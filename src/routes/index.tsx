@@ -15,7 +15,7 @@ import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 
 type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
-type Stop = "shack" | "bridge" | "central" | "workshop" | "ridge" | "lookout";
+type Stop = "home" | "central";
 type Mission = { id: number; text: string; agent: Agent; reason: string; state: "Routing" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
@@ -29,12 +29,26 @@ const startLogs: Log[] = [
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
 type Point = { x: number; y: number };
-const STOPS: Record<Stop, Point> = { shack: { x: 17, y: 70 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 80, y: 64 }, ridge: { x: 57, y: 52 }, lookout: { x: 53, y: 43 } };
-const MEET: Record<Agent, Point> = { Oz: { x: 40, y: 64 }, Brix: { x: 55, y: 59 }, Lowkey: { x: 55, y: 59 } };
-const WORLD_ASPECT = 1.72;
+/** Aspect ratio of the Sanctuary artwork; markers live in a layer locked to the image, so these coordinates are image percentages. */
+const WORLD_ASPECT = 1264 / 848;
 const WALK_SPEED = 5.5; // percent of world width per second
-const pointFor = (agent: Agent, stop: Stop): Point => stop === "central" ? MEET[agent] : STOPS[stop];
-const depthFor = (y: number) => (1 - Math.min(Math.max((74 - y) / 31, 0), 1) * 0.12).toFixed(3);
+/**
+ * Walkable route for each character, from their home spot to the crossroads meeting point.
+ * Every node sits on a visible track or open ground in the artwork, clear of fences, buildings and props.
+ */
+const PATHS: Record<Agent, Point[]> = {
+  // Shack porch yard → glowing lower trail (above the fence line) → crossroads
+  Oz: [{ x: 19, y: 63.4 }, { x: 23.5, y: 63.6 }, { x: 27, y: 62.2 }, { x: 30.5, y: 60.8 }, { x: 35, y: 60.3 }, { x: 40, y: 60 }, { x: 46, y: 59.6 }],
+  // Workshop yard (left of the building, clear of scrap piles) → lower glowing trail → crossroads
+  Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
+  // Upper dirt road beneath the lookout cliff → open meadow, east of the fence → crossroads
+  Lowkey: [{ x: 56, y: 42.6 }, { x: 57.4, y: 46.4 }, { x: 57.2, y: 50.8 }, { x: 55.4, y: 55.2 }, { x: 53, y: 58.7 }],
+};
+const HOME = (agent: Agent) => PATHS[agent][0]!;
+const toMeet = (agent: Agent) => PATHS[agent].slice(1);
+const toHome = (agent: Agent) => PATHS[agent].slice(0, -1).reverse();
+const trailPoints = (agent: Agent) => PATHS[agent].map(p => `${p.x},${p.y}`).join(" ");
+const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / WORLD_ASPECT);
 const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
