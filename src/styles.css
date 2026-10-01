@@ -128,3 +128,7 @@
 
 .sheet-brix{width:76px;height:86px}.sheet-brix .sheet-shadow{width:70%;height:6px}
 @media(max-width:600px){.sheet-brix{width:57px;height:64px}}
+
+/* Moxi is an unmarked, stationary discovery by the river rocks. */
+.moxi-easter-egg{position:absolute;left:36%;top:79%;width:clamp(31px,4.8%,46px);height:auto;z-index:2;pointer-events:none;user-select:none;filter:brightness(.77) saturate(.85) drop-shadow(0 2px 2px var(--sprite-contact));mask-image:linear-gradient(to bottom,black 78%,transparent 100%)}
+@media(max-width:600px){.moxi-easter-egg{width:29px;left:34%;top:80%}}

@@ -7,6 +7,7 @@ import world from "@/assets/zygoria-world.jpg";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
+import moxi from "@/assets/moxi-sanctuary.webp.asset.json";
 
 type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
@@ -190,6 +191,7 @@ function CommandCentre() {
             <div className="location-tag workshop-tag"><span className="location-line"/> BRIX'S WORKSHOP</div>
             <div className="location-tag lookout-tag"><span className="location-line"/> LOOKOUT</div>
             <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
+             <img className="moxi-easter-egg" src={moxi.url} alt="Moxi, a tiny magenta dragon tucked beside the Sanctuary river" draggable={false} />
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 57,52 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
             <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
