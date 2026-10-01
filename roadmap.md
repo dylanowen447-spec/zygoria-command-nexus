@@ -10,3 +10,4 @@
 - [x] Replace position tweening with frame-by-frame route walking synced to a looping 4-pose walk cycle (legs, arms, bounce, facing), idle on stop; keep height rule, map and UI.
 - [x] Use uploaded Lowkey sprite sheet (idle, walk 1-4, thinking); taller than Oz, shorter than Brix; route curves up to lookout
 - [x] Use uploaded Brix sprite sheet (idle, walk 1-4, thinking); tallest and broadest
+- [x] Add uploaded Moxi as a small static creature hidden by the Sanctuary river without changing crew or routes.
