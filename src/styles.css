@@ -129,9 +129,6 @@
 .sheet-brix{width:76px;height:86px}.sheet-brix .sheet-shadow{width:70%;height:6px}
 @media(max-width:600px){.sheet-brix{width:57px;height:64px}}
 
-/* Moxi stays behind a pixel-matched foreground rock on the arrival-pod riverbank. */
-.moxi-easter-egg,.moxi-foreground-rock{position:absolute;pointer-events:none;user-select:none}
-.moxi-easter-egg{left:49.05%;top:64.5%;width:3.8%;height:auto;z-index:2;filter:brightness(.69) saturate(.79) drop-shadow(0 2px 2px var(--sprite-contact))}
-.moxi-foreground-rock{inset:0;width:100%;height:100%;z-index:3;object-fit:cover;object-position:center;animation:worldBreath 12s ease-in-out infinite alternate}
-@media(max-width:600px){.moxi-easter-egg{left:49%;top:64.5%;width:5%}}
-@media(prefers-reduced-motion:reduce){.moxi-foreground-rock{animation:none}}
+/* The static dragon and foreground bank rock share the world image's exact coordinate system. */
+.moxi-scenery{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:2;pointer-events:none;user-select:none;animation:worldBreath 12s ease-in-out infinite alternate}
+@media(prefers-reduced-motion:reduce){.moxi-scenery{animation:none}}
