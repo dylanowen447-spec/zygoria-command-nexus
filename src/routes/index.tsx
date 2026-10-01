@@ -98,12 +98,6 @@ function CommandCentre() {
         setPositions(prev => ({ ...prev, [agent]: route[route.length - 1] }));
         resolve();
       };
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        coords.current[agent] = { ...targets[targets.length - 1]! };
-        paint(agent);
-        finish();
-        return;
-      }
       face(targets[0]!);
       setWalking(prev => prev.includes(agent) ? prev : [...prev, agent]);
       let segment = 0;
