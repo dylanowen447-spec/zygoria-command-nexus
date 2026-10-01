@@ -5,11 +5,17 @@ export async function planJob(directive: string) {
   if (!apiKey) throw new Error("Job planning is unavailable right now.");
   try {
     const result = await createJobDecisionCall(apiKey, directive);
-    if (result.agent !== "Oz" && result.agent !== "Brix" && result.agent !== "Lowkey") {
-      throw new Error("The job could not be assigned. Please try again.");
+    type Agent = "Oz" | "Brix" | "Lowkey";
+    const steps: { agent: Agent; activity: string; result: string }[] = [];
+    for (const step of result.steps) {
+      if (step.agent !== "Oz" && step.agent !== "Brix" && step.agent !== "Lowkey") continue;
+      const agent: Agent = step.agent;
+      if (steps.at(-1)?.agent === agent) continue;
+      steps.push({ agent, activity: step.activity.trim().slice(0, 100) || "Working on the directive.", result: step.result.trim().slice(0, 900) });
+      if (steps.length === 3) break;
     }
-    const agent: "Oz" | "Brix" | "Lowkey" = result.agent;
-    return { agent, reason: result.reason.trim().slice(0, 160) || "Best suited to this directive." };
+    if (!steps.length) throw new Error("The job could not be assigned. Please try again.");
+    return { agent: steps[0]!.agent, steps, reason: result.reason.trim().slice(0, 160) || "Best suited to this directive." };
   } catch (error) {
     if (error instanceof Error && "statusCode" in error) {
       const status = Number(error.statusCode);
