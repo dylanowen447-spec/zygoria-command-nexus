@@ -10,6 +10,7 @@ import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
 import moxiUnderTree from "@/assets/moxi-under-tree.webp.asset.json";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
+import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 
 type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
@@ -222,7 +223,7 @@ function CommandCentre() {
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 57,52 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
             <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
-              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name}</span>
+              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : agent.name}</span>
             </Button>)}
             <div className="map-coordinate bottom-left"><MapPin size={12}/> THE SANCTUARY — EST. ARRIVAL DAY</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>
