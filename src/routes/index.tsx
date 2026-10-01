@@ -15,7 +15,7 @@ import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 
 type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
-type Stop = "shack" | "bridge" | "central" | "workshop" | "ridge" | "lookout";
+type Stop = "home" | "central";
 type Mission = { id: number; text: string; agent: Agent; reason: string; state: "Routing" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
@@ -29,12 +29,26 @@ const startLogs: Log[] = [
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
 type Point = { x: number; y: number };
-const STOPS: Record<Stop, Point> = { shack: { x: 17, y: 70 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 80, y: 64 }, ridge: { x: 57, y: 52 }, lookout: { x: 53, y: 43 } };
-const MEET: Record<Agent, Point> = { Oz: { x: 40, y: 64 }, Brix: { x: 55, y: 59 }, Lowkey: { x: 55, y: 59 } };
-const WORLD_ASPECT = 1.72;
+/** Aspect ratio of the Sanctuary artwork; markers live in a layer locked to the image, so these coordinates are image percentages. */
+const WORLD_ASPECT = 1264 / 848;
 const WALK_SPEED = 5.5; // percent of world width per second
-const pointFor = (agent: Agent, stop: Stop): Point => stop === "central" ? MEET[agent] : STOPS[stop];
-const depthFor = (y: number) => (1 - Math.min(Math.max((74 - y) / 31, 0), 1) * 0.12).toFixed(3);
+/**
+ * Walkable route for each character, from their home spot to the crossroads meeting point.
+ * Every node sits on a visible track or open ground in the artwork, clear of fences, buildings and props.
+ */
+const PATHS: Record<Agent, Point[]> = {
+  // Shack porch yard → glowing lower trail (above the fence line) → crossroads
+  Oz: [{ x: 19, y: 63.4 }, { x: 23.5, y: 63.6 }, { x: 27, y: 62.2 }, { x: 30.5, y: 60.8 }, { x: 35, y: 60.3 }, { x: 40, y: 60 }, { x: 46, y: 59.6 }],
+  // Workshop yard (left of the building, clear of scrap piles) → lower glowing trail → crossroads
+  Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
+  // Upper dirt road beneath the lookout cliff → open meadow, east of the fence → crossroads
+  Lowkey: [{ x: 54, y: 41.6 }, { x: 56.6, y: 45.6 }, { x: 57.2, y: 50.8 }, { x: 55.4, y: 55.2 }, { x: 53, y: 58.7 }],
+};
+const HOME = (agent: Agent) => PATHS[agent][0]!;
+const toMeet = (agent: Agent) => PATHS[agent].slice(1);
+const toHome = (agent: Agent) => PATHS[agent].slice(0, -1).reverse();
+const trailPoints = (agent: Agent) => PATHS[agent].map(p => `${p.x},${p.y}`).join(" ");
+const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / WORLD_ASPECT);
 const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
@@ -57,13 +71,13 @@ function CommandCentre() {
   const [selected, setSelected] = useState<Agent | null>(null);
   const [phase, setPhase] = useState<"idle" | "planning" | "routing" | "working">("idle");
   const [planningError, setPlanningError] = useState("");
-  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "shack", Brix: "workshop", Lowkey: "lookout" });
+  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home" });
   const [walking, setWalking] = useState<Agent[]>([]);
-  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "right" });
+  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const frames = useRef<number[]>([]);
   const runId = useRef(0);
-  const coords = useRef<Record<Agent, Point>>({ Oz: { ...STOPS.shack }, Brix: { ...STOPS.workshop }, Lowkey: { ...STOPS.lookout } });
+  const coords = useRef<Record<Agent, Point>>({ Oz: { ...HOME("Oz") }, Brix: { ...HOME("Brix") }, Lowkey: { ...HOME("Lowkey") } });
   const markerRefs = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const active = missions[0];
   const assigned = active?.state === "Routing" ? "Oz" : active?.state === "In progress" ? active.agent : null;
@@ -83,15 +97,14 @@ function CommandCentre() {
     el.style.setProperty("--depth", depthFor(p.y));
   }
   const wait = (ms: number) => new Promise<void>(resolve => { timers.current.push(setTimeout(resolve, ms)); });
-  const routeTime = (agent: Agent, route: Stop[]) => {
+  const routeTime = (agent: Agent, targets: Point[]) => {
     let from = coords.current[agent], total = 0;
-    for (const stop of route) { const to = pointFor(agent, stop); total += distance(from, to); from = to; }
+    for (const to of targets) { total += distance(from, to); from = to; }
     return total / WALK_SPEED;
   };
-  /** Moves a character along named stops frame by frame; the walk cycle loops only while this runs. */
-  function walk(agent: Agent, route: Stop[], run: number) {
+  /** Moves a character along walkable path nodes frame by frame; the walk cycle loops only while this runs. */
+  function walk(agent: Agent, targets: Point[], end: Stop, run: number) {
     return new Promise<void>(resolve => {
-      const targets = route.map(stop => pointFor(agent, stop));
       const face = (target: Point) => {
         const dx = target.x - coords.current[agent].x;
         if (Math.abs(dx) < 0.3) return;
@@ -100,7 +113,7 @@ function CommandCentre() {
       };
       const finish = () => {
         setWalking(prev => prev.filter(a => a !== agent));
-        setPositions(prev => ({ ...prev, [agent]: route[route.length - 1] }));
+        setPositions(prev => ({ ...prev, [agent]: end }));
         resolve();
       };
       face(targets[0]!);
@@ -133,12 +146,12 @@ function CommandCentre() {
   }
   async function runMission(id: number, agent: Agent, run: number) {
     if (agent === "Oz") {
-      await walk("Oz", ["bridge", "central"], run);
+      await walk("Oz", toMeet("Oz"), "central", run);
       if (run !== runId.current) return;
       setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
       setPhase("working");
       log("Oz", "Taking the assignment at the crossroads.");
-      await walk("Oz", ["bridge", "shack"], run);
+      await walk("Oz", toHome("Oz"), "home", run);
       await wait(3500);
       if (run !== runId.current) return;
       setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "Complete" } : m));
@@ -146,16 +159,15 @@ function CommandCentre() {
       log("Oz", "Assignment complete. Standing by for the next mission.");
       return;
     }
-    const home: Stop = agent === "Brix" ? "workshop" : "lookout";
     await wait(250);
     if (run !== runId.current) return;
-    const lead = Math.max(0.4, routeTime("Oz", ["bridge", "central"]) - routeTime(agent, agent === "Lowkey" ? ["ridge", "central"] : ["central"]));
+    const lead = Math.max(0.4, routeTime("Oz", toMeet("Oz")) - routeTime(agent, toMeet(agent)));
     const agentWalk = wait(lead * 1000).then(() => {
       if (run !== runId.current) return;
       log(agent, "Walking to the crossroads for the handoff.");
-      return walk(agent, agent === "Lowkey" ? ["ridge", "central"] : ["central"], run);
+      return walk(agent, toMeet(agent), "central", run);
     });
-    await Promise.all([walk("Oz", ["bridge", "central"], run), agentWalk]);
+    await Promise.all([walk("Oz", toMeet("Oz"), "central", run), agentWalk]);
     if (run !== runId.current) return;
     setFacing(prev => ({ ...prev, Oz: "right", [agent]: "left" }));
     log("Oz", `Briefing ${agent} at the crossroads.`);
@@ -166,8 +178,8 @@ function CommandCentre() {
     setPhase("working");
     log("Oz", `Mission transferred to ${agent}.`);
     await Promise.all([
-      walk("Oz", ["bridge", "shack"], run),
-      walk(agent, agent === "Lowkey" ? ["ridge", home] : [home], run).then(() => { if (run === runId.current) log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }),
+      walk("Oz", toHome("Oz"), "home", run),
+      walk(agent, toHome(agent), "home", run).then(() => { if (run === runId.current) log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }),
     ]);
     await wait(3500);
     if (run !== runId.current) return;
@@ -222,11 +234,13 @@ function CommandCentre() {
              <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
              <div className="scene-depth" aria-hidden="true"><span className="depth-haze"/><span className="depth-ridge-shade"/><span className="depth-pool pool-shack"/><span className="depth-pool pool-workshop"/><span className="depth-pool pool-pods"/><span className="depth-pool pool-lookout"/><span className="depth-pool pool-bridge"/><span className="depth-river"/><span className="depth-fore"/></div>
              <img className="moxi-scenery" src={moxiUnderTree.url} alt="Moxi, a tiny dragon peeking over rocks beneath the evergreen near Brix's workshop" draggable={false} />
-            <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 57,52 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
             <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
+            <div className="world-stage">
+            <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints("Oz")}/><polyline points={trailPoints("Brix")}/><polyline points={trailPoints("Lowkey")}/></svg>
             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
               <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
             </Button>)}
+            </div>
             <div className="map-coordinate bottom-left"><MapPin size={12}/> THE SANCTUARY — EST. ARRIVAL DAY</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>
           <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> 1 SANCTUARY</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>

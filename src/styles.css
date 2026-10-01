@@ -169,3 +169,8 @@
 @keyframes cycleContact{0%,50%,100%{transform:translateX(-50%) scaleX(1)}25%,75%{transform:translateX(-50%) scaleX(.85);opacity:.8}}
 .moxi-scenery{filter:drop-shadow(0 2px 2px oklch(0.05 0.01 265 / 50%))}
 @media (prefers-reduced-motion:reduce){.depth-pool{animation:none}}
+/* Path layer locked to the artwork's cover box so path nodes (image %) land on the same ground at every screen shape */
+.world-image-wrap{container-type:size}
+.world-stage{position:absolute;left:50%;top:50%;width:max(100cqw,calc(100cqh * 1.4906));height:max(100cqh,calc(100cqw / 1.4906));transform:translate(-50%,-50%);z-index:4;pointer-events:none}
+.world-stage .agent-marker{pointer-events:auto}
+.world-stage .world-trails{opacity:.55}
