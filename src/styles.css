@@ -109,4 +109,5 @@
 @keyframes cycleArmB{0%,100%{transform:rotate(-18deg)}25%,75%{transform:rotate(0deg)}50%{transform:rotate(18deg)}}
 @keyframes cycleBounce{0%,50%,100%{translate:0 .4px}25%,75%{translate:0 -2px}}
 @keyframes cycleShadow{0%,50%,100%{transform:scaleX(1);opacity:1}25%,75%{transform:scaleX(.84);opacity:.78}}
-@media(prefers-reduced-motion:reduce){.agent-marker.is-walking .character-sprite :is(.sprite-leg,.sprite-arm,.sprite-figure,.sprite-shadow){animation:none!important}}
+/* Walking is the core interaction, so the step cycle still plays when the device asks for reduced motion. */
+@media(prefers-reduced-motion:reduce){.agent-marker.is-walking .character-sprite :is(.sprite-leg,.sprite-arm,.sprite-figure,.sprite-shadow){animation-duration:.56s!important;animation-iteration-count:infinite!important}.agent-marker.is-walking.marker-brix .character-sprite :is(.sprite-leg,.sprite-arm,.sprite-figure,.sprite-shadow){animation-duration:.66s!important}}

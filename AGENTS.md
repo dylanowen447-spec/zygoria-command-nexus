@@ -8,3 +8,4 @@
 - Keep the Zygoria prototype simulation in the index route's client state; it does not require persistent services or credentials.
 - Keep visual roles and HUD styling in the global design tokens and stylesheet so the world interface remains consistent.
 - Keep character sprites as inline SVG; route movement is painted per animation frame from client state along named map stops, while CSS loops the limb walk cycle only during that movement, so walking is synced and never a position tween.
+- Character route walking and the limb step cycle ignore the reduced-motion preference; walking is the core interaction, so ambient effects are the only motion that gets disabled.
