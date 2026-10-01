@@ -8,7 +8,8 @@ export async function planJob(directive: string) {
     if (result.agent !== "Oz" && result.agent !== "Brix" && result.agent !== "Lowkey") {
       throw new Error("The job could not be assigned. Please try again.");
     }
-    return { agent: result.agent, reason: result.reason.trim().slice(0, 160) || "Best suited to this directive." };
+    const agent: "Oz" | "Brix" | "Lowkey" = result.agent;
+    return { agent, reason: result.reason.trim().slice(0, 160) || "Best suited to this directive." };
   } catch (error) {
     if (error instanceof Error && "statusCode" in error) {
       const status = Number(error.statusCode);
