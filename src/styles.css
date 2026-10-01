@@ -123,11 +123,11 @@
 @keyframes ozBreathe{from{translate:0 0}to{translate:0 -.6px}}
 @media(max-width:600px){.sheet-sprite{width:33px;height:42px}}
 @media(prefers-reduced-motion:reduce){.agent-marker.is-walking .sheet-frames{animation-duration:.5s,.25s!important;animation-iteration-count:infinite!important}}
-.sheet-oz{transform:translateX(-50%) scale(.95);transform-origin:center bottom}
-.sheet-lowkey{width:66px;height:70px;transform:translateX(-50%) scale(.88);transform-origin:center bottom}.sheet-lowkey .sheet-shadow{opacity:.45}
+.sheet-oz{transform:translateX(-50%) scale(.93);transform-origin:center bottom}
+.sheet-lowkey{width:66px;height:70px;transform:translateX(-50%) scale(.86);transform-origin:center bottom}.sheet-lowkey .sheet-shadow{opacity:.45}
 @media(max-width:600px){.sheet-lowkey{width:50px;height:54px}}
 
-.sheet-brix{width:76px;height:86px;transform:translateX(-50%) scale(.85);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
+.sheet-brix{width:76px;height:86px;transform:translateX(-50%) scale(.83);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
 @media(max-width:600px){.sheet-brix{width:57px;height:64px}}
 
 /* The static dragon and foreground bank rock share the world image's exact coordinate system. */
@@ -141,9 +141,9 @@
 .assignment-reason{display:grid;gap:5px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line-soft);overflow-wrap:anywhere}.assignment-reason strong{font:700 9px var(--font-mono);color:var(--electric)}.assignment-reason span{font:11px/1.4 var(--font-body);color:var(--muted-foreground)}.planning-error{margin:10px 0 0;font:11px/1.4 var(--font-body);color:var(--destructive);overflow-wrap:anywhere}
 
 /* Oz's supplied hand-lettered mark replaces only his in-world name. */
-.marker-oz .marker-name{top:calc(100% + 1px);line-height:0}.marker-brix .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.oz-wordmark{display:block;width:32px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.brix-wordmark{display:block;width:44px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.marker-lowkey .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.lowkey-wordmark{display:block;width:47px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}
+.marker-oz .marker-name{top:calc(100% + 1px);line-height:0}.marker-brix .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.oz-wordmark{display:block;width:31.4px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.brix-wordmark{display:block;width:43.1px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.marker-lowkey .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.lowkey-wordmark{display:block;width:46.1px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}
 .oz-wordmark,.brix-wordmark,.lowkey-wordmark{max-width:none!important;flex:none;position:relative;z-index:5}
-@media(max-width:600px){.oz-wordmark{width:34px!important}.brix-wordmark{width:46px!important}.lowkey-wordmark{width:48px!important}}
+@media(max-width:600px){.oz-wordmark{width:33.3px!important}.brix-wordmark{width:45.1px!important}.lowkey-wordmark{width:47px!important}}
 
 /* Spatial depth layers over the Sanctuary artwork */
 .scene-depth{position:absolute;inset:0;pointer-events:none;z-index:1}
