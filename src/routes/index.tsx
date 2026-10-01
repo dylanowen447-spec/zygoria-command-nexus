@@ -45,10 +45,15 @@ const PATHS: Record<Agent, Point[]> = {
   // Open plateau track right of the treeline (flat, clear of the pines) → down the open grass east of the lone pine → crossroads
   Lowkey: [{ x: 47.5, y: 41 }, { x: 50, y: 43.5 }, { x: 50.7, y: 47 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
 };
+/** Work spots reached from home along open ground: Brix up the glowing trail to the workshop entrance, Lowkey up the plateau track toward the lookout. */
+const WORK: Partial<Record<Agent, Point[]>> = {
+  Brix: [{ x: 67.5, y: 54.6 }, { x: 71, y: 52.8 }],
+  Lowkey: [{ x: 50.5, y: 39 }, { x: 53.5, y: 38 }],
+};
 const HOME = (agent: Agent) => PATHS[agent][0]!;
 const toMeet = (agent: Agent) => PATHS[agent].slice(1);
 const toHome = (agent: Agent) => PATHS[agent].slice(0, -1).reverse();
-const trailPoints = (agent: Agent) => PATHS[agent].map(p => `${p.x},${p.y}`).join(" ");
+const trailPoints = (agent: Agent) => [...(WORK[agent] ?? []).slice().reverse(), ...PATHS[agent]].map(p => `${p.x},${p.y}`).join(" ");
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / WORLD_ASPECT);
 const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -182,7 +187,8 @@ function CommandCentre() {
     setPhase("working");
     let output: Awaited<typeof call>;
     try {
-      [output] = await Promise.all([call, walk("Oz", toHome("Oz"), "home", run), agent === "Oz" ? Promise.resolve() : walk(agent, toHome(agent), "home", run)]);
+      const work = WORK[agent];
+      [output] = await Promise.all([call, walk("Oz", toHome("Oz"), "home", run), agent === "Oz" ? Promise.resolve() : walk(agent, work ? [...toHome(agent), ...work] : toHome(agent), "home", run)]);
     } catch (error) {
       if (run !== runId.current) return null;
       const message = error instanceof Error ? error.message : "The crew could not finish this step.";
@@ -192,6 +198,13 @@ function CommandCentre() {
     }
     if (run !== runId.current) return null;
     log(agent, output.activity);
+    const work = WORK[agent];
+    if (work) {
+      await wait(1500);
+      if (run !== runId.current) return null;
+      await walk(agent, [...work.slice(0, -1).reverse(), HOME(agent)], "home", run);
+      if (run !== runId.current) return null;
+    }
     await wait(1200);
     if (run !== runId.current) return null;
     const step: Step = { agent, activity: output.activity, result: output.result, verdict: output.verdict };
