@@ -24,3 +24,4 @@
 - [x] Strict pathing: no walking off the bridge/pier, no idling on edges, fences, water, ravines or cliffs; Oz idles on solid ground
 - [x] Move Lowkey nearer the river by the waterfall without overlapping it
 - [x] Move Oz slightly right so he no longer covers the shack and its light
+- [ ] Move LOOKOUT tag up slightly (clear of Lowkey, his chip and the workshop tag on phone + desktop)
