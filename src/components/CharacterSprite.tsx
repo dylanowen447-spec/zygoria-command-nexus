@@ -1,7 +1,13 @@
+import ozSheet from "@/assets/oz-sheet.webp.asset.json";
+
 type Character = "Oz" | "Brix" | "Lowkey";
 
-/** Small, deliberately simplified silhouettes of the supplied First Genesis characters. */
+/** Small, deliberately simplified silhouettes of the supplied First Genesis characters. Oz uses his supplied 6-frame sheet. */
 export function CharacterSprite({ character }: { character: Character }) {
+  if (character === "Oz") return <span className="oz-sprite" aria-hidden="true">
+    <span className="oz-shadow" />
+    <span className="oz-frames" style={{ backgroundImage: `url(${ozSheet.url})` }} />
+  </span>;
   return <svg className={`character-sprite sprite-${character.toLowerCase()}`} viewBox="0 0 44 70" role="presentation" aria-hidden="true">
     <ellipse className="sprite-shadow" cx="22" cy="66" rx="14" ry="3" />
     <g className="sprite-figure"><g className="sprite-body">
