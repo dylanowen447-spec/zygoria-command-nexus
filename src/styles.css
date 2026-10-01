@@ -35,12 +35,12 @@
 .marker-name{order:2;margin-top:2px;color:var(--foreground);font:700 11px var(--font-display);text-shadow:0 1px 5px var(--background),0 0 8px var(--electric)}
 .marker-ground{position:absolute;bottom:0;left:50%;width:49px;height:11px;border:1px solid var(--electric);border-radius:50%;transform:translateX(-50%) perspective(20px) rotateX(52deg);background:var(--electric-glow);box-shadow:0 0 15px var(--electric),inset 0 0 10px var(--electric);animation:groundPulse 2s ease-in-out infinite}
 .marker-oz{left:22%;top:82%}.marker-brix{left:79%;top:76%}.marker-lowkey{left:51%;top:65%}
-.marker-oz.is-traveling{left:38%;top:75%}.marker-brix.is-traveling{left:68%;top:69%}.marker-lowkey.is-traveling{left:44%;top:48%}
+.marker-oz.is-traveling{left:38%;top:75%}.marker-brix.is-traveling{left:84%;top:64%}.marker-lowkey.is-traveling{left:44%;top:48%}
 .agent-marker.is-traveling .marker-portrait img{animation:characterWalk .35s ease-in-out infinite alternate}
 .agent-marker.is-traveling .marker-ground{animation:groundPulse .6s ease-in-out infinite}
 .handoff-path{pointer-events:none;left:32%;top:72%;height:2px;animation:none;opacity:.75}
 .handoff-path.path-routing{width:0}
-.handoff-path.path-working.path-brix{width:39%;transform:rotate(-5deg)}
+.handoff-path.path-working.path-brix{width:49%;transform:rotate(-11deg)}
 .handoff-path.path-working.path-lowkey{width:28%;transform:rotate(-34deg)}
 @keyframes worldBreath{from{filter:brightness(.96)}to{filter:brightness(1.1)}}
 @keyframes riverShimmer{from{opacity:.15;transform:translateX(-3%)}to{opacity:.65;transform:translateX(4%)}}
@@ -57,9 +57,9 @@
  .marker-name{font-size:9px;margin-top:1px}
  .marker-ground{width:35px;height:8px}
  .marker-oz{left:22%;top:81%}.marker-brix{left:78%;top:78%}.marker-lowkey{left:52%;top:67%}
- .marker-oz.is-traveling{left:39%;top:76%}.marker-brix.is-traveling{left:69%;top:69%}.marker-lowkey.is-traveling{left:44%;top:51%}
+ .marker-oz.is-traveling{left:39%;top:76%}.marker-brix.is-traveling{left:84%;top:62%}.marker-lowkey.is-traveling{left:44%;top:51%}
  .handoff-path{left:32%;top:74%}
- .handoff-path.path-working.path-brix{width:39%;transform:rotate(-5deg)}
+ .handoff-path.path-working.path-brix{width:49%;transform:rotate(-11deg)}
  .handoff-path.path-working.path-lowkey{width:26%;transform:rotate(-36deg)}
 }
 @media(prefers-reduced-motion:reduce){.world-image,.river-light,.workshop-light,.marker-portrait img,.marker-ground{animation:none!important}}
