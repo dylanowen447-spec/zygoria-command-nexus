@@ -4,3 +4,4 @@
 - [x] Make the world scene feel inhabited, with grounded characters, glowing status labels, and task-triggered movement to map locations.
 - [x] Replace portrait markers and sliding movement with small full-body characters walking the shack, central area, workshop, and lookout paths; verify iPhone behavior.
 - [x] Refine Oz, Brix, and Lowkey into distinctive front-facing sprites with directional 3–4 frame walks, working poses, and grounded shadows without changing map layout.
+- [x] Redraw in-world sprites to match the supplied First Genesis references: Oz's yellow fur, spikes and headset; Brix's blond hair, boxing gloves and record chest; Lowkey's red angular hood and shadowed mask.
