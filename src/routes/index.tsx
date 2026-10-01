@@ -16,12 +16,13 @@ import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
 type Stop = "home" | "central";
-type Mission = { id: number; text: string; agent: Agent; reason: string; state: "Routing" | "In progress" | "Complete"; time: string };
+type Step = { agent: Agent; activity: string; result: string };
+type Mission = { id: number; text: string; agent: Agent; reason: string; steps: Step[]; done: number; state: "Routing" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
-  { name: "Oz", role: "The orchestrator", place: "Riverside shack", image: ozPortrait.url, icon: Sparkles },
-  { name: "Brix", role: "The builder", place: "Workshop / garage", image: brixPortrait.url, icon: Wrench },
-  { name: "Lowkey", role: "The scout", place: "The wilds", image: lowkeyPortrait.url, icon: Crosshair },
+  { name: "Oz", role: "Coordinator / creative lead", place: "Riverside shack", image: ozPortrait.url, icon: Sparkles },
+  { name: "Brix", role: "Builder / technical", place: "Workshop / garage", image: brixPortrait.url, icon: Wrench },
+  { name: "Lowkey", role: "Lore / research", place: "The wilds", image: lowkeyPortrait.url, icon: Crosshair },
 ];
 const startLogs: Log[] = [
   { id: 1, agent: "Oz", text: "Command link established.", time: "SYSTEM" },
@@ -79,8 +80,9 @@ function CommandCentre() {
   const runId = useRef(0);
   const coords = useRef<Record<Agent, Point>>({ Oz: { ...HOME("Oz") }, Brix: { ...HOME("Brix") }, Lowkey: { ...HOME("Lowkey") } });
   const markerRefs = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
+  const [current, setCurrent] = useState<Agent | null>(null);
   const active = missions[0];
-  const assigned = active?.state === "Routing" ? "Oz" : active?.state === "In progress" ? active.agent : null;
+  const assigned = active?.state === "Routing" ? "Oz" : active?.state === "In progress" ? current : null;
   const statuses: Record<Agent, Status> = {
     Oz: walking.includes("Oz") ? "Thinking" : phase === "planning" || phase === "routing" ? "Thinking" : phase === "working" ? assigned === "Oz" ? "Working" : "Waiting" : "Idle",
     Brix: walking.includes("Brix") && phase === "routing" ? "Waiting" : assigned === "Brix" ? "Working" : "Idle",
@@ -144,48 +146,53 @@ function CommandCentre() {
       frames.current.push(requestAnimationFrame(step));
     });
   }
-  async function runMission(id: number, agent: Agent, run: number) {
+  const setMission = (id: number, patch: (m: Mission) => Partial<Mission>) => setMissions(prev => prev.map(m => m.id === id ? { ...m, ...patch(m) } : m));
+  /** One step: the agent walks its valid path to the crossroads for Oz's briefing, then back to its workplace to work. */
+  async function runStep(id: number, step: Step, index: number, run: number) {
+    const agent = step.agent;
+    setMission(id, () => ({ state: "Routing" }));
+    setPhase("routing");
+    setCurrent(null);
     if (agent === "Oz") {
       await walk("Oz", toMeet("Oz"), "central", run);
       if (run !== runId.current) return;
-      setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
-      setPhase("working");
-      log("Oz", "Taking the assignment at the crossroads.");
-      await walk("Oz", toHome("Oz"), "home", run);
-      await wait(3500);
+      log("Oz", "Keeping this one.");
+    } else {
+      await wait(250);
       if (run !== runId.current) return;
-      setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "Complete" } : m));
-      setPhase("idle");
-      log("Oz", "Assignment complete. Standing by for the next mission.");
-      return;
+      const lead = Math.max(0.4, routeTime("Oz", toMeet("Oz")) - routeTime(agent, toMeet(agent)));
+      const agentWalk = wait(lead * 1000).then(() => {
+        if (run !== runId.current) return;
+        log(agent, "Walking to the crossroads for the handoff.");
+        return walk(agent, toMeet(agent), "central", run);
+      });
+      await Promise.all([walk("Oz", toMeet("Oz"), "central", run), agentWalk]);
+      if (run !== runId.current) return;
+      setFacing(prev => ({ ...prev, Oz: "right", [agent]: "left" }));
+      log("Oz", index ? `Passing the work on to ${agent}.` : `Briefing ${agent} at the crossroads.`);
+      await wait(1500);
+      if (run !== runId.current) return;
     }
-    await wait(250);
-    if (run !== runId.current) return;
-    const lead = Math.max(0.4, routeTime("Oz", toMeet("Oz")) - routeTime(agent, toMeet(agent)));
-    const agentWalk = wait(lead * 1000).then(() => {
-      if (run !== runId.current) return;
-      log(agent, "Walking to the crossroads for the handoff.");
-      return walk(agent, toMeet(agent), "central", run);
-    });
-    await Promise.all([walk("Oz", toMeet("Oz"), "central", run), agentWalk]);
-    if (run !== runId.current) return;
-    setFacing(prev => ({ ...prev, Oz: "right", [agent]: "left" }));
-    log("Oz", `Briefing ${agent} at the crossroads.`);
-    await wait(1500);
-    if (run !== runId.current) return;
-    setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
+    setMission(id, () => ({ state: "In progress", agent }));
+    setCurrent(agent);
     setSelected(agent);
     setPhase("working");
-    log("Oz", `Mission transferred to ${agent}.`);
-    await Promise.all([
-      walk("Oz", toHome("Oz"), "home", run),
-      walk(agent, toHome(agent), "home", run).then(() => { if (run === runId.current) log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }),
-    ]);
-    await wait(3500);
+    log(agent, step.activity);
+    await Promise.all([walk("Oz", toHome("Oz"), "home", run), agent === "Oz" ? Promise.resolve() : walk(agent, toHome(agent), "home", run)]);
+    await wait(2500);
     if (run !== runId.current) return;
-    setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "Complete" } : m));
+    setMission(id, m => ({ done: Math.max(m.done, index + 1) }));
+    log(agent, "Step finished — result posted.");
+  }
+  async function runMission(id: number, steps: Step[], run: number) {
+    for (let i = 0; i < steps.length; i++) {
+      await runStep(id, steps[i]!, i, run);
+      if (run !== runId.current) return;
+    }
+    setMission(id, () => ({ state: "Complete" }));
+    setCurrent(null);
     setPhase("idle");
-    log(agent, "Assignment complete. Standing by for the next mission.");
+    log(steps.at(-1)!.agent, "Directive complete. Standing by.");
   }
   function log(agent: Agent, text: string) {
     setLogs(prev => [{ id: Date.now() + Math.random(), agent, text, time: now() }, ...prev].slice(0, 12));
@@ -205,15 +212,15 @@ function CommandCentre() {
       setPhase("idle");
       return;
     }
-    const { agent, reason } = decision;
+    const { agent, reason, steps } = decision;
     const id = Date.now();
     setDraft("");
     setSelected("Oz");
     setWalking([]);
     setPhase("routing");
-    setMissions(prev => [{ id, text, agent, reason, state: "Routing" as const, time: now() }, ...prev].slice(0, 8));
-    log("Oz", `${agent} selected: ${reason}`);
-    void runMission(id, agent, runId.current);
+    setMissions(prev => [{ id, text, agent, reason, steps, done: 0, state: "Routing" as const, time: now() }, ...prev].slice(0, 8));
+    log("Oz", `Route: ${steps.map(st => st.agent).join(" → ")}. ${reason}`);
+    void runMission(id, steps, runId.current);
   }
   return <div className="command-app">
     <header className="command-header">
@@ -250,10 +257,10 @@ function CommandCentre() {
         <div className="crew-grid">{agents.map(agent => { const Icon = agent.icon; return <Button key={agent.name} variant="ghost" type="button" onClick={() => setSelected(agent.name)} className={`crew-item ${selected === agent.name ? "selected" : ""}`}><span className="crew-portrait"><img src={agent.image} alt="" /></span><span className="crew-info"><span className="crew-name">{agent.name} <Icon size={13}/></span><span className="crew-role">{agent.role}</span><span className="crew-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]} <span>· {agent.place}</span></span></span><ChevronRight className="crew-arrow" size={16}/></Button> })}</div>
       </div>
       <aside className="intel-panel"><div className="intel-top"><div className="intel-heading"><span><Activity size={17}/> MISSION CONTROL</span><span className="panel-id">PANEL_01</span></div><div className="intel-subhead">REAL-TIME OPERATIONAL OVERVIEW</div></div>
-        <section className="intel-section current-section"><div className="panel-section-heading"><span><span className="section-square"/> CURRENT DIRECTIVE</span><span className="section-number">01 / 03</span></div>{active && active.state !== "Complete" ? <div className="current-task"><div className="task-status-line"><span className="task-state"><span className="live-dot"/>{active.state.toUpperCase()}</span><span>#{String(active.id).slice(-4)}</span></div><p>{active.text}</p><div className="assigned-row"><span>ASSIGNED TO</span><span className="assigned-agent"><img src={agents.find(a => a.name === assigned)?.image ?? ozPortrait.url} alt=""/>{assigned}<ArrowRight size={12}/></span></div><div className="assignment-reason"><strong>BEST FIT · {active.agent.toUpperCase()}</strong><span>{active.reason}</span></div><div className="task-progress"><span className={phase === "routing" ? "lit" : ""}/><span className={phase === "working" ? "lit" : ""}/><span/></div><div className="progress-labels"><span>RECEIVED</span><span>HANDOFF</span><span>COMPLETE</span></div></div> : <div className="empty-directive"><div className="empty-orbit"><Command size={25}/></div><strong>{phase === "planning" ? "CHOOSING CREW" : "AWAITING DIRECTIVE"}</strong><span>{phase === "planning" ? "Oz is reviewing the job." : "The crew is standing by."}</span><div className="empty-line"/></div>}</section>
-        <section className="intel-section"><div className="panel-section-heading"><span><span className="section-square"/> TASK HISTORY</span><span className="section-number">{String(missions.length).padStart(2,"0")}</span></div>{missions.length ? <div className="history-list">{missions.map(m => <div className="history-item" key={m.id}><span className={`history-icon ${m.state === "Complete" ? "done" : ""}`}>{m.state === "Complete" ? <Check size={13}/> : <ArrowRight size={13}/>}</span><div><strong>{m.text}</strong><small>{m.agent} · {m.time}</small><small>{m.reason}</small></div><span className="history-state">{m.state === "Complete" ? "DONE" : m.state === "Routing" ? "ROUTING" : "ACTIVE"}</span></div>)}</div> : <div className="empty-list">NO MISSIONS LOGGED YET <span>— 00</span></div>}</section>
+        <section className="intel-section current-section"><div className="panel-section-heading"><span><span className="section-square"/> CURRENT DIRECTIVE</span><span className="section-number">01 / 03</span></div>{active && active.state !== "Complete" ? <div className="current-task"><div className="task-status-line"><span className="task-state"><span className="live-dot"/>{active.state.toUpperCase()}</span><span>#{String(active.id).slice(-4)}</span></div><p>{active.text}</p><div className="assigned-row"><span>ASSIGNED TO</span><span className="assigned-agent"><img src={agents.find(a => a.name === assigned)?.image ?? ozPortrait.url} alt=""/>{assigned}<ArrowRight size={12}/></span></div><div className="assignment-reason"><strong>ROUTE · {active.steps.map(st => st.agent.toUpperCase()).join(" → ")}</strong><span>{active.reason}</span></div><div className="task-progress"><span className={phase === "routing" ? "lit" : ""}/><span className={phase === "working" ? "lit" : ""}/><span/></div><div className="progress-labels"><span>RECEIVED</span><span>HANDOFF</span><span>COMPLETE</span></div></div> : <div className="empty-directive"><div className="empty-orbit"><Command size={25}/></div><strong>{phase === "planning" ? "CHOOSING CREW" : "AWAITING DIRECTIVE"}</strong><span>{phase === "planning" ? "Oz is reviewing the job." : "The crew is standing by."}</span><div className="empty-line"/></div>}</section>
+        <section className="intel-section"><div className="panel-section-heading"><span><span className="section-square"/> TASK HISTORY</span><span className="section-number">{String(missions.length).padStart(2,"0")}</span></div>{missions.length ? <div className="history-list">{missions.map(m => <div className="history-item" key={m.id}><span className={`history-icon ${m.state === "Complete" ? "done" : ""}`}>{m.state === "Complete" ? <Check size={13}/> : <ArrowRight size={13}/>}</span><div><strong>{m.text}</strong><small>{m.steps.map(st => st.agent).join(" → ")} · {m.time}</small><small>{m.reason}</small>{m.steps.slice(0, m.done).map((st, i) => <div className="task-result" key={i}><b>{st.agent.toUpperCase()} · RESULT</b><p>{st.result}</p></div>)}</div><span className="history-state">{m.state === "Complete" ? "DONE" : m.state === "Routing" ? "ROUTING" : "ACTIVE"}</span></div>)}</div> : <div className="empty-list">NO MISSIONS LOGGED YET <span>— 00</span></div>}</section>
         <section className="intel-section activity-section"><div className="panel-section-heading"><span><span className="section-square"/> ACTIVITY LOG</span><Radio size={13} className="radio-icon"/></div><div className="activity-list">{logs.slice(0, 6).map(entry => <div className="activity-item" key={entry.id}><span className="activity-node"/><div><span className="activity-agent">{entry.agent}</span><span className="activity-text">{entry.text}</span><small>{entry.time}</small></div></div>)}</div></section>
-        <div className="intel-bottom"><Cpu size={15}/> ZYGORIA SYSTEMS <span>SIMULATION MODE</span></div>
+        <div className="intel-bottom"><Cpu size={15}/> ZYGORIA SYSTEMS <span>AI ROUTING LIVE</span></div>
       </aside>
     </main>
     <footer className="app-footer"><span>© ZYGORIA // COMMAND CENTRE</span><span>WORLD STATE: SIMULATED <span className="footer-cross">✦</span> BUILD 0.1.0</span></footer>

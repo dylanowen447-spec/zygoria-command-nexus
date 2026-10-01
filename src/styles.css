@@ -174,3 +174,5 @@
 .world-stage{position:absolute;left:50%;top:50%;width:max(100cqw,calc(100cqh * 1.4906));height:max(100cqh,calc(100cqw / 1.4906));transform:translate(-50%,-50%);z-index:4;pointer-events:none}
 .world-stage .agent-marker{pointer-events:auto}
 .world-stage .world-trails{opacity:.55}
+
+.task-result{margin-top:8px;padding:8px 10px;border-left:2px solid var(--electric);background:color-mix(in oklab,var(--electric) 7%,transparent);border-radius:4px}.task-result b{display:block;font:700 9px var(--font-mono);color:var(--electric);margin-bottom:4px}.task-result p{margin:0;font:11.5px/1.45 var(--font-body);color:var(--foreground);white-space:pre-wrap;overflow-wrap:anywhere}
