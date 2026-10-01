@@ -53,7 +53,7 @@ const WORK: Partial<Record<Agent, Point[]>> = {
 const HOME = (agent: Agent) => PATHS[agent][0]!;
 const toMeet = (agent: Agent) => PATHS[agent].slice(1);
 const toHome = (agent: Agent) => PATHS[agent].slice(0, -1).reverse();
-const trailPoints = (agent: Agent) => PATHS[agent].map(p => `${p.x},${p.y}`).join(" ");
+const trailPoints = (agent: Agent) => [...(WORK[agent] ?? []).slice().reverse(), ...PATHS[agent]].map(p => `${p.x},${p.y}`).join(" ");
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / WORLD_ASPECT);
 const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
