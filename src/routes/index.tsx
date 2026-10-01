@@ -7,7 +7,7 @@ import world from "@/assets/zygoria-world.jpg";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
-import moxiTreePeek from "@/assets/moxi-tree-peek.webp.asset.json";
+import moxiTreePeek from "@/assets/moxi-tree-peek-v2.webp.asset.json";
 
 type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
