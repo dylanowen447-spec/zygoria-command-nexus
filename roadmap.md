@@ -19,3 +19,5 @@
 - [x] Add one AI Gateway job decision (Oz, Brix, or Lowkey) with a short reason, then update the chosen character's status through the existing dispatch flow; no tools or autonomous background work.
 - [x] Match the lettering under Oz to the newly uploaded reference, keeping the other character labels and world unchanged.
 - [x] Slightly shrink the Oz, Brix and Lowkey name tags and centre Lowkey's tag under his feet.
+- [x] Shift Brix slightly so he covers less of the workshop; make workshop slightly larger/more readable; keep Brix tallest, layout/routes/UI unchanged
+- [x] Pathing: Oz idle off the fence onto clear ground; routes follow walkable paths, no clipping through fences/buildings/props; keep zones (Oz shack, Lowkey lookout, Brix workshop), sprites, sizes, UI

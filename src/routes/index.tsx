@@ -4,7 +4,7 @@ import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, C
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { chooseJobAgent } from "@/lib/job-planning.functions";
-import world from "@/assets/zygoria-world-pod-colours.jpg";
+import world from "@/assets/zygoria-world-workshop.jpg";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
@@ -29,7 +29,7 @@ const startLogs: Log[] = [
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
 type Point = { x: number; y: number };
-const STOPS: Record<Stop, Point> = { shack: { x: 20, y: 74 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 76, y: 58 }, ridge: { x: 57, y: 52 }, lookout: { x: 53, y: 43 } };
+const STOPS: Record<Stop, Point> = { shack: { x: 17, y: 70 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 80, y: 64 }, ridge: { x: 57, y: 52 }, lookout: { x: 53, y: 43 } };
 const MEET: Record<Agent, Point> = { Oz: { x: 40, y: 64 }, Brix: { x: 55, y: 59 }, Lowkey: { x: 55, y: 59 } };
 const WORLD_ASPECT = 1.72;
 const WALK_SPEED = 5.5; // percent of world width per second
@@ -229,7 +229,7 @@ function CommandCentre() {
             </Button>)}
             <div className="map-coordinate bottom-left"><MapPin size={12}/> THE SANCTUARY — EST. ARRIVAL DAY</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>
-          <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> 1 SANCTUARY</span></div>
+          <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> 1 SANCTUARY</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>
         </div>
         <form className="mission-form" onSubmit={submit}><div className="form-title"><span><Terminal size={16}/> NEW DIRECTIVE</span><span className="form-counter">{phase === "idle" ? "READY FOR INPUT" : phase === "planning" ? "SELECTING CREW" : "MISSION IN PROGRESS"}</span></div><div className="form-row"><span className="prompt-chevron">›</span><input aria-label="Enter a job for the crew" placeholder="What needs doing around The Sanctuary?" value={draft} onChange={e => setDraft(e.target.value)} maxLength={180} disabled={phase !== "idle"}/><Button className="dispatch-button" type="submit" disabled={!draft.trim() || phase !== "idle"}>{phase === "planning" ? "CHOOSING" : "DISPATCH"} <Send size={14}/></Button></div>{planningError && <p className="planning-error" role="alert">{planningError}</p>}<div className="form-foot"><span>DIRECTIVES ARE ROUTED THROUGH OZ</span><span>↵ TO SEND</span></div></form>
         <div className="roster-heading"><div className="section-label"><span className="section-symbol">✦</span> THE CREW <span className="label-count">/ 03</span></div><span className="roster-hint">SELECT AN AGENT TO INSPECT <ArrowDownRight size={14}/></span></div>
@@ -242,6 +242,6 @@ function CommandCentre() {
         <div className="intel-bottom"><Cpu size={15}/> ZYGORIA SYSTEMS <span>SIMULATION MODE</span></div>
       </aside>
     </main>
-    <footer className="app-footer"><span>© ZYGORIA // COMMAND CENTRE</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span><span>WORLD STATE: SIMULATED <span className="footer-cross">✦</span> BUILD 0.1.0</span></footer>
+    <footer className="app-footer"><span>© ZYGORIA // COMMAND CENTRE</span><span>WORLD STATE: SIMULATED <span className="footer-cross">✦</span> BUILD 0.1.0</span></footer>
   </div>;
 }
