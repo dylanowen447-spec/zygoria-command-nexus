@@ -88,12 +88,10 @@ function CommandCentre() {
   const [current, setCurrent] = useState<Agent | null>(null);
   const [finishedId, setFinishedId] = useState<number | null>(null);
   const active = missions[0];
-  const assigned = active?.state === "Routing" ? "Oz" : active?.state === "In progress" ? current : null;
-  const statuses: Record<Agent, Status> = {
-    Oz: walking.includes("Oz") ? "Thinking" : phase === "planning" || phase === "routing" ? "Thinking" : phase === "working" ? assigned === "Oz" ? "Working" : "Waiting" : "Idle",
-    Brix: walking.includes("Brix") && phase === "routing" ? "Waiting" : assigned === "Brix" ? "Working" : "Idle",
-    Lowkey: walking.includes("Lowkey") && phase === "routing" ? "Waiting" : assigned === "Lowkey" ? "Working" : "Idle",
-  };
+  const assigned = active && active.state !== "Complete" ? current : null;
+  // Only the task owner is active: walking = Working (travelling), stationary = Thinking pose; everyone else is Idle.
+  const statusFor = (a: Agent): Status => phase === "planning" && a === "Oz" ? "Thinking" : current === a && phase !== "idle" ? walking.includes(a) ? "Working" : "Thinking" : "Idle";
+  const statuses: Record<Agent, Status> = { Oz: statusFor("Oz"), Brix: statusFor("Brix"), Lowkey: statusFor("Lowkey") };
   useEffect(() => () => { runId.current++; timers.current.forEach(clearTimeout); frames.current.forEach(cancelAnimationFrame); }, []);
   const markerStyle = (agent: Agent) => ({ left: `${coords.current[agent].x}%`, top: `${coords.current[agent].y}%`, "--depth": depthFor(coords.current[agent].y) }) as CSSProperties;
   function paint(agent: Agent) {
@@ -153,42 +151,68 @@ function CommandCentre() {
     });
   }
   const setMission = (id: number, patch: (m: Mission) => Partial<Mission>) => setMissions(prev => prev.map(m => m.id === id ? { ...m, ...patch(m) } : m));
-  /** One real handoff: the agent walks to the crossroads for the briefing and back to work while its AI call processes all earlier outputs. */
+  type Spot = "home" | "central" | "work";
+  const spots = useRef<Record<Agent, Spot>>({ Oz: "home", Brix: "home", Lowkey: "home" });
+  function pathBetween(agent: Agent, from: Spot, to: Spot): Point[] {
+    const work = WORK[agent];
+    const f = from === "work" && !work ? "home" : from, t = to === "work" && !work ? "home" : to;
+    if (f === t) return [];
+    const back = work ? [...work.slice(0, -1).reverse(), HOME(agent)] : [];
+    if (f === "home" && t === "central") return toMeet(agent);
+    if (f === "central" && t === "home") return toHome(agent);
+    if (f === "home" && t === "work") return work!;
+    if (f === "work" && t === "home") return back;
+    if (f === "central" && t === "work") return [...toHome(agent), ...work!];
+    return [...back, ...toMeet(agent)];
+  }
+  /** Walks a character between Sanctuary spots on its own path nodes. */
+  async function goTo(agent: Agent, to: Spot, run: number) {
+    const path = pathBetween(agent, spots.current[agent], to);
+    spots.current[agent] = to;
+    if (path.length) await walk(agent, path, to === "central" ? "central" : "home", run);
+  }
+  /** One real handoff: the previous owner stops, the new owner walks to collect and works while its AI call processes all earlier outputs. */
   async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, run: number): Promise<Step | null> {
-    setMission(id, () => ({ state: "Routing" }));
-    setPhase("routing");
-    setCurrent(null);
     const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview } });
     call.catch(() => undefined);
-    const from = previous.at(-1)?.agent ?? "Oz";
-    if (agent === "Oz") {
-      await walk("Oz", toMeet("Oz"), "central", run);
-      if (run !== runId.current) return null;
-      log("Oz", finalReview ? `Receiving ${from}'s output for final review.` : "Keeping this one.");
-    } else {
-      await wait(250);
-      if (run !== runId.current) return null;
-      const lead = Math.max(0.4, routeTime("Oz", toMeet("Oz")) - routeTime(agent, toMeet(agent)));
-      const agentWalk = wait(lead * 1000).then(() => {
-        if (run !== runId.current) return;
-        log(agent, "Walking to the crossroads for the handoff.");
-        return walk(agent, toMeet(agent), "central", run);
-      });
-      await Promise.all([walk("Oz", toMeet("Oz"), "central", run), agentWalk]);
-      if (run !== runId.current) return null;
-      setFacing(prev => ({ ...prev, Oz: "right", [agent]: "left" }));
-      log("Oz", previous.length ? `Handing ${from}'s output to ${agent}.` : `Briefing ${agent} at the crossroads.`);
-      await wait(1200);
+    const from: Agent | null = previous.at(-1)?.agent ?? null;
+    if (!from) {
+      setMission(id, () => ({ state: "Routing", agent: "Oz" }));
+      setPhase("routing");
+      setCurrent("Oz");
+      setSelected("Oz");
+      log("Oz", "Receiving the directive at the crossroads.");
+      await goTo("Oz", "central", run);
       if (run !== runId.current) return null;
     }
-    setMission(id, () => ({ state: "In progress", agent }));
-    setCurrent(agent);
-    setSelected(agent);
-    setPhase("working");
+    const prev = from ?? "Oz";
+    if (prev !== agent) {
+      if (spots.current[prev] !== "central") {
+        log(prev, `Bringing the output to the crossroads for ${agent}.`);
+        await goTo(prev, "central", run);
+        if (run !== runId.current) return null;
+      }
+      log(prev, `Handing off to ${agent}.`);
+      setCurrent(agent);
+      setSelected(agent);
+      setMission(id, () => ({ state: "In progress", agent }));
+      setPhase("working");
+      if (agent !== "Oz") {
+        log(agent, "Walking to the crossroads to collect the handoff.");
+        await goTo(agent, "central", run);
+        if (run !== runId.current) return null;
+        setFacing(p => ({ ...p, [prev]: "right", [agent]: "left" }));
+        await wait(700);
+        if (run !== runId.current) return null;
+      }
+    } else {
+      setMission(id, () => ({ state: "In progress", agent }));
+      setPhase("working");
+    }
+    log(agent, agent === "Oz" ? (finalReview ? "Taking the combined output home for final review." : "Keeping this one — heading back to work on it.") : "Heading to the work area.");
     let output: Awaited<typeof call>;
     try {
-      const work = WORK[agent];
-      [output] = await Promise.all([call, walk("Oz", toHome("Oz"), "home", run), agent === "Oz" ? Promise.resolve() : walk(agent, work ? [...toHome(agent), ...work] : toHome(agent), "home", run)]);
+      [output] = await Promise.all([call, goTo(agent, "work", run)]);
     } catch (error) {
       if (run !== runId.current) return null;
       const message = error instanceof Error ? error.message : "The crew could not finish this step.";
@@ -198,13 +222,6 @@ function CommandCentre() {
     }
     if (run !== runId.current) return null;
     log(agent, output.activity);
-    const work = WORK[agent];
-    if (work) {
-      await wait(1500);
-      if (run !== runId.current) return null;
-      await walk(agent, [...work.slice(0, -1).reverse(), HOME(agent)], "home", run);
-      if (run !== runId.current) return null;
-    }
     await wait(1200);
     if (run !== runId.current) return null;
     const step: Step = { agent, activity: output.activity, result: output.result, verdict: output.verdict };
@@ -227,12 +244,13 @@ function CommandCentre() {
         setMission(id, () => ({ route }));
       }
     }
-    setMission(id, () => ({ state: "Complete" }));
+    setMission(id, () => ({ state: "Complete", done: done.length }));
     setCurrent(null);
     setPhase("idle");
     setFinishedId(id);
     log(done.at(-1)?.agent ?? "Oz", "Directive complete. Standing by.");
-    await wait(3500);
+    await Promise.all((["Oz", "Brix", "Lowkey"] as Agent[]).map(a => goTo(a, "home", run)));
+    await wait(2500);
     setFinishedId(prev => prev === id ? null : prev);
   }
   function log(agent: Agent, text: string) {
