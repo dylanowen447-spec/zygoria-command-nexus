@@ -123,5 +123,5 @@
 @keyframes ozBreathe{from{translate:0 0}to{translate:0 -.6px}}
 @media(max-width:600px){.sheet-sprite{width:33px;height:42px}}
 @media(prefers-reduced-motion:reduce){.agent-marker.is-walking .sheet-frames{animation-duration:.5s,.25s!important;animation-iteration-count:infinite!important}}
-.sheet-lowkey{width:71px;height:76px}.sheet-lowkey .sheet-shadow{opacity:.45}
-@media(max-width:600px){.sheet-lowkey{width:54px;height:58px}}
+.sheet-lowkey{width:66px;height:70px}.sheet-lowkey .sheet-shadow{opacity:.45}
+@media(max-width:600px){.sheet-lowkey{width:50px;height:54px}}
