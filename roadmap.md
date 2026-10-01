@@ -18,3 +18,4 @@
 - [x] Move the existing three arrival pods into the dark area just up and right of their latest location; keep them large and visibly electric without altering the Sanctuary layout or characters.
 - [x] Add one AI Gateway job decision (Oz, Brix, or Lowkey) with a short reason, then update the chosen character's status through the existing dispatch flow; no tools or autonomous background work.
 - [x] Match the lettering under Oz to the newly uploaded reference, keeping the other character labels and world unchanged.
+- [ ] Slightly shrink the Oz, Brix and Lowkey name tags and centre Lowkey's tag under his feet.

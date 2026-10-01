@@ -142,4 +142,4 @@
 /* Oz's supplied hand-lettered mark replaces only his in-world name. */
 .marker-oz .marker-name{top:calc(100% + 1px);line-height:0}.marker-brix .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.oz-wordmark{display:block;width:38px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.brix-wordmark{display:block;width:52px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.marker-lowkey .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.lowkey-wordmark{display:block;width:56px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}
 .oz-wordmark,.brix-wordmark,.lowkey-wordmark{max-width:none!important;flex:none;position:relative;z-index:5}
-@media(max-width:600px){.oz-wordmark{width:40px!important}.brix-wordmark{width:54px!important}.lowkey-wordmark{width:58px!important}}
+@media(max-width:600px){.oz-wordmark{width:34px!important}.brix-wordmark{width:46px!important}.lowkey-wordmark{width:48px!important}}
