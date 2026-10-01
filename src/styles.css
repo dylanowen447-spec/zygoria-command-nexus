@@ -125,3 +125,6 @@
 @media(prefers-reduced-motion:reduce){.agent-marker.is-walking .sheet-frames{animation-duration:.5s,.25s!important;animation-iteration-count:infinite!important}}
 .sheet-lowkey{width:66px;height:70px}.sheet-lowkey .sheet-shadow{opacity:.45}
 @media(max-width:600px){.sheet-lowkey{width:50px;height:54px}}
+
+.sheet-brix{width:76px;height:86px}.sheet-brix .sheet-shadow{width:70%;height:6px}
+@media(max-width:600px){.sheet-brix{width:57px;height:64px}}
