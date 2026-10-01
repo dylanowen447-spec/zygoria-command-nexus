@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, Command, Cpu, Crosshair, Hexagon, MapPin, Radio, Send, Signal, Sparkles, Terminal, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CharacterSprite } from "@/components/CharacterSprite";
 import world from "@/assets/zygoria-world.jpg";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
@@ -9,6 +10,7 @@ import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
 
 type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
+type Stop = "shack" | "bridge" | "central" | "workshop" | "lookout";
 type Mission = { id: number; text: string; agent: Agent; state: "Routing" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
@@ -42,14 +44,15 @@ function CommandCentre() {
   const [logs, setLogs] = useState<Log[]>(startLogs);
   const [selected, setSelected] = useState<Agent | null>(null);
   const [phase, setPhase] = useState<"idle" | "routing" | "working">("idle");
-  const [traveler, setTraveler] = useState<Agent | null>(null);
+  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "shack", Brix: "workshop", Lowkey: "lookout" });
+  const [walking, setWalking] = useState<Agent[]>([]);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const active = missions[0];
   const assigned = active?.state === "Routing" ? "Oz" : active?.state === "In progress" ? active.agent : null;
   const statuses: Record<Agent, Status> = {
-    Oz: phase === "routing" ? "Thinking" : phase === "working" ? "Waiting" : "Idle",
-    Brix: assigned === "Brix" ? "Working" : "Idle",
-    Lowkey: assigned === "Lowkey" ? "Working" : "Idle",
+    Oz: walking.includes("Oz") ? "Thinking" : phase === "routing" ? "Thinking" : phase === "working" ? "Waiting" : "Idle",
+    Brix: walking.includes("Brix") && phase === "routing" ? "Waiting" : assigned === "Brix" ? "Working" : "Idle",
+    Lowkey: walking.includes("Lowkey") && phase === "routing" ? "Waiting" : assigned === "Lowkey" ? "Working" : "Idle",
   };
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   function log(agent: Agent, text: string) {
@@ -63,24 +66,29 @@ function CommandCentre() {
     const id = Date.now();
     setDraft("");
     setSelected("Oz");
-    setTraveler(null);
+    setWalking([]);
     setPhase("routing");
     setMissions(prev => [{ id, text, agent, state: "Routing" as const, time: now() }, ...prev].slice(0, 8));
-    log("Oz", `Mission received. Assessing handoff to ${agent}.`);
+    log("Oz", `Mission received. Heading to the crossroads to meet ${agent}.`);
+    timers.current.push(setTimeout(() => { setWalking(["Oz"]); setPositions(prev => ({ ...prev, Oz: "bridge" })); }, 100));
+    timers.current.push(setTimeout(() => setPositions(prev => ({ ...prev, Oz: "central" })), 1300));
+    timers.current.push(setTimeout(() => { setWalking([agent]); setPositions(prev => ({ ...prev, [agent]: "central" })); log(agent, "Walking to the crossroads for the handoff."); }, 2700));
     timers.current.push(setTimeout(() => {
       setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
       setSelected(agent);
-      setTraveler(agent);
+      setWalking(["Oz", agent]);
+      setPositions(prev => ({ ...prev, Oz: "bridge", [agent]: agent === "Brix" ? "workshop" : "lookout" }));
       setPhase("working");
       log("Oz", `Mission transferred to ${agent}.`);
-      log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment in the field.");
-    }, 2200));
+    }, 5200));
+    timers.current.push(setTimeout(() => setPositions(prev => ({ ...prev, Oz: "shack" })), 6500));
+    timers.current.push(setTimeout(() => { setWalking([]); log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }, 7800));
     timers.current.push(setTimeout(() => {
       setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "Complete" } : m));
       setPhase("idle");
-      setTraveler(null);
+      setWalking([]);
       log(agent, "Assignment complete. Standing by for the next mission.");
-    }, 8500));
+    }, 11500));
   }
   return <div className="command-app">
     <header className="command-header">
@@ -97,11 +105,13 @@ function CommandCentre() {
             <div className="map-coordinate top-right"><span className="live-dot"/> LIVE ENVIRONMENT</div>
             <div className="location-tag shack-tag"><span className="location-line"/> RIVERSIDE SHACK</div>
             <div className="location-tag workshop-tag"><span className="location-line"/> BRIX'S WORKSHOP</div>
+            <div className="location-tag lookout-tag"><span className="location-line"/> LOOKOUT</div>
             <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
-            {agents.map(agent => <Button key={agent.name} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${agent.name === "Oz" && phase === "routing" || traveler === agent.name ? "is-traveling" : ""}`}>
-              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="marker-portrait"><img src={agent.image} alt="" /></span><span className="marker-name">{agent.name}</span><span className="marker-ground"/>
+            <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
+            <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
+            {agents.map(agent => <Button key={agent.name} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
+              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name}</span>
             </Button>)}
-            {phase !== "idle" && <div className={`handoff-path path-${phase} path-${active?.agent.toLowerCase()}`} aria-hidden="true"><span className="handoff-pulse"/></div>}
             <div className="map-coordinate bottom-left"><MapPin size={12}/> THE KNOWN WORLD</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>
           <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> 1 WORLD</span></div>
