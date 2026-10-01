@@ -82,3 +82,31 @@
 @media(prefers-reduced-motion:reduce){.sprite-figure,.sprite-shadow{animation:none!important}.sprite-stage{transition-duration:.01ms!important}}
 .agent-marker.is-walking.at-central .marker-name{opacity:0}
 .marker-brix.at-central .marker-status,.marker-lowkey.at-central .marker-status{transform:translateX(65%)}
+/* Frame-driven walking: route position is painted per frame in JS; these four poses loop only while moving. */
+.world-image-wrap .agent-marker{transition:filter .2s!important}
+.world-image-wrap .agent-marker .sprite-stage{transform:translateY(4px) scale(var(--depth,1))!important;transition:none!important}
+.world-image-wrap .agent-marker.is-walking.facing-left .sprite-stage{scale:-1 1}
+.agent-marker .character-sprite .sprite-body{transform:none!important;transform-origin:22px 64px;transition:rotate .2s ease-out}
+.agent-marker .sprite-lowkey .sprite-body{transform:translateY(3px)!important}
+.agent-marker.is-walking .character-sprite .sprite-body{rotate:4deg}
+.agent-marker .sprite-head{transition:translate .2s ease-out}
+.agent-marker.is-walking .sprite-head{translate:1.6px 0}
+.agent-marker .sprite-leg,.agent-marker .sprite-arm,.agent-marker .sprite-shadow{transform-box:view-box}
+.agent-marker .sprite-oz .leg-back{transform-origin:18px 48px}.agent-marker .sprite-oz .leg-front{transform-origin:26px 48px}.agent-marker .sprite-oz .arm-back{transform-origin:14px 31px}.agent-marker .sprite-oz .arm-front{transform-origin:30px 31px}
+.agent-marker .sprite-brix .leg-back{transform-origin:17px 47px}.agent-marker .sprite-brix .leg-front{transform-origin:27px 47px}.agent-marker .sprite-brix .arm-back{transform-origin:12px 29px}.agent-marker .sprite-brix .arm-front{transform-origin:32px 29px}
+.agent-marker .sprite-lowkey .leg-back{transform-origin:18px 47px}.agent-marker .sprite-lowkey .leg-front{transform-origin:26px 47px}.agent-marker .sprite-lowkey .arm-back{transform-origin:14px 31px}.agent-marker .sprite-lowkey .arm-front{transform-origin:30px 31px}
+.agent-marker.is-walking .character-sprite .leg-front{animation:cycleLegA .56s ease-in-out infinite!important}
+.agent-marker.is-walking .character-sprite .leg-back{animation:cycleLegB .56s ease-in-out infinite!important}
+.agent-marker.is-walking .character-sprite .arm-front{animation:cycleArmA .56s ease-in-out infinite!important}
+.agent-marker.is-walking .character-sprite .arm-back{animation:cycleArmB .56s ease-in-out infinite!important}
+.agent-marker.is-walking .character-sprite .sprite-figure{animation:cycleBounce .56s ease-in-out infinite!important}
+.agent-marker.is-walking .character-sprite .sprite-shadow{animation:cycleShadow .56s ease-in-out infinite!important}
+.agent-marker.is-walking.marker-brix .character-sprite :is(.sprite-leg,.sprite-arm,.sprite-figure,.sprite-shadow){animation-duration:.66s!important}
+/* 0% left step, 25% passing, 50% right step, 75% passing */
+@keyframes cycleLegA{0%,100%{transform:rotate(-26deg)}25%{transform:rotate(0deg)}50%{transform:rotate(24deg)}75%{transform:translateY(-3px) rotate(0deg)}}
+@keyframes cycleLegB{0%,100%{transform:rotate(24deg)}25%{transform:translateY(-3px) rotate(0deg)}50%{transform:rotate(-26deg)}75%{transform:rotate(0deg)}}
+@keyframes cycleArmA{0%,100%{transform:rotate(18deg)}25%,75%{transform:rotate(0deg)}50%{transform:rotate(-18deg)}}
+@keyframes cycleArmB{0%,100%{transform:rotate(-18deg)}25%,75%{transform:rotate(0deg)}50%{transform:rotate(18deg)}}
+@keyframes cycleBounce{0%,50%,100%{translate:0 .4px}25%,75%{translate:0 -2px}}
+@keyframes cycleShadow{0%,50%,100%{transform:scaleX(1);opacity:1}25%,75%{transform:scaleX(.84);opacity:.78}}
+@media(prefers-reduced-motion:reduce){.agent-marker.is-walking .character-sprite :is(.sprite-leg,.sprite-arm,.sprite-figure,.sprite-shadow){animation:none!important}}
