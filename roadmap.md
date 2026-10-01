@@ -7,3 +7,4 @@
 - [x] Redraw in-world sprites to match the supplied First Genesis references: Oz's yellow fur, spikes and headset; Brix's blond hair, boxing gloves and record chest; Lowkey's red angular hood and shadowed mask.
 - [x] Ground the existing sprites on the terrain with moonlit colour, softer contact shadows, depth scaling, and smoother walking without changing their designs or the map.
 - [x] Preserve sprite designs and map while making Oz shortest, Lowkey slightly taller, and Brix tallest and broadest at their world stops.
+- [x] Replace position tweening with frame-by-frame route walking synced to a looping 4-pose walk cycle (legs, arms, bounce, facing), idle on stop; keep height rule, map and UI.
