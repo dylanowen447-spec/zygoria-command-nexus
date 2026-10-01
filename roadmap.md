@@ -13,4 +13,4 @@
 - [x] Add uploaded Moxi as a small static creature hidden by the Sanctuary river without changing crew or routes.
 - [x] Make Moxi peek from behind foreground river rocks with matched scale and lighting, without movement or interaction.
 - [x] Move Moxi clear of the crossroads label and make her slightly more visible while still partly hidden.
-- [ ] Move Moxi into the trees below and slightly right of Brix, still partly occluded and static.
+- [ ] Place Moxi below the evergreen she is currently beside, visible on phones but partly sheltered by scenery, static.
