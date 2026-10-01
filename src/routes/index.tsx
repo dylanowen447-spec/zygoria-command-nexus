@@ -41,8 +41,8 @@ const PATHS: Record<Agent, Point[]> = {
   Oz: [{ x: 26, y: 63 }, { x: 30.5, y: 60.8 }, { x: 35, y: 60.3 }, { x: 40, y: 60 }, { x: 46, y: 59.6 }],
   // Workshop yard (left of the building, clear of scrap piles) → lower glowing trail → crossroads
   Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
-  // Grassy bank beside the waterfall pool (clear of the water) → down the open meadow → crossroads
-  Lowkey: [{ x: 36, y: 45 }, { x: 41, y: 47.5 }, { x: 46, y: 50.5 }, { x: 50, y: 54 }, { x: 53, y: 58.7 }],
+  // Open plateau track right of the treeline (flat, clear of the pines) → down the open grass east of the lone pine → crossroads
+  Lowkey: [{ x: 47.5, y: 41 }, { x: 50, y: 43.5 }, { x: 50.7, y: 47 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
 };
 const HOME = (agent: Agent) => PATHS[agent][0]!;
 const toMeet = (agent: Agent) => PATHS[agent].slice(1);
