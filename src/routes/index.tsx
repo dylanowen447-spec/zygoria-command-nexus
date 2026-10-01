@@ -99,12 +99,12 @@ function CommandCentre() {
         resolve();
       };
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        coords.current[agent] = { ...targets[targets.length - 1] };
+        coords.current[agent] = { ...targets[targets.length - 1]! };
         paint(agent);
         finish();
         return;
       }
-      face(targets[0]);
+      face(targets[0]!);
       setWalking(prev => prev.includes(agent) ? prev : [...prev, agent]);
       let segment = 0;
       let last = performance.now();
@@ -113,12 +113,12 @@ function CommandCentre() {
         let budget = Math.min(time - last, 64) / 1000 * WALK_SPEED;
         last = time;
         while (budget > 0 && segment < targets.length) {
-          const p = coords.current[agent], t = targets[segment], d = distance(p, t);
+          const p = coords.current[agent], t = targets[segment]!, d = distance(p, t);
           if (d <= budget) {
             coords.current[agent] = { ...t };
             budget -= d;
             segment++;
-            if (segment < targets.length) face(targets[segment]);
+            if (segment < targets.length) face(targets[segment]!);
           } else {
             const k = budget / d;
             coords.current[agent] = { x: p.x + (t.x - p.x) * k, y: p.y + (t.y - p.y) * k };
