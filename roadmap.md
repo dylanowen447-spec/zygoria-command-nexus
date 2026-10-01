@@ -3,4 +3,4 @@
 - [x] Verify desktop and iPhone layouts and task handoff interaction.
 - [x] Make the world scene feel inhabited, with grounded characters, glowing status labels, and task-triggered movement to map locations.
 - [x] Replace portrait markers and sliding movement with small full-body characters walking the shack, central area, workshop, and lookout paths; verify iPhone behavior.
-- [ ] Refine Oz, Brix, and Lowkey into distinctive front-facing sprites with directional 3–4 frame walks, working poses, and grounded shadows without changing map layout.
+- [x] Refine Oz, Brix, and Lowkey into distinctive front-facing sprites with directional 3–4 frame walks, working poses, and grounded shadows without changing map layout.
