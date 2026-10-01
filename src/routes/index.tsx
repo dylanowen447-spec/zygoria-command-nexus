@@ -63,7 +63,7 @@ function CommandCentre() {
     setDraft("");
     setSelected("Oz");
     setPhase("routing");
-    setMissions(prev => [{ id, text, agent, state: "Routing", time: now() }, ...prev].slice(0, 8));
+    setMissions(prev => [{ id, text, agent, state: "Routing" as const, time: now() }, ...prev].slice(0, 8));
     log("Oz", `Mission received. Assessing handoff to ${agent}.`);
     timers.current.push(setTimeout(() => {
       setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
