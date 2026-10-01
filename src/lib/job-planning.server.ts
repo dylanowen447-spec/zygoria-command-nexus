@@ -1,21 +1,17 @@
-import { createJobDecisionCall } from "./ai/responses.ts";
+import { createAgentStepCall, createRouteCall } from "./ai/responses.ts";
 
-export async function planJob(directive: string) {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("Job planning is unavailable right now.");
+export type Agent = "Oz" | "Brix" | "Lowkey";
+const isAgent = (a: string): a is Agent => a === "Oz" || a === "Brix" || a === "Lowkey";
+
+function apiKey() {
+  const key = process.env["LOVABLE_API_KEY"];
+  if (!key) throw new Error("Job planning is unavailable right now.");
+  return key;
+}
+
+async function guarded<T>(work: () => Promise<T>): Promise<T> {
   try {
-    const result = await createJobDecisionCall(apiKey, directive);
-    type Agent = "Oz" | "Brix" | "Lowkey";
-    const steps: { agent: Agent; activity: string; result: string }[] = [];
-    for (const step of result.steps) {
-      if (step.agent !== "Oz" && step.agent !== "Brix" && step.agent !== "Lowkey") continue;
-      const agent: Agent = step.agent;
-      if (steps.at(-1)?.agent === agent) continue;
-      steps.push({ agent, activity: step.activity.trim().slice(0, 100) || "Working on the directive.", result: step.result.trim().slice(0, 900) });
-      if (steps.length === 3) break;
-    }
-    if (!steps.length) throw new Error("The job could not be assigned. Please try again.");
-    return { agent: steps[0]!.agent, steps, reason: result.reason.trim().slice(0, 160) || "Best suited to this directive." };
+    return await work();
   } catch (error) {
     if (error instanceof Error && "statusCode" in error) {
       const status = Number(error.statusCode);
@@ -24,12 +20,32 @@ export async function planJob(directive: string) {
         try {
           const body = JSON.parse(error.responseBody);
           message = body?.error?.message ?? body?.message;
-        } catch { /* Preserve the status even if the response is not JSON. */ }
+        } catch { /* keep status */ }
       }
-      if (status === 402 || status === 403 || status === 400 || status === 404 || status === 429) {
-        throw new Error(message || `Job planning is unavailable (${status}).`);
-      }
+      if ([400, 402, 403, 404, 429].includes(status)) throw new Error(message || `The crew is unavailable (${status}).`);
     }
     throw error;
   }
+}
+
+export function planRoute(directive: string) {
+  return guarded(async () => {
+    const result = await createRouteCall(apiKey(), directive);
+    const route: Agent[] = [];
+    for (const a of result.route) {
+      if (!isAgent(a) || route.at(-1) === a) continue;
+      route.push(a);
+      if (route.length === 4) break;
+    }
+    if (!route.length) route.push("Oz");
+    return { route, reason: result.reason.trim().slice(0, 160) || "Best suited to this directive." };
+  });
+}
+
+export function runAgentStep(directive: string, agent: Agent, previous: { agent: Agent; result: string }[], isFinalReview: boolean) {
+  return guarded(async () => {
+    const r = await createAgentStepCall(apiKey(), directive, agent, previous, isFinalReview);
+    const verdict: "pass" | "conflict" | "n/a" = agent === "Lowkey" && !isFinalReview ? (r.verdict.toLowerCase().includes("conflict") ? "conflict" : "pass") : "n/a";
+    return { activity: r.activity.trim().slice(0, 100) || "Working on the directive.", result: r.result.trim().slice(0, 1400), verdict };
+  });
 }
