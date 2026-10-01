@@ -138,3 +138,7 @@
 @media(max-width:600px){.brand-copy .brand-title{font-size:21px}.brand-copy .brand-subtitle{font-size:7px;letter-spacing:1.3px;gap:5px;margin-top:5px}.brand-subtitle-rule{width:9px}.app-footer{flex-wrap:wrap;column-gap:12px;row-gap:7px}.creator-credit{order:3;width:100%;justify-content:flex-end}.creator-signature{font-size:12px}.creator-year{font-size:8px}}
 
 .assignment-reason{display:grid;gap:5px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line-soft);overflow-wrap:anywhere}.assignment-reason strong{font:700 9px var(--font-mono);color:var(--electric)}.assignment-reason span{font:11px/1.4 var(--font-body);color:var(--muted-foreground)}.planning-error{margin:10px 0 0;font:11px/1.4 var(--font-body);color:var(--destructive);overflow-wrap:anywhere}
+
+/* Oz's supplied hand-lettered mark replaces only his in-world name. */
+.marker-oz .marker-name{top:calc(100% + 1px);line-height:0}.oz-wordmark{display:block;width:38px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}
+@media(max-width:600px){.oz-wordmark{width:32px}}
