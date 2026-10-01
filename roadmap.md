@@ -17,3 +17,4 @@
 - [x] Apply poster-inspired Zygoria/FIRST GENESIS title treatment and subtle Dylan Owen / 2026 credits without changing the world or UI structure.
 - [x] Move the existing three arrival pods into the dark area just up and right of their latest location; keep them large and visibly electric without altering the Sanctuary layout or characters.
 - [x] Add one AI Gateway job decision (Oz, Brix, or Lowkey) with a short reason, then update the chosen character's status through the existing dispatch flow; no tools or autonomous background work.
+- [ ] Match the lettering under Oz to the newly uploaded reference, keeping the other character labels and world unchanged.
