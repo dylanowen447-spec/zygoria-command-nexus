@@ -51,22 +51,22 @@
 .oz-fur,.oz-hair{fill:var(--sprite-fur)}.oz-face{fill:var(--sprite-face)}.oz-suit{fill:var(--sprite-blue)}.oz-chest{fill:var(--sprite-cyan)}.oz-collar{fill:var(--sprite-crimson)}.oz-belt{fill:var(--sprite-orange)}.oz-buckle{fill:var(--sprite-crimson)}.oz-headband,.oz-mic{fill:none;stroke:var(--sprite-black);stroke-width:2.4;stroke-linecap:round}.oz-ear{fill:var(--sprite-black)}.oz-mic-tip{fill:var(--sprite-cyan)}.oz-eye{fill:var(--sprite-black)}.oz-smile{fill:var(--sprite-eye)}
 .brix-pants{fill:var(--sprite-blue)}.brix-skin,.brix-face{fill:var(--sprite-face)}.brix-glove{fill:var(--sprite-crimson)}.brix-shoulder{fill:var(--sprite-orange)}.brix-shirt{fill:var(--sprite-cyan)}.brix-record{fill:var(--sprite-black)}.brix-label{fill:var(--sprite-cyan)}.brix-belt{fill:var(--sprite-orange)}.brix-buckle{fill:var(--sprite-crimson)}.brix-hair{fill:var(--sprite-fur)}.brix-brow,.brix-stubble{fill:none;stroke:var(--sprite-black);stroke-width:1.4;stroke-linecap:round}.brix-eye{fill:var(--sprite-cyan);stroke:var(--sprite-black);stroke-width:.5}
 .lowkey-suit{fill:var(--sprite-crimson)}.lowkey-cape{fill:var(--sprite-crimson)}.lowkey-lapel{fill:var(--sprite-crimson)}.lowkey-chest{fill:var(--sprite-blue)}.lowkey-record{fill:var(--sprite-black)}.lowkey-label{fill:var(--sprite-cyan)}.lowkey-belt{fill:var(--sprite-orange)}.lowkey-hood{fill:var(--sprite-crimson)}.lowkey-hood-highlight{fill:none;stroke:var(--sprite-orange);stroke-width:1.1;stroke-linecap:round}.lowkey-mask{fill:var(--sprite-black)}.lowkey-face{fill:var(--sprite-face)}.lowkey-eyes{fill:none;stroke:var(--sprite-eye);stroke-width:1.8;stroke-linecap:round}
-.sprite-oz{transform:scale(1.04);transform-origin:22px 60px}.sprite-brix{transform:scale(1.13);transform-origin:22px 60px}.sprite-lowkey{transform:scale(.9);transform-origin:22px 61px}.sprite-lowkey .sprite-body{transform:translateY(3px)}.agent-marker.is-walking.facing-left .sprite-lowkey .sprite-body{transform:translateY(3px) scaleX(-1)}
+.sprite-oz{transform:scale(.86);transform-origin:50% 91.4%}.sprite-brix{transform:scale(1.22);transform-origin:50% 92.8%}.sprite-lowkey{transform:scale(1.17);transform-origin:50% 91.4%}.sprite-lowkey .sprite-body{transform:translateY(3px)}.agent-marker.is-walking.facing-left .sprite-lowkey .sprite-body{transform:translateY(3px) scaleX(-1)}
 
 /* Terrain integration: the stage ends at the named map stop, while the label sits below it. */
 :root{--sprite-fur:oklch(.76 .13 89);--sprite-fur-light:oklch(.84 .1 92);--sprite-cyan:oklch(.65 .105 218);--sprite-orange:oklch(.61 .14 48);--sprite-crimson:oklch(.44 .16 23);--sprite-blue:oklch(.48 .14 251);--sprite-face:oklch(.77 .065 69);--sprite-eye:oklch(.88 .015 101);--sprite-contact:oklch(.06 .015 258 / 54%);--sprite-moonlight:oklch(.64 .075 228 / 15%)}
 .agent-marker{filter:none!important;transition:left 1.15s ease-in-out,top 1.15s ease-in-out!important;overflow:visible!important}
 .agent-marker:hover,.agent-marker.is-selected{filter:none!important}
-.marker-status{border-color:var(--line-soft);box-shadow:0 0 5px var(--electric-glow)}
+.marker-status{border-color:var(--line-soft);box-shadow:0 0 5px var(--electric-glow);margin-bottom:6px}
 .marker-name{position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);white-space:nowrap;text-shadow:0 1px 3px var(--background)}
 .sprite-stage{transform:translateY(4px) scale(1);transform-origin:50% 100%;transition:transform 1.15s ease-in-out;filter:drop-shadow(-1px -1px 1px var(--sprite-moonlight))}
-.agent-marker.at-central .sprite-stage{transform:translateY(4px) scale(.94)}
-.agent-marker.at-workshop .sprite-stage{transform:translateY(4px) scale(.9)}
-.agent-marker.at-lookout .sprite-stage{transform:translateY(4px) scale(.79)}
+.agent-marker.at-central .sprite-stage{transform:translateY(4px) scale(.96)}
+.agent-marker.at-workshop .sprite-stage{transform:translateY(4px) scale(.93)}
+.agent-marker.at-lookout .sprite-stage{transform:translateY(4px) scale(.9)}
 .sprite-stage:after{display:none}
 .character-sprite{animation:none!important;filter:brightness(.9) saturate(.87)}
 .sprite-line{stroke-width:1.35}.oz-headband,.oz-mic{stroke-width:1.8}.brix-brow,.brix-stubble{stroke-width:1.1}.lowkey-eyes{stroke-width:1.5}.lowkey-hood-highlight{stroke-width:.85}
-.sprite-shadow{fill:var(--sprite-contact);opacity:1;filter:blur(1.4px);transform-origin:22px 66px}
+.sprite-shadow{fill:var(--sprite-contact);opacity:.85;filter:blur(1.7px);transform-origin:22px 66px}
 .sprite-figure{animation:groundedIdle 2.4s ease-in-out infinite alternate}
 .agent-marker.is-walking .sprite-figure{animation:groundedWalk .64s ease-in-out infinite}
 .agent-marker.is-thinking .sprite-figure{animation:groundedThink 1.6s ease-in-out infinite alternate}
