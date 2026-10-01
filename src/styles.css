@@ -80,3 +80,5 @@
 @keyframes walkForward{0%,100%{rotate:-15deg}25%{rotate:0deg}50%{rotate:15deg}75%{rotate:0deg}}
 @keyframes walkBackward{0%,100%{rotate:15deg}25%{rotate:0deg}50%{rotate:-15deg}75%{rotate:0deg}}
 @media(prefers-reduced-motion:reduce){.sprite-figure,.sprite-shadow{animation:none!important}.sprite-stage{transition-duration:.01ms!important}}
+.agent-marker.is-walking.at-central .marker-name{opacity:0}
+.marker-brix.at-central .marker-status,.marker-lowkey.at-central .marker-status{transform:translateX(65%)}
