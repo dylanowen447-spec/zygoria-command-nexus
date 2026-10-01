@@ -46,6 +46,7 @@ function CommandCentre() {
   const [phase, setPhase] = useState<"idle" | "routing" | "working">("idle");
   const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "shack", Brix: "workshop", Lowkey: "lookout" });
   const [walking, setWalking] = useState<Agent[]>([]);
+  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "right" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const active = missions[0];
   const assigned = active?.state === "Routing" ? "Oz" : active?.state === "In progress" ? active.agent : null;
@@ -70,13 +71,14 @@ function CommandCentre() {
     setPhase("routing");
     setMissions(prev => [{ id, text, agent, state: "Routing" as const, time: now() }, ...prev].slice(0, 8));
     log("Oz", `Mission received. Heading to the crossroads to meet ${agent}.`);
-    timers.current.push(setTimeout(() => { setWalking(["Oz"]); setPositions(prev => ({ ...prev, Oz: "bridge" })); }, 100));
+    timers.current.push(setTimeout(() => { setWalking(["Oz"]); setFacing(prev => ({ ...prev, Oz: "right" })); setPositions(prev => ({ ...prev, Oz: "bridge" })); }, 100));
     timers.current.push(setTimeout(() => setPositions(prev => ({ ...prev, Oz: "central" })), 1300));
-    timers.current.push(setTimeout(() => { setWalking([agent]); setPositions(prev => ({ ...prev, [agent]: "central" })); log(agent, "Walking to the crossroads for the handoff."); }, 2700));
+    timers.current.push(setTimeout(() => { setWalking([agent]); setFacing(prev => ({ ...prev, [agent]: agent === "Brix" ? "left" : "right" })); setPositions(prev => ({ ...prev, [agent]: "central" })); log(agent, "Walking to the crossroads for the handoff."); }, 2700));
     timers.current.push(setTimeout(() => {
       setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
       setSelected(agent);
       setWalking(["Oz", agent]);
+      setFacing(prev => ({ ...prev, Oz: "left", [agent]: agent === "Brix" ? "right" : "left" }));
       setPositions(prev => ({ ...prev, Oz: "bridge", [agent]: agent === "Brix" ? "workshop" : "lookout" }));
       setPhase("working");
       log("Oz", `Mission transferred to ${agent}.`);
@@ -109,7 +111,7 @@ function CommandCentre() {
             <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
             <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
-            {agents.map(agent => <Button key={agent.name} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
+            {agents.map(agent => <Button key={agent.name} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
               <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name}</span>
             </Button>)}
             <div className="map-coordinate bottom-left"><MapPin size={12}/> THE KNOWN WORLD</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>

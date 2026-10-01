@@ -7,3 +7,4 @@
 
 - Keep the Zygoria prototype simulation in the index route's client state; it does not require persistent services or credentials.
 - Keep visual roles and HUD styling in the global design tokens and stylesheet so the world interface remains consistent.
+- Keep character sprites as inline SVG and animate them along named map stops in client state so walking works without external assets or services.

@@ -2,4 +2,5 @@
 - [x] Use the supplied Oz, Brix, and Lowkey character art for their markers and roster.
 - [x] Verify desktop and iPhone layouts and task handoff interaction.
 - [x] Make the world scene feel inhabited, with grounded characters, glowing status labels, and task-triggered movement to map locations.
-- [ ] Replace portrait markers and sliding movement with small full-body characters walking the shack, central area, workshop, and lookout paths; verify iPhone behavior.
+- [x] Replace portrait markers and sliding movement with small full-body characters walking the shack, central area, workshop, and lookout paths; verify iPhone behavior.
+- [x] Refine Oz, Brix, and Lowkey into distinctive front-facing sprites with directional 3–4 frame walks, working poses, and grounded shadows without changing map layout.
