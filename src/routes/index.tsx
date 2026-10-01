@@ -71,13 +71,13 @@ function CommandCentre() {
   const [selected, setSelected] = useState<Agent | null>(null);
   const [phase, setPhase] = useState<"idle" | "planning" | "routing" | "working">("idle");
   const [planningError, setPlanningError] = useState("");
-  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "shack", Brix: "workshop", Lowkey: "lookout" });
+  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home" });
   const [walking, setWalking] = useState<Agent[]>([]);
-  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "right" });
+  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const frames = useRef<number[]>([]);
   const runId = useRef(0);
-  const coords = useRef<Record<Agent, Point>>({ Oz: { ...STOPS.shack }, Brix: { ...STOPS.workshop }, Lowkey: { ...STOPS.lookout } });
+  const coords = useRef<Record<Agent, Point>>({ Oz: { ...HOME("Oz") }, Brix: { ...HOME("Brix") }, Lowkey: { ...HOME("Lowkey") } });
   const markerRefs = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const active = missions[0];
   const assigned = active?.state === "Routing" ? "Oz" : active?.state === "In progress" ? active.agent : null;
@@ -97,15 +97,14 @@ function CommandCentre() {
     el.style.setProperty("--depth", depthFor(p.y));
   }
   const wait = (ms: number) => new Promise<void>(resolve => { timers.current.push(setTimeout(resolve, ms)); });
-  const routeTime = (agent: Agent, route: Stop[]) => {
+  const routeTime = (agent: Agent, targets: Point[]) => {
     let from = coords.current[agent], total = 0;
-    for (const stop of route) { const to = pointFor(agent, stop); total += distance(from, to); from = to; }
+    for (const to of targets) { total += distance(from, to); from = to; }
     return total / WALK_SPEED;
   };
-  /** Moves a character along named stops frame by frame; the walk cycle loops only while this runs. */
-  function walk(agent: Agent, route: Stop[], run: number) {
+  /** Moves a character along walkable path nodes frame by frame; the walk cycle loops only while this runs. */
+  function walk(agent: Agent, targets: Point[], end: Stop, run: number) {
     return new Promise<void>(resolve => {
-      const targets = route.map(stop => pointFor(agent, stop));
       const face = (target: Point) => {
         const dx = target.x - coords.current[agent].x;
         if (Math.abs(dx) < 0.3) return;
@@ -114,7 +113,7 @@ function CommandCentre() {
       };
       const finish = () => {
         setWalking(prev => prev.filter(a => a !== agent));
-        setPositions(prev => ({ ...prev, [agent]: route[route.length - 1] }));
+        setPositions(prev => ({ ...prev, [agent]: end }));
         resolve();
       };
       face(targets[0]!);
