@@ -21,4 +21,4 @@
 - [x] Slightly shrink the Oz, Brix and Lowkey name tags and centre Lowkey's tag under his feet.
 - [x] Shift Brix slightly so he covers less of the workshop; make workshop slightly larger/more readable; keep Brix tallest, layout/routes/UI unchanged
 - [x] Pathing: Oz idle off the fence onto clear ground; routes follow walkable paths, no clipping through fences/buildings/props; keep zones (Oz shack, Lowkey lookout, Brix workshop), sprites, sizes, UI
-- [ ] Strict pathing: no walking off the bridge/pier, no idling on edges, fences, water, ravines or cliffs; Oz idles on solid ground
+- [x] Strict pathing: no walking off the bridge/pier, no idling on edges, fences, water, ravines or cliffs; Oz idles on solid ground

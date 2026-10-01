@@ -42,7 +42,7 @@ const PATHS: Record<Agent, Point[]> = {
   // Workshop yard (left of the building, clear of scrap piles) → lower glowing trail → crossroads
   Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
   // Upper dirt road beneath the lookout cliff → open meadow, east of the fence → crossroads
-  Lowkey: [{ x: 56, y: 42.6 }, { x: 57.4, y: 46.4 }, { x: 57.2, y: 50.8 }, { x: 55.4, y: 55.2 }, { x: 53, y: 58.7 }],
+  Lowkey: [{ x: 54, y: 41.6 }, { x: 56.6, y: 45.6 }, { x: 57.2, y: 50.8 }, { x: 55.4, y: 55.2 }, { x: 53, y: 58.7 }],
 };
 const HOME = (agent: Agent) => PATHS[agent][0]!;
 const toMeet = (agent: Agent) => PATHS[agent].slice(1);
