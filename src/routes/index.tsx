@@ -4,7 +4,7 @@ import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, C
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { chooseJobAgent } from "@/lib/job-planning.functions";
-import world from "@/assets/zygoria-world-final.jpg";
+import world from "@/assets/zygoria-world-pod-colours.jpg";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
