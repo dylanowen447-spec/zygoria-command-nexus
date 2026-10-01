@@ -37,12 +37,12 @@ const WALK_SPEED = 5.5; // percent of world width per second
  * Every node sits on a visible track or open ground in the artwork, clear of fences, buildings and props.
  */
 const PATHS: Record<Agent, Point[]> = {
-  // Shack porch yard → glowing lower trail (above the fence line) → crossroads
-  Oz: [{ x: 19, y: 63.4 }, { x: 23.5, y: 63.6 }, { x: 27, y: 62.2 }, { x: 30.5, y: 60.8 }, { x: 35, y: 60.3 }, { x: 40, y: 60 }, { x: 46, y: 59.6 }],
+  // Open ground right of the shack (clear of the building and its lantern light) → glowing lower trail → crossroads
+  Oz: [{ x: 26, y: 63 }, { x: 30.5, y: 60.8 }, { x: 35, y: 60.3 }, { x: 40, y: 60 }, { x: 46, y: 59.6 }],
   // Workshop yard (left of the building, clear of scrap piles) → lower glowing trail → crossroads
   Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
-  // Upper dirt road beneath the lookout cliff → open meadow, east of the fence → crossroads
-  Lowkey: [{ x: 54, y: 41.6 }, { x: 56.6, y: 45.6 }, { x: 57.2, y: 50.8 }, { x: 55.4, y: 55.2 }, { x: 53, y: 58.7 }],
+  // Grassy bank beside the waterfall pool (clear of the water) → down the open meadow → crossroads
+  Lowkey: [{ x: 36, y: 45 }, { x: 41, y: 47.5 }, { x: 46, y: 50.5 }, { x: 50, y: 54 }, { x: 53, y: 58.7 }],
 };
 const HOME = (agent: Agent) => PATHS[agent][0]!;
 const toMeet = (agent: Agent) => PATHS[agent].slice(1);
