@@ -182,7 +182,7 @@ function CommandCentre() {
       <div className="world-column">
         <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> LIVE WORLD FEED <span className="eyebrow-line"/></div><h1>Zygoria <span>World</span></h1><p>Three minds. One world. Infinite possibilities.</p></div><div className="world-index"><CircleDot size={14}/> SECTOR 01 <span> / </span> ACTIVE</div></div>
         <div className="world-frame">
-          <div className="world-image-wrap"><img className="world-image" src={world} width={1536} height={1024} alt="Zygoria landscape with a wooden riverside shack, Brix's workshop, and mountains" />
+          <div className="world-image-wrap"><img className="world-image" src={world} width={1536} height={1024} alt="Zygoria: a salvaged riverside shack, Brix's scrap workshop, three landing pods, a lookout tower and Old Earth ruins" />
             <div className="world-vignette"/>
             <div className="map-coordinate top-left">◉ &nbsp; ZYGORIA / CENTRAL BASIN</div>
             <div className="map-coordinate top-right"><span className="live-dot"/> LIVE ENVIRONMENT</div>
