@@ -220,6 +220,7 @@ function CommandCentre() {
             <div className="location-tag workshop-tag"><span className="location-line"/> BRIX'S WORKSHOP</div>
             <div className="location-tag lookout-tag"><span className="location-line"/> LOOKOUT</div>
              <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
+             <div className="scene-depth" aria-hidden="true"><span className="depth-haze"/><span className="depth-ridge-shade"/><span className="depth-pool pool-shack"/><span className="depth-pool pool-workshop"/><span className="depth-pool pool-pods"/><span className="depth-pool pool-lookout"/><span className="depth-pool pool-bridge"/><span className="depth-river"/><span className="depth-fore"/></div>
              <img className="moxi-scenery" src={moxiUnderTree.url} alt="Moxi, a tiny dragon peeking over rocks beneath the evergreen near Brix's workshop" draggable={false} />
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 57,52 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
             <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>

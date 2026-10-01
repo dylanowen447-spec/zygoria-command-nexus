@@ -143,3 +143,28 @@
 .marker-oz .marker-name{top:calc(100% + 1px);line-height:0}.marker-brix .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.oz-wordmark{display:block;width:32px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.brix-wordmark{display:block;width:44px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.marker-lowkey .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.lowkey-wordmark{display:block;width:47px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}
 .oz-wordmark,.brix-wordmark,.lowkey-wordmark{max-width:none!important;flex:none;position:relative;z-index:5}
 @media(max-width:600px){.oz-wordmark{width:34px!important}.brix-wordmark{width:46px!important}.lowkey-wordmark{width:48px!important}}
+
+/* Spatial depth layers over the Sanctuary artwork */
+.scene-depth{position:absolute;inset:0;pointer-events:none;z-index:1}
+.scene-depth>span{position:absolute;display:block}
+.depth-haze{inset:0 0 45% 0;background:linear-gradient(180deg,oklch(0.55 0.08 280 / 14%),oklch(0.45 0.09 300 / 8%) 55%,transparent);mix-blend-mode:screen}
+.depth-ridge-shade{left:0;right:0;top:40%;height:22%;background:linear-gradient(180deg,transparent,oklch(0.08 0.02 265 / 22%) 60%,transparent);mix-blend-mode:multiply}
+.depth-pool{border-radius:50%;transform:translate(-50%,-50%);mix-blend-mode:screen;animation:depthPulse 6s ease-in-out infinite alternate}
+.pool-shack{left:17%;top:64%;width:22%;height:20%;background:radial-gradient(closest-side,oklch(0.78 0.15 65 / 30%),transparent)}
+.pool-workshop{left:79%;top:52%;width:24%;height:22%;background:radial-gradient(closest-side,oklch(0.75 0.14 225 / 26%),transparent);animation-delay:-2s}
+.pool-pods{left:60%;top:28%;width:16%;height:14%;background:radial-gradient(closest-side,oklch(0.8 0.13 215 / 24%),transparent);animation-delay:-4s}
+.pool-lookout{left:53%;top:36%;width:10%;height:12%;background:radial-gradient(closest-side,oklch(0.82 0.1 230 / 18%),transparent)}
+.pool-bridge{left:32%;top:76%;width:14%;height:10%;background:radial-gradient(closest-side,oklch(0.75 0.12 220 / 18%),transparent)}
+.depth-river{left:22%;top:70%;width:30%;height:30%;background:radial-gradient(ellipse at 50% 40%,oklch(0.7 0.12 230 / 12%),transparent 70%);mix-blend-mode:screen}
+.depth-fore{left:0;right:0;bottom:0;height:22%;background:linear-gradient(0deg,oklch(0.06 0.015 265 / 55%),transparent);mix-blend-mode:multiply}
+.depth-fore:before,.depth-fore:after{content:'';position:absolute;bottom:0;width:26%;height:160%;background:radial-gradient(ellipse at bottom,oklch(0.05 0.01 265 / 55%),transparent 70%)}
+.depth-fore:before{left:-6%}.depth-fore:after{right:-6%}
+@keyframes depthPulse{from{opacity:.75}to{opacity:1}}
+/* Sprites: atmospheric perspective + contact shadow + rim light */
+.agent-marker .sprite-stage{position:relative;filter:brightness(calc(.62 + var(--depth,1) * .38)) saturate(calc(.55 + var(--depth,1) * .4)) drop-shadow(-1px -1px 0 oklch(0.8 0.1 230 / 22%)) drop-shadow(2px 3px 2px oklch(0.05 0.01 265 / 55%))}
+.agent-marker .sprite-stage:after{content:'';position:absolute;left:50%;bottom:-2px;width:34px;height:8px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(closest-side,oklch(0.04 0.01 265 / 70%),transparent);z-index:-1;pointer-events:none}
+.marker-brix .sprite-stage:after{width:44px}
+.agent-marker.is-walking .sprite-stage:after{animation:cycleContact .56s ease-in-out infinite}
+@keyframes cycleContact{0%,50%,100%{transform:translateX(-50%) scaleX(1)}25%,75%{transform:translateX(-50%) scaleX(.85);opacity:.8}}
+.moxi-scenery{filter:drop-shadow(0 2px 2px oklch(0.05 0.01 265 / 50%))}
+@media (prefers-reduced-motion:reduce){.depth-pool{animation:none}}
