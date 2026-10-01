@@ -11,26 +11,6 @@ export function CharacterSprite({ character }: { character: Character }) {
   return <svg className={`character-sprite sprite-${character.toLowerCase()}`} viewBox="0 0 44 70" role="presentation" aria-hidden="true">
     <ellipse className="sprite-shadow" cx="22" cy="66" rx="14" ry="3" />
     <g className="sprite-figure"><g className="sprite-body">
-      {character === "Oz" && <>
-        <g className="sprite-leg leg-back"><path className="oz-fur sprite-line" d="M15 47 21 48 20 60 16 62 12 58Z"/><path className="sprite-boot sprite-line" d="M12 58 18 60 19 64 9 64Z"/></g>
-        <g className="sprite-leg leg-front"><path className="oz-fur sprite-line" d="M23 48 29 47 32 59 27 62 23 59Z"/><path className="sprite-boot sprite-line" d="M26 60 32 58 36 64 25 64Z"/></g>
-        <g className="sprite-arm arm-back"><path className="oz-fur sprite-line" d="M15 31 11 29 7 34 3 38 7 43 11 40 15 40Z"/><path className="oz-fur" d="M6 36 2 35 4 39 1 41 8 42Z"/></g>
-        <path className="oz-suit sprite-line" d="M15 29 29 29 34 45 28 50 16 50 10 44Z"/>
-        <path className="oz-chest sprite-line" d="M19 30 25 30 28 44 22 48 16 44Z"/>
-        <path className="oz-collar sprite-line" d="M14 28 7 32 15 37 19 32 22 31 25 32 29 37 37 32 30 28 27 26Z"/>
-        <path className="oz-belt sprite-line" d="M11 45 21 48 33 45 36 49 25 52 22 58 19 52 8 49Z"/>
-        <path className="oz-buckle sprite-line" d="M19 47 25 47 22 55Z"/>
-        <g className="sprite-arm arm-front"><path className="oz-fur sprite-line" d="M30 31 35 29 39 35 42 39 38 43 34 40 29 41Z"/><path className="oz-fur" d="M39 36 43 35 41 39 44 41 37 42Z"/></g>
-        <g className="sprite-head">
-        <path className="oz-face sprite-line" d="M14 16 Q22 10 31 16 L32 24 Q30 32 22 33 Q14 31 12 24Z"/>
-        <path className="oz-hair sprite-line" d="M11 21 5 17 12 16 6 11 15 13 12 6 19 10 22 2 25 10 33 5 30 13 38 12 33 17 39 20 31 19 28 13 23 17 18 12Z"/>
-        <path className="oz-headband" d="M11 20 Q10 12 16 10 M28 10 Q35 12 34 20"/>
-        <circle className="oz-ear sprite-line" cx="11" cy="22" r="3"/><circle className="oz-ear sprite-line" cx="34" cy="22" r="3"/>
-        <path className="oz-mic" d="M35 23 Q36 29 29 29"/><circle className="oz-mic-tip" cx="29" cy="29" r="1.5"/>
-        <ellipse className="oz-eye" cx="18" cy="22" rx="2.3" ry="3"/><ellipse className="oz-eye" cx="27" cy="22" rx="2.3" ry="3"/>
-        <path className="oz-smile sprite-line" d="M16 26 Q22 33 29 26 Q23 28 16 26Z"/>
-        </g>
-      </>}
       {character === "Brix" && <>
         <g className="sprite-leg leg-back"><path className="brix-pants sprite-line" d="M13 46 22 47 21 60 16 61 11 58Z"/><path className="sprite-boot sprite-line" d="M12 59 19 59 20 65 8 65Z"/></g>
         <g className="sprite-leg leg-front"><path className="brix-pants sprite-line" d="M22 47 31 46 33 59 28 62 24 60Z"/><path className="sprite-boot sprite-line" d="M26 60 33 59 37 65 25 65Z"/></g>
