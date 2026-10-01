@@ -15,3 +15,5 @@
 - [x] Move Moxi clear of the crossroads label and make her slightly more visible while still partly hidden.
 - [x] Place Moxi below the evergreen she is currently beside, visible on phones but partly sheltered by scenery, static.
 - [x] Apply poster-inspired Zygoria/FIRST GENESIS title treatment and subtle Dylan Owen / 2026 credits without changing the world or UI structure.
+- [ ] Move the existing three arrival pods off the central crossroads into the nearby mid-distance without altering the Sanctuary layout or characters.
+- [ ] Add AI Gateway job assignment and concise action plans to the existing dispatch flow.
