@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, Command, Cpu, Crosshair, Hexagon, MapPin, Radio, Send, Signal, Sparkles, Terminal, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
@@ -23,6 +23,14 @@ const startLogs: Log[] = [
   { id: 2, agent: "Brix", text: "Workshop systems online.", time: "SYSTEM" },
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
+type Point = { x: number; y: number };
+const STOPS: Record<Stop, Point> = { shack: { x: 20, y: 74 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 76, y: 58 }, lookout: { x: 53, y: 43 } };
+const MEET: Record<Agent, Point> = { Oz: { x: 40, y: 64 }, Brix: { x: 55, y: 59 }, Lowkey: { x: 55, y: 59 } };
+const WORLD_ASPECT = 1.72;
+const WALK_SPEED = 5.5; // percent of world width per second
+const pointFor = (agent: Agent, stop: Stop): Point => stop === "central" ? MEET[agent] : STOPS[stop];
+const depthFor = (y: number) => (1 - Math.min(Math.max((74 - y) / 31, 0), 1) * 0.12).toFixed(3);
+const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / WORLD_ASPECT);
 const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 const pickAgent = (text: string): Agent => /build|fix|code|design|make|create|repair|engine|workshop|garage|machine|develop|craft|prototype|tool|app|website/i.test(text) ? "Brix" : "Lowkey";
 
@@ -48,6 +56,10 @@ function CommandCentre() {
   const [walking, setWalking] = useState<Agent[]>([]);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "right" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const frames = useRef<number[]>([]);
+  const runId = useRef(0);
+  const coords = useRef<Record<Agent, Point>>({ Oz: { ...STOPS.shack }, Brix: { ...STOPS.workshop }, Lowkey: { ...STOPS.lookout } });
+  const markerRefs = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const active = missions[0];
   const assigned = active?.state === "Routing" ? "Oz" : active?.state === "In progress" ? active.agent : null;
   const statuses: Record<Agent, Status> = {
@@ -55,7 +67,101 @@ function CommandCentre() {
     Brix: walking.includes("Brix") && phase === "routing" ? "Waiting" : assigned === "Brix" ? "Working" : "Idle",
     Lowkey: walking.includes("Lowkey") && phase === "routing" ? "Waiting" : assigned === "Lowkey" ? "Working" : "Idle",
   };
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(() => () => { runId.current++; timers.current.forEach(clearTimeout); frames.current.forEach(cancelAnimationFrame); }, []);
+  const markerStyle = (agent: Agent) => ({ left: `${coords.current[agent].x}%`, top: `${coords.current[agent].y}%`, "--depth": depthFor(coords.current[agent].y) }) as CSSProperties;
+  function paint(agent: Agent) {
+    const el = markerRefs.current[agent];
+    if (!el) return;
+    const p = coords.current[agent];
+    el.style.left = `${p.x}%`;
+    el.style.top = `${p.y}%`;
+    el.style.setProperty("--depth", depthFor(p.y));
+  }
+  const wait = (ms: number) => new Promise<void>(resolve => { timers.current.push(setTimeout(resolve, ms)); });
+  const routeTime = (agent: Agent, route: Stop[]) => {
+    let from = coords.current[agent], total = 0;
+    for (const stop of route) { const to = pointFor(agent, stop); total += distance(from, to); from = to; }
+    return total / WALK_SPEED;
+  };
+  /** Moves a character along named stops frame by frame; the walk cycle loops only while this runs. */
+  function walk(agent: Agent, route: Stop[], run: number) {
+    return new Promise<void>(resolve => {
+      const targets = route.map(stop => pointFor(agent, stop));
+      const face = (target: Point) => {
+        const dx = target.x - coords.current[agent].x;
+        if (Math.abs(dx) < 0.3) return;
+        const dir = dx < 0 ? "left" as const : "right" as const;
+        setFacing(prev => prev[agent] === dir ? prev : { ...prev, [agent]: dir });
+      };
+      const finish = () => {
+        setWalking(prev => prev.filter(a => a !== agent));
+        setPositions(prev => ({ ...prev, [agent]: route[route.length - 1] }));
+        resolve();
+      };
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        coords.current[agent] = { ...targets[targets.length - 1] };
+        paint(agent);
+        finish();
+        return;
+      }
+      face(targets[0]);
+      setWalking(prev => prev.includes(agent) ? prev : [...prev, agent]);
+      let segment = 0;
+      let last = performance.now();
+      const step = (time: number) => {
+        if (run !== runId.current) return;
+        let budget = Math.min(time - last, 64) / 1000 * WALK_SPEED;
+        last = time;
+        while (budget > 0 && segment < targets.length) {
+          const p = coords.current[agent], t = targets[segment], d = distance(p, t);
+          if (d <= budget) {
+            coords.current[agent] = { ...t };
+            budget -= d;
+            segment++;
+            if (segment < targets.length) face(targets[segment]);
+          } else {
+            const k = budget / d;
+            coords.current[agent] = { x: p.x + (t.x - p.x) * k, y: p.y + (t.y - p.y) * k };
+            budget = 0;
+          }
+        }
+        paint(agent);
+        if (segment >= targets.length) finish();
+        else frames.current.push(requestAnimationFrame(step));
+      };
+      frames.current.push(requestAnimationFrame(step));
+    });
+  }
+  async function runMission(id: number, agent: Agent, run: number) {
+    const home: Stop = agent === "Brix" ? "workshop" : "lookout";
+    await wait(250);
+    if (run !== runId.current) return;
+    const lead = Math.max(0.4, routeTime("Oz", ["bridge", "central"]) - routeTime(agent, ["central"]));
+    const agentWalk = wait(lead * 1000).then(() => {
+      if (run !== runId.current) return;
+      log(agent, "Walking to the crossroads for the handoff.");
+      return walk(agent, ["central"], run);
+    });
+    await Promise.all([walk("Oz", ["bridge", "central"], run), agentWalk]);
+    if (run !== runId.current) return;
+    setFacing(prev => ({ ...prev, Oz: "right", [agent]: "left" }));
+    log("Oz", `Briefing ${agent} at the crossroads.`);
+    await wait(1500);
+    if (run !== runId.current) return;
+    setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
+    setSelected(agent);
+    setPhase("working");
+    log("Oz", `Mission transferred to ${agent}.`);
+    await Promise.all([
+      walk("Oz", ["bridge", "shack"], run),
+      walk(agent, [home], run).then(() => { if (run === runId.current) log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }),
+    ]);
+    await wait(3500);
+    if (run !== runId.current) return;
+    setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "Complete" } : m));
+    setPhase("idle");
+    log(agent, "Assignment complete. Standing by for the next mission.");
+  }
   function log(agent: Agent, text: string) {
     setLogs(prev => [{ id: Date.now() + Math.random(), agent, text, time: now() }, ...prev].slice(0, 12));
   }
@@ -71,26 +177,7 @@ function CommandCentre() {
     setPhase("routing");
     setMissions(prev => [{ id, text, agent, state: "Routing" as const, time: now() }, ...prev].slice(0, 8));
     log("Oz", `Mission received. Heading to the crossroads to meet ${agent}.`);
-    timers.current.push(setTimeout(() => { setWalking(["Oz"]); setFacing(prev => ({ ...prev, Oz: "right" })); setPositions(prev => ({ ...prev, Oz: "bridge" })); }, 100));
-    timers.current.push(setTimeout(() => setPositions(prev => ({ ...prev, Oz: "central" })), 1300));
-    timers.current.push(setTimeout(() => { setWalking([agent]); setFacing(prev => ({ ...prev, [agent]: agent === "Brix" ? "left" : "right" })); setPositions(prev => ({ ...prev, [agent]: "central" })); log(agent, "Walking to the crossroads for the handoff."); }, 2700));
-    timers.current.push(setTimeout(() => {
-      setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
-      setSelected(agent);
-      setWalking(["Oz", agent]);
-      setFacing(prev => ({ ...prev, Oz: "left", [agent]: agent === "Brix" ? "right" : "left" }));
-      setPositions(prev => ({ ...prev, Oz: "bridge", [agent]: agent === "Brix" ? "workshop" : "lookout" }));
-      setPhase("working");
-      log("Oz", `Mission transferred to ${agent}.`);
-    }, 5200));
-    timers.current.push(setTimeout(() => setPositions(prev => ({ ...prev, Oz: "shack" })), 6500));
-    timers.current.push(setTimeout(() => { setWalking([]); log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }, 7800));
-    timers.current.push(setTimeout(() => {
-      setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "Complete" } : m));
-      setPhase("idle");
-      setWalking([]);
-      log(agent, "Assignment complete. Standing by for the next mission.");
-    }, 11500));
+    void runMission(id, agent, runId.current);
   }
   return <div className="command-app">
     <header className="command-header">
@@ -111,7 +198,7 @@ function CommandCentre() {
             <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
             <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
-            {agents.map(agent => <Button key={agent.name} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
+            {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
               <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name}</span>
             </Button>)}
             <div className="map-coordinate bottom-left"><MapPin size={12}/> THE KNOWN WORLD</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
