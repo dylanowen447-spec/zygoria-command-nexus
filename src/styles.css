@@ -140,5 +140,6 @@
 .assignment-reason{display:grid;gap:5px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line-soft);overflow-wrap:anywhere}.assignment-reason strong{font:700 9px var(--font-mono);color:var(--electric)}.assignment-reason span{font:11px/1.4 var(--font-body);color:var(--muted-foreground)}.planning-error{margin:10px 0 0;font:11px/1.4 var(--font-body);color:var(--destructive);overflow-wrap:anywhere}
 
 /* Oz's supplied hand-lettered mark replaces only his in-world name. */
-.marker-oz .marker-name{top:calc(100% + 1px);line-height:0}.marker-brix .marker-name{top:calc(100% - 13px);line-height:0}.oz-wordmark{display:block;width:38px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.brix-wordmark{display:block;width:52px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}
-@media(max-width:600px){.oz-wordmark{width:32px}.brix-wordmark{width:42px}}
+.marker-oz .marker-name{top:calc(100% + 1px);line-height:0}.marker-brix .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}.oz-wordmark{display:block;width:38px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}.brix-wordmark{display:block;width:52px;height:auto;filter:drop-shadow(0 1px 2px var(--background))}
+.oz-wordmark,.brix-wordmark{max-width:none!important;flex:none;position:relative;z-index:5}
+@media(max-width:600px){.oz-wordmark{width:40px!important}.brix-wordmark{width:54px!important}}
