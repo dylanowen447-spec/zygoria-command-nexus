@@ -14,3 +14,4 @@
 - [x] Make Moxi peek from behind foreground river rocks with matched scale and lighting, without movement or interaction.
 - [x] Move Moxi clear of the crossroads label and make her slightly more visible while still partly hidden.
 - [ ] Place Moxi below the evergreen she is currently beside, visible on phones but partly sheltered by scenery, static.
+- [ ] Apply poster-inspired Zygoria/FIRST GENESIS title treatment and subtle Dylan Owen / 2026 credits without changing the world or UI structure.
