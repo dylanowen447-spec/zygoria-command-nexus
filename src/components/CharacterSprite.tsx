@@ -4,7 +4,7 @@ type Character = "Oz" | "Brix" | "Lowkey";
 export function CharacterSprite({ character }: { character: Character }) {
   return <svg className={`character-sprite sprite-${character.toLowerCase()}`} viewBox="0 0 44 70" role="presentation" aria-hidden="true">
     <ellipse className="sprite-shadow" cx="22" cy="66" rx="14" ry="3" />
-    <g className="sprite-body">
+    <g className="sprite-figure"><g className="sprite-body">
       {character === "Oz" && <>
         <g className="sprite-leg leg-back"><path className="oz-fur sprite-line" d="M15 47 21 48 20 60 16 62 12 58Z"/><path className="sprite-boot sprite-line" d="M12 58 18 60 19 64 9 64Z"/></g>
         <g className="sprite-leg leg-front"><path className="oz-fur sprite-line" d="M23 48 29 47 32 59 27 62 23 59Z"/><path className="sprite-boot sprite-line" d="M26 60 32 58 36 64 25 64Z"/></g>
@@ -56,6 +56,6 @@ export function CharacterSprite({ character }: { character: Character }) {
         <path className="lowkey-face" d="M18 26 Q22 28 26 26 L24 29 20 29Z"/>
         <path className="lowkey-eyes" d="M16 23 20 24 M28 23 24 24"/>
       </>}
-    </g>
+    </g></g>
   </svg>;
 }
