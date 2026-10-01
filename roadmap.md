@@ -1,0 +1,3 @@
+- [x] Build the Zygoria Command Centre visual prototype with world, status markers, task simulation, and activity panel.
+- [x] Use the supplied Oz, Brix, and Lowkey character art for their markers and roster.
+- [x] Verify desktop and iPhone layouts and task handoff interaction.
