@@ -29,7 +29,7 @@ const startLogs: Log[] = [
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
 type Point = { x: number; y: number };
-const STOPS: Record<Stop, Point> = { shack: { x: 20, y: 74 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 76, y: 58 }, ridge: { x: 57, y: 52 }, lookout: { x: 53, y: 43 } };
+const STOPS: Record<Stop, Point> = { shack: { x: 20, y: 74 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 80, y: 64 }, ridge: { x: 57, y: 52 }, lookout: { x: 53, y: 43 } };
 const MEET: Record<Agent, Point> = { Oz: { x: 40, y: 64 }, Brix: { x: 55, y: 59 }, Lowkey: { x: 55, y: 59 } };
 const WORLD_ASPECT = 1.72;
 const WALK_SPEED = 5.5; // percent of world width per second
