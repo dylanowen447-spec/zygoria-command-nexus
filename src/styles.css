@@ -111,3 +111,17 @@
 @keyframes cycleShadow{0%,50%,100%{transform:scaleX(1);opacity:1}25%,75%{transform:scaleX(.84);opacity:.78}}
 /* Walking is the core interaction, so the step cycle still plays when the device asks for reduced motion. */
 @media(prefers-reduced-motion:reduce){.agent-marker.is-walking .character-sprite :is(.sprite-leg,.sprite-arm,.sprite-figure,.sprite-shadow){animation-duration:.56s!important;animation-iteration-count:infinite!important}.agent-marker.is-walking.marker-brix .character-sprite :is(.sprite-leg,.sprite-arm,.sprite-figure,.sprite-shadow){animation-duration:.66s!important}}
+/* Oz sprite sheet: 6 frames in one strip — idle, walk 1-4, thinking. Frames face right. */
+.sheet-sprite{position:absolute;left:50%;bottom:0;width:44px;height:56px;transform:translateX(-50%);display:block}
+.sheet-shadow{position:absolute;left:18%;bottom:-1px;width:64%;height:5px;border-radius:50%;background:var(--sprite-contact);filter:blur(1.6px)}
+.sheet-frames{position:absolute;inset:0;background-size:600% 100%;background-repeat:no-repeat;background-position:0 0;filter:brightness(.9) saturate(.87);animation:ozBreathe 2.4s ease-in-out infinite alternate}
+.agent-marker.is-thinking .sheet-frames{background-position:100% 0;animation:ozBreathe 1.6s ease-in-out infinite alternate}
+.agent-marker.is-walking .sheet-frames{animation:ozWalk .5s steps(4,end) infinite,ozBounce .25s ease-in-out infinite alternate!important}
+.agent-marker.is-walking .sheet-shadow{animation:cycleShadow .5s ease-in-out infinite}
+@keyframes ozWalk{from{background-position:20% 0}to{background-position:100% 0}}
+@keyframes ozBounce{from{translate:0 0}to{translate:0 -2px}}
+@keyframes ozBreathe{from{translate:0 0}to{translate:0 -.6px}}
+@media(max-width:600px){.sheet-sprite{width:33px;height:42px}}
+@media(prefers-reduced-motion:reduce){.agent-marker.is-walking .sheet-frames{animation-duration:.5s,.25s!important;animation-iteration-count:infinite!important}}
+.sheet-lowkey{width:66px;height:70px}.sheet-lowkey .sheet-shadow{opacity:.45}
+@media(max-width:600px){.sheet-lowkey{width:50px;height:54px}}

@@ -10,7 +10,7 @@ import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
 
 type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
-type Stop = "shack" | "bridge" | "central" | "workshop" | "lookout";
+type Stop = "shack" | "bridge" | "central" | "workshop" | "ridge" | "lookout";
 type Mission = { id: number; text: string; agent: Agent; state: "Routing" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
@@ -24,7 +24,7 @@ const startLogs: Log[] = [
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
 type Point = { x: number; y: number };
-const STOPS: Record<Stop, Point> = { shack: { x: 20, y: 74 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 76, y: 58 }, lookout: { x: 53, y: 43 } };
+const STOPS: Record<Stop, Point> = { shack: { x: 20, y: 74 }, bridge: { x: 32, y: 74 }, central: { x: 47, y: 61 }, workshop: { x: 76, y: 58 }, ridge: { x: 57, y: 52 }, lookout: { x: 53, y: 43 } };
 const MEET: Record<Agent, Point> = { Oz: { x: 40, y: 64 }, Brix: { x: 55, y: 59 }, Lowkey: { x: 55, y: 59 } };
 const WORLD_ASPECT = 1.72;
 const WALK_SPEED = 5.5; // percent of world width per second
@@ -130,11 +130,11 @@ function CommandCentre() {
     const home: Stop = agent === "Brix" ? "workshop" : "lookout";
     await wait(250);
     if (run !== runId.current) return;
-    const lead = Math.max(0.4, routeTime("Oz", ["bridge", "central"]) - routeTime(agent, ["central"]));
+    const lead = Math.max(0.4, routeTime("Oz", ["bridge", "central"]) - routeTime(agent, agent === "Lowkey" ? ["ridge", "central"] : ["central"]));
     const agentWalk = wait(lead * 1000).then(() => {
       if (run !== runId.current) return;
       log(agent, "Walking to the crossroads for the handoff.");
-      return walk(agent, ["central"], run);
+      return walk(agent, agent === "Lowkey" ? ["ridge", "central"] : ["central"], run);
     });
     await Promise.all([walk("Oz", ["bridge", "central"], run), agentWalk]);
     if (run !== runId.current) return;
@@ -148,7 +148,7 @@ function CommandCentre() {
     log("Oz", `Mission transferred to ${agent}.`);
     await Promise.all([
       walk("Oz", ["bridge", "shack"], run),
-      walk(agent, [home], run).then(() => { if (run === runId.current) log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }),
+      walk(agent, agent === "Lowkey" ? ["ridge", home] : [home], run).then(() => { if (run === runId.current) log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }),
     ]);
     await wait(3500);
     if (run !== runId.current) return;
@@ -190,7 +190,7 @@ function CommandCentre() {
             <div className="location-tag workshop-tag"><span className="location-line"/> BRIX'S WORKSHOP</div>
             <div className="location-tag lookout-tag"><span className="location-line"/> LOOKOUT</div>
             <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
-            <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
+            <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,74 32,74 47,61 76,58"/><polyline points="47,61 57,52 53,43"/><circle cx="47" cy="61" r=".6"/><circle cx="32" cy="74" r=".6"/></svg>
             <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
               <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name}</span>
