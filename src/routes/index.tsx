@@ -146,12 +146,12 @@ function CommandCentre() {
   }
   async function runMission(id: number, agent: Agent, run: number) {
     if (agent === "Oz") {
-      await walk("Oz", ["bridge", "central"], run);
+      await walk("Oz", toMeet("Oz"), "central", run);
       if (run !== runId.current) return;
       setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "In progress" } : m));
       setPhase("working");
       log("Oz", "Taking the assignment at the crossroads.");
-      await walk("Oz", ["bridge", "shack"], run);
+      await walk("Oz", toHome("Oz"), "home", run);
       await wait(3500);
       if (run !== runId.current) return;
       setMissions(prev => prev.map(m => m.id === id ? { ...m, state: "Complete" } : m));
@@ -159,16 +159,15 @@ function CommandCentre() {
       log("Oz", "Assignment complete. Standing by for the next mission.");
       return;
     }
-    const home: Stop = agent === "Brix" ? "workshop" : "lookout";
     await wait(250);
     if (run !== runId.current) return;
-    const lead = Math.max(0.4, routeTime("Oz", ["bridge", "central"]) - routeTime(agent, agent === "Lowkey" ? ["ridge", "central"] : ["central"]));
+    const lead = Math.max(0.4, routeTime("Oz", toMeet("Oz")) - routeTime(agent, toMeet(agent)));
     const agentWalk = wait(lead * 1000).then(() => {
       if (run !== runId.current) return;
       log(agent, "Walking to the crossroads for the handoff.");
-      return walk(agent, agent === "Lowkey" ? ["ridge", "central"] : ["central"], run);
+      return walk(agent, toMeet(agent), "central", run);
     });
-    await Promise.all([walk("Oz", ["bridge", "central"], run), agentWalk]);
+    await Promise.all([walk("Oz", toMeet("Oz"), "central", run), agentWalk]);
     if (run !== runId.current) return;
     setFacing(prev => ({ ...prev, Oz: "right", [agent]: "left" }));
     log("Oz", `Briefing ${agent} at the crossroads.`);
@@ -179,8 +178,8 @@ function CommandCentre() {
     setPhase("working");
     log("Oz", `Mission transferred to ${agent}.`);
     await Promise.all([
-      walk("Oz", ["bridge", "shack"], run),
-      walk(agent, agent === "Lowkey" ? ["ridge", home] : [home], run).then(() => { if (run === runId.current) log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }),
+      walk("Oz", toHome("Oz"), "home", run),
+      walk(agent, toHome(agent), "home", run).then(() => { if (run === runId.current) log(agent, agent === "Brix" ? "Working on the assignment at the workshop." : "Investigating the assignment at the lookout."); }),
     ]);
     await wait(3500);
     if (run !== runId.current) return;
