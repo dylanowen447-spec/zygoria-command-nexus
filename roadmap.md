@@ -1,9 +1,9 @@
-# Roadmap
+# Zygoria Nexus — Task roadmap
 
-- [x] Oz voice fix (action-first, no corporate language)
-- [x] Fish diet canon + fish-love entry
-- [x] Zone artwork generated (ruins, caves, cronk swamp, Shelton camp)
-- [x] Zone system: selector, per-zone paths, AI picks crew + zone, missions travel
-- [ ] Central canon / story-state system (CANON_TRUTH / CURRENTLY_KNOWN / HIDDEN_FUTURE_CANON, per-agent knowledge, unlocked zones, story stage in one place) — in progress
-- [ ] Crew banter: broad/personal questions get 2-3 agents answering together, reacting to each other, group trigger words
-- [ ] Verify: zone switch + zone mission run, group question run
+## Completed
+- [x] Oz voice rule (cheeky, action-first, no corporate language)
+- [x] Fish-only / fish-love canon
+- [x] Zone expansion: Sanctuary + Old Earth ruins, survivor caves, Cronk's swamp, Shelton's camp (art, paths, work nodes, selector, AI zone routing)
+- [x] Central canon/story-state system (`src/lib/ai/canon-state.server.ts`): STORY_STAGE, CANON_TRUTH, CURRENTLY_KNOWN per agent, DISCOVERED, UNLOCKED_ZONES, HIDDEN_FUTURE_CANON; injected into every AI call; safe `getCanonState` feed for the UI (stage chip + unlocked zone chips only)
+- [x] Crew conversations: group routing, brief in-character replies that react to each other
+- [x] End-to-end verification (zone chips, zone switching, group question, zone job)
