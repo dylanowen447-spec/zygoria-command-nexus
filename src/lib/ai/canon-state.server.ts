@@ -26,7 +26,9 @@ export const CANON_TRUTH: string[] = [
   "Human survivors hide in caves, tunnels and ruins; the trio are helping them — food, shelter, water, safety.",
   "Cronk is an evolved crocodilian who controls a swamp territory with mutant rat minions.",
   "Shelton is an intelligent turtle-like boss who controls a work camp with guards and subjugated human workers.",
-  "Fish is the only food anyone eats at this stage — and the crew love it that much.",
+  "Fish is the only food anyone eats at this stage — the crew are fine with it.",
+  "The crew are obsessed with what this world is and what they mean to it — that is what they care about most.",
+  "The crew have noticed the world seems to have WOKEN UP since they arrived: restored lights, systems and energy seem to stir in response to their rebuilding. They do not know why.",
   "Boulderpot is an established species (ZYG 005). Cards so far: ZYG 001-003 the trio, ZYG 004 Moxi, ZYG 005 Boulderpot; Shiny 001-003 the trio, Shiny 004 Shelton.",
   "First Genesis is the opening era: arrival, discovery, survival, rebuilding, mystery, hidden threats.",
 ];
@@ -34,21 +36,22 @@ export const CANON_TRUTH: string[] = [
 /** What each character has actually discovered so far — shared knowledge plus their own perspective. */
 export const CURRENTLY_KNOWN: Record<string, string[]> = {
   Oz: [
-    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is all there is to eat.",
+    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
     "Oz knows the crew and the camp better than anyone — who is good at what, who needs watching, what needs doing next.",
     "He has not yet found the working decks he is destined to find; he senses sound and electricity are his thing.",
-    "He does NOT know why the trio were sent, that their memories were sealed, or that restoring technology may wake something dormant.",
+    "He does NOT know why the trio were sent, that their memories were sealed, or why the world seems to wake as they rebuild it.",
   ],
   Brix: [
-    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is all there is to eat.",
+    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
     "Brix knows the state of every machine, scrap pile and half-built project in the Workshop, and what salvaged parts the ruins and the camp might yield.",
-    "He does NOT know why the trio were sent, that their memories were sealed, or that restoring technology may wake something dormant.",
+    "He does NOT know why the trio were sent, that their memories were sealed, or why the world seems to wake as they rebuild it.",
   ],
   Lowkey: [
-    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is all there is to eat.",
+    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
     "Lowkey knows the most Old Earth history: the ruins, what the collapse left behind, and old stories about ancient dragons surviving the collapse in dormancy.",
     "He suspects something is dormant out there — something's out there, but he doesn't know what — and he keeps that suspicion mostly to himself.",
-    "He does NOT know why the trio were sent, that their memories were sealed, or the full truth about the Network.",
+    "He does NOT know why the trio were sent, that their memories were sealed, or why the world seems to wake as they rebuild it.",
+    "Lowkey has quietly noticed the world stirring since the trio began rebuilding — lights responding, energy changing — and suspects there is more to it.",
   ],
 };
 
