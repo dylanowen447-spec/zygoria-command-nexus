@@ -29,4 +29,5 @@
 - [ ] Oz voice: enforce lads/action-first tone, ban corporate language (in progress — needs live check)
 - [ ] Expand the world beyond The Sanctuary into full zones with their own paths, so Dispatch can send jobs anywhere in Zygoria
 - [x] Oz voice: enforce lads/action-first tone, ban corporate language (verified live — no office language in his answers)
-- [ ] Add lore: they only eat fish in Zygoria at the current canon stage
+- [x] Add lore: they only eat fish in Zygoria at the current canon stage — verified live ("We eat fish round here... it's all we have")
+- [ ] Add lore: they love fish so much they don't care about anything else
