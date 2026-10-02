@@ -437,6 +437,7 @@ function CommandCentre() {
             </Button>)}
             </div>
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
+            <WelcomeGuide />
           </div>
           <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> 1 SANCTUARY</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>
         </div>
