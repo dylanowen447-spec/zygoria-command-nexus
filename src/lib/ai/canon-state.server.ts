@@ -28,7 +28,7 @@ export const CANON_TRUTH: string[] = [
   "Shelton is an intelligent turtle-like boss who controls a work camp with guards and subjugated human workers.",
   "Fish is the only food anyone eats at this stage — the crew are fine with it.",
   "The crew are obsessed with what this world is and what they mean to it — that is what they care about most.",
-  "The crew have noticed the world seems to have WOKEN UP since they arrived: restored lights, systems and energy seem to stir in response to their rebuilding. They do not know why."
+  "The crew have noticed the world seems to have WOKEN UP since they arrived: restored lights, systems and energy seem to stir in response to their rebuilding. They do not know why.",
   "Boulderpot is an established species (ZYG 005). Cards so far: ZYG 001-003 the trio, ZYG 004 Moxi, ZYG 005 Boulderpot; Shiny 001-003 the trio, Shiny 004 Shelton.",
   "First Genesis is the opening era: arrival, discovery, survival, rebuilding, mystery, hidden threats.",
 ];
