@@ -28,6 +28,10 @@ async function guarded<T>(work: () => Promise<T>): Promise<T> {
   }
 }
 
+const ZONE_IDS = ["sanctuary", "ruins", "caves", "cronk", "shelton"] as const;
+type ZoneId = (typeof ZONE_IDS)[number];
+const isZone = (z: string): z is ZoneId => (ZONE_IDS as readonly string[]).includes(z);
+
 export function planRoute(directive: string) {
   return guarded(async () => {
     const result = await createRouteCall(apiKey(), directive);
@@ -38,7 +42,11 @@ export function planRoute(directive: string) {
       if (route.length === 4) break;
     }
     if (!route.length) route.push("Oz");
-    return { route, reason: result.reason.trim().slice(0, 160) || "Best suited to this directive." };
+    return {
+      route,
+      zone: isZone(result.zone) ? result.zone : "sanctuary",
+      reason: result.reason.trim().slice(0, 160) || "Best suited to this directive.",
+    };
   });
 }
 
