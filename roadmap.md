@@ -8,3 +8,4 @@
 - [x] Crew conversations: group routing, brief in-character replies that react to each other
 - [x] End-to-end verification (zone chips, zone switching, group question, zone job)
 - [ ] New crew obsession canon: the trio are obsessed with what this world is and what they mean to it; they have noticed the world seems to have woken up since they arrived. Reflect in canon notes + story state, keep spoiler-safe.
+- [x] Strengthen the two Sanctuary shack silhouettes with subtle rim light and selective color contrast, without changing the painting or map placement.
