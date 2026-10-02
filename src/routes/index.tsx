@@ -4,7 +4,7 @@ import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, C
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { chooseJobRoute, runCrewStep } from "@/lib/job-planning.functions";
-import world from "@/assets/zygoria-world-shack-speakers2.png";
+import world from "@/assets/zygoria-world-green-trees.png";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
