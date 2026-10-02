@@ -88,7 +88,7 @@ export const HIDDEN_FUTURE_CANON: string[] = [
 /** The full story-state prompt block injected into every agent call. */
 export function canonContext(agent: string) {
   const truth = CANON_TRUTH.map(t => `  - ${t}`).join("\n");
-  const known = (CURRENTLY_KNOWN[agent] ?? CURRENTLY_KNOWN["Oz"]).map(k => `  - ${k}`).join("\n");
+  const known = (CURRENTLY_KNOWN[agent] ?? CURRENTLY_KNOWN["Oz"] ?? []).map(k => `  - ${k}`).join("\n");
   const chars = DISCOVERED.characters.map(c => `  - ${c}`).join("\n");
   const locs = DISCOVERED.locations.map(l => `  - ${l}`).join("\n");
   const hidden = HIDDEN_FUTURE_CANON.map(h => `  - ${h}`).join("\n");
