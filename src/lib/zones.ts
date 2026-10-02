@@ -109,6 +109,7 @@ export const ZONES: Record<ZoneId, Zone> = {
   },
   caves: {
     id: "caves",
+    chip: "CAVES",
     title: ["Survivor ", "Caves"],
     sub: "Where the last people hide.",
     indexA: "CAVES",
@@ -143,6 +144,7 @@ export const ZONES: Record<ZoneId, Zone> = {
   },
   cronk: {
     id: "cronk",
+    chip: "SWAMP",
     title: ["Cronk's ", "Territory"],
     sub: "His swamp. His rules. Watch your step.",
     indexA: "SWAMP",
@@ -177,6 +179,7 @@ export const ZONES: Record<ZoneId, Zone> = {
   },
   shelton: {
     id: "shelton",
+    chip: "CAMP",
     title: ["Shelton's ", "Camp"],
     sub: "A work camp run by a turtle with guards.",
     indexA: "CAMP",
