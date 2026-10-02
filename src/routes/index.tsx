@@ -87,6 +87,7 @@ function CommandCentre() {
     el.style.left = `${p.x}%`;
     el.style.top = `${p.y}%`;
     el.style.setProperty("--depth", depthFor(p.y));
+    if (agent === "Lowkey" && zoneRef.current === "sanctuary") el.classList.toggle("on-ridge", p.y < 34);
   }
   const wait = (ms: number) => new Promise<void>(resolve => { timers.current.push(setTimeout(resolve, ms)); });
   const routeTime = (agent: Agent, targets: Point[]) => {

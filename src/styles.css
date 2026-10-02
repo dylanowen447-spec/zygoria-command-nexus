@@ -229,3 +229,11 @@
 .codex-detail{margin-top:20px;padding:17px 0;border-top:1px solid var(--electric);border-bottom:1px solid var(--border)}.codex-detail-label{font:9px var(--font-mono);letter-spacing:1px;color:var(--electric)}.codex-detail h3{margin:9px 0;font:700 24px var(--font-display)}.codex-detail p{font:13px/1.6 var(--font-body);color:var(--foreground);margin:0;overflow-wrap:anywhere}.codex-detail-meta{display:grid;gap:9px;margin-top:20px;color:var(--muted-foreground);font:10px/1.4 var(--font-mono)}.codex-detail-meta span{display:flex;align-items:center;gap:7px}.codex-detail-meta svg{flex:none;color:var(--electric)}.codex-quiet{padding:30px 0;color:var(--dim);font:12px var(--font-body)}
 @media(max-width:600px){.codex-head{padding:19px 17px 14px}.codex-head h2{font-size:25px}.codex-bookmark{padding:10px 17px}.codex-body{padding:16px 17px 28px}.codex-tabs{padding:10px 13px}.codex-drawer{border-left:0}}
 @media(prefers-reduced-motion:reduce){.codex-drawer{animation:none}}
+
+/* Lowkey recedes naturally as the painted switchback climbs the new mountain. */
+.lookout-tag{left:58%;top:8%}
+.world-stage .marker-lowkey.on-ridge{height:66px!important;width:54px!important}
+.marker-lowkey.on-ridge .marker-status{height:15px;min-width:46px;font-size:7px;margin-bottom:3px}
+.marker-lowkey.on-ridge .sprite-stage{width:31px;height:43px}
+.marker-lowkey.on-ridge .lowkey-wordmark{width:35px}
+@media(max-width:600px){.lookout-tag{left:60%;top:7%}.world-stage .marker-lowkey.on-ridge{height:39px!important;width:35px!important}.marker-lowkey.on-ridge .marker-status{height:10px;min-width:31px;font-size:5px;margin-bottom:1px;padding:0 2px}.marker-lowkey.on-ridge .sprite-stage{width:20px;height:26px}.marker-lowkey.on-ridge .lowkey-wordmark{width:27px!important}}
