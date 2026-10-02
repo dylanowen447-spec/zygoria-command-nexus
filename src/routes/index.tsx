@@ -172,7 +172,7 @@ function CommandCentre() {
     if (path.length) await walk(agent, path, to === "central" ? "central" : "home", run);
   }
   /** One real handoff: the previous owner stops, the new owner walks to collect and works while its AI call processes all earlier outputs. */
-  async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, run: number): Promise<Step | null> {
+  async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, solo: boolean, run: number): Promise<Step | null> {
     const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview } });
     call.catch(() => undefined);
     const from: Agent | null = previous.at(-1)?.agent ?? null;
@@ -181,9 +181,13 @@ function CommandCentre() {
       setPhase("routing");
       setCurrent("Oz");
       setSelected("Oz");
-      log("Oz", "Receiving the directive at the crossroads.");
-      await goTo("Oz", "central", run);
-      if (run !== runId.current) return null;
+      if (solo && agent === "Oz") {
+        log("Oz", "Receiving the directive — keeping this one at the shack.");
+      } else {
+        log("Oz", "Receiving the directive at the crossroads.");
+        await goTo("Oz", "central", run);
+        if (run !== runId.current) return null;
+      }
     }
     const prev = from ?? "Oz";
     if (prev !== agent) {
