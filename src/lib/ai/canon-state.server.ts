@@ -88,6 +88,31 @@ export const HIDDEN_FUTURE_CANON: string[] = [
   "The full truth about the Network — what it really is remains larger and mysterious.",
 ];
 
+/** Visitor-safe journal pages. These descriptions are limited to what the crew currently knows.
+ * Change an entry here when the story establishes a new discovery; never project CANON_TRUTH or hidden lore to the browser. */
+export const CODEX_PAGES = [
+  { id: "oz", category: "Characters", name: "Oz", description: "The trio's energetic coordinator. At home by the Riverside Shack.", location: "The Sanctuary", recordedBy: null, level: "known" },
+  { id: "brix", category: "Characters", name: "Brix", description: "Builder of the crew. His workshop holds the settlement's repairs and salvaged machinery.", location: "The Sanctuary", recordedBy: null, level: "known" },
+  { id: "lowkey", category: "Characters", name: "Lowkey", description: "Quiet observer of Old Earth's ruins, often watching from the lookout.", location: "The Sanctuary", recordedBy: null, level: "known" },
+  { id: "survivors", category: "Characters", name: "The Survivors", description: "People shelter in caves, tunnels and ruins. The crew are helping with safety, water and shelter.", location: "Survivor Caves", recordedBy: null, level: "known" },
+  { id: "cronk", category: "Characters", name: "Cronk", description: "Survivors warn of a crocodilian danger in the swamp. The crew have not fully met him.", location: "Swamp territory", recordedBy: null, level: "partial" },
+  { id: "shelton", category: "Characters", name: "Shelton", description: "A turtle-like boss holds a guarded work camp. The crew have not fully met him.", location: "Work camp", recordedBy: null, level: "partial" },
+  { id: "unrecorded-creature-1", category: "Creatures", name: "Unrecorded", description: "We haven’t discovered enough about this yet.", location: null, recordedBy: null, level: "hidden" },
+  { id: "unrecorded-creature-2", category: "Creatures", name: "Unrecorded", description: "We’ll have to explore further before we can fill this in.", location: null, recordedBy: null, level: "hidden" },
+  { id: "sanctuary", category: "Locations", name: "The Sanctuary", description: "The crew's rebuilt home beside the river: shack, workshop, lookout, crossroads and arrival site.", location: "Ruined Cambridge region", recordedBy: null, level: "known" },
+  { id: "ruins", category: "Locations", name: "Old Earth Ruins", description: "The remains of the old city around the Sanctuary. Much of it is still unexplored.", location: "Cambridge region", recordedBy: null, level: "partial" },
+  { id: "caves", category: "Locations", name: "Survivor Caves", description: "Shelter for the people left behind. The crew know people are living there.", location: null, recordedBy: null, level: "partial" },
+  { id: "swamp", category: "Locations", name: "Swamp Territory", description: "Cronk's territory. The crew know it is dangerous, but have not mapped it all.", location: null, recordedBy: null, level: "partial" },
+  { id: "camp", category: "Locations", name: "Work Camp", description: "Shelton's guarded camp. More must be learned about what happens inside.", location: null, recordedBy: null, level: "partial" },
+  { id: "pods", category: "Objects", name: "The Arrival Pods", description: "Three egg-shaped stasis pods remain near the Sanctuary: Oz's yellow, Lowkey's red and Brix's blue.", location: "The Sanctuary", recordedBy: null, level: "known" },
+  { id: "workshop", category: "Objects", name: "Brix's Workshop", description: "An improvised place of tools, scrap and half-built repairs.", location: "The Sanctuary", recordedBy: "Brix", level: "known" },
+  { id: "salvage", category: "Old Earth discoveries", name: "Salvaged machinery", description: "Old cables, machines and recovered parts are being studied and put to use. What else remains is unclear.", location: "Old Earth Ruins", recordedBy: "Brix", level: "partial" },
+  { id: "lights", category: "Old Earth discoveries", name: "Restored lights", description: "Repaired lights and systems seem to stir as the crew rebuild. The reason is still unknown.", location: "The Sanctuary", recordedBy: null, level: "partial" },
+  { id: "network", category: "Network-related discoveries", name: "No entry yet", description: "This part of Zygoria is still unknown to us.", location: null, recordedBy: null, level: "hidden" },
+  { id: "waking", category: "Unsolved mysteries", name: "The waking world", description: "Since the crew arrived, the world seems to respond to their rebuilding. Nobody knows why.", location: "The Sanctuary", recordedBy: null, level: "partial" },
+  { id: "purpose", category: "Unsolved mysteries", name: "Why were we sent?", description: "The crew still do not know why they arrived here or what they mean to this world.", location: null, recordedBy: null, level: "partial" },
+] as const;
+
 /** The full story-state prompt block injected into every agent call. */
 export function canonContext(agent: string) {
   const truth = CANON_TRUTH.map(t => `  - ${t}`).join("\n");

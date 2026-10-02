@@ -14,5 +14,6 @@
 - Crew AI runs as server-only Gateway calls: one routing call, then one call per handoff step that receives all earlier outputs, driven step-by-step by the client — so handoffs are genuine, never simulated.
 - Zygoria canon lives in one server-only module injected into every crew AI call; later dated entries override earlier ones — so all agents share one source of truth and never invent lore.
 - Live story progress lives in `src/lib/ai/canon-state.server.ts` (stage, canon truth, per-agent knowledge, discoveries, unlocked zones, hidden future canon); the UI reads it only through the safe `getCanonState` server function, never the client bundle — so one edit advances the whole world.
+- Keep Codex journal pages in the central server-only story state and expose only visitor-safe records through `getCanonState`, so the journal grows with the story without revealing undiscovered lore.
 - Crew conversations are real sequential AI calls: the router flags broad/group questions, and each member answers briefly in their own voice reacting to the previous speakers — never simulated dialogue.
 - Keep Sanctuary building emphasis as a transparent artwork-aligned overlay above the original image, so local lighting changes never alter the map geometry or character paths.

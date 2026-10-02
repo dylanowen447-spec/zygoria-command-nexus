@@ -1,6 +1,7 @@
 # Zygoria Nexus — Task roadmap
 
 ## Completed
+- [x] Expand the Field Codex drawer into a seven-section Zygoria Codex with visitor-safe discoveries, partial records and current-zone continuity.
 - [x] Oz voice rule (cheeky, action-first, no corporate language)
 - [x] Fish-only / fish-love canon
 - [x] Zone expansion: Sanctuary + Old Earth ruins, survivor caves, Cronk's swamp, Shelton's camp (art, paths, work nodes, selector, AI zone routing)
@@ -10,3 +11,4 @@
 - [x] New crew obsession canon: the trio are obsessed with what this world is and what they mean to it; they have noticed the world seems to have woken up since they arrived. Reflect in canon notes + story state, keep spoiler-safe.
 - [x] Strengthen the two Sanctuary shack silhouettes with subtle rim light and selective color contrast, without changing the painting or map placement.
 - [x] Field codex drawer: spoiler-safe discoveries unlocked by zones visited and completed jobs, saved on device
+- [x] Distinct, restrained crew humour in dialogue: Oz impulsive, Brix dry, Lowkey deadpan; serious moments remain serious
