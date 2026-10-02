@@ -20,7 +20,7 @@ export const STORY_STAGE = {
 export const CANON_TRUTH: string[] = [
   "Zygoria is Old Earth, long after civilisation collapsed; The Network was not destroyed, only dormant.",
   "Oz, Brix and Lowkey arrived in egg-shaped stasis pods in the ruined Cambridge region.",
-  "The Sanctuary is their rebuilt home base: the Riverside Shack, Brix's Workshop, Lowkey's Lookout, the Crossroads, the river and the three arrival pods.",
+  "The Sanctuary is their rebuilt home base: the Riverside Shack, Brix's Workshop, Lowkey's Lookout, the Crossroads, the river and the three arrival pods. Lowkey's Lookout is a high natural rocky mountain overlook reached by a winding walkable path above the settlement; he sometimes spends quiet nights there watching the moon. It is not a wooden tower or platform.",
   "Pod colours: Oz = yellow (smallest), Brix = blue (largest), Lowkey = red.",
   "Moxi is a young ancient dragon who survived the collapse in deep dormancy; she lives hidden near the Sanctuary. Her colours are locked canon.",
   "Human survivors hide in caves, tunnels and ruins; the trio are helping them — food, shelter, water, safety.",
@@ -36,18 +36,18 @@ export const CANON_TRUTH: string[] = [
 /** What each character has actually discovered so far — shared knowledge plus their own perspective. */
 export const CURRENTLY_KNOWN: Record<string, string[]> = {
   Oz: [
-    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
+    "SHARED: The Sanctuary and its landmarks, including Lowkey's natural mountain overlook above the settlement; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
     "Oz knows the crew and the camp better than anyone — who is good at what, who needs watching, what needs doing next.",
     "He has not yet found the working decks he is destined to find; he senses sound and electricity are his thing.",
     "He does NOT know why the trio were sent, that their memories were sealed, or why the world seems to wake as they rebuild it.",
   ],
   Brix: [
-    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
+    "SHARED: The Sanctuary and its landmarks, including Lowkey's natural mountain overlook above the settlement; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
     "Brix knows the state of every machine, scrap pile and half-built project in the Workshop, and what salvaged parts the ruins and the camp might yield.",
     "He does NOT know why the trio were sent, that their memories were sealed, or why the world seems to wake as they rebuild it.",
   ],
   Lowkey: [
-    "SHARED: The Sanctuary and its landmarks; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
+    "SHARED: The Sanctuary and its landmarks, including Lowkey's natural mountain overlook above the settlement; the crew's roles; the survivors in the caves; Cronk and Shelton's territories are dangerous; fish is the food there is.",
     "Lowkey knows the most Old Earth history: the ruins, what the collapse left behind, and old stories about ancient dragons surviving the collapse in dormancy.",
     "He suspects something is dormant out there — something's out there, but he doesn't know what — and he keeps that suspicion mostly to himself.",
     "He does NOT know why the trio were sent, that their memories were sealed, or why the world seems to wake as they rebuild it.",
@@ -93,7 +93,7 @@ export const HIDDEN_FUTURE_CANON: string[] = [
 export const CODEX_PAGES = [
   { id: "oz", category: "Characters", name: "Oz", description: "The trio's energetic coordinator. At home by the Riverside Shack.", location: "The Sanctuary", recordedBy: null, level: "known" },
   { id: "brix", category: "Characters", name: "Brix", description: "Builder of the crew. His workshop holds the settlement's repairs and salvaged machinery.", location: "The Sanctuary", recordedBy: null, level: "known" },
-  { id: "lowkey", category: "Characters", name: "Lowkey", description: "Quiet observer of Old Earth's ruins, often watching from the lookout.", location: "The Sanctuary", recordedBy: null, level: "known" },
+  { id: "lowkey", category: "Characters", name: "Lowkey", description: "Quiet observer of Old Earth's ruins. He sometimes watches the moon from the mountain overlook above home.", location: "The Sanctuary", recordedBy: null, level: "known" },
   { id: "survivors", category: "Characters", name: "The Survivors", description: "People shelter in caves, tunnels and ruins. The crew are helping with safety, water and shelter.", location: "Survivor Caves", recordedBy: null, level: "known" },
   { id: "cronk", category: "Characters", name: "Cronk", description: "Survivors warn of a crocodilian danger in the swamp. The crew have not fully met him.", location: "Swamp territory", recordedBy: null, level: "partial" },
   { id: "shelton", category: "Characters", name: "Shelton", description: "A turtle-like boss holds a guarded work camp. The crew have not fully met him.", location: "Work camp", recordedBy: null, level: "partial" },

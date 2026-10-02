@@ -1,4 +1,4 @@
-import worldImg from "@/assets/zygoria-world-green-trees-v2.png";
+import worldImg from "@/assets/sanctuary-mountain-overlook.png";
 import ruinsImg from "@/assets/zone-ruins.jpg";
 import cavesImg from "@/assets/zone-caves.jpg";
 import swampImg from "@/assets/zone-swamp.jpg";
@@ -56,7 +56,7 @@ export const ZONES: Record<ZoneId, Zone> = {
     short: "SANCTUARY",
     meetName: "crossroads",
     img: worldImg,
-    alt: "The Sanctuary: Oz, Brix and Lowkey's rebuilt home base — a salvaged riverside shack, Brix's scrap workshop, their three landing pods, a lookout tower and reused Old Earth ruins",
+    alt: "The Sanctuary: a salvaged riverside shack, Brix's scrap workshop, three landing pods and Lowkey's winding mountain overlook above the river and Old Earth ruins",
     aspect: SANCTUARY_ASPECT,
     tags: [],
     // Open ground right of the shack (clear of the building and its lantern light) → glowing lower trail → crossroads
@@ -64,13 +64,13 @@ export const ZONES: Record<ZoneId, Zone> = {
       Oz: [{ x: 26, y: 63 }, { x: 30.5, y: 60.8 }, { x: 35, y: 60.3 }, { x: 40, y: 60 }, { x: 46, y: 59.6 }],
       // Workshop yard (left of the building, clear of scrap piles) → lower glowing trail → crossroads
       Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
-      // Open plateau track right of the treeline (flat, clear of the pines) → down the open grass east of the lone pine → crossroads
-      Lowkey: [{ x: 47.5, y: 41 }, { x: 50, y: 43.5 }, { x: 50.7, y: 47 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
+      // Foot of the mountain switchback → open grass east of the pines → crossroads.
+      Lowkey: [{ x: 47.5, y: 40.8 }, { x: 48, y: 43.8 }, { x: 50.7, y: 47 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
     },
-    // Work spots reached from home along open ground: Brix up the glowing trail to the workshop entrance, Lowkey up the plateau track toward the lookout.
+    // Work spots reached from home along open ground: Brix at his workshop, Lowkey winding uphill on the painted mountain path.
     work: {
       Brix: [{ x: 67.5, y: 54.6 }, { x: 71, y: 52.8 }],
-      Lowkey: [{ x: 50.5, y: 39 }, { x: 53.5, y: 38 }],
+      Lowkey: [{ x: 47, y: 38 }, { x: 49, y: 35.5 }, { x: 53.5, y: 32.5 }, { x: 55, y: 30 }, { x: 51, y: 26 }, { x: 49.5, y: 23.5 }, { x: 52, y: 21.5 }, { x: 55, y: 19 }, { x: 55, y: 16.5 }, { x: 52, y: 14.7 }, { x: 49.5, y: 12.5 }],
     },
   },
   ruins: {
