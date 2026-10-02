@@ -70,7 +70,7 @@ export const ZONES: Record<ZoneId, Zone> = {
     // Work spots reached from home along open ground: Brix at his workshop, Lowkey winding uphill on the painted mountain path.
     work: {
       Brix: [{ x: 67.5, y: 54.6 }, { x: 71, y: 52.8 }],
-      Lowkey: [{ x: 47, y: 38 }, { x: 49, y: 35.5 }, { x: 53.5, y: 32.5 }, { x: 55, y: 30 }, { x: 51, y: 26 }, { x: 49.5, y: 23.5 }, { x: 52, y: 21.5 }, { x: 55, y: 19 }, { x: 55, y: 16.5 }, { x: 52, y: 14.7 }, { x: 49.5, y: 12.5 }],
+      Lowkey: [{ x: 47, y: 38 }, { x: 49, y: 35.5 }, { x: 53.5, y: 32.5 }, { x: 55, y: 30 }, { x: 51, y: 26 }, { x: 49.5, y: 23.5 }, { x: 52, y: 21.5 }, { x: 55, y: 19 }],
     },
   },
   ruins: {
