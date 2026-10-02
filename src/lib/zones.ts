@@ -1,3 +1,4 @@
+import worldImg from "@/assets/zygoria-world-green-trees-v2.png";
 import ruinsImg from "@/assets/zone-ruins.jpg";
 import cavesImg from "@/assets/zone-caves.jpg";
 import swampImg from "@/assets/zone-swamp.jpg";
@@ -13,6 +14,8 @@ export type Zone = {
   id: ZoneId;
   /** Page heading split as [plain, highlighted]. */
   title: [string, string];
+  /** Short chip label for the zone selector. */
+  chip: string;
   sub: string;
   indexA: string;
   indexB: string;
@@ -44,6 +47,7 @@ export const ZONES: Record<ZoneId, Zone> = {
   sanctuary: {
     id: "sanctuary",
     title: ["The ", "Sanctuary"],
+    chip: "SANCTUARY",
     sub: "Built from the crash. Held by three.",
     indexA: "HOME BASE",
     indexB: "SECURE",
@@ -51,7 +55,7 @@ export const ZONES: Record<ZoneId, Zone> = {
     bottom: "THE SANCTUARY — EST. ARRIVAL DAY",
     short: "SANCTUARY",
     meetName: "crossroads",
-    img: "sanctuary",
+    img: worldImg,
     alt: "The Sanctuary: Oz, Brix and Lowkey's rebuilt home base — a salvaged riverside shack, Brix's scrap workshop, their three landing pods, a lookout tower and reused Old Earth ruins",
     aspect: SANCTUARY_ASPECT,
     tags: [],
