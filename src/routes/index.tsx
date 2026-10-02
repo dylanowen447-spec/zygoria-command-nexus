@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 
 import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, Command, Cpu, Crosshair, Hexagon, MapPin, Radio, Send, Signal, Sparkles, Terminal, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
-import { chooseJobRoute, runCrewStep } from "@/lib/job-planning.functions";
+import { chooseJobRoute, getCanonState, runCrewStep } from "@/lib/job-planning.functions";
 import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type Agent, type Point, type ZoneId } from "@/lib/zones";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
@@ -16,7 +16,7 @@ import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
 type Stop = "home" | "central";
 type Step = { agent: Agent; activity: string; result: string; verdict: "pass" | "conflict" | "n/a" };
-type Mission = { id: number; text: string; agent: Agent; reason: string; route: Agent[]; zone: ZoneId; steps: Step[]; done: number; error?: string; state: "Routing" | "Handoff" | "In progress" | "Complete"; time: string };
+type Mission = { id: number; text: string; agent: Agent; reason: string; route: Agent[]; zone: ZoneId; group: boolean; steps: Step[]; done: number; error?: string; state: "Routing" | "Handoff" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
   { name: "Oz", role: "Coordinator / creative lead", place: "Riverside shack", image: ozPortrait.url, icon: Sparkles },
@@ -37,6 +37,7 @@ const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minu
 const HAND: Record<Agent, { x: number; y: number }> = { Oz: { x: 8, y: -14 }, Lowkey: { x: 9, y: -16 }, Brix: { x: 12, y: -19 } };
 
 export const Route = createFileRoute("/")({
+  loader: () => getCanonState(),
   head: () => ({ meta: [
     { title: "Zygoria Command Centre" },
     { name: "description", content: "Enter the Zygoria world and dispatch simulated missions to Oz, Brix, and Lowkey." },
@@ -49,6 +50,7 @@ export const Route = createFileRoute("/")({
 });
 
 function CommandCentre() {
+  const canon = Route.useLoaderData();
   const [draft, setDraft] = useState("");
   const [missions, setMissions] = useState<Mission[]>([]);
   const [logs, setLogs] = useState<Log[]>(startLogs);
@@ -219,8 +221,8 @@ function CommandCentre() {
     return () => cancelAnimationFrame(raf);
   }, [current]);
   /** One real handoff: the previous owner stops, the new owner walks to collect and works while its AI call processes all earlier outputs. */
-  async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, solo: boolean, run: number): Promise<Step | null> {
-    const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview } });
+  async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, solo: boolean, group: boolean, run: number): Promise<Step | null> {
+    const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview, group } });
     call.catch(() => undefined);
     const meetName = ZONES[zoneRef.current].meetName;
     const zoneName = ZONES[zoneRef.current].short.toLowerCase();
@@ -290,7 +292,7 @@ function CommandCentre() {
     log(agent, output.verdict === "conflict" ? "Canon conflict flagged — result posted." : "Step finished — result posted.");
     return step;
   }
-  async function runMission(id: number, directive: string, route: Agent[], missionZone: ZoneId, run: number) {
+  async function runMission(id: number, directive: string, route: Agent[], missionZone: ZoneId, group: boolean, run: number) {
     const done: Step[] = [];
     if (missionZone !== "sanctuary") {
       setZoneId(missionZone);
@@ -300,7 +302,7 @@ function CommandCentre() {
     }
     for (let i = 0; i < route.length; i++) {
       const agent = route[i]!;
-      const step = await runStep(id, directive, agent, done, i > 0 && i === route.length - 1 && agent === "Oz", route.length === 1, run);
+      const step = await runStep(id, directive, agent, done, i > 0 && i === route.length - 1 && agent === "Oz", route.length === 1 && !group, group, run);
       if (run !== runId.current) return;
       if (!step) break;
       done.push(step);
@@ -340,16 +342,16 @@ function CommandCentre() {
       setPhase("idle");
       return;
     }
-    const { route, zone: missionZone, reason } = decision;
+    const { route, zone: missionZone, group, reason } = decision;
     const agent = route[0]!;
     const id = Date.now();
     setDraft("");
     setSelected("Oz");
     setWalking([]);
     setPhase("routing");
-    setMissions(prev => [{ id, text, agent, reason, route, zone: missionZone, steps: [], done: 0, state: "Routing" as const, time: now() }, ...prev].slice(0, 8));
+    setMissions(prev => [{ id, text, agent, reason, route, zone: missionZone, group, steps: [], done: 0, state: "Routing" as const, time: now() }, ...prev].slice(0, 8));
     log("Oz", `Route: ${route.join(" → ")}. ${reason}`);
-    void runMission(id, text, route, missionZone, runId.current);
+    void runMission(id, text, route, missionZone, group, runId.current);
   }
   function selectZone(z: ZoneId) {
     if (phase !== "idle" || z === zoneId) return;
@@ -365,7 +367,7 @@ function CommandCentre() {
     <main className="command-layout">
       <div className="world-column">
         <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> LIVE WORLD FEED <span className="eyebrow-line"/></div><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></div><div className="world-index"><CircleDot size={14}/> {zone.indexA} <span> / </span> {zone.indexB}</div></div>
-        <div className="zone-selector" role="group" aria-label="Zygoria zones">{ZONE_LIST.map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
+        <div className="zone-selector" role="group" aria-label="Zygoria zones"><span className="stage-chip" title={canon.stageSummary}>{canon.stage}</span>{ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
           <div className="world-image-wrap" style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
             <div className="world-vignette"/>
