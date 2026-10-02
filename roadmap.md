@@ -25,4 +25,4 @@
 - [x] Move Lowkey nearer the river by the waterfall without overlapping it
 - [x] Move Oz slightly right so he no longer covers the shack and its light
 - [x] Move LOOKOUT tag above the eggs, clear of Lowkey and the workshop tag on phone + desktop
-- [ ] Add speakers and electric details around Oz's shack in the world artwork
+- [x] Add speakers and electric details around Oz's shack in the world artwork
