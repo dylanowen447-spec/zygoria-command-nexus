@@ -2,6 +2,7 @@ import sourceOfTruth from "./canon/2026-10-01-source-of-truth.md?raw";
 import fishDiet from "./canon/2026-10-02-fish-diet.md?raw";
 import crewObsession from "./canon/2026-10-02-crew-obsession.md?raw";
 import undiscoveredAnswers from "./canon/2026-10-02-undiscovered-answers.md?raw";
+import crewHumour from "./canon/2026-10-02-crew-humour.md?raw";
 /**
  * Zygoria canon — the single source of truth the crew reads on every directive.
  * Add notes as dated entries in order; when a later entry says something changed, it overrides earlier ones.
@@ -12,6 +13,7 @@ export const ZYGORIA_CANON_ENTRIES: { date: string; notes: string }[] = [
   { date: "2026-10-02", notes: fishDiet },
   { date: "2026-10-02", notes: crewObsession },
   { date: "2026-10-02", notes: undiscoveredAnswers },
+  { date: "2026-10-02", notes: crewHumour },
 ];
 
 export function canonPrompt() {
