@@ -1,4 +1,5 @@
 import sourceOfTruth from "./canon/2026-10-01-source-of-truth.md?raw";
+import fishDiet from "./canon/2026-10-02-fish-diet.md?raw";
 /**
  * Zygoria canon — the single source of truth the crew reads on every directive.
  * Add notes as dated entries in order; when a later entry says something changed, it overrides earlier ones.
@@ -6,6 +7,7 @@ import sourceOfTruth from "./canon/2026-10-01-source-of-truth.md?raw";
 export const ZYGORIA_CANON_ENTRIES: { date: string; notes: string }[] = [
   // Lore notes from Dylan Owen, oldest first.
   { date: "2026-10-01", notes: sourceOfTruth },
+  { date: "2026-10-02", notes: fishDiet },
 ];
 
 export function canonPrompt() {
