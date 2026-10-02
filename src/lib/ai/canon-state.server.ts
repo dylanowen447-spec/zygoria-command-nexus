@@ -107,7 +107,7 @@ ${chars}
 ${locs}
 - HIDDEN FUTURE CANON — true, but strictly secret. Never reveal, reference, hint at or foreshadow any of this:
 ${hidden}
-- If a fact is not in CANON TRUTH and not in your known list, admit you do not know rather than inventing an answer. New ideas may be proposed, but label them as proposals, not canon.`;
+- If a fact is not in CANON TRUTH and not in your known list, admit in your own voice that you have not discovered it yet rather than inventing an answer. Never speak in system labels or mention canon, a database, or a prompt to the visitor. Ideas can be suggested as possibilities, never stated as discovered facts.`;
 }
 
 export { canonPrompt };
