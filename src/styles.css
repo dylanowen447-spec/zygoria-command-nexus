@@ -281,6 +281,24 @@
 .welcome-tip svg{color:var(--violet);flex:none}
 .welcome-enter{margin-top:14px;width:100%;height:36px;border-radius:2px!important;font:700 10px var(--font-mono)!important;letter-spacing:1.5px;background:color-mix(in oklab,var(--electric) 12%,transparent)!important;border:1px solid color-mix(in oklab,var(--electric) 45%,transparent)!important;color:var(--electric)!important}
 .welcome-enter:hover{background:color-mix(in oklab,var(--electric) 22%,transparent)!important;box-shadow:0 0 18px oklch(0.65 0.17 218 / 30%)}
-.welcome-tab{position:absolute;left:10px;bottom:40px;z-index:8;height:26px;padding:0 10px;border-radius:2px!important;font:700 9px var(--font-mono)!important;letter-spacing:1.5px;color:var(--electric)!important;border-color:color-mix(in oklab,var(--electric) 40%,transparent)!important;background:oklch(0.09 0.025 259 / 88%)!important;box-shadow:0 0 14px oklch(0.65 0.17 218 / 18%)}
+.welcome-tab{position:absolute;left:10px;bottom:70px;z-index:8;height:26px;padding:0 10px;border-radius:2px!important;font:700 9px var(--font-mono)!important;letter-spacing:1.5px;color:var(--electric)!important;border-color:color-mix(in oklab,var(--electric) 40%,transparent)!important;background:oklch(0.09 0.025 259 / 88%)!important;box-shadow:0 0 14px oklch(0.65 0.17 218 / 18%)}
 .welcome-tab:hover{border-color:var(--electric)!important;background:var(--surface-raised)!important}
-@media(max-width:600px){.welcome-card{padding:15px 14px 13px}.welcome-card h3{font-size:17px}.welcome-lead{font-size:12px}.welcome-col li{font-size:10.5px}.welcome-jobs li{font-size:10.5px}.welcome-tab{left:8px;bottom:36px}}
+@media(max-width:600px){
+.welcome-overlay{padding:10px;align-items:flex-start;padding-top:12px}
+.welcome-card{padding:12px 12px 10px;max-height:none;overflow:visible}
+.welcome-card h3{font-size:15px;margin-top:5px}
+.welcome-lead{font-size:10.5px;margin-top:7px}
+.welcome-col{margin-top:8px}
+.welcome-label{font-size:8px;letter-spacing:1.2px}
+.welcome-col ul{display:block;margin:4px 0 0}
+.welcome-col li{display:inline;font-size:9.5px;padding-left:0;line-height:1.5}
+.welcome-col li:before{position:static;display:inline;width:auto;height:auto;background:none;box-shadow:none;content:' · ';color:var(--dim)}
+.welcome-col li:last-child:after{content:''}
+.welcome-jobs ul{display:grid;gap:1px}
+.welcome-jobs li{display:block;font-size:9.5px;padding-left:11px}
+.welcome-jobs li:before{content:'';position:absolute;left:0;top:6px;width:5px;height:1px;background:var(--electric);box-shadow:0 0 6px var(--electric);color:initial}
+.welcome-note{font-size:9.5px;margin-top:8px}
+.welcome-tip{margin-top:8px;padding:6px 9px;font-size:9px}
+.welcome-enter{margin-top:9px;height:30px;font-size:9px!important}
+.welcome-tab{left:8px;bottom:62px}
+}
