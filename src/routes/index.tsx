@@ -4,7 +4,7 @@ import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, C
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { chooseJobRoute, runCrewStep } from "@/lib/job-planning.functions";
-import world from "@/assets/zygoria-world-workshop.jpg";
+import world from "@/assets/zygoria-world-shack-speakers2.png";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
@@ -172,7 +172,7 @@ function CommandCentre() {
     if (path.length) await walk(agent, path, to === "central" ? "central" : "home", run);
   }
   /** One real handoff: the previous owner stops, the new owner walks to collect and works while its AI call processes all earlier outputs. */
-  async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, run: number): Promise<Step | null> {
+  async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, solo: boolean, run: number): Promise<Step | null> {
     const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview } });
     call.catch(() => undefined);
     const from: Agent | null = previous.at(-1)?.agent ?? null;
@@ -181,9 +181,13 @@ function CommandCentre() {
       setPhase("routing");
       setCurrent("Oz");
       setSelected("Oz");
-      log("Oz", "Receiving the directive at the crossroads.");
-      await goTo("Oz", "central", run);
-      if (run !== runId.current) return null;
+      if (solo && agent === "Oz") {
+        log("Oz", "Receiving the directive — keeping this one at the shack.");
+      } else {
+        log("Oz", "Receiving the directive at the crossroads.");
+        await goTo("Oz", "central", run);
+        if (run !== runId.current) return null;
+      }
     }
     const prev = from ?? "Oz";
     if (prev !== agent) {
@@ -209,10 +213,11 @@ function CommandCentre() {
       setMission(id, () => ({ state: "In progress", agent }));
       setPhase("working");
     }
-    log(agent, agent === "Oz" ? (finalReview ? "Taking the combined output home for final review." : "Keeping this one — heading back to work on it.") : "Heading to the work area.");
+    const staysPut = agent === "Oz" && solo;
+    log(agent, staysPut ? "Working on it right here at the shack." : agent === "Oz" ? (finalReview ? "Taking the combined output home for final review." : "Keeping this one — heading back to work on it.") : "Heading to the work area.");
     let output: Awaited<typeof call>;
     try {
-      [output] = await Promise.all([call, goTo(agent, "work", run)]);
+      [output] = await Promise.all([call, staysPut ? Promise.resolve() : goTo(agent, "work", run)]);
     } catch (error) {
       if (run !== runId.current) return null;
       const message = error instanceof Error ? error.message : "The crew could not finish this step.";
@@ -233,7 +238,7 @@ function CommandCentre() {
     const done: Step[] = [];
     for (let i = 0; i < route.length; i++) {
       const agent = route[i]!;
-      const step = await runStep(id, directive, agent, done, i > 0 && i === route.length - 1 && agent === "Oz", run);
+      const step = await runStep(id, directive, agent, done, i > 0 && i === route.length - 1 && agent === "Oz", route.length === 1, run);
       if (run !== runId.current) return;
       if (!step) break;
       done.push(step);
