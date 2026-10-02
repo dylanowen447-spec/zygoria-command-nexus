@@ -212,9 +212,11 @@ function CommandCentre() {
     el.classList.add("is-held");
     let raf = 0;
     const track = () => {
-      const p = coords.current[current];
-      el.style.left = `${p.x}%`;
-      el.style.top = `${p.y}%`;
+      if (!el.classList.contains("is-travelling")) {
+        const p = coords.current[current];
+        el.style.left = `${p.x}%`;
+        el.style.top = `${p.y}%`;
+      }
       raf = requestAnimationFrame(track);
     };
     raf = requestAnimationFrame(track);
