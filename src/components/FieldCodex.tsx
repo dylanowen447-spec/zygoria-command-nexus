@@ -67,7 +67,7 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
   const selected = pages.find(page => page.id === selectedId && page.category === category);
   const list = pages.filter(page => page.category === category);
   const visibleCount = pages.filter(page => page.level !== "hidden").length;
-  const imageFor = (id: string) => PORTRAITS[id] ?? (ZONE_IMAGES[id] ? ZONES[ZONE_IMAGES[id]].img : undefined);
+  const imageFor = (id: string) => { const zoneId = ZONE_IMAGES[id]; return PORTRAITS[id] ?? (zoneId ? ZONES[zoneId].img : undefined); };
   const close = () => { setOpen(false); triggerRef.current?.focus(); };
 
   return <>
