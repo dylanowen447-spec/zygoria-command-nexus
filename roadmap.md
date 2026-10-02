@@ -1,9 +1,7 @@
 # Zygoria Nexus — Task roadmap
 
-## In progress
-- [ ] Expand the existing Field Codex drawer into an in-world Zygoria Codex with seven canon-safe sections, discovery details, partial unknowns and current-zone continuity.
-
 ## Completed
+- [x] Expand the Field Codex drawer into a seven-section Zygoria Codex with visitor-safe discoveries, partial records and current-zone continuity.
 - [x] Oz voice rule (cheeky, action-first, no corporate language)
 - [x] Fish-only / fish-love canon
 - [x] Zone expansion: Sanctuary + Old Earth ruins, survivor caves, Cronk's swamp, Shelton's camp (art, paths, work nodes, selector, AI zone routing)

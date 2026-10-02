@@ -19,6 +19,7 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
   const [category, setCategory] = useState<Category>("Characters");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [found, setFound] = useState<string[]>([]);
+  const [restored, setRestored] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -27,10 +28,12 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
       const saved = JSON.parse(localStorage.getItem(KEY) ?? "[]");
       if (Array.isArray(saved)) setFound(saved.filter((id): id is string => typeof id === "string"));
     } catch { /* journal still works when storage is unavailable */ }
+    setRestored(true);
   }, []);
 
   // Visits and finished directives bookmark already-known pages; neither can establish new lore.
   useEffect(() => {
+    if (!restored) return;
     const logged = new Set(found);
     for (const zone of visited) {
       const pageId = zone === "cronk" ? "swamp" : zone === "shelton" ? "camp" : zone;
@@ -45,7 +48,7 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
       setFound(next);
       try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* optional */ }
     }
-  }, [visited, logs, found, pages]);
+  }, [visited, logs, found, pages, restored]);
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +70,8 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
   const selected = pages.find(page => page.id === selectedId && page.category === category);
   const list = pages.filter(page => page.category === category);
   const visibleCount = pages.filter(page => page.level !== "hidden").length;
+  const fullyKnown = pages.filter(page => page.level === "known").length;
+  const incomplete = pages.filter(page => page.level === "partial").length;
   const imageFor = (id: string) => { const zoneId = ZONE_IMAGES[id]; return PORTRAITS[id] ?? (zoneId ? ZONES[zoneId].img : undefined); };
   const close = () => { setOpen(false); triggerRef.current?.focus(); };
 
@@ -75,7 +80,7 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
     {open && <div className="codex-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}>
       <aside className="codex-drawer" role="dialog" aria-modal="true" aria-label="Zygoria Codex">
         <header className="codex-head"><div><div className="codex-eyebrow">FIELD JOURNAL / {currentZone === "sanctuary" ? "HOME" : ZONES[currentZone].short}</div><h2>Zygoria Codex</h2><p>Notes from a world still being understood.</p></div><Button ref={closeRef} type="button" variant="ghost" size="icon" className="codex-close" onClick={close} aria-label="Close codex"><X size={17}/></Button></header>
-        <div className="codex-bookmark"><BookOpen size={15}/><span>{visibleCount} known pages · {pages.length - visibleCount} still unrecorded</span></div>
+        <div className="codex-bookmark"><BookOpen size={15}/><span>{fullyKnown} known · {incomplete} incomplete · {pages.length - visibleCount} unrecorded</span></div>
         <nav className="codex-tabs" aria-label="Codex sections">{CATEGORIES.map(item => <Button key={item} type="button" variant="ghost" className={`codex-tab ${category === item ? "is-active" : ""}`} aria-current={category === item ? "page" : undefined} onClick={() => { setCategory(item); setSelectedId(null); }}>{item}<span>{pages.filter(page => page.category === item).length}</span></Button>)}</nav>
         <div className="codex-body"><div className="codex-section-title"><span>{category}</span><small>{String(list.length).padStart(2, "0")} ENTRIES</small></div>
           <div className="codex-list">{list.map(page => {
@@ -83,7 +88,7 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
             const image = !hidden ? imageFor(page.id) : undefined;
             return <Button type="button" variant="ghost" key={page.id} className={`codex-row ${selectedId === page.id ? "is-selected" : ""}`} onClick={() => setSelectedId(page.id)} aria-label={`Read ${hidden ? "undiscovered" : page.name} entry`}>
               <span className={`codex-thumb ${hidden ? "is-hidden" : ""}`}>{image ? <img src={image} alt=""/> : hidden ? <LockKeyhole size={17}/> : <BookOpen size={17}/>}</span>
-              <span className="codex-row-copy"><strong>{hidden ? "Unrecorded" : page.name}</strong><small>{hidden ? "NOT YET DISCOVERED" : found.includes(page.id) ? "FIELD NOTE · RECORDED" : page.level === "partial" ? "FRAGMENT · INCOMPLETE" : "KNOWN · NOTED"}</small></span><ChevronRight size={15}/>
+              <span className="codex-row-copy"><strong>{hidden ? "Unrecorded" : page.name}</strong><small>{hidden ? "STILL TO DISCOVER" : page.level === "partial" ? found.includes(page.id) ? "FIELD NOTE · INCOMPLETE" : "FRAGMENT · INCOMPLETE" : found.includes(page.id) ? "FIELD NOTE · RECORDED" : "KNOWN · NOTED"}</small></span><ChevronRight size={15}/>
             </Button>;
           })}</div>
           {selected && <div className="codex-detail" aria-live="polite"><div className="codex-detail-label">{selected.level === "hidden" ? "BLANK PAGE" : selected.level === "partial" ? "INCOMPLETE RECORD" : "FIELD RECORD"}</div>
