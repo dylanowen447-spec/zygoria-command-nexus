@@ -3,7 +3,7 @@ import { HOME, ZONES, type Agent, type Point, type ZoneId } from "@/lib/zones";
 /** One interactive world object a Zig can change. States advance one step per completed action. */
 export type WorldObject = { id: string; zone: ZoneId; agent: Agent; name: string; states: string[]; verbs: string[]; discovery?: string };
 export type WorldState = { levels: Record<string, number>; discoveries: string[] };
-export type WorldChange = { objectId: string; agent: Agent; verb: string; name: string; from: string; to: string; discovery?: string };
+export type WorldChange = { objectId: string; agent: Agent; verb: string; name: string; from: string; to: string; discovery?: string | undefined };
 
 /** Role-specific verbs: Brix builds and repairs, Oz powers and operates, Lowkey scouts and investigates. */
 export const ROLE_VERBS: Record<Agent, { verb: string; match: RegExp }[]> = {
