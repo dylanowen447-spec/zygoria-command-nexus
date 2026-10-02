@@ -1,33 +1,9 @@
-- [x] Build the Zygoria Command Centre visual prototype with world, status markers, task simulation, and activity panel.
-- [x] Use the supplied Oz, Brix, and Lowkey character art for their markers and roster.
-- [x] Verify desktop and iPhone layouts and task handoff interaction.
-- [x] Make the world scene feel inhabited, with grounded characters, glowing status labels, and task-triggered movement to map locations.
-- [x] Replace portrait markers and sliding movement with small full-body characters walking the shack, central area, workshop, and lookout paths; verify iPhone behavior.
-- [x] Refine Oz, Brix, and Lowkey into distinctive front-facing sprites with directional 3–4 frame walks, working poses, and grounded shadows without changing map layout.
-- [x] Redraw in-world sprites to match the supplied First Genesis references: Oz's yellow fur, spikes and headset; Brix's blond hair, boxing gloves and record chest; Lowkey's red angular hood and shadowed mask.
-- [x] Ground the existing sprites on the terrain with moonlit colour, softer contact shadows, depth scaling, and smoother walking without changing their designs or the map.
-- [x] Preserve sprite designs and map while making Oz shortest, Lowkey slightly taller, and Brix tallest and broadest at their world stops.
-- [x] Replace position tweening with frame-by-frame route walking synced to a looping 4-pose walk cycle (legs, arms, bounce, facing), idle on stop; keep height rule, map and UI.
-- [x] Use uploaded Lowkey sprite sheet (idle, walk 1-4, thinking); taller than Oz, shorter than Brix; route curves up to lookout
-- [x] Use uploaded Brix sprite sheet (idle, walk 1-4, thinking); tallest and broadest
-- [x] Add uploaded Moxi as a small static creature hidden by the Sanctuary river without changing crew or routes.
-- [x] Make Moxi peek from behind foreground river rocks with matched scale and lighting, without movement or interaction.
-- [x] Move Moxi clear of the crossroads label and make her slightly more visible while still partly hidden.
-- [x] Place Moxi below the evergreen she is currently beside, visible on phones but partly sheltered by scenery, static.
-- [x] Apply poster-inspired Zygoria/FIRST GENESIS title treatment and subtle Dylan Owen / 2026 credits without changing the world or UI structure.
-- [x] Move the existing three arrival pods into the dark area just up and right of their latest location; keep them large and visibly electric without altering the Sanctuary layout or characters.
-- [x] Add one AI Gateway job decision (Oz, Brix, or Lowkey) with a short reason, then update the chosen character's status through the existing dispatch flow; no tools or autonomous background work.
-- [x] Match the lettering under Oz to the newly uploaded reference, keeping the other character labels and world unchanged.
-- [x] Slightly shrink the Oz, Brix and Lowkey name tags and centre Lowkey's tag under his feet.
-- [x] Shift Brix slightly so he covers less of the workshop; make workshop slightly larger/more readable; keep Brix tallest, layout/routes/UI unchanged
-- [x] Pathing: Oz idle off the fence onto clear ground; routes follow walkable paths, no clipping through fences/buildings/props; keep zones (Oz shack, Lowkey lookout, Brix workshop), sprites, sizes, UI
-- [x] Strict pathing: no walking off the bridge/pier, no idling on edges, fences, water, ravines or cliffs; Oz idles on solid ground
-- [x] Move Lowkey nearer the river by the waterfall without overlapping it
-- [x] Move Oz slightly right so he no longer covers the shack and its light
-- [x] Move LOOKOUT tag above the eggs, clear of Lowkey and the workshop tag on phone + desktop
-- [x] Add speakers and electric details around Oz's shack in the world artwork
-- [ ] Oz voice: enforce lads/action-first tone, ban corporate language (in progress — needs live check)
-- [ ] Expand the world beyond The Sanctuary into full zones with their own paths, so Dispatch can send jobs anywhere in Zygoria
-- [x] Oz voice: enforce lads/action-first tone, ban corporate language (verified live — no office language in his answers)
-- [x] Add lore: they only eat fish in Zygoria at the current canon stage — verified live ("We eat fish round here... it's all we have")
-- [ ] Add lore: they love fish so much they don't care about anything else
+# Roadmap
+
+- [x] Oz voice fix (action-first, no corporate language)
+- [x] Fish diet canon + fish-love entry
+- [x] Zone artwork generated (ruins, caves, cronk swamp, Shelton camp)
+- [x] Zone system: selector, per-zone paths, AI picks crew + zone, missions travel
+- [ ] Central canon / story-state system (CANON_TRUTH / CURRENTLY_KNOWN / HIDDEN_FUTURE_CANON, per-agent knowledge, unlocked zones, story stage in one place) — in progress
+- [ ] Crew banter: broad/personal questions get 2-3 agents answering together, reacting to each other, group trigger words
+- [ ] Verify: zone switch + zone mission run, group question run
