@@ -196,7 +196,7 @@ function CommandCentre() {
         el.style.left = `${p.x}%`;
         el.style.top = `${p.y}%`;
         const ha = handOffset(from), hb = handOffset(to), lift = Math.sin(Math.PI * k) * -6;
-        el.style.transform = `translate(${ha.x + (hb.x - ha.x) * k}px, ${ha.y + (hb.y - ha.y) * k + lift}px)`;
+        el.style.transform = `translate(calc(${ha.x + (hb.x - ha.x) * k}px * var(--desktop-sprite-scale, 1)), calc(${ha.y + (hb.y - ha.y) * k}px * var(--desktop-sprite-scale, 1) + ${lift}px))`;
         if (k < 1) frames.current.push(requestAnimationFrame(step));
         else { el.classList.remove("is-travelling"); el.classList.add("is-held"); resolve(); }
       };
@@ -216,7 +216,7 @@ function CommandCentre() {
         el.style.left = `${p.x}%`;
         el.style.top = `${p.y}%`;
         const o = handOffset(current);
-        el.style.transform = `translate(${o.x}px, ${o.y}px)`;
+        el.style.transform = `translate(calc(${o.x}px * var(--desktop-sprite-scale, 1)), calc(${o.y}px * var(--desktop-sprite-scale, 1)))`;
       }
       raf = requestAnimationFrame(track);
     };
