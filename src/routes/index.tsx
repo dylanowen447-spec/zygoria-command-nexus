@@ -188,7 +188,7 @@ function CommandCentre() {
       el.classList.add("is-travelling");
       const t0 = performance.now();
       const step = (time: number) => {
-        if (run !== runId.current) { el.classList.remove("is-travelling"); return; }
+        if (run !== runId.current) { el.classList.remove("is-travelling", "is-held"); return; }
         const k = Math.min((time - t0) / duration, 1);
         let target = k * total, p = pts[0]!;
         for (let i = 1; i < pts.length; i++) {
@@ -199,11 +199,27 @@ function CommandCentre() {
         el.style.left = `${p.x}%`;
         el.style.top = `${p.y}%`;
         if (k < 1) frames.current.push(requestAnimationFrame(step));
-        else { el.classList.remove("is-travelling"); resolve(); }
+        else { el.classList.remove("is-travelling"); el.classList.add("is-held"); resolve(); }
       };
       frames.current.push(requestAnimationFrame(step));
     });
   }
+  /** While an agent owns the task, keep the glowing icon hovering over them wherever they stand or walk. */
+  useEffect(() => {
+    const el = taskIconRef.current;
+    if (!el) return;
+    if (!current) { el.classList.remove("is-held", "is-travelling"); return; }
+    el.classList.add("is-held");
+    let raf = 0;
+    const track = () => {
+      const p = coords.current[current];
+      el.style.left = `${p.x}%`;
+      el.style.top = `${p.y}%`;
+      raf = requestAnimationFrame(track);
+    };
+    raf = requestAnimationFrame(track);
+    return () => cancelAnimationFrame(raf);
+  }, [current]);
   /** One real handoff: the previous owner stops, the new owner walks to collect and works while its AI call processes all earlier outputs. */
   async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, solo: boolean, run: number): Promise<Step | null> {
     const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview } });
