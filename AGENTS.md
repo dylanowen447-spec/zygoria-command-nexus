@@ -19,3 +19,4 @@
 - Keep Sanctuary building emphasis as a transparent artwork-aligned overlay above the original image, so local lighting changes never alter the map geometry or character paths.
 - Keep Sanctuary terrain edits localized to the scene artwork and align Lowkey's mountain route nodes to its painted switchback, so other landmarks and paths remain unchanged.
 - Scale desktop character artwork around the sprite stage's bottom anchor with a shared world-stage factor, and apply that factor to the carried task icon offsets; this preserves waypoint feet coordinates and untouched mobile proportions.
+- Zig task steps end in a role-specific action on a zone world object (src/lib/world-state.ts); object levels and discoveries persist on-device so world changes outlive the task.

@@ -14,7 +14,7 @@ const PORTRAITS: Record<string, string> = { oz: ozPortrait.url, brix: brixPortra
 const ZONE_IMAGES: Record<string, ZoneId> = { sanctuary: "sanctuary", ruins: "ruins", caves: "caves", swamp: "cronk", camp: "shelton" };
 const KEY = "zygoria-codex-v1";
 
-export function FieldCodex({ pages, logs, visited, currentZone }: { pages: readonly Page[]; logs: Log[]; visited: ZoneId[]; currentZone: ZoneId }) {
+export function FieldCodex({ pages, logs, visited, currentZone, recorded = [] }: { pages: readonly Page[]; logs: Log[]; visited: ZoneId[]; currentZone: ZoneId; recorded?: string[] }) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<Category>("Characters");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -39,6 +39,7 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
       const pageId = zone === "cronk" ? "swamp" : zone === "shelton" ? "camp" : zone;
       logged.add(pageId);
     }
+    for (const id of recorded) logged.add(id); // discoveries made by Zig world actions
     for (const mission of logs.filter(item => item.done)) {
       if (/salvage|scrap|cable|machine|tech/i.test(mission.text)) logged.add("salvage");
       if (/repair|rebuild|power|light|generator/i.test(mission.text)) logged.add("lights");
@@ -48,7 +49,7 @@ export function FieldCodex({ pages, logs, visited, currentZone }: { pages: reado
       setFound(next);
       try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* optional */ }
     }
-  }, [visited, logs, found, pages, restored]);
+  }, [visited, logs, found, pages, restored, recorded]);
 
   useEffect(() => {
     if (!open) return;
