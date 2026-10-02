@@ -213,10 +213,11 @@ function CommandCentre() {
       setMission(id, () => ({ state: "In progress", agent }));
       setPhase("working");
     }
-    log(agent, agent === "Oz" ? (finalReview ? "Taking the combined output home for final review." : "Keeping this one — heading back to work on it.") : "Heading to the work area.");
+    const staysPut = agent === "Oz" && solo;
+    log(agent, staysPut ? "Working on it right here at the shack." : agent === "Oz" ? (finalReview ? "Taking the combined output home for final review." : "Keeping this one — heading back to work on it.") : "Heading to the work area.");
     let output: Awaited<typeof call>;
     try {
-      [output] = await Promise.all([call, goTo(agent, "work", run)]);
+      [output] = await Promise.all([call, staysPut ? Promise.resolve() : goTo(agent, "work", run)]);
     } catch (error) {
       if (run !== runId.current) return null;
       const message = error instanceof Error ? error.message : "The crew could not finish this step.";
