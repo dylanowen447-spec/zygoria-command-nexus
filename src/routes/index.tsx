@@ -238,7 +238,7 @@ function CommandCentre() {
     const done: Step[] = [];
     for (let i = 0; i < route.length; i++) {
       const agent = route[i]!;
-      const step = await runStep(id, directive, agent, done, i > 0 && i === route.length - 1 && agent === "Oz", run);
+      const step = await runStep(id, directive, agent, done, i > 0 && i === route.length - 1 && agent === "Oz", route.length === 1, run);
       if (run !== runId.current) return;
       if (!step) break;
       done.push(step);
