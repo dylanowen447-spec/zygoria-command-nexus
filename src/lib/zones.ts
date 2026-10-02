@@ -76,6 +76,7 @@ export const ZONES: Record<ZoneId, Zone> = {
   ruins: {
     id: "ruins",
     title: ["Old Earth ", "Ruins"],
+    chip: "RUINS",
     sub: "The dead city. Still full of salvage.",
     indexA: "RUINS",
     indexB: "SALVAGE",
