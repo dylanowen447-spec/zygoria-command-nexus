@@ -1,6 +1,7 @@
 # Zygoria Nexus — Task roadmap
 
 ## Completed
+- [x] Role-specific Zig actions that create persistent world changes (objects, Codex discoveries, 7-stage task tracker).
 - [x] Make Oz, Brix and Lowkey moderately larger on desktop only, keeping sprite proportions, animation, feet anchors and mobile sizing unchanged.
 - [x] Replace the Sanctuary's wooden lookout with Lowkey's natural mountain overlook and winding walkable route, preserving the rest of the world.
 - [x] Expand the Field Codex drawer into a seven-section Zygoria Codex with visitor-safe discoveries, partial records and current-zone continuity.

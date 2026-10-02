@@ -239,3 +239,22 @@
 .marker-lowkey.on-ridge .sprite-stage{width:31px;height:43px}
 .marker-lowkey.on-ridge .lowkey-wordmark{width:35px}
 @media(max-width:600px){.lookout-tag{left:60%;top:7%}.world-stage .marker-lowkey.on-ridge{height:39px!important;width:35px!important}.marker-lowkey.on-ridge .marker-status{height:10px;min-width:31px;font-size:5px;margin-bottom:1px;padding:0 2px}.marker-lowkey.on-ridge .sprite-stage{width:20px;height:26px}.marker-lowkey.on-ridge .lowkey-wordmark{width:27px!important}}
+/* Persistent world objects changed by Zig actions */
+.world-object{position:absolute;z-index:3;transform:translate(-50%,-50%);pointer-events:none}
+.wo-ring{display:block;width:18px;height:7px;border-radius:50%;border:1px solid var(--dim);opacity:.45;transition:all .6s}
+.world-object.level-1 .wo-ring,.world-object.level-2 .wo-ring{border-color:var(--electric);box-shadow:0 0 10px var(--electric);opacity:.85}
+.world-object.wo-brix:not(.level-0) .wo-ring{border-color:var(--green);box-shadow:0 0 10px var(--green)}
+.world-object.wo-lowkey:not(.level-0) .wo-ring{border-color:var(--violet);box-shadow:0 0 10px var(--violet)}
+.world-object.is-max .wo-ring{width:24px;height:9px;animation:pulse 2.4s infinite}
+.world-object.is-acting .wo-ring{border-color:var(--gold);box-shadow:0 0 16px var(--gold);opacity:1;animation:pulse .5s infinite}
+.wo-label{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);white-space:nowrap;font:8px var(--font-mono);letter-spacing:1px;color:var(--foreground);background:oklch(0.105 0.025 259 / 88%);border:1px solid var(--electric);padding:2px 5px;opacity:0;transition:opacity .4s}
+.world-object.is-acting .wo-label,.world-object.just-changed .wo-label{opacity:1}
+.world-object.just-changed .wo-label{border-color:var(--green);color:var(--green)}
+.task-progress.stages-7{grid-template-columns:repeat(7,1fr)}
+.progress-labels.stage-now span:last-child{color:var(--electric)}
+.world-change-line{display:block;margin-top:8px;font:9px var(--font-mono);letter-spacing:1px;color:var(--green)}
+.world-state-list{margin-top:12px;display:grid;gap:6px}
+.world-state-row{display:flex;justify-content:space-between;align-items:center;font:10px var(--font-mono);letter-spacing:1px;color:var(--muted-foreground)}
+.world-state-row small{margin-left:7px;color:var(--dim);font-size:8px}
+.world-state-row b{font-weight:500;color:var(--dim)}
+.world-state-row:not(.level-0) b{color:var(--green)}

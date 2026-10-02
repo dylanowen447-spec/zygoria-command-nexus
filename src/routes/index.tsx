@@ -14,10 +14,12 @@ import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
+import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 
+const TASK_STAGES = ["TASK RECEIVED", "ASSIGNED", "MOVING TO SITE", "PERFORMING ACTION", "WORLD CHANGED", "PASSING ON", "COMPLETE"];
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
 type Stop = "home" | "central";
-type Step = { agent: Agent; activity: string; result: string; verdict: "pass" | "conflict" | "n/a" };
+type Step = { agent: Agent; activity: string; result: string; verdict: "pass" | "conflict" | "n/a"; change?: WorldChange };
 type Mission = { id: number; text: string; agent: Agent; reason: string; route: Agent[]; zone: ZoneId; group: boolean; steps: Step[]; done: number; error?: string; state: "Routing" | "Handoff" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
@@ -73,6 +75,23 @@ function CommandCentre() {
   const markerRefs = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const [current, setCurrent] = useState<Agent | null>(null);
   const [finishedId, setFinishedId] = useState<number | null>(null);
+  const [taskStage, setTaskStage] = useState(0);
+  const [world, setWorld] = useState<WorldState>(EMPTY_WORLD);
+  const worldRef = useRef<WorldState>(EMPTY_WORLD);
+  const [acting, setActing] = useState<string | null>(null);
+  const [changed, setChanged] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(WORLD_KEY) ?? "null");
+      if (saved && typeof saved.levels === "object" && Array.isArray(saved.discoveries)) { worldRef.current = saved; setWorld(saved); }
+    } catch { /* world still works without storage */ }
+  }, []);
+  useEffect(() => { if (!changed) return; const t = setTimeout(() => setChanged(null), 4000); return () => clearTimeout(t); }, [changed]);
+  function commitWorld(next: WorldState) {
+    worldRef.current = next;
+    setWorld(next);
+    try { localStorage.setItem(WORLD_KEY, JSON.stringify(next)); } catch { /* optional */ }
+  }
   const active = missions[0];
   const assigned = active && active.state !== "Complete" ? current : null;
   // Only the task owner is active: walking = Working (travelling), stationary = Thinking pose; everyone else is Idle.
@@ -234,6 +253,7 @@ function CommandCentre() {
       setMission(id, () => ({ state: "Routing", agent: "Oz" }));
       setPhase("routing");
       setCurrent("Oz");
+      setTaskStage(1);
       setSelected("Oz");
       if (zoneRef.current !== "sanctuary") {
         log("Oz", `Receiving the directive — heading out to the ${zoneName}.`);
@@ -255,9 +275,11 @@ function CommandCentre() {
       log(prev, `Handing off to ${agent} — task energy in transit.`);
       setMission(id, () => ({ state: "Handoff", agent: prev }));
       setPhase("handoff");
+      setTaskStage(5);
       await sendTask(prev, agent, run);
       if (run !== runId.current) return null;
       log(agent, "Task received.");
+      setTaskStage(1);
       setCurrent(agent);
       setSelected(agent);
       setMission(id, () => ({ state: "In progress", agent }));
@@ -275,7 +297,9 @@ function CommandCentre() {
       setPhase("working");
     }
     const staysPut = zoneRef.current === "sanctuary" && agent === "Oz" && solo;
-    log(agent, staysPut ? "Working on it right here at the shack." : agent === "Oz" ? (finalReview ? "Taking a last look over the combined output." : zoneRef.current === "sanctuary" ? "Keeping this one — heading back to work on it." : `Heading deeper into the ${zoneName}.`) : "Heading to the work area.");
+    const target = objectFor(zoneRef.current, agent);
+    setTaskStage(staysPut ? 3 : 2);
+    log(agent, staysPut ? `Working on the ${target.name.toLowerCase()} right here at the shack.` : `Heading to the ${target.name.toLowerCase()}.`);
     let output: Awaited<typeof call>;
     try {
       [output] = await Promise.all([call, staysPut ? Promise.resolve() : goTo(agent, "work", run)]);
@@ -288,9 +312,22 @@ function CommandCentre() {
     }
     if (run !== runId.current) return null;
     log(agent, output.activity);
-    await wait(1200);
+    // Visible role action at the object, then a persistent world change.
+    const verb = chooseVerb(agent, directive);
+    setTaskStage(3);
+    setActing(target.id);
+    log(agent, `${verb[0]!.toUpperCase()}${verb.slice(1)} the ${target.name.toLowerCase()}.`);
+    await wait(1800);
+    setActing(null);
     if (run !== runId.current) return null;
-    const step: Step = { agent, activity: output.activity, result: output.result, verdict: output.verdict };
+    const { next, change } = applyAction(worldRef.current, zoneRef.current, agent, directive);
+    commitWorld(next);
+    setChanged(target.id);
+    setTaskStage(4);
+    log(agent, `World changed: ${change.name} ${change.from} → ${change.to}.${change.discovery ? " New Codex record." : ""}`);
+    await wait(1000);
+    if (run !== runId.current) return null;
+    const step: Step = { agent, activity: output.activity, result: output.result, verdict: output.verdict, change };
     setMission(id, m => ({ steps: [...m.steps, step], done: m.steps.length + 1 }));
     log(agent, output.verdict === "conflict" ? "Canon conflict flagged — result posted." : "Step finished — result posted.");
     return step;
@@ -317,10 +354,12 @@ function CommandCentre() {
       }
     }
     setMission(id, () => ({ state: "Complete", done: done.length }));
+    setTaskStage(6);
     setCurrent(null);
     setPhase("idle");
     setFinishedId(id);
-    log(done.at(-1)?.agent ?? "Oz", missionZone === "sanctuary" ? "Directive complete. Standing by." : "Directive complete. Heading back to the Sanctuary.");
+    const changes = done.filter(s => s.change).length;
+    log(done.at(-1)?.agent ?? "Oz", `Directive complete — ${changes} world change${changes === 1 ? "" : "s"} made. ${missionZone === "sanctuary" ? "Standing by." : "Heading back to the Sanctuary."}`);
     await Promise.all((["Oz", "Brix", "Lowkey"] as Agent[]).map(a => goTo(a, "home", run)));
     if (missionZone !== "sanctuary") setZoneId("sanctuary");
     await wait(2500);
@@ -391,6 +430,7 @@ function CommandCentre() {
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}
             <div className="world-stage">
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/></svg>
+            {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
               <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
@@ -404,9 +444,10 @@ function CommandCentre() {
         <div className="roster-heading"><div className="section-label"><span className="section-symbol">✦</span> THE CREW <span className="label-count">/ 03</span></div><span className="roster-hint">SELECT AN AGENT TO INSPECT <ArrowDownRight size={14}/></span></div>
         <div className="crew-grid">{agents.map(agent => { const Icon = agent.icon; return <Button key={agent.name} variant="ghost" type="button" onClick={() => setSelected(agent.name)} className={`crew-item ${selected === agent.name ? "selected" : ""}`}><span className="crew-portrait"><img src={agent.image} alt="" /></span><span className="crew-info"><span className="crew-name">{agent.name} <Icon size={13}/></span><span className="crew-role">{agent.role}</span><span className="crew-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]} <span>· {agent.place}</span></span></span><ChevronRight className="crew-arrow" size={16}/></Button> })}</div>
       </div>
-      <aside className="intel-panel"><div className="intel-top"><div className="intel-heading"><span><Activity size={17}/> MISSION CONTROL</span><span className="panel-id">PANEL_01</span></div><div className="intel-subhead">REAL-TIME OPERATIONAL OVERVIEW</div><FieldCodex pages={canon.codexPages} logs={codexLogs} visited={visitedZones} currentZone={zoneId}/></div>
-        <section className="intel-section current-section"><div className="panel-section-heading"><span><span className="section-square"/> CURRENT DIRECTIVE</span><span className="section-number">01 / 03</span></div>{active && (active.state !== "Complete" || finishedId === active.id) ? <div className={`current-task ${active.state === "Complete" ? "is-complete" : ""}`}><div className="task-status-line"><span className="task-state">{active.state === "Complete" ? <Check size={12}/> : <span className="live-dot"/>}{active.state.toUpperCase()}</span><span>#{String(active.id).slice(-4)}</span></div><p>{active.text}</p><div className="assigned-row"><span>{active.state === "Complete" ? "COMPLETED BY" : "ASSIGNED TO"}</span><span className="assigned-agent"><img src={agents.find(a => a.name === (assigned ?? active.agent))?.image ?? ozPortrait.url} alt=""/>{assigned ?? active.agent}{active.state === "Complete" ? <Check size={12}/> : <ArrowRight size={12}/>}</span></div><div className="assignment-reason"><strong>ROUTE · {active.route.map((a, i) => i < active.steps.length ? `${a.toUpperCase()} ✓` : i === active.steps.length && active.state !== "Complete" ? `[${a.toUpperCase()}]` : a.toUpperCase()).join(" → ")}</strong><span>{active.reason} · ZONE: {ZONES[active.zone].short}</span></div><div className="task-progress"><span className={active.state !== "Complete" && phase === "routing" || active.state === "Complete" ? "lit" : ""}/><span className={active.state !== "Complete" && (phase === "working" || phase === "handoff") || active.state === "Complete" ? "lit" : ""}/><span className={active.state === "Complete" ? "lit" : ""}/></div><div className="progress-labels"><span>RECEIVED</span><span>HANDOFF</span><span>COMPLETE</span></div></div> : <div className="empty-directive"><div className="empty-orbit"><Command size={25}/></div><strong>{phase === "planning" ? "CHOOSING CREW" : "AWAITING DIRECTIVE"}</strong><span>{phase === "planning" ? "Oz is reviewing the job." : "The crew is standing by."}</span><div className="empty-line"/></div>}</section>
-        <section className="intel-section"><div className="panel-section-heading"><span><span className="section-square"/> TASK HISTORY</span><span className="section-number">{String(missions.length).padStart(2,"0")}</span></div>{missions.length ? <div className="history-list">{missions.map(m => <div className="history-item" key={m.id}><span className={`history-icon ${m.state === "Complete" ? "done" : ""}`}>{m.state === "Complete" ? <Check size={13}/> : <ArrowRight size={13}/>}</span><div><strong>{m.text}</strong><small>{m.route.join(" → ")} · {ZONES[m.zone].short} · {m.time}</small><small>{m.reason}</small>{m.error && <small className="planning-error">{m.error}</small>}{m.steps.slice(0, m.done).map((st, i) => <div className="task-result" key={i}><b>{st.agent.toUpperCase()} · {i > 0 && i === m.steps.length - 1 && st.agent === "Oz" && m.state === "Complete" ? "FINAL REVIEW" : st.verdict === "conflict" ? "CANON CONFLICT" : "RESULT"}</b><p>{st.result}</p></div>)}</div><span className="history-state">{m.state === "Complete" ? "DONE" : m.state === "Routing" ? "ROUTING" : m.state === "Handoff" ? "HANDOFF" : "ACTIVE"}</span></div>)}</div> : <div className="empty-list">NO MISSIONS LOGGED YET <span>— 00</span></div>}</section>
+      <aside className="intel-panel"><div className="intel-top"><div className="intel-heading"><span><Activity size={17}/> MISSION CONTROL</span><span className="panel-id">PANEL_01</span></div><div className="intel-subhead">REAL-TIME OPERATIONAL OVERVIEW</div><FieldCodex pages={canon.codexPages} logs={codexLogs} visited={visitedZones} currentZone={zoneId} recorded={world.discoveries}/></div>
+        <section className="intel-section current-section"><div className="panel-section-heading"><span><span className="section-square"/> CURRENT DIRECTIVE</span><span className="section-number">01 / 03</span></div>{active && (active.state !== "Complete" || finishedId === active.id) ? <div className={`current-task ${active.state === "Complete" ? "is-complete" : ""}`}><div className="task-status-line"><span className="task-state">{active.state === "Complete" ? <Check size={12}/> : <span className="live-dot"/>}{active.state.toUpperCase()}</span><span>#{String(active.id).slice(-4)}</span></div><p>{active.text}</p><div className="assigned-row"><span>{active.state === "Complete" ? "COMPLETED BY" : "ASSIGNED TO"}</span><span className="assigned-agent"><img src={agents.find(a => a.name === (assigned ?? active.agent))?.image ?? ozPortrait.url} alt=""/>{assigned ?? active.agent}{active.state === "Complete" ? <Check size={12}/> : <ArrowRight size={12}/>}</span></div><div className="assignment-reason"><strong>ROUTE · {active.route.map((a, i) => i < active.steps.length ? `${a.toUpperCase()} ✓` : i === active.steps.length && active.state !== "Complete" ? `[${a.toUpperCase()}]` : a.toUpperCase()).join(" → ")}</strong><span>{active.reason} · ZONE: {ZONES[active.zone].short}</span></div><div className="task-progress stages-7">{TASK_STAGES.map((s, i) => <span key={s} className={i <= (active.state === "Complete" ? 6 : taskStage) ? "lit" : ""}/>)}</div><div className="progress-labels stage-now"><span>STAGE {(active.state === "Complete" ? 6 : taskStage) + 1}/7</span><span>{TASK_STAGES[active.state === "Complete" ? 6 : taskStage]}</span></div>{active.steps.filter(st => st.change).map((st, i) => <div className="world-change-line" key={i}>✦ {st.change!.name.toUpperCase()} · {st.change!.from} → {st.change!.to}</div>)}</div> : <div className="empty-directive"><div className="empty-orbit"><Command size={25}/></div><strong>{phase === "planning" ? "CHOOSING CREW" : "AWAITING DIRECTIVE"}</strong><span>{phase === "planning" ? "Oz is reviewing the job." : "The crew is standing by."}</span><div className="empty-line"/></div>}</section>
+        <section className="intel-section"><div className="panel-section-heading"><span><span className="section-square"/> WORLD STATE · {zone.short}</span><span className="section-number">{WORLD_OBJECTS.filter(o => o.zone === zoneId && (world.levels[o.id] ?? 0) > 0).length}/3</span></div><div className="world-state-list">{WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-state-row level-${lvl}`}><span>{o.name}<small>{o.agent.toUpperCase()}</small></span><b>{o.states[lvl]}</b></div>; })}</div></section>
+        <section className="intel-section"><div className="panel-section-heading"><span><span className="section-square"/> TASK HISTORY</span><span className="section-number">{String(missions.length).padStart(2,"0")}</span></div>{missions.length ? <div className="history-list">{missions.map(m => <div className="history-item" key={m.id}><span className={`history-icon ${m.state === "Complete" ? "done" : ""}`}>{m.state === "Complete" ? <Check size={13}/> : <ArrowRight size={13}/>}</span><div><strong>{m.text}</strong><small>{m.route.join(" → ")} · {ZONES[m.zone].short} · {m.time}</small><small>{m.reason}</small>{m.error && <small className="planning-error">{m.error}</small>}{m.steps.slice(0, m.done).map((st, i) => <div className="task-result" key={i}><b>{st.agent.toUpperCase()} · {i > 0 && i === m.steps.length - 1 && st.agent === "Oz" && m.state === "Complete" ? "FINAL REVIEW" : st.verdict === "conflict" ? "CANON CONFLICT" : "RESULT"}</b>{st.change && <small className="world-change-line">✦ {st.change.name} · {st.change.from} → {st.change.to}{st.change.discovery ? " · CODEX UPDATED" : ""}</small>}<p>{st.result}</p></div>)}</div><span className="history-state">{m.state === "Complete" ? "DONE" : m.state === "Routing" ? "ROUTING" : m.state === "Handoff" ? "HANDOFF" : "ACTIVE"}</span></div>)}</div> : <div className="empty-list">NO MISSIONS LOGGED YET <span>— 00</span></div>}</section>
         <section className="intel-section activity-section"><div className="panel-section-heading"><span><span className="section-square"/> ACTIVITY LOG</span><Radio size={13} className="radio-icon"/></div><div className="activity-list">{logs.slice(0, 6).map(entry => <div className="activity-item" key={entry.id}><span className="activity-node"/><div><span className="activity-agent">{entry.agent}</span><span className="activity-text">{entry.text}</span><small>{entry.time}</small></div></div>)}</div></section>
         <div className="intel-bottom"><Cpu size={15}/> ZYGORIA SYSTEMS <span>AI ROUTING LIVE</span></div>
       </aside>
