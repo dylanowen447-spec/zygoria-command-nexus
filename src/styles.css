@@ -192,3 +192,6 @@
 .location-tag.zone-tag{text-transform:uppercase}
 @media (max-width:900px){.zone-selector{margin:-8px 0 10px}.zone-chip{padding:4px 7px;font-size:8px}}
 .stage-chip{font:700 9px var(--font-mono);letter-spacing:1px;color:var(--violet);border:1px solid oklch(0.71 0.19 301 / 45%);border-radius:2px;padding:5px 9px;background:oklch(0.71 0.19 301 / 9%);box-shadow:0 0 10px oklch(0.71 0.19 301 / 18%);white-space:nowrap}
+
+/* Original Sanctuary paint, selectively defined at its exact artwork coordinates. */
+.shack-definition{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none;user-select:none;z-index:1}
