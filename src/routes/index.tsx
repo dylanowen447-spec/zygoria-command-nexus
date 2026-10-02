@@ -13,6 +13,7 @@ import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
+import { WelcomeGuide } from "@/components/WelcomeGuide";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 
@@ -438,6 +439,7 @@ function CommandCentre() {
             </div>
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>
+          <WelcomeGuide />
           <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> 1 SANCTUARY</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>
         </div>
         <form className="mission-form" onSubmit={submit}><div className="form-title"><span><Terminal size={16}/> NEW DIRECTIVE</span><span className="form-counter">{phase === "idle" ? "READY FOR INPUT" : phase === "planning" ? "SELECTING CREW" : "MISSION IN PROGRESS"}</span></div><div className="form-row"><span className="prompt-chevron">›</span><input aria-label="Enter a job for the crew" placeholder="What needs doing around Zygoria?" value={draft} onChange={e => setDraft(e.target.value)} maxLength={180} disabled={phase !== "idle"}/><Button className="dispatch-button" type="submit" disabled={!draft.trim() || phase !== "idle"}>{phase === "planning" ? "CHOOSING" : "DISPATCH"} <Send size={14}/></Button></div>{planningError && <p className="planning-error" role="alert">{planningError}</p>}<div className="form-foot"><span>DIRECTIVES ARE ROUTED THROUGH OZ</span><span>↵ TO SEND</span></div></form>
