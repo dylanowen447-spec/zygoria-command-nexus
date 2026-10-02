@@ -58,6 +58,9 @@ const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / WORLD_ASPECT);
 const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
+/** Where each sprite's hand sits relative to its feet, in px (facing right). */
+const HAND: Record<Agent, { x: number; y: number }> = { Oz: { x: 8, y: -14 }, Lowkey: { x: 9, y: -16 }, Brix: { x: 12, y: -19 } };
+
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
     { title: "Zygoria Command Centre" },
@@ -172,6 +175,13 @@ function CommandCentre() {
     if (path.length) await walk(agent, path, to === "central" ? "central" : "home", run);
   }
   const taskIconRef = useRef<HTMLDivElement | null>(null);
+  const facingRef = useRef(facing);
+  facingRef.current = facing;
+  /** Pixel offset from an agent's feet to the hand they carry the task in (follows facing). */
+  const handOffset = (a: Agent) => {
+    const h = HAND[a], dir = facingRef.current[a] === "right" ? 1 : -1;
+    return { x: h.x * dir, y: h.y };
+  };
   /** Sends the glowing task icon from one owner to the next along the receiver's walkable path nodes. */
   function sendTask(from: Agent, to: Agent, run: number) {
     return new Promise<void>(resolve => {
@@ -198,6 +208,8 @@ function CommandCentre() {
         }
         el.style.left = `${p.x}%`;
         el.style.top = `${p.y}%`;
+        const ha = handOffset(from), hb = handOffset(to), lift = Math.sin(Math.PI * k) * -6;
+        el.style.transform = `translate(${ha.x + (hb.x - ha.x) * k}px, ${ha.y + (hb.y - ha.y) * k + lift}px)`;
         if (k < 1) frames.current.push(requestAnimationFrame(step));
         else { el.classList.remove("is-travelling"); el.classList.add("is-held"); resolve(); }
       };
@@ -216,6 +228,8 @@ function CommandCentre() {
         const p = coords.current[current];
         el.style.left = `${p.x}%`;
         el.style.top = `${p.y}%`;
+        const o = handOffset(current);
+        el.style.transform = `translate(${o.x}px, ${o.y}px)`;
       }
       raf = requestAnimationFrame(track);
     };
