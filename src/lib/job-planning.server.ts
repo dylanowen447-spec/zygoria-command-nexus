@@ -51,9 +51,9 @@ export function planRoute(directive: string) {
   });
 }
 
-export function runAgentStep(directive: string, agent: Agent, previous: { agent: Agent; result: string }[], isFinalReview: boolean) {
+export function runAgentStep(directive: string, agent: Agent, previous: { agent: Agent; result: string }[], isFinalReview: boolean, group = false) {
   return guarded(async () => {
-    const r = await createAgentStepCall(apiKey(), directive, agent, previous, isFinalReview);
+    const r = await createAgentStepCall(apiKey(), directive, agent, previous, isFinalReview, group);
     const verdict: "pass" | "conflict" | "n/a" = agent === "Lowkey" && !isFinalReview ? (r.verdict.toLowerCase().includes("conflict") ? "conflict" : "pass") : "n/a";
     return { activity: r.activity.trim().slice(0, 100) || "Working on the directive.", result: r.result.trim().slice(0, 1400), verdict };
   });
