@@ -26,3 +26,5 @@
 - [x] Move Oz slightly right so he no longer covers the shack and its light
 - [x] Move LOOKOUT tag above the eggs, clear of Lowkey and the workshop tag on phone + desktop
 - [x] Add speakers and electric details around Oz's shack in the world artwork
+- [ ] Oz voice: enforce lads/action-first tone, ban corporate language (in progress — needs live check)
+- [ ] Expand the world beyond The Sanctuary into full zones with their own paths, so Dispatch can send jobs anywhere in Zygoria
