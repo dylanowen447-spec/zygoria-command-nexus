@@ -17,7 +17,7 @@ type Agent = "Oz" | "Brix" | "Lowkey";
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
 type Stop = "home" | "central";
 type Step = { agent: Agent; activity: string; result: string; verdict: "pass" | "conflict" | "n/a" };
-type Mission = { id: number; text: string; agent: Agent; reason: string; route: Agent[]; steps: Step[]; done: number; error?: string; state: "Routing" | "In progress" | "Complete"; time: string };
+type Mission = { id: number; text: string; agent: Agent; reason: string; route: Agent[]; steps: Step[]; done: number; error?: string; state: "Routing" | "Handoff" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
   { name: "Oz", role: "Coordinator / creative lead", place: "Riverside shack", image: ozPortrait.url, icon: Sparkles },
@@ -75,7 +75,7 @@ function CommandCentre() {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [logs, setLogs] = useState<Log[]>(startLogs);
   const [selected, setSelected] = useState<Agent | null>(null);
-  const [phase, setPhase] = useState<"idle" | "planning" | "routing" | "working">("idle");
+  const [phase, setPhase] = useState<"idle" | "planning" | "routing" | "handoff" | "working">("idle");
   const [planningError, setPlanningError] = useState("");
   const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home" });
   const [walking, setWalking] = useState<Agent[]>([]);
@@ -171,6 +171,39 @@ function CommandCentre() {
     spots.current[agent] = to;
     if (path.length) await walk(agent, path, to === "central" ? "central" : "home", run);
   }
+  const taskIconRef = useRef<HTMLDivElement | null>(null);
+  /** Sends the glowing task icon from one owner to the next along the receiver's walkable path nodes. */
+  function sendTask(from: Agent, to: Agent, run: number) {
+    return new Promise<void>(resolve => {
+      const el = taskIconRef.current;
+      const start = { ...coords.current[from] }, end = { ...coords.current[to] };
+      const pts: Point[] = [start];
+      if (spots.current[from] === "central") pts.push(...pathBetween(to, "central", spots.current[to]));
+      else pts.push(...pathBetween(from, spots.current[from], "central"), ...pathBetween(to, "central", spots.current[to]));
+      pts.push(end);
+      let total = 0;
+      for (let i = 1; i < pts.length; i++) total += distance(pts[i - 1]!, pts[i]!);
+      const duration = Math.max(1100, total / 16 * 1000);
+      if (!el) { resolve(); return; }
+      el.classList.add("is-travelling");
+      const t0 = performance.now();
+      const step = (time: number) => {
+        if (run !== runId.current) { el.classList.remove("is-travelling"); return; }
+        const k = Math.min((time - t0) / duration, 1);
+        let target = k * total, p = pts[0]!;
+        for (let i = 1; i < pts.length; i++) {
+          const a = pts[i - 1]!, b = pts[i]!, d = distance(a, b);
+          if (target <= d || i === pts.length - 1) { const f = d ? Math.min(target / d, 1) : 1; p = { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f }; break; }
+          target -= d;
+        }
+        el.style.left = `${p.x}%`;
+        el.style.top = `${p.y}%`;
+        if (k < 1) frames.current.push(requestAnimationFrame(step));
+        else { el.classList.remove("is-travelling"); resolve(); }
+      };
+      frames.current.push(requestAnimationFrame(step));
+    });
+  }
   /** One real handoff: the previous owner stops, the new owner walks to collect and works while its AI call processes all earlier outputs. */
   async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, solo: boolean, run: number): Promise<Step | null> {
     const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview } });
@@ -196,7 +229,12 @@ function CommandCentre() {
         await goTo(prev, "central", run);
         if (run !== runId.current) return null;
       }
-      log(prev, `Handing off to ${agent}.`);
+      log(prev, `Handing off to ${agent} — task energy in transit.`);
+      setMission(id, () => ({ state: "Handoff", agent: prev }));
+      setPhase("handoff");
+      await sendTask(prev, agent, run);
+      if (run !== runId.current) return null;
+      log(agent, "Task received.");
       setCurrent(agent);
       setSelected(agent);
       setMission(id, () => ({ state: "In progress", agent }));
