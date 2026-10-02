@@ -1,5 +1,8 @@
 # Zygoria Nexus — Task roadmap
 
+## In progress
+- [ ] Expand the existing Field Codex drawer into an in-world Zygoria Codex with seven canon-safe sections, discovery details, partial unknowns and current-zone continuity.
+
 ## Completed
 - [x] Oz voice rule (cheeky, action-first, no corporate language)
 - [x] Fish-only / fish-love canon
