@@ -13,6 +13,7 @@ import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
+import { WelcomeGuide } from "@/components/WelcomeGuide";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 
