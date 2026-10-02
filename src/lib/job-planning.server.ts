@@ -45,6 +45,7 @@ export function planRoute(directive: string) {
     return {
       route,
       zone: isZone(result.zone) ? result.zone : "sanctuary",
+      group: result.group === true,
       reason: result.reason.trim().slice(0, 160) || "Best suited to this directive.",
     };
   });
