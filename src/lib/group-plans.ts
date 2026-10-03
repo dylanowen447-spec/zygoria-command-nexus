@@ -28,5 +28,19 @@ export function findGroupPlan(lines: { agent: Agent; text: string }[], speakers:
   return null;
 }
 
+/** A visitor's direct order ("everyone head to the lookout", "Oz and Brix go to the shack"). */
+const ORDER = /\b(go|head|walk|meet|gather|assemble|move|get|come|run|hike|climb|take)\b/i;
+export function findUserCommand(directive: string): { place: PlanPlace; who: Agent[]; proposer: Agent } | null {
+  for (const sentence of directive.split(/(?<=[.!?])\s+/)) {
+    if (!ORDER.test(sentence) && !PROPOSAL.test(sentence)) continue;
+    const hit = PLACES.find(p => p.match.test(sentence));
+    if (!hit) continue;
+    const named = (["Oz", "Brix", "Lowkey"] as Agent[]).filter(a => new RegExp(`\\b${a}\\b`, "i").test(sentence));
+    const who: Agent[] = named.length && !EVERYONE.test(sentence) ? named : ["Oz", "Brix", "Lowkey"];
+    return { place: hit.place, who, proposer: hit.place.owner && who.includes(hit.place.owner) ? hit.place.owner : who[0]! };
+  }
+  return null;
+}
+
 /** Spread so nobody stacks: the place's owner takes the spot, others stand either side facing outward. */
 export const GROUP_OFFSETS: { x: number; y: number }[] = [{ x: 0, y: 0 }, { x: -4, y: 1.2 }, { x: 4, y: 1.2 }];
