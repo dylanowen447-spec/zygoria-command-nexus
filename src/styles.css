@@ -367,3 +367,6 @@
 .cover-caption{margin:6px 0 2px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font:9px var(--font-mono);letter-spacing:1px;color:var(--gold)}
 .cover-caption span{color:var(--muted-foreground)}
 @media(max-width:600px){.app-footer .creator-badge{order:3;width:100%;justify-content:center;font-size:8px}.creator-badge-name{font-size:11px}}
+.cover-backdrop{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:16px;background:oklch(0.1 0.02 250 / 80%);backdrop-filter:blur(6px)}
+.cover-dialog{position:relative;width:min(440px,92vw);border-radius:8px}
+.cover-close{position:absolute;top:16px;right:16px;display:grid;place-items:center;width:30px;height:30px;border-radius:999px;border:1px solid var(--electric);background:var(--surface);color:var(--foreground);cursor:pointer}
