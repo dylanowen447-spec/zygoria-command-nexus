@@ -5,6 +5,7 @@ import { ZONES, type ZoneId } from "@/lib/zones";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
+import { CHRONICLES } from "@/lib/chronicles";
 
 type Category = "Characters" | "Creatures" | "Locations" | "Objects" | "Old Earth discoveries" | "Network-related discoveries" | "Unsolved mysteries";
 type Page = { id: string; category: Category; name: string; description: string; location: string | null; recordedBy: string | null; level: "known" | "partial" | "hidden" };
@@ -18,6 +19,8 @@ export function FieldCodex({ pages, logs, visited, currentZone, recorded = [] }:
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<Category>("Characters");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [chronicles, setChronicles] = useState(false);
+  const [chapter, setChapter] = useState(3);
   const [found, setFound] = useState<string[]>([]);
   const [restored, setRestored] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -82,7 +85,11 @@ export function FieldCodex({ pages, logs, visited, currentZone, recorded = [] }:
       <aside className="codex-drawer" role="dialog" aria-modal="true" aria-label="Zygoria Codex">
         <header className="codex-head"><div><div className="codex-eyebrow">FIELD JOURNAL / {currentZone === "sanctuary" ? "HOME" : ZONES[currentZone].short}</div><h2>Zygoria Codex</h2><p>Notes from a world still being understood.</p></div><Button ref={closeRef} type="button" variant="ghost" size="icon" className="codex-close" onClick={close} aria-label="Close codex"><X size={17}/></Button></header>
         <div className="codex-bookmark"><BookOpen size={15}/><span>{fullyKnown} known · {incomplete} incomplete · {pages.length - visibleCount} unrecorded</span></div>
-        <nav className="codex-tabs" aria-label="Codex sections">{CATEGORIES.map(item => <Button key={item} type="button" variant="ghost" className={`codex-tab ${category === item ? "is-active" : ""}`} aria-current={category === item ? "page" : undefined} onClick={() => { setCategory(item); setSelectedId(null); }}>{item}<span>{pages.filter(page => page.category === item).length}</span></Button>)}</nav>
+        <nav className="codex-tabs" aria-label="Codex sections"><Button type="button" variant="ghost" className={`codex-tab ${chronicles ? "is-active" : ""}`} aria-current={chronicles ? "page" : undefined} onClick={() => { setChronicles(true); setSelectedId(null); }}>Chronicles<span>{CHRONICLES.length}</span></Button>{CATEGORIES.map(item => <Button key={item} type="button" variant="ghost" className={`codex-tab ${!chronicles && category === item ? "is-active" : ""}`} aria-current={!chronicles && category === item ? "page" : undefined} onClick={() => { setChronicles(false); setCategory(item); setSelectedId(null); }}>{item}<span>{pages.filter(page => page.category === item).length}</span></Button>)}</nav>
+        {chronicles ? <div className="codex-body"><div className="codex-section-title"><span>First Genesis · Chapter {chapter + 1} of {CHRONICLES.length}</span><small>{chapter === 3 ? "YOU ARE HERE" : "MEMORY"}</small></div>
+          <figure className="chronicle-page"><a href={CHRONICLES[chapter]!.img} target="_blank" rel="noreferrer"><img src={CHRONICLES[chapter]!.img} alt={`Chapter ${chapter + 1}: ${CHRONICLES[chapter]!.title}`}/></a><figcaption><h3>{CHRONICLES[chapter]!.title}</h3><p>{CHRONICLES[chapter]!.text}</p></figcaption></figure>
+          <div className="chronicle-nav"><Button type="button" variant="outline" disabled={chapter === 0} onClick={() => setChapter(c => c - 1)}>‹ PREV</Button><span>{CHRONICLES.map((c, i) => <button key={c.n} type="button" className={`chronicle-dot ${i === chapter ? "is-active" : ""}`} aria-label={`Chapter ${c.n}`} onClick={() => setChapter(i)}/>)}</span><Button type="button" variant="outline" disabled={chapter === CHRONICLES.length - 1} onClick={() => setChapter(c => c + 1)}>NEXT ›</Button></div>
+        </div> :
         <div className="codex-body"><div className="codex-section-title"><span>{category}</span><small>{String(list.length).padStart(2, "0")} ENTRIES</small></div>
           <div className="codex-list">{list.map(page => {
             const hidden = page.level === "hidden";
@@ -97,7 +104,7 @@ export function FieldCodex({ pages, logs, visited, currentZone, recorded = [] }:
             {selected.level !== "hidden" && <div className="codex-detail-meta"><span><MapPin size={13}/> {selected.location ? `Known location · ${selected.location}` : "Location not yet recorded"}</span><span><BookOpen size={13}/> {selected.recordedBy ? `Recorded by ${selected.recordedBy}` : "Crew journal"}</span><span>{selected.level === "partial" ? "DISCOVERY STATUS · INCOMPLETE" : "DISCOVERY STATUS · KNOWN"}</span></div>}
           </div>}
           {!selected && <div className="codex-quiet">Choose a page to read the crew's notes.</div>}
-        </div>
+        </div>}
       </aside>
     </div>}
   </>;
