@@ -111,7 +111,7 @@ function CommandCentre() {
   const statusFor = (a: Agent): Status => phase === "planning" && a === "Oz" ? "Thinking" : current === a && phase !== "idle" ? walking.includes(a) ? "Working" : "Thinking" : "Idle";
   const statuses: Record<Agent, Status> = { Oz: statusFor("Oz"), Brix: statusFor("Brix"), Lowkey: statusFor("Lowkey") };
   useEffect(() => () => { runId.current++; timers.current.forEach(clearTimeout); frames.current.forEach(cancelAnimationFrame); }, []);
-  const markerStyle = (agent: Agent) => ({ left: `${coords.current[zoneId][agent].x}%`, top: `${coords.current[zoneId][agent].y}%`, "--depth": depthFor(coords.current[zoneId][agent].y) }) as CSSProperties;
+  const markerStyle = (agent: Agent) => ({ left: `${coords.current[zoneId][agent].x}%`, top: `${coords.current[zoneId][agent].y}%`, "--depth": depthFor(coords.current[zoneId][agent].y), zIndex: 10 + Math.round(coords.current[zoneId][agent].y * 10) }) as CSSProperties;
   function paint(agent: Agent) {
     const el = markerRefs.current[agent];
     if (!el) return;
@@ -119,6 +119,8 @@ function CommandCentre() {
     el.style.left = `${p.x}%`;
     el.style.top = `${p.y}%`;
     el.style.setProperty("--depth", depthFor(p.y));
+    // Whoever stands lower on the ground draws in front, so nobody vanishes behind another Zig.
+    el.style.setProperty("z-index", String(10 + Math.round(p.y * 10)), "important");
     if (agent === "Lowkey" && zoneRef.current === "sanctuary") el.classList.toggle("on-ridge", p.y < 34);
   }
   const wait = (ms: number) => new Promise<void>(resolve => { timers.current.push(setTimeout(resolve, ms)); });
@@ -440,7 +442,7 @@ function CommandCentre() {
         const h = others[Math.floor(Math.random() * 2)]!;
         const run = runId.current;
         visiting.current = v;
-        const there = [...toMeet(z, v), ...toHome(z, h).slice(0, -1)];
+        const there = [...toMeet(z, v), ...toHome(z, h).slice(0, -2)];
         log(v, `Wandering over to see ${h}.`);
         await walk(v, there, "central", run);
         if (run !== runId.current || !alive) return;
