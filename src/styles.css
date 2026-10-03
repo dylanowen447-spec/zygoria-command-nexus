@@ -355,3 +355,15 @@
 .chronicle-nav > span { display: flex; gap: .4rem; }
 .chronicle-dot { width: 8px; height: 8px; border-radius: 99px; background: color-mix(in oklch, var(--electric) 25%, transparent); border: 0; padding: 0; cursor: pointer; }
 .chronicle-dot.is-active { background: var(--electric); box-shadow: 0 0 8px var(--electric); }
+.app-footer{align-items:center}
+.creator-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line-soft);border-radius:999px;background:var(--surface);color:var(--muted-foreground);font:9px var(--font-mono);letter-spacing:1px;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.creator-badge:hover,.creator-badge:focus-visible{border-color:var(--gold);box-shadow:0 0 14px oklch(0.8 0.14 85 / 25%);outline:none}
+.creator-badge-label{text-transform:uppercase;color:var(--dim)}
+.creator-badge-name{font:italic 600 12px var(--font-display);letter-spacing:.4px;color:var(--foreground)}
+.creator-badge-year{color:var(--gold)}
+.creator-badge-cta{padding-left:8px;border-left:1px solid var(--line-soft);color:var(--electric);text-transform:uppercase}
+.cover-dialog{max-width:min(440px,92vw);padding:10px;background:var(--surface);border:1px solid var(--electric);box-shadow:0 0 40px oklch(0.7 0.15 215 / 30%)}
+.cover-art{width:100%;height:auto;max-height:78vh;object-fit:contain;display:block}
+.cover-caption{margin:6px 0 2px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font:9px var(--font-mono);letter-spacing:1px;color:var(--gold)}
+.cover-caption span{color:var(--muted-foreground)}
+@media(max-width:600px){.app-footer .creator-badge{order:3;width:100%;justify-content:center;font-size:8px}.creator-badge-name{font-size:11px}}
