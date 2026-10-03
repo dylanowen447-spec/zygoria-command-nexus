@@ -16,7 +16,8 @@ export function offlineRoute(directive: string) {
     : has(d, ["cave", "survivor", "crate", "lantern"]) ? "caves"
     : has(d, ["cronk", "swamp", "rat", "flare"]) ? "cronk"
     : has(d, ["shelton", "camp", "guard", "gate"]) ? "shelton" : "sanctuary";
-  const group = has(d, ["you lot", "all of you", "crew", "lads", "you all", "everyone", "what do you think", "how are you", "what next", "do you like"]);
+  const group = has(d, ["you lot", "all of you", "crew", "lads", "you all", "everyone", "what do you think", "how are you", "what next", "do you like"])
+    || (!/\b(oz|ozzy|brix|lowkey)\b/.test(d) && (/\?\s*$/.test(d) || /^(who|what|where|why|how|tell me|is|are|do|does|can)\b/.test(d)));
   const named: Agent[] = [];
   if (/\boz\b|ozzy/.test(d)) named.push("Oz");
   if (/\bbrix\b/.test(d)) named.push("Brix");
