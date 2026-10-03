@@ -9,6 +9,7 @@ const hz = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 
 function start(volume: number): Engine {
   const ctx = new AudioContext();
+  void ctx.resume(); // some browsers create the context suspended even inside a click
   const master = ctx.createGain();
   master.gain.value = volume;
   const lp = ctx.createBiquadFilter();
@@ -65,7 +66,11 @@ export function ShackRadio({ trigger }: { trigger: number }) {
   const eng = useRef<Engine | null>(null);
   useEffect(() => { const v = Number(localStorage.getItem(KEY)); if (v > 0 && v <= 1) setVol(v); }, []);
   const stop = () => { if (eng.current) { clearInterval(eng.current.timer); void eng.current.ctx.close(); eng.current = null; } setOn(false); };
-  const play = () => { if (!eng.current) eng.current = start(vol * 0.6); setOn(true); };
+  const play = () => {
+    if (!eng.current) eng.current = start(vol * 0.6);
+    if (eng.current.ctx.state === "suspended") void eng.current.ctx.resume();
+    setOn(true);
+  };
   useEffect(() => { if (trigger > 0) play(); }, [trigger]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => stop(), []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { localStorage.setItem(KEY, String(vol)); if (eng.current) eng.current.master.gain.value = vol * 0.6; }, [vol]);
