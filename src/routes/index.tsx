@@ -6,6 +6,7 @@ import { CharacterSprite } from "@/components/CharacterSprite";
 import { ShackRadio } from "@/components/ShackRadio";
 import { chooseJobRoute, getCanonState, runCrewStep } from "@/lib/job-planning.functions";
 import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type Agent, type Point, type ZoneId } from "@/lib/zones";
+import { findGroupPlan, GROUP_OFFSETS } from "@/lib/group-plans";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
