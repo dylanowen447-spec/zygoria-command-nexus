@@ -181,6 +181,7 @@
   .world-stage .brix-wordmark{width:86.2px}
   .world-stage .lowkey-wordmark,.world-stage .marker-lowkey.on-ridge .lowkey-wordmark{width:92.2px}
   .world-stage .agent-marker .marker-status{transform:translateY(-65px)}
+  .world-stage .task-energy{width:10px;height:10px;margin:-5px 0 0 -5px}
 }
 /* The summit sits near the artwork's upper edge: keep Lowkey fully visible on narrower desktop frames. */
 @media(min-width:901px){
