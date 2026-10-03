@@ -16,3 +16,5 @@
 - [x] Strengthen the two Sanctuary shack silhouettes with subtle rim light and selective color contrast, without changing the painting or map placement.
 - [x] Field codex drawer: spoiler-safe discoveries unlocked by zones visited and completed jobs, saved on device
 - [x] Distinct, restrained crew humour in dialogue: Oz impulsive, Brix dry, Lowkey deadpan; serious moments remain serious
+
+- [x] Zigs follow through on group plans they propose (lookout, workshop, shack, crossroads), spread out, then return home
