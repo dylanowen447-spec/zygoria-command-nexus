@@ -181,17 +181,16 @@
   .world-stage .brix-wordmark{width:86.2px}
   .world-stage .lowkey-wordmark,.world-stage .marker-lowkey.on-ridge .lowkey-wordmark{width:92.2px}
   .world-stage .agent-marker .marker-status{transform:translateY(-65px)}
-  .world-stage .marker-lowkey.on-ridge .marker-status{transform:translateY(-65px)}
 }
 /* The summit sits near the artwork's upper edge: keep Lowkey fully visible on narrower desktop frames. */
 @media(min-width:901px){
   @container (max-width:900px){
-    .world-stage .marker-lowkey.on-ridge .sprite-stage{transform:translateY(4px) scale(1.7)!important}
-    .world-stage .marker-lowkey.on-ridge .marker-status{transform:translateY(-23px)}
+    .world-image-wrap:has(.shack-definition) .marker-lowkey:is(.at-home,.on-ridge) .sprite-stage{transform:translateY(4px) scale(1.7)!important}
+    .world-image-wrap:has(.shack-definition) .marker-lowkey:is(.at-home,.on-ridge) .marker-status{transform:translateY(-23px)}
   }
   @container (max-width:650px){
-    .world-stage .marker-lowkey.on-ridge .sprite-stage{transform:translateY(4px) scale(1.25)!important}
-    .world-stage .marker-lowkey.on-ridge .marker-status{transform:translateY(-8px)}
+    .world-image-wrap:has(.shack-definition) .marker-lowkey:is(.at-home,.on-ridge) .sprite-stage{transform:translateY(4px) scale(1.25)!important}
+    .world-image-wrap:has(.shack-definition) .marker-lowkey:is(.at-home,.on-ridge) .marker-status{transform:translateY(-8px)}
   }
 }
 
