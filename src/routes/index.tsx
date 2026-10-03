@@ -335,7 +335,7 @@ function CommandCentre() {
     setTaskStage(3);
     setActing(target.id);
     log(agent, `${verb[0]!.toUpperCase()}${verb.slice(1)} the ${target.name.toLowerCase()}.`);
-    await wait(1800);
+    await wait(800);
     setActing(null);
     if (run !== runId.current) return null;
     const { next, change } = applyAction(worldRef.current, zoneRef.current, agent, directive);
@@ -344,7 +344,7 @@ function CommandCentre() {
     if (target.id === "sanc-speakers") setRadioKick(k => k + 1);
     setTaskStage(4);
     log(agent, `World changed: ${change.name} ${change.from} → ${change.to}.${change.discovery ? " New Codex record." : ""}`);
-    await wait(1000);
+    await wait(400);
     if (run !== runId.current) return null;
     const step: Step = { agent, activity: output.activity, result: output.result, verdict: output.verdict, change };
     setMission(id, m => ({ steps: [...m.steps, step], done: m.steps.length + 1 }));
@@ -385,10 +385,9 @@ function CommandCentre() {
     log(done.at(-1)?.agent ?? "Oz", `Directive complete — ${changes} world change${changes === 1 ? "" : "s"} made. ${missionZone === "sanctuary" ? "Standing by." : "Heading back to the Sanctuary."}`);
     await Promise.all((["Oz", "Brix", "Lowkey"] as Agent[]).map(a => goTo(a, "home", run)));
     if (missionZone !== "sanctuary") setZoneId("sanctuary");
-    await wait(2500);
-    setFinishedId(prev => prev === id ? null : prev);
+    setTimeout(() => setFinishedId(prev => prev === id ? null : prev), 2500);
     if (missionZone === "sanctuary" && run === runId.current) {
-      const plan = findUserCommand(directive) ?? findGroupPlan(done.map(s => ({ agent: s.agent, text: s.result })), [...new Set(route)]);
+      const plan = findGroupPlan(done.map(s => ({ agent: s.agent, text: s.result })), [...new Set(route)]);
       if (plan) await groupOuting(plan, run);
     }
   }
