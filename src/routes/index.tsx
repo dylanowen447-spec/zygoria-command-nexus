@@ -42,6 +42,16 @@ const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minu
 /** Where each sprite's hand sits relative to its feet, in px (facing right). */
 const HAND: Record<Agent, { x: number; y: number }> = { Oz: { x: 8, y: -14 }, Lowkey: { x: 9, y: -16 }, Brix: { x: 12, y: -19 } };
 
+/** Short in-character exchanges for idle visits: [visitor line, host reply]. */
+const IDLE_CHATS: Record<string, [string, string][]> = {
+  "Oz>Brix": [["Got any spare wire? Asking for a speaker. Totally not the one I blew.", "That's the third one, Oz."], ["What's this do?", "Don't touch that."], ["Reckon I could fly with this?", "No. Put it down."]],
+  "Brix>Oz": [["Your bass rattled two bolts loose in my bench.", "So the music's working then."], ["Who wired this lamp? It's held on with hope.", "Hope and a bit of string, mate."], ["Just checking the shack's still standing.", "Course it is. Mostly."]],
+  "Lowkey>Oz": [["The lights by the river flickered last night. Twice.", "Spooky. Love it."], ["Saw you from the ridge. You were dancing.", "...Training, that was."], ["Quiet up there tonight.", "Quiet's boring. Stay for a tune."]],
+  "Lowkey>Brix": [["Something's humming under the ruins.", "Humming how? Electrical or creepy?"], ["Your workshop glows from the ridge.", "That'll be the bad wiring."], ["The moon looked different tonight.", "The moon doesn't change, Lowkey. ...Does it?"]],
+  "Oz>Lowkey": [["Made it to the top! Barely. Why's it so high?", "It's a mountain."], ["What are you looking at?", "Everything."], ["Bet I can see my shack from here.", "You can. You left the lamp on."]],
+  "Brix>Lowkey": [["Climbed all this way to check the view's still working.", "It is."], ["Anything out there I should worry about?", "Not yet."], ["Wind's strong. You'll want a windbreak up here.", "I like the wind."]],
+};
+
 export const Route = createFileRoute("/")({
   loader: () => getCanonState(),
   head: () => ({ meta: [
@@ -376,6 +386,7 @@ function CommandCentre() {
     event.preventDefault();
     const text = draft.trim();
     if (!text || phase !== "idle") return;
+    cancelVisit();
     setPlanningError("");
     setFinishedId(null);
     setPhase("planning");
@@ -399,6 +410,56 @@ function CommandCentre() {
     log("Oz", `Route: ${route.join(" → ")}. ${reason}`);
     void runMission(id, text, route, missionZone, group, runId.current);
   }
+  /** Ambient idle life: every so often one Zig strolls along the trails to another's resting spot for a quick chat. */
+  const [bubble, setBubble] = useState<{ agent: Agent; text: string } | null>(null);
+  const visiting = useRef<Agent | null>(null);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  function cancelVisit() {
+    const v = visiting.current;
+    visiting.current = null;
+    setBubble(null);
+    if (!v) return;
+    runId.current++;
+    const z = ZONES.sanctuary;
+    coords.current.sanctuary[v] = { ...HOME(z, v) };
+    spots.current.sanctuary[v] = "home";
+    setPositions(prev => ({ ...prev, [v]: "home" }));
+    paint(v);
+  }
+  useEffect(() => {
+    if (phase !== "idle" || zoneId !== "sanctuary") return;
+    let alive = true;
+    const loop = async () => {
+      while (alive) {
+        await wait(22000 + Math.random() * 20000);
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current) continue;
+        const z = ZONES.sanctuary, all: Agent[] = ["Oz", "Brix", "Lowkey"];
+        const v = all[Math.floor(Math.random() * 3)]!;
+        const others = all.filter(a => a !== v);
+        const h = others[Math.floor(Math.random() * 2)]!;
+        const run = runId.current;
+        visiting.current = v;
+        const there = [...toMeet(z, v), ...toHome(z, h).slice(0, -1)];
+        log(v, `Wandering over to see ${h}.`);
+        await walk(v, there, "central", run);
+        if (run !== runId.current || !alive) return;
+        const hx = HOME(z, h).x, vx = coords.current.sanctuary[v].x;
+        setFacing(p => ({ ...p, [v]: hx < vx ? "left" : "right", [h]: hx < vx ? "right" : "left" }));
+        const [a, b] = IDLE_CHATS[`${v}>${h}`]![Math.floor(Math.random() * 3)]!;
+        setBubble({ agent: v, text: a }); log(v, a);
+        await wait(3200); if (run !== runId.current) return;
+        setBubble({ agent: h, text: b }); log(h, b);
+        await wait(3200); if (run !== runId.current) return;
+        setBubble(null);
+        await walk(v, [...there.slice(0, -1).reverse(), HOME(z, v)], "home", run);
+        if (run !== runId.current) return;
+        visiting.current = null;
+      }
+    };
+    void loop();
+    return () => { alive = false; };
+  }, [phase, zoneId]);
   const visitedZones = useMemo(() => [...new Set<ZoneId>([zoneId, ...missions.map(m => m.zone)])], [zoneId, missions]);
   const codexLogs = useMemo(() => missions.map(m => ({ text: m.text, zone: m.zone, done: m.state === "Complete", results: m.steps.map(st => st.result).join(" ") })), [missions]);
   function selectZone(z: ZoneId) {
@@ -437,7 +498,7 @@ function CommandCentre() {
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
-              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span><span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
+              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
             </Button>)}
             </div>
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
