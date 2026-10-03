@@ -436,7 +436,17 @@ function CommandCentre() {
     setFacing(p => ({ ...p, ...Object.fromEntries(routes.map(r => [r.a, coords.current.sanctuary[r.a].x <= cx ? "left" : "right"])) }));
     await wait(3000);
     if (run !== runId.current) return;
-    await Promise.all(routes.map(r => r.path.length ? walk(r.a, [...r.path.slice(0, -1).reverse(), HOME(z, r.a)], "home", run) : Promise.resolve()));
+    const back = (r: (typeof routes)[number]) => [...r.path.slice(0, -1).reverse(), HOME(z, r.a)];
+    if (pickup) {
+      // On the way down, Brix leads again and Oz trails by half a second, so they never overlap.
+      const descentLead = routeTime("Brix", back(routes.find(r => r.a === "Brix")!).slice(0, 2)) * 1000 + 500;
+      await Promise.all([
+        walk("Brix", back(routes.find(r => r.a === "Brix")!), "home", run),
+        wait(descentLead).then(() => run === runId.current ? walk("Oz", back(routes.find(r => r.a === "Oz")!), "home", run) : undefined),
+      ]);
+    } else {
+      await Promise.all(routes.map(r => r.path.length ? walk(r.a, back(r), "home", run) : Promise.resolve()));
+    }
     if (run !== runId.current) return;
     outing.current = [];
   }
