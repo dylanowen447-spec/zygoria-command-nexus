@@ -64,8 +64,8 @@ export const ZONES: Record<ZoneId, Zone> = {
       Oz: [{ x: 26, y: 63 }, { x: 30.5, y: 60.8 }, { x: 35, y: 60.3 }, { x: 40, y: 60 }, { x: 46, y: 59.6 }],
       // Workshop yard (left of the building, clear of scrap piles) → lower glowing trail → crossroads
       Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
-      // Foot of the mountain switchback → open grass east of the pines → crossroads.
-      Lowkey: [{ x: 47.5, y: 40.8 }, { x: 48, y: 43.8 }, { x: 50.7, y: 47 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
+      // Summit of the mountain overlook (Lowkey's resting spot) → down the painted switchback → open grass east of the pines → crossroads.
+      Lowkey: [{ x: 55, y: 19 }, { x: 52, y: 21.5 }, { x: 49.5, y: 23.5 }, { x: 51, y: 26 }, { x: 55, y: 30 }, { x: 53.5, y: 32.5 }, { x: 49, y: 35.5 }, { x: 47, y: 38 }, { x: 47.5, y: 40.8 }, { x: 48, y: 43.8 }, { x: 50.7, y: 47 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
     },
     // Work spots reached from home along open ground: Brix at his workshop, Lowkey winding uphill on the painted mountain path.
     work: {
