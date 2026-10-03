@@ -327,3 +327,13 @@
 .world-image-wrap.scanner-event:after{content:'';position:absolute;left:62%;top:40%;width:22%;height:24%;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(closest-side,oklch(0.8 0.15 220 / 45%),transparent);animation:scanner-flicker 2.6s ease-out}
 @keyframes scanner-flicker{0%,20%,40%{opacity:0}10%,30%{opacity:1}55%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
 @media (prefers-reduced-motion:reduce){.world-image-wrap.scanner-event:after{animation:none;opacity:.6}}
+
+/* Codex chronicles — First Genesis comic pages */
+.chronicle-page { margin: 0; display: grid; gap: .6rem; }
+.chronicle-page img { width: 100%; border-radius: 6px; border: 1px solid color-mix(in oklch, var(--electric) 40%, transparent); box-shadow: 0 0 18px color-mix(in oklch, var(--electric) 18%, transparent); }
+.chronicle-page h3 { font-family: var(--font-mono); letter-spacing: .12em; text-transform: uppercase; font-size: .9rem; color: var(--electric); }
+.chronicle-page p { font-size: .82rem; opacity: .85; line-height: 1.5; }
+.chronicle-nav { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .75rem; }
+.chronicle-nav > span { display: flex; gap: .4rem; }
+.chronicle-dot { width: 8px; height: 8px; border-radius: 99px; background: color-mix(in oklch, var(--electric) 25%, transparent); border: 0; padding: 0; cursor: pointer; }
+.chronicle-dot.is-active { background: var(--electric); box-shadow: 0 0 8px var(--electric); }

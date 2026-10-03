@@ -77,9 +77,17 @@ const LINES: Record<Agent, { task: string[]; chat: string[]; final: string[]; ac
   },
 };
 
+/** Memories of the first three chapters, used when visitors ask about their past. */
+const ORIGIN: Record<Agent, string[]> = {
+  Oz: ["We cracked out of three eggs in the ruins. Freezing, dusty, nobody about. Walking out of there was the best call we ever made.", "Old City first, then a proper long walk, then the river. Built the shack right here. Home sweet home."],
+  Brix: ["Ruins came first. Hatched there, searched Old City, found nothing to drink. So we walked till we hit the river and built this.", "There was a library in Old City. We could read the books. Still can't explain that one."],
+  Lowkey: ["We woke in the ruins. Too quiet. Too many dead towers.", "I spotted the river from a hill on the long walk. Seemed like a place to begin again."],
+};
+
 export function offlineStep(directive: string, agent: Agent, previous: { agent: Agent; result: string }[], isFinalReview: boolean, group: boolean) {
   const seed = directive + agent + previous.length;
   const set = LINES[agent];
-  const result = group ? pick(set.chat, seed) : isFinalReview ? pick(set.final, seed) : pick(set.task, seed);
+  const origin = /where.*(from|come)|origin|past|egg|hatch|arriv|old city|library|long walk|how.*(find|found|got here|built)|ruins/i.test(directive);
+  const result = origin && !isFinalReview ? pick(ORIGIN[agent], seed) : group ? pick(set.chat, seed) : isFinalReview ? pick(set.final, seed) : pick(set.task, seed);
   return { activity: group ? "Chipping in" : set.activity, result, verdict: (agent === "Lowkey" && !isFinalReview && !group ? "pass" : "n/a") as "pass" | "n/a" };
 }

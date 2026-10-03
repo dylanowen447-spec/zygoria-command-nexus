@@ -1,6 +1,7 @@
 # Zygoria Nexus — Task roadmap
 
 ## Completed
+- [x] First Genesis chapters 1–4: canon order (ruins before Sanctuary), Chapter 04 badge, Codex Chronicles comic reader, offline origin memories.
 - [x] Role-specific Zig actions that create persistent world changes (objects, Codex discoveries, 7-stage task tracker).
 - [x] Make Oz, Brix and Lowkey moderately larger on desktop only, keeping sprite proportions, animation, feet anchors and mobile sizing unchanged.
 - [x] Replace the Sanctuary's wooden lookout with Lowkey's natural mountain overlook and winding walkable route, preserving the rest of the world.
