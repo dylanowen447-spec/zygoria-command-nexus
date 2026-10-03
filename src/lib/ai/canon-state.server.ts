@@ -30,6 +30,7 @@ export const CANON_TRUTH: string[] = [
   "The crew are obsessed with what this world is and what they mean to it — that is what they care about most.",
   "The crew have noticed the world seems to have WOKEN UP since they arrived: restored lights, systems and energy seem to stir in response to their rebuilding. They do not know why.",
   "Boulderpot is an established species (ZYG 005). Cards so far: ZYG 001-003 the trio, ZYG 004 Moxi, ZYG 005 Boulderpot; Shiny 001-003 the trio, Shiny 004 Shelton.",
+  "Lowkey has seen a distant repeating flash beyond the Sanctuary from his ridge. Once Brix's repaired workshop scanner (fixed with a copper coil from Oz's yellow pod) locks on, it points east of the river. Its origin is unknown — never explain what causes it.",
   "First Genesis is the opening era: arrival, discovery, survival, rebuilding, mystery, hidden threats.",
 ];
 
