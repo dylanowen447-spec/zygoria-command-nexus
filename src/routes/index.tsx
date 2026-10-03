@@ -421,9 +421,11 @@ function CommandCentre() {
       setBubble(null);
       const oz = routes.find(r => r.a === "Oz")!, brix = routes.find(r => r.a === "Brix")!;
       const ozEnd = oz.path.at(-1)!;
+      // Oz trails Brix by half a second once Brix has passed him, on the same trail, so they never overlap.
+      const lead = routeTime("Brix", brix.path.slice(0, 2)) * 1000 + 500;
       await Promise.all([
         walk("Brix", brix.path, "central", run),
-        wait(350).then(() => run === runId.current ? walk("Oz", [...toMeet(z, "Brix"), ...ownerTail(), ozEnd], "central", run) : undefined),
+        wait(lead).then(() => run === runId.current ? walk("Oz", [...brix.path.slice(1, -1), ozEnd], "central", run) : undefined),
       ]);
     } else {
       await Promise.all(routes.map(r => r.path.length ? walk(r.a, r.path, "central", run) : Promise.resolve()));
