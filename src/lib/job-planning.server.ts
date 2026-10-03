@@ -1,4 +1,5 @@
 import { createAgentStepCall, createRouteCall } from "./ai/responses.ts";
+import { offlineRoute, offlineStep } from "./ai/offline-crew.server.ts";
 
 export type Agent = "Oz" | "Brix" | "Lowkey";
 const isAgent = (a: string): a is Agent => a === "Oz" || a === "Brix" || a === "Lowkey";
@@ -44,7 +45,11 @@ const ZONE_IDS = ["sanctuary", "ruins", "caves", "cronk", "shelton"] as const;
 type ZoneId = (typeof ZONE_IDS)[number];
 const isZone = (z: string): z is ZoneId => (ZONE_IDS as readonly string[]).includes(z);
 
-export function planRoute(directive: string) {
+export async function planRoute(directive: string) {
+  try { return await planRouteLive(directive); } catch (e) { console.warn("offline crew route", e); return offlineRoute(directive); }
+}
+
+function planRouteLive(directive: string) {
   return guarded(async () => {
     const result = await createRouteCall(apiKey(), directive);
     const route: Agent[] = [];
@@ -63,7 +68,11 @@ export function planRoute(directive: string) {
   });
 }
 
-export function runAgentStep(directive: string, agent: Agent, previous: { agent: Agent; result: string }[], isFinalReview: boolean, group = false) {
+export async function runAgentStep(directive: string, agent: Agent, previous: { agent: Agent; result: string }[], isFinalReview: boolean, group = false) {
+  try { return await runAgentStepLive(directive, agent, previous, isFinalReview, group); } catch (e) { console.warn("offline crew step", e); return offlineStep(directive, agent, previous, isFinalReview, group); }
+}
+
+function runAgentStepLive(directive: string, agent: Agent, previous: { agent: Agent; result: string }[], isFinalReview: boolean, group = false) {
   return guarded(async () => {
     const r = await createAgentStepCall(apiKey(), directive, agent, previous, isFinalReview, group);
     const verdict: "pass" | "conflict" | "n/a" = agent === "Lowkey" && !isFinalReview ? (r.verdict.toLowerCase().includes("conflict") ? "conflict" : "pass") : "n/a";
