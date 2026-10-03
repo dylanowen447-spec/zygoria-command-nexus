@@ -3,6 +3,7 @@ import fishDiet from "./canon/2026-10-02-fish-diet.md?raw";
 import crewObsession from "./canon/2026-10-02-crew-obsession.md?raw";
 import undiscoveredAnswers from "./canon/2026-10-02-undiscovered-answers.md?raw";
 import crewHumour from "./canon/2026-10-02-crew-humour.md?raw";
+import coreCanon from "./canon/2026-10-03-core-canon-first-genesis.md?raw";
 /**
  * Zygoria canon — the single source of truth the crew reads on every directive.
  * Add notes as dated entries in order; when a later entry says something changed, it overrides earlier ones.
@@ -14,6 +15,8 @@ export const ZYGORIA_CANON_ENTRIES: { date: string; notes: string }[] = [
   { date: "2026-10-02", notes: crewObsession },
   { date: "2026-10-02", notes: undiscoveredAnswers },
   { date: "2026-10-02", notes: crewHumour },
+  // Core First Genesis canon. Much of it is hidden world truth: the crew only know what CURRENTLY_KNOWN says; Network/Zyg Spark depth stays secret.
+  { date: "2026-10-03", notes: coreCanon },
 ];
 
 export function canonPrompt() {
