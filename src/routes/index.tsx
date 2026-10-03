@@ -568,6 +568,7 @@ function CommandCentre() {
         <div className="intel-bottom"><Cpu size={15}/> ZYGORIA SYSTEMS <span>AI ROUTING LIVE</span></div>
       </aside>
     </main>
-    <footer className="app-footer"><span>© ZYGORIA // COMMAND CENTRE</span><CreatorCredit /><span>WORLD STATE: SIMULATED <span className="footer-cross">✦</span> BUILD 0.1.0</span></footer>
+    <div className="creator-dock"><CreatorCredit /></div>
+    <footer className="app-footer"><span>© ZYGORIA // COMMAND CENTRE</span><span>WORLD STATE: SIMULATED <span className="footer-cross">✦</span> BUILD 0.1.0</span></footer>
   </div>;
 }
