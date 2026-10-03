@@ -27,7 +27,7 @@ function start(volume: number): Engine {
   const d = noise.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
 
-  const beat = 60 / 78 / 2; // 78 bpm, 8th notes
+  const beat = 60 / 88 / 2; // 88 bpm, 8th notes
   let step = 0; let next = 0; let started = false;
   const env = (g: GainNode, t: number, peak: number, dur: number) => {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
