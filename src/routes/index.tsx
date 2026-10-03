@@ -425,7 +425,7 @@ function CommandCentre() {
       // Oz falls in ~1.8s behind Brix on the same trail: enough room at desktop sprite size that they never overlap.
       await Promise.all([
         walk("Brix", brix.path, "central", run),
-        wait(1800).then(() => run === runId.current ? walk("Oz", [...brix.path.slice(0, -1), ozEnd], "central", run) : undefined),
+        wait(2600).then(() => run === runId.current ? walk("Oz", [...brix.path.slice(0, -1), ozEnd], "central", run) : undefined),
       ]);
     } else {
       await Promise.all(routes.map(r => r.path.length ? walk(r.a, r.path, "central", run) : Promise.resolve()));
@@ -441,7 +441,7 @@ function CommandCentre() {
       // Brix gets well down the first switchback before Oz leaves the summit, so nobody walks through anybody.
       await Promise.all([
         walk("Brix", back(routes.find(r => r.a === "Brix")!), "home", run),
-        wait(2200).then(() => run === runId.current ? walk("Oz", back(routes.find(r => r.a === "Oz")!), "home", run) : undefined),
+        wait(2600).then(() => run === runId.current ? walk("Oz", back(routes.find(r => r.a === "Oz")!), "home", run) : undefined),
       ]);
     } else {
       await Promise.all(routes.map(r => r.path.length ? walk(r.a, back(r), "home", run) : Promise.resolve()));
