@@ -174,8 +174,25 @@
 .world-stage{position:absolute;left:50%;top:50%;width:max(100cqw,calc(100cqh * 1.4906));height:max(100cqh,calc(100cqw / 1.4906));transform:translate(-50%,-50%);z-index:4;pointer-events:none}
 .world-stage .agent-marker{pointer-events:auto}
 .world-stage .world-trails{opacity:.55}
-/* Enlarge only the artwork anchored at each character's feet; waypoint coordinates and mobile sizing stay fixed. */
-@media(min-width:901px){.world-stage{--desktop-sprite-scale:1.16}}
+/* Double desktop artwork and wordmarks around their existing feet anchors; phone sizes and routes stay fixed. */
+@media(min-width:901px){
+  .world-stage{--desktop-sprite-scale:2.32}
+  .world-stage .oz-wordmark{width:62.8px}
+  .world-stage .brix-wordmark{width:86.2px}
+  .world-stage .lowkey-wordmark,.world-stage .marker-lowkey.on-ridge .lowkey-wordmark{width:92.2px}
+  .world-stage .agent-marker .marker-status{transform:translateY(-65px)}
+}
+/* The summit sits near the artwork's upper edge: keep Lowkey fully visible on narrower desktop frames. */
+@media(min-width:901px){
+  @container (max-width:900px){
+    .world-image-wrap:has(.shack-definition) .marker-lowkey:is(.at-home,.on-ridge) .sprite-stage{transform:translateY(4px) scale(1.4)!important}
+    .world-image-wrap:has(.shack-definition) .marker-lowkey:is(.at-home,.on-ridge) .marker-status{transform:translateY(-18px)}
+  }
+  @container (max-width:650px){
+    .world-image-wrap:has(.shack-definition) .marker-lowkey:is(.at-home,.on-ridge) .sprite-stage{transform:translateY(4px) scale(1.25)!important}
+    .world-image-wrap:has(.shack-definition) .marker-lowkey:is(.at-home,.on-ridge) .marker-status{transform:translateY(-8px)}
+  }
+}
 
 .task-result{margin-top:8px;padding:8px 10px;border-left:2px solid var(--electric);background:color-mix(in oklab,var(--electric) 7%,transparent);border-radius:4px}.task-result b{display:block;font:700 9px var(--font-mono);color:var(--electric);margin-bottom:4px}.task-result p{margin:0;font:11.5px/1.45 var(--font-body);color:var(--foreground);white-space:pre-wrap;overflow-wrap:anywhere}
 .task-energy{position:absolute;z-index:5;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;opacity:0;pointer-events:none;transition:opacity .25s}.task-energy.is-travelling,.task-energy.is-held{opacity:1}.task-energy span{display:block;width:100%;height:100%;transform:rotate(45deg);background:var(--electric);border:1px solid var(--foreground);box-shadow:0 0 3px var(--electric),0 0 7px var(--electric),0 0 12px oklch(0.76 0.14 210 / 45%);animation:taskEnergy .6s ease-in-out infinite alternate}@keyframes taskEnergy{from{transform:rotate(45deg) scale(.85);filter:brightness(1)}to{transform:rotate(45deg) scale(1.1);filter:brightness(1.4)}}
