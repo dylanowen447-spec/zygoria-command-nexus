@@ -20,13 +20,13 @@ export const chooseJobRoute = createServerFn({ method: "POST" })
   });
 
 export const runCrewStep = createServerFn({ method: "POST" })
-  .inputValidator((input: { directive: string; agent: Agent; previous: { agent: Agent; result: string }[]; finalReview: boolean; group?: boolean }) => {
+  .inputValidator((input: { directive: string; agent: Agent; previous: { agent: Agent; result: string }[]; finalReview: boolean; group?: boolean; story?: string }) => {
     if (!isAgent(input?.agent)) throw new Error("Unknown crew member.");
     const previous = Array.isArray(input.previous) ? input.previous.slice(0, 4) : [];
     for (const p of previous) if (!isAgent(p?.agent) || typeof p.result !== "string") throw new Error("Invalid handoff.");
-    return { directive: checkDirective(input.directive), agent: input.agent, previous: previous.map(p => ({ agent: p.agent, result: p.result.slice(0, 1500) })), finalReview: input.finalReview === true, group: input.group === true };
+    return { directive: checkDirective(input.directive), agent: input.agent, previous: previous.map(p => ({ agent: p.agent, result: p.result.slice(0, 1500) })), finalReview: input.finalReview === true, group: input.group === true, story: typeof input.story === "string" ? input.story.slice(0, 400) : "" };
   })
   .handler(async ({ data }) => {
     const { runAgentStep } = await import("./job-planning.server.ts");
-    return runAgentStep(data.directive, data.agent, data.previous, data.finalReview, data.group);
+    return runAgentStep(data.story ? `${data.directive}\n\n(Scene right now: ${data.story} Weave this in briefly and naturally, in your own voice.)` : data.directive, data.agent, data.previous, data.finalReview, data.group);
   });
