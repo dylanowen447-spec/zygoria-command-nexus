@@ -322,3 +322,4 @@
 @keyframes idle-bubble-in{from{opacity:0;transform:translate(-50%,4px)}to{opacity:1;transform:translate(-50%,0)}}
 @media(max-width:600px){.idle-bubble{font-size:9px;max-width:130px}}
 .agent-marker .idle-bubble{z-index:2000}
+.world-image-wrap{isolation:isolate}
