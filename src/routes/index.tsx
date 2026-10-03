@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEven
 import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, Command, Cpu, Crosshair, Hexagon, MapPin, Radio, Send, Signal, Sparkles, Terminal, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
+import { ShackRadio } from "@/components/ShackRadio";
 import { chooseJobRoute, getCanonState, runCrewStep } from "@/lib/job-planning.functions";
 import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type Agent, type Point, type ZoneId } from "@/lib/zones";
 import ozPortrait from "@/assets/oz.webp.asset.json";
@@ -87,6 +88,7 @@ function CommandCentre() {
       if (saved && typeof saved.levels === "object" && Array.isArray(saved.discoveries)) { worldRef.current = saved; setWorld(saved); }
     } catch { /* world still works without storage */ }
   }, []);
+  const [radioKick, setRadioKick] = useState(0);
   useEffect(() => { if (!changed) return; const t = setTimeout(() => setChanged(null), 4000); return () => clearTimeout(t); }, [changed]);
   function commitWorld(next: WorldState) {
     worldRef.current = next;
@@ -324,6 +326,7 @@ function CommandCentre() {
     const { next, change } = applyAction(worldRef.current, zoneRef.current, agent, directive);
     commitWorld(next);
     setChanged(target.id);
+    if (target.id === "sanc-speakers") setRadioKick(k => k + 1);
     setTaskStage(4);
     log(agent, `World changed: ${change.name} ${change.from} → ${change.to}.${change.discovery ? " New Codex record." : ""}`);
     await wait(1000);
@@ -407,7 +410,7 @@ function CommandCentre() {
   return <div className="command-app">
     <header className="command-header">
       <div className="brand-lockup"><div className="brand-mark"><Hexagon size={25} strokeWidth={1.5}/><span>Z</span></div><div className="brand-copy"><div className="brand-title">ZYGORIA<span className="brand-tm">™</span></div><div className="brand-subtitle"><span className="brand-subtitle-rule"/>FIRST GENESIS<span className="brand-subtitle-rule"/></div></div></div>
-      <div className="header-right"><div className="live-indicator"><span className="live-dot"/> WORLD ONLINE</div><div className="header-divider"/><div className="header-coordinate"><Signal size={14}/> 47° N / 09° E</div><div className="header-avatar">Z</div></div>
+      <div className="header-right"><ShackRadio trigger={radioKick}/><div className="live-indicator"><span className="live-dot"/> WORLD ONLINE</div><div className="header-divider"/><div className="header-coordinate"><Signal size={14}/> 47° N / 09° E</div><div className="header-avatar">Z</div></div>
     </header>
     <main className="command-layout">
       <div className="world-column">
