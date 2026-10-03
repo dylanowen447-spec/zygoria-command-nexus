@@ -412,7 +412,8 @@ function CommandCentre() {
     if (pickup) {
       // Oz collects Brix from his yard first, then the pair climb the ridge together.
       const brixHome = HOME(z, "Brix");
-      await walk("Oz", [...toMeet(z, "Oz"), ...toHome(z, "Brix").slice(0, -1), { x: brixHome.x - 3, y: brixHome.y + 0.6 }], "central", run);
+      // Oz waits just below the yard's exit line, so Brix can step onto the trail without walking through him.
+      await walk("Oz", [...toMeet(z, "Oz"), ...toHome(z, "Brix").slice(0, -1), { x: brixHome.x - 2.5, y: brixHome.y + 3 }], "central", run);
       if (run !== runId.current) return;
       setFacing(p => ({ ...p, Oz: "right", Brix: "left" }));
       setBubble({ agent: "Brix", text: "Right behind you." });
@@ -421,11 +422,10 @@ function CommandCentre() {
       setBubble(null);
       const oz = routes.find(r => r.a === "Oz")!, brix = routes.find(r => r.a === "Brix")!;
       const ozEnd = oz.path.at(-1)!;
-      // Oz trails Brix by half a second once Brix has passed him, on the same trail, so they never overlap.
-      const lead = routeTime("Brix", brix.path.slice(0, 2)) * 1000 + 500;
+      // Oz falls in ~1.8s behind Brix on the same trail: enough room at desktop sprite size that they never overlap.
       await Promise.all([
         walk("Brix", brix.path, "central", run),
-        wait(lead).then(() => run === runId.current ? walk("Oz", [...brix.path.slice(1, -1), ozEnd], "central", run) : undefined),
+        wait(1800).then(() => run === runId.current ? walk("Oz", [...brix.path.slice(0, -1), ozEnd], "central", run) : undefined),
       ]);
     } else {
       await Promise.all(routes.map(r => r.path.length ? walk(r.a, r.path, "central", run) : Promise.resolve()));
@@ -438,11 +438,10 @@ function CommandCentre() {
     if (run !== runId.current) return;
     const back = (r: (typeof routes)[number]) => [...r.path.slice(0, -1).reverse(), HOME(z, r.a)];
     if (pickup) {
-      // On the way down, Brix leads again and Oz trails by half a second, so they never overlap.
-      const descentLead = routeTime("Brix", back(routes.find(r => r.a === "Brix")!).slice(0, 2)) * 1000 + 500;
+      // Brix gets well down the first switchback before Oz leaves the summit, so nobody walks through anybody.
       await Promise.all([
         walk("Brix", back(routes.find(r => r.a === "Brix")!), "home", run),
-        wait(descentLead).then(() => run === runId.current ? walk("Oz", back(routes.find(r => r.a === "Oz")!), "home", run) : undefined),
+        wait(2200).then(() => run === runId.current ? walk("Oz", back(routes.find(r => r.a === "Oz")!), "home", run) : undefined),
       ]);
     } else {
       await Promise.all(routes.map(r => r.path.length ? walk(r.a, back(r), "home", run) : Promise.resolve()));
