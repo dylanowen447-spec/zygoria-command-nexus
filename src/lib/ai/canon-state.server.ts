@@ -10,16 +10,16 @@ import { canonPrompt } from "./zygoria-canon.ts";
  */
 
 export const STORY_STAGE = {
-  number: "STAGE 01",
-  label: "ARRIVAL & THE SANCTUARY",
+  number: "CHAPTER 04",
+  label: "FINDING HOME",
   summary:
-    "The trio landed in the ruined Cambridge region, built The Sanctuary and have begun restoring the land and meeting the people left behind. Cronk and Shelton's territories are known dangers. The Network lies dormant and nobody in-world knows it will return.",
+    "The trio hatched from three eggs in the ruins of Old Earth (Ch.1), explored Old City and its library (Ch.2), walked until they found the river (Ch.3), and built The Sanctuary there (Ch.4, now). Cronk and Shelton's territories are known dangers. The Network lies dormant and nobody in-world knows it will return.",
 };
 
 /** What is objectively true in the Zygoria universe right now — including facts the crew have not discovered yet. */
 export const CANON_TRUTH: string[] = [
   "Zygoria is Old Earth, long after civilisation collapsed; The Network was not destroyed, only dormant.",
-  "Oz, Brix and Lowkey arrived in egg-shaped stasis pods in the ruined Cambridge region.",
+  "Oz, Brix and Lowkey arrived in egg-shaped pods in the ruins of Old Earth, explored Old City, then made the long walk to the river where they built The Sanctuary. The ruins came first; the Sanctuary came after.",
   "The Sanctuary is their rebuilt home base: the Riverside Shack, Brix's Workshop, Lowkey's Lookout, the Crossroads, the river and the three arrival pods. Lowkey's Lookout is a high natural rocky mountain overlook reached by a winding walkable path above the settlement; he sometimes spends quiet nights there watching the moon. It is not a wooden tower or platform.",
   "Pod colours: Oz = yellow (smallest), Brix = blue (largest), Lowkey = red.",
   "Moxi is a young ancient dragon who survived the collapse in deep dormancy; she lives hidden near the Sanctuary. Her colours are locked canon.",
