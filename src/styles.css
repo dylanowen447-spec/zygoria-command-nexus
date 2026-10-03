@@ -304,3 +304,15 @@
 .welcome-enter{margin-top:7px;height:28px;font-size:9px!important}
 .welcome-tab{left:8px;bottom:62px}
 }
+
+/* Oz's shack radio */
+.shack-radio{display:flex;align-items:center;gap:.5rem}
+.shack-radio button{display:flex;align-items:center;gap:.4rem;padding:.3rem .6rem;border:1px solid oklch(0.7 0.15 230 / .35);border-radius:999px;background:oklch(0.18 0.04 260 / .6);color:var(--electric);font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;cursor:pointer}
+.shack-radio.is-on button{box-shadow:0 0 12px oklch(0.75 0.15 210 / .35)}
+.shack-radio input{width:70px;accent-color:var(--electric)}
+.radio-label{display:flex;align-items:center;gap:.25rem}
+.radio-eq{display:flex;align-items:flex-end;gap:2px;height:12px}
+.radio-eq i{width:3px;background:var(--electric);animation:radio-eq .8s ease-in-out infinite alternate}
+.radio-eq i:nth-child(2){animation-delay:-.3s}.radio-eq i:nth-child(3){animation-delay:-.55s}
+@keyframes radio-eq{from{height:3px}to{height:12px}}
+@media(max-width:600px){.radio-label{display:none}.shack-radio input{width:50px}}
