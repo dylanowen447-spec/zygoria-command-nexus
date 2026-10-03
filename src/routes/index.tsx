@@ -386,6 +386,38 @@ function CommandCentre() {
     if (missionZone !== "sanctuary") setZoneId("sanctuary");
     await wait(2500);
     setFinishedId(prev => prev === id ? null : prev);
+    if (missionZone === "sanctuary" && run === runId.current) {
+      const plan = findGroupPlan(done.map(s => ({ agent: s.agent, text: s.result })), [...new Set(route)]);
+      if (plan) await groupOuting(plan, run);
+    }
+  }
+  /** The Zigs follow through on a plan they proposed themselves: walk together on existing trails, spread out, then drift home. */
+  const outing = useRef<Agent[]>([]);
+  async function groupOuting(plan: NonNullable<ReturnType<typeof findGroupPlan>>, run: number) {
+    const z = ZONES.sanctuary, { place } = plan;
+    const ownerTail = (a: Agent): Point[] => place.owner ? (place.spot === "work" ? [...toHome(z, place.owner), ...(z.work[place.owner] ?? [])] : toHome(z, place.owner)) : [];
+    const order = [...plan.who].sort((a, b) => (a === place.owner ? -1 : b === place.owner ? 1 : 0));
+    const routes = order.map((a, i) => {
+      let path: Point[];
+      if (a === place.owner) path = place.spot === "work" ? [...(z.work[a] ?? [])] : [];
+      else path = [...toMeet(z, a), ...ownerTail(a)];
+      const end = path.at(-1) ?? HOME(z, a);
+      const off = GROUP_OFFSETS[place.owner ? i : i + 1] ?? GROUP_OFFSETS[0]!;
+      if (off.x || off.y) path.push({ x: end.x + off.x, y: end.y + off.y });
+      return { a, path };
+    });
+    outing.current = order;
+    log(plan.proposer, `Following through — heading to ${place.name}${order.length > 1 ? " together" : ""}.`);
+    await Promise.all(routes.map(r => r.path.length ? walk(r.a, r.path, "central", run) : Promise.resolve()));
+    if (run !== runId.current) return;
+    // Look outward as a small group, then return to their own routines.
+    const cx = routes.reduce((t, r) => t + coords.current.sanctuary[r.a].x, 0) / routes.length;
+    setFacing(p => ({ ...p, ...Object.fromEntries(routes.map(r => [r.a, coords.current.sanctuary[r.a].x <= cx ? "left" : "right"])) }));
+    await wait(6000);
+    if (run !== runId.current) return;
+    await Promise.all(routes.map(r => r.path.length ? walk(r.a, [...r.path.slice(0, -1).reverse(), HOME(z, r.a)], "home", run) : Promise.resolve()));
+    if (run !== runId.current) return;
+    outing.current = [];
   }
   /** Story layer: beats advance through conversation and play out as in-world exchanges. */
   const [story, setStory] = useState<StoryState>(EMPTY_STORY);
@@ -460,6 +492,13 @@ function CommandCentre() {
     const v = visiting.current;
     visiting.current = null;
     setBubble(null);
+    if (outing.current.length) {
+      const back = outing.current; outing.current = [];
+      runId.current++;
+      for (const a of back) { coords.current.sanctuary[a] = { ...HOME(ZONES.sanctuary, a) }; spots.current.sanctuary[a] = "home"; paint(a); }
+      setWalking([]);
+      setPositions({ Oz: "home", Brix: "home", Lowkey: "home" });
+    }
     if (!v) return;
     runId.current++;
     const z = ZONES.sanctuary;
@@ -474,7 +513,7 @@ function CommandCentre() {
     const loop = async () => {
       while (alive) {
         await wait(22000 + Math.random() * 20000);
-        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current) continue;
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || outing.current.length) continue;
         const z = ZONES.sanctuary, all: Agent[] = ["Oz", "Brix", "Lowkey"];
         const v = all[Math.floor(Math.random() * 3)]!;
         const others = all.filter(a => a !== v);
