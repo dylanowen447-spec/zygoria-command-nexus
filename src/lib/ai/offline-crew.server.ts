@@ -5,7 +5,7 @@ type ZoneId = "sanctuary" | "ruins" | "caves" | "cronk" | "shelton";
 const pick = <T,>(list: T[], seed: string) => {
   let h = 0;
   for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return list[h % list.length];
+  return list[h % list.length]!;
 };
 
 const has = (d: string, words: string[]) => words.some((w) => d.includes(w));
@@ -24,7 +24,7 @@ export function offlineRoute(directive: string) {
   let route: Agent[];
   if (group) route = ["Oz", "Brix", "Lowkey"];
   else if (has(d, ["together", "team up", "solve"])) route = ["Oz", "Lowkey", "Brix", "Oz"];
-  else if (named.length) route = [named[0]];
+  else if (named.length) route = [named[0]!];
   else if (has(d, ["repair", "fix", "build", "rig", "workshop", "inspect", "modify"])) route = ["Brix"];
   else if (has(d, ["scout", "ridge", "look", "investigate", "lore", "history", "moon", "network"])) route = ["Lowkey"];
   else route = ["Oz"];
