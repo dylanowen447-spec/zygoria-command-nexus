@@ -396,12 +396,12 @@ function CommandCentre() {
   const outing = useRef<Agent[]>([]);
   async function groupOuting(plan: NonNullable<ReturnType<typeof findGroupPlan>>, run: number) {
     const z = ZONES.sanctuary, { place } = plan;
-    const ownerTail = (a: Agent): Point[] => place.owner ? (place.spot === "work" ? [...toHome(z, place.owner), ...(z.work[place.owner] ?? [])] : toHome(z, place.owner)) : [];
+    const ownerTail = (): Point[] => place.owner ? (place.spot === "work" ? [...toHome(z, place.owner), ...(z.work[place.owner] ?? [])] : toHome(z, place.owner)) : [];
     const order = [...plan.who].sort((a, b) => (a === place.owner ? -1 : b === place.owner ? 1 : 0));
     const routes = order.map((a, i) => {
       let path: Point[];
       if (a === place.owner) path = place.spot === "work" ? [...(z.work[a] ?? [])] : [];
-      else path = [...toMeet(z, a), ...ownerTail(a)];
+      else path = [...toMeet(z, a), ...ownerTail()];
       const end = path.at(-1) ?? HOME(z, a);
       const off = GROUP_OFFSETS[place.owner ? i : i + 1] ?? GROUP_OFFSETS[0]!;
       if (off.x || off.y) path.push({ x: end.x + off.x, y: end.y + off.y });
@@ -409,12 +409,31 @@ function CommandCentre() {
     });
     outing.current = order;
     log(plan.proposer, `Following through — heading to ${place.name}${order.length > 1 ? " together" : ""}.`);
-    await Promise.all(routes.map(r => r.path.length ? walk(r.a, r.path, "central", run) : Promise.resolve()));
+    const pickup = place.owner === "Lowkey" && order.includes("Oz") && order.includes("Brix");
+    if (pickup) {
+      // Oz collects Brix from his yard first, then the pair climb the ridge together.
+      const brixHome = HOME(z, "Brix");
+      await walk("Oz", [...toMeet(z, "Oz"), ...toHome(z, "Brix").slice(0, -1), { x: brixHome.x - 3, y: brixHome.y + 0.6 }], "central", run);
+      if (run !== runId.current) return;
+      setFacing(p => ({ ...p, Oz: "right", Brix: "left" }));
+      setBubble({ agent: "Brix", text: "Right behind you." });
+      await wait(900);
+      if (run !== runId.current) return;
+      setBubble(null);
+      const oz = routes.find(r => r.a === "Oz")!, brix = routes.find(r => r.a === "Brix")!;
+      const ozEnd = oz.path.at(-1)!;
+      await Promise.all([
+        walk("Brix", brix.path, "central", run),
+        wait(350).then(() => run === runId.current ? walk("Oz", [...toMeet(z, "Brix"), ...ownerTail(), ozEnd], "central", run) : undefined),
+      ]);
+    } else {
+      await Promise.all(routes.map(r => r.path.length ? walk(r.a, r.path, "central", run) : Promise.resolve()));
+    }
     if (run !== runId.current) return;
     // Look outward as a small group, then return to their own routines.
     const cx = routes.reduce((t, r) => t + coords.current.sanctuary[r.a].x, 0) / routes.length;
     setFacing(p => ({ ...p, ...Object.fromEntries(routes.map(r => [r.a, coords.current.sanctuary[r.a].x <= cx ? "left" : "right"])) }));
-    await wait(6000);
+    await wait(3000);
     if (run !== runId.current) return;
     await Promise.all(routes.map(r => r.path.length ? walk(r.a, [...r.path.slice(0, -1).reverse(), HOME(z, r.a)], "home", run) : Promise.resolve()));
     if (run !== runId.current) return;
