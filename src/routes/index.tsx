@@ -476,6 +476,17 @@ function CommandCentre() {
     if (!text || phase !== "idle") return;
     cancelVisit();
     setPlanningError("");
+    const order = zoneRef.current === "sanctuary" ? findUserCommand(text) : null;
+    if (order) {
+      // Direct orders skip the job routine: acknowledge and move straight away.
+      setDraft("");
+      setPhase("working");
+      const run = runId.current;
+      log(order.proposer, `On it — ${order.who.length > 1 ? "rendezvous at" : "heading to"} ${order.place.name}.`);
+      await groupOuting(order, run);
+      if (run === runId.current) setPhase("idle");
+      return;
+    }
     setFinishedId(null);
     setPhase("planning");
     setSelected("Oz");
