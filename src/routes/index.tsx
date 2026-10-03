@@ -297,7 +297,7 @@ function CommandCentre() {
       setMission(id, () => ({ state: "In progress", agent }));
       setPhase("working");
     }
-    const staysPut = zoneRef.current === "sanctuary" && agent === "Oz" && solo;
+    const staysPut = false;
     const target = objectFor(zoneRef.current, agent);
     setTaskStage(staysPut ? 3 : 2);
     log(agent, staysPut ? `Working on the ${target.name.toLowerCase()} right here at the shack.` : `Heading to the ${target.name.toLowerCase()}.`);
