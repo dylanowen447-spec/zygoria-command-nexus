@@ -37,6 +37,8 @@ const startLogs: Log[] = [
   { id: 2, agent: "Brix", text: "Workshop systems online.", time: "SYSTEM" },
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
+/** Crossroads fire pit, just below where the trails meet (artwork %). */
+const FIRE_PIT = { x: 50, y: 63.5 };
 const WALK_SPEED = 5.5; // percent of world width per second
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZONES.sanctuary.aspect);
