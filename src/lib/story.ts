@@ -28,94 +28,82 @@ export type StoryChapter = {
   codex: { id: string; name: string; description: string; location: string; recordedBy: string };
 };
 
+/** Chapter 4's Sanctuary mystery: Lowkey spots something, the crew investigate, and Moxi comes out. */
 export const SANCTUARY_SIGNAL: StoryChapter = {
-  id: "sanctuary-signal",
+  id: "sanctuary-moxi",
   zone: "sanctuary",
   unlocks: "caves",
   codex: {
-    id: "signal",
-    name: "Old Earth Signal",
-    description: "Origin: Unknown · Direction: East of the river · Status: Active · Classification: Old Earth Discovery. Something out there is still transmitting. Nobody knows what.",
-    location: "East of the river",
+    id: "moxi",
+    name: "Moxi",
+    description: "A tiny dragon who was hiding under the evergreen by Brix's workshop. Shy, curious, and very fond of grilled fish. She trusts the crew now.",
+    location: "The evergreen by Brix's workshop",
     recordedBy: "Lowkey",
   },
   beats: [
     {
-      id: "flash",
+      // Fired automatically by the Sanctuary timer, never by words.
+      id: "spotted",
       requires: [],
-      match: /lowkey|ridge|mountain|lookout|see|saw|seen|strange|weird|flash|light|signal|anything new|what.*(up|happen)/i,
-      note: "Lowkey has been seeing a distant flash beyond the Sanctuary from his ridge. It flashes, disappears, then comes back. He thought it was sunlight; it isn't. Mention it briefly, mysteriously.",
-      lines: [["Lowkey", "I keep seeing something from the ridge."], ["Lowkey", "It flashes, disappears, then comes back. Thought it was sunlight. It isn't."]],
+      match: /(?!)/,
+      note: "Lowkey just noticed something move near the trees at the edge of the Sanctuary. He doesn't know what it was.",
+      lines: [["Lowkey", "Hang on. Something moved over there."], ["Lowkey", "Near the trees. That wasn't a bird."]],
     },
     {
-      id: "pattern",
-      requires: ["flash"],
-      match: /flash|signal|light|pattern|repeat|saw|seen|ridge|lowkey/i,
-      note: "Lowkey reveals the flash repeats in a pattern — same place, same rhythm. He doesn't know what it is.",
-      lines: [["Lowkey", "Watched it all night. It repeats. Same gaps every time."], ["Oz", "Wait… it repeats?"]],
+      id: "dragon",
+      requires: ["spotted"],
+      match: /lowkey|moved|movement|saw|see|seen|what (was|is) (it|that)|bird|trees|creature|something/i,
+      note: "Lowkey thinks what he saw was small and scaly — almost like a tiny dragon. He isn't sure and doesn't know its name. Oz and Brix haven't heard yet.",
+      lines: [["Lowkey", "Small. Scaly. Wings, I think."], ["Lowkey", "Looked like a dragon. A tiny one. Don't tell me I'm seeing things."]],
     },
     {
-      id: "oz",
-      requires: ["pattern"],
-      match: /oz|pattern|repeat|signal|flash|electric|transmit|random/i,
-      note: "Oz realises a repeating pattern could be a surviving Old Earth electrical signal. He's excited and wants to find where it comes from.",
-      lines: [["Oz", "That doesn't sound random. That sounds electric."], ["Oz", "If something out there is still transmitting, I want to know what."]],
+      id: "told",
+      requires: ["dragon"],
+      match: /dragon|lowkey (says|saw|said|reckons|thinks)|tell (oz|brix)|oz|brix/i,
+      note: "The visitor has told Oz and Brix that Lowkey saw a tiny dragon. Oz is thrilled, Brix is sceptical but curious. They decide to look for signs. Nobody knows its name.",
+      lines: [["Oz", "A DRAGON? Here? Lowkey, why didn't you lead with that!"], ["Brix", "Dragons. Right. …We'll look for tracks before anyone gets excited."]],
     },
     {
-      id: "scanner",
-      requires: ["oz"],
-      match: /brix|workshop|scanner|where|locate|trace|track|find|direction|source|coming from/i,
-      note: "Brix says his workshop scanner could find where the signal comes from, but it's damaged: it needs one salvaged copper coil.",
-      lines: [["Brix", "My scanner could find where it's coming from. If it worked."], ["Brix", "Coil's burnt out. I need a copper coil that isn't toast."]],
+      id: "clues",
+      requires: ["told"],
+      match: /track|clue|sign|search|look|investigate|find|claw|footprint|scorch|bridge|river/i,
+      note: "The crew found clues: little claw marks on the bridge rocks, a patch of scorched grass, and a fish skeleton picked clean. The trail leads toward the trees by Brix's workshop.",
+      lines: [["Lowkey", "Claw marks on the bridge rocks. Small ones."], ["Brix", "Scorched grass here. Something breathed on it."], ["Oz", "And someone's been eating fish. Not me. For once."]],
     },
     {
-      id: "coil",
-      requires: ["scanner"],
-      match: /pod|coil|copper|salvage|part|wire|egg|spare/i,
-      note: "Oz remembers his yellow arrival pod had compatible wiring — there's an intact copper coil inside. Brix confirms it can be reused safely.",
-      lines: [["Oz", "My pod! There's a coil in the yellow one. Pretty sure. Fairly sure."], ["Brix", "…It's actually intact. Shielded, too. That'll go in safely."]],
+      id: "hiding",
+      requires: ["clues"],
+      match: /tree|evergreen|pine|workshop|hide|hiding|trail|follow|where/i,
+      note: "The crew followed the trail to the evergreen beside Brix's workshop. Something small is peeking out from the rocks underneath, too nervous to come out. It might need a reason to trust them — like food.",
+      lines: [["Brix", "Under the evergreen. By my workshop. Of course it is."], ["Lowkey", "There. Eyes. It's watching us."], ["Oz", "It's scared. We need to give it a reason to trust us."]],
     },
     {
-      id: "fixed",
-      requires: ["coil"],
-      match: /repair|fix|install|scanner|brix|fit|try|switch|turn on|activate|run/i,
-      note: "Brix fits the coil and repairs the scanner. The workshop lights flicker, the scanner pulses, and it locks on: the signal comes from east of the river, beyond the Sanctuary. Origin unknown. Keep it mysterious.",
-      lines: [["Brix", "Coil's in. Stand back."], ["Lowkey", "East of the river. Same place I've been watching."], ["Oz", "Something's still alive out there. Come on, let's go."]],
+      // Fired after a cookout once the hiding place is known.
+      id: "trust",
+      requires: ["hiding"],
+      match: /(?!)/,
+      note: "Oz left a grilled fish by the evergreen. The tiny dragon came out, ate it, and told them her name: Moxi. She is shy but trusts the crew now.",
+      lines: [["Oz", "One grilled fish. Left right here. No sudden moves, lads."], ["Lowkey", "She's coming out."], ["Brix", "…That's a dragon. An actual dragon."], ["Oz", "She said her name's Moxi! Welcome home, Moxi."]],
     },
   ],
   idle: {
-    "": [
-      { pair: ["Lowkey", "Oz"], lines: ["Saw that flash again.", "What flash?"] },
-      { pair: ["Lowkey", "Brix"], lines: ["Something blinks out past the river at night.", "Probably a reflection. Probably."] },
-    ],
-    flash: [
-      { pair: ["Lowkey", "Oz"], lines: ["Saw that flash again.", "Same place?"] },
-      { pair: ["Lowkey", "Brix"], lines: ["It came back. Three times.", "Lights don't just come back."] },
-    ],
-    pattern: [
-      { pair: ["Lowkey", "Oz"], lines: ["Saw that flash again.", "Same place?"] },
-      { pair: ["Oz", "Lowkey"], lines: ["Still repeating?", "Exactly."] },
-    ],
-    oz: [
-      { pair: ["Oz", "Brix"], lines: ["Can your gear track a signal?", "Ask me something harder. …Actually, it's broken."] },
-      { pair: ["Brix", "Oz"], lines: ["If you've borrowed another wire, tell me now.", "Borrowed is a strong word."] },
-    ],
-    scanner: [
-      { pair: ["Brix", "Oz"], lines: ["Still need a copper coil.", "Have you checked… everywhere?"] },
-      { pair: ["Lowkey", "Brix"], lines: ["The pods came with a lot of wiring.", "…Huh."] },
-    ],
-    coil: [
-      { pair: ["Brix", "Oz"], lines: ["Coil's on my bench. Scanner's ready to try.", "Then try it!"] },
-    ],
-    fixed: [
-      { pair: ["Lowkey", "Oz"], lines: ["Still pulsing. East of the river.", "Then that's where we're going."] },
-      { pair: ["Brix", "Lowkey"], lines: ["Scanner hasn't lost it once.", "Neither have I."] },
+    spotted: [{ pair: ["Lowkey", "Oz"], lines: ["Saw something move by the trees.", "Like what?"] }],
+    dragon: [{ pair: ["Lowkey", "Brix"], lines: ["I know what I saw.", "Nobody said anything."] }],
+    told: [{ pair: ["Oz", "Brix"], lines: ["Do dragons like fish?", "Find one first."] }],
+    clues: [{ pair: ["Brix", "Lowkey"], lines: ["Those claw marks are fresh.", "Toward the trees."] }],
+    hiding: [{ pair: ["Oz", "Brix"], lines: ["What do dragons eat?", "Looks like fish, from the bones."] }],
+    trust: [
+      { pair: ["Oz", "Lowkey"], lines: ["Moxi stole another fish.", "She's earned it."] },
+      { pair: ["Brix", "Oz"], lines: ["She's been sleeping by my bench.", "She likes you!"] },
     ],
   },
 };
 
 export const STORY_CHAPTERS: StoryChapter[] = [SANCTUARY_SIGNAL];
 export const STORY_KEY = "zygoria-story-v1";
+/** Seconds spent in the Sanctuary after the opening; Lowkey spots movement at MOXI_SPOT_AFTER. */
+export const SANCTUARY_TIME_KEY = "zygoria-sanctuary-time-v1";
+export const MOXI_SPOT_AFTER = 180;
 export type StoryState = { beats: string[] };
 export const EMPTY_STORY: StoryState = { beats: [] };
 
@@ -131,4 +119,5 @@ export function nextBeat(zone: ZoneId, s: StoryState, directive: string): { chap
 }
 
 /** Zones locked behind an unfinished chapter. */
-export const lockedZones = (s: StoryState) => STORY_CHAPTERS.filter(c => !chapterDone(c, s)).map(c => c.unlocks);
+// Players who finished the old signal chapter keep the caves they already unlocked.
+export const lockedZones = (s: StoryState) => STORY_CHAPTERS.filter(c => !chapterDone(c, s) && !s.beats.includes("fixed")).map(c => c.unlocks);
