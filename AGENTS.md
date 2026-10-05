@@ -21,3 +21,4 @@
 - Scale desktop character artwork around the sprite stage's bottom anchor with a shared world-stage factor, and apply that factor to the carried task icon offsets; this preserves waypoint feet coordinates and untouched mobile proportions.
 - Zig task steps end in a role-specific action on a zone world object (src/lib/world-state.ts); object levels and discoveries persist on-device so world changes outlive the task.
 - Story chapters live in src/lib/story.ts (client state, localStorage); each zone adds a chapter of conversation-triggered beats that can unlock the next zone — so progression stays modular.
+- The crossroads fire pit cookout is a client-only scripted sequence triggered by food/cook words in the Sanctuary, bypassing AI routing — so it always plays reliably.

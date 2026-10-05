@@ -37,6 +37,8 @@ const startLogs: Log[] = [
   { id: 2, agent: "Brix", text: "Workshop systems online.", time: "SYSTEM" },
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
+/** Crossroads fire pit, just below where the trails meet (artwork %). */
+const FIRE_PIT = { x: 50, y: 63.5 };
 const WALK_SPEED = 5.5; // percent of world width per second
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZONES.sanctuary.aspect);
@@ -456,6 +458,38 @@ function CommandCentre() {
     if (run !== runId.current) return;
     outing.current = [];
   }
+  /** Cookout: the crew meet at the crossroads fire pit; Brix lays kindling, Lowkey lights it, Oz grills tiny fish, everyone eats. */
+  const [fire, setFire] = useState<"out" | "spark" | "lit" | "grilling" | "embers">("out");
+  async function cookout(run: number) {
+    const z = ZONES.sanctuary;
+    const all: Agent[] = ["Oz", "Brix", "Lowkey"];
+    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x - 3, y: FIRE_PIT.y - 4 } };
+    const paths = Object.fromEntries(all.map(a => [a, [...toMeet(z, a), seat[a]]])) as Record<Agent, Point[]>;
+    outing.current = all;
+    const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(ms); return run === runId.current; };
+    log("Oz", "Food? Sorted. Meet at the fire pit.");
+    await Promise.all(all.map(a => walk(a, paths[a], "central", run)));
+    if (run !== runId.current) return;
+    setFacing(p => ({ ...p, Oz: "right", Brix: "left" }));
+    if (!await say("Brix", "Kindling's laid. Lowkey, give us the heat.")) return;
+    setFire("spark");
+    if (!await say("Lowkey", "Stand back.", 700)) return;
+    setFire("lit");
+    if (!await say("Lowkey", "Embers will hold.", 1400)) return;
+    setFire("grilling");
+    if (!await say("Oz", "Fish on! Tiny ones, but they're ours.", 2600)) return;
+    if (!await say("Brix", "Turn them, Oz. That one's going black.", 2000)) return;
+    if (!await say("Oz", "Crispy is a flavour.", 1800)) return;
+    if (!await say("Lowkey", "Not bad.", 1600)) return;
+    setBubble(null);
+    setFire("embers");
+    await wait(1200);
+    if (run !== runId.current) return;
+    await Promise.all(all.map(a => walk(a, [...paths[a].slice(0, -1).reverse(), HOME(z, a)], "home", run)));
+    if (run !== runId.current) return;
+    outing.current = [];
+    timers.current.push(setTimeout(() => setFire(f => f === "embers" ? "out" : f), 8000));
+  }
   /** Story layer: beats advance through conversation and play out as in-world exchanges. */
   const [story, setStory] = useState<StoryState>(EMPTY_STORY);
   const storyRef = useRef<StoryState>(EMPTY_STORY);
@@ -495,6 +529,14 @@ function CommandCentre() {
     cancelVisit();
     setPlanningError("");
     const order = zoneRef.current === "sanctuary" ? findUserCommand(text) : null;
+    if (zoneRef.current === "sanctuary" && /\b(cook|grill|food|hungry|dinner|supper|feed me|eat|campfire|fire pit)\b/i.test(text)) {
+      setDraft("");
+      setPhase("working");
+      const run = runId.current;
+      await cookout(run);
+      if (run === runId.current) setPhase("idle");
+      return;
+    }
     if (order) {
       // Direct orders skip the job routine: acknowledge and move straight away.
       setDraft("");
@@ -632,6 +674,7 @@ function CommandCentre() {
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}
             <div className="world-stage">
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/></svg>
+            {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%` }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
              {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
