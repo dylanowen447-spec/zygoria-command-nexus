@@ -200,7 +200,7 @@ const LONG_WALK: Scene = {
     deadtree: { at: { x: 40, y: 44 }, words: "dead|tree|branch", lines: { Brix: ["Dead tree. Dry as bone."], Oz: ["Tree's had a rough day. Century."], Lowkey: ["Not even birds."] } },
     stream: { at: { x: 45, y: 55 }, words: "stream|water|drink|river", lines: { Brix: ["Water. Running clear. Not rusty.", "Drinkable, I reckon."], Oz: ["WATER! Actual water!", "I'm drinking all of it."], Lowkey: ["It's moving. Nothing else here moves."] } },
     sprout: { at: { x: 48, y: 66 }, words: "grass|sprout|plant|green", lines: { Oz: ["Wait… is that grass?! Out of the rock!"], Brix: ["Green shoots. Wasn't expecting that."], Lowkey: ["The ground feels different here. Awake."] } },
-    trees: { at: { x: 55, y: 46 }, words: "tree|trees|leaf|leaves", lines: { Lowkey: ["Leaves. Alive ones."], Brix: ["Healthy trees. Roots find water."], Oz: ["Trees that aren't dead! Fancy."] } },
+    trees: { at: { x: 88, y: 60 }, words: "tree|trees|leaf|leaves", lines: { Lowkey: ["Leaves. Alive ones."], Brix: ["Healthy trees. Roots find water."], Oz: ["Trees that aren't dead! Fancy."] } },
     plateau: { at: { x: 60, y: 72 }, words: "rock|plateau|flat", lines: { Brix: ["Solid rock. Good footing."], Oz: ["Big flat bit. Nap spot."], Lowkey: ["Greener the further we go."] } },
     ridge: { at: { x: 67, y: 51 }, words: "ridge|edge|cliff|valley|overlook|view|top", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
