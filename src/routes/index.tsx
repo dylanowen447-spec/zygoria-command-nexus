@@ -11,6 +11,7 @@ import ozPortrait from "@/assets/oz-portrait.webp.asset.json";
 import ozCrewIcon from "@/assets/oz-crew-icon.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
+import { MoxiResident, MOXI_LINES } from "@/components/MoxiResident";
 import moxiUnderTree from "@/assets/moxi-under-tree.webp.asset.json";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
@@ -547,6 +548,7 @@ function CommandCentre() {
   const pendingBeat = useRef<StoryBeat | null>(null);
   const storyNote = useRef("");
   const [scannerEvent, setScannerEvent] = useState(false);
+  const [moxiSay, setMoxiSay] = useState<{ id: number; text: string } | null>(null);
   useEffect(() => {
     try { const saved = JSON.parse(localStorage.getItem(STORY_KEY) ?? "null"); if (saved && Array.isArray(saved.beats)) { storyRef.current = saved; setStory(saved); } } catch { /* optional */ }
   }, []);
@@ -594,6 +596,10 @@ function CommandCentre() {
     if (prologue === "on") { setDraft(""); setPrologueCmd({ id: Date.now(), text }); return; }
     cancelVisit();
     setPlanningError("");
+    if (zoneRef.current === "sanctuary" && storyRef.current.beats.includes("trust") && /\bmoxi\b/i.test(text)) {
+      setDraft(""); const line = MOXI_LINES[Math.floor(Math.random() * MOXI_LINES.length)]!;
+      setMoxiSay({ id: Date.now(), text: line }); log("Lowkey", `Moxi: ${line}`); return;
+    }
     const order = zoneRef.current === "sanctuary" ? findUserCommand(text) : null;
     if (zoneRef.current === "sanctuary" && /\b(cook|grill|food|hungry|dinner|supper|feed me|eat|campfire|fire pit)\b/i.test(text)) {
       setDraft("");
@@ -736,7 +742,8 @@ function CommandCentre() {
               <div className="location-tag lookout-tag"><span className="location-line"/> LOOKOUT</div>
               <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
               <div className="scene-depth" aria-hidden="true"><span className="depth-haze"/><span className="depth-ridge-shade"/><span className="depth-pool pool-shack"/><span className="depth-pool pool-workshop"/><span className="depth-pool pool-pods"/><span className="depth-pool pool-lookout"/><span className="depth-pool pool-bridge"/><span className="depth-river"/><span className="depth-fore"/></div>
-              {story.beats.includes("hiding") && <img className="moxi-scenery" src={moxiUnderTree.url} alt="Moxi, a tiny dragon peeking over rocks beneath the evergreen near Brix's workshop" draggable={false} />}
+              {story.beats.includes("trust") && <MoxiResident say={moxiSay}/>}
+              {story.beats.includes("hiding") && !story.beats.includes("trust") && <img className="moxi-scenery" src={moxiUnderTree.url} alt="Moxi, a tiny dragon peeking over rocks beneath the evergreen near Brix's workshop" draggable={false} />}
               <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
             </>}
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}

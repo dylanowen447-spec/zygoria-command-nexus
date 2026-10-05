@@ -32,8 +32,8 @@
 - [x] Long Walk: pathing fits new artwork; Zigs walk staggered 2s+ behind each other when moving together
 
 ## Deeper chapters + Moxi return loop
-- [ ] L1 Moxi discovery story in Sanctuary (replaces flash mystery)
-- [ ] L2 Moxi resident (waiting on user's Moxi sprite)
+- [x] L1 Moxi discovery story in Sanctuary (replaces flash mystery)
+- [x] L2 Moxi resident (uses supplied sprite)
 - [ ] L3 One small problem per chapter
 - [ ] L4 Longer Long Walk
 - [ ] L5 Sanctuary return events
