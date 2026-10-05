@@ -330,10 +330,7 @@
 .welcome-tip{margin-top:6px;padding:5px 8px;font-size:8.5px}
 .welcome-enter{margin-top:7px;height:28px;font-size:9px!important}
 /* Mobile only: guide and skip control sit below the game screen so the world view stays clear. */
-.prologue-skip{position:static;display:block;width:calc(100% - 24px);margin:9px auto 2px;text-align:center}
-.welcome-overlay{position:static;display:block;padding:10px 10px 0;background:none}
-.welcome-card{max-height:none;backdrop-filter:none}
-.welcome-tab{position:static;display:block;margin:8px 10px 0;height:30px;width:calc(100% - 20px)}
+.welcome-tab{position:static;display:block;margin:8px auto 0;height:30px;width:calc(100% - 24px)}
 }
 
 /* Oz's shack radio */
