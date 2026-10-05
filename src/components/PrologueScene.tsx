@@ -175,7 +175,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       }
     }
 
-    const hub = scene.spots.centre ? "centre" : "front";
+    const hub = scene.spots["centre"] ? "centre" : "front";
     const send = (z: Agent, spot: string) => {
       orders[z] = spot;
       if (heading[z]) cancel[z] = true;
@@ -190,7 +190,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         setBubbles(b => ({ ...b, [z]: "…" }));
         let reply: string;
         try {
-          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: scene.story } });
+          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: scene.story, prologue: true } });
           reply = out.result.replace(/\s+/g, " ").trim().slice(0, 220);
         } catch { reply = pick(SHRUGS[z]); }
         if (!alive) return;
