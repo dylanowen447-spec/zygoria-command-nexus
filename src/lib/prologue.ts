@@ -115,11 +115,11 @@ const OLD_CITY: Scene = {
     alley: { at: { x: 85, y: 50 }, lines: { Lowkey: ["The lane keeps going. Steps, maybe."], Brix: ["Narrow, but passable."], Oz: ["Ooh, a side street."] } },
     library: { at: { x: 86, y: 32 }, lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
-  objectives: [{ spot: "library", tag: { label: "THE LIBRARY", x: 80, y: 14 }, found: { Oz: ["Steps! Big doors!", "Lads, over here!"], Brix: ["Stone building. Still standing.", "Over here."], Lowkey: ["An archway. Words carved above it.", "Come."] } }],
+  objectives: [{ spot: "library", tag: { label: "THE LIBRARY", x: 68, y: 12 }, found: { Oz: ["Steps! Big doors!", "Lads, over here!"], Brix: ["Stone building. Still standing.", "Over here."], Lowkey: ["An archway. Words carved above it.", "Come."] } }],
   unlock: { seen: 2, ms: 35000, maxMs: 90000 },
   hints: { Lowkey: "There's a lane off to the right. Steps at the end.", Brix: "Building down that side street's still standing.", Oz: "What's down that alley? Only one way to find out." },
   opening: [["Oz", "Whoa. Big."], ["Brix", "Dead. All of it."], ["Lowkey", "Something here wants to be found."]],
-  gather: { spot: "library", at: { Oz: { x: 82, y: 36 }, Brix: { x: 90, y: 37 }, Lowkey: { x: 86, y: 32 } } },
+  gather: { spot: "library", at: { Oz: { x: 79, y: 41 }, Brix: { x: 91, y: 44 }, Lowkey: { x: 86, y: 32 } } },
   finale: [["Oz", "Doors are open!"], ["Brix", "Roof's holding. Mostly."], ["Lowkey", "Writing over the arch. I can read it."], ["Oz", "Then in we go."]],
   card: { eyebrow: "CHAPTER 02 · DISCOVERY", title: "The Library", text: "A crumbling library, its doors open.", next: "Enter the Library ›" },
 };
@@ -159,7 +159,7 @@ const LIBRARY: Scene = {
   unlock: { seen: 2, ms: 25000, maxMs: 70000 },
   hints: { Oz: "Something's glowing by that old desk.", Brix: "That pedestal's catching the light.", Lowkey: "Red cover, by the window." },
   opening: [["Oz", "Books! Loads of them."], ["Brix", "Watch the shelves. They're leaning."], ["Lowkey", "Quiet. Like it's waiting."]],
-  gather: { spot: "centre", at: { Oz: { x: 44, y: 71 }, Brix: { x: 57, y: 72 }, Lowkey: { x: 50, y: 66 } } },
+  gather: { spot: "centre", at: { Oz: { x: 41, y: 62 }, Brix: { x: 58, y: 63 }, Lowkey: { x: 50, y: 57 } } },
   finale: [["Oz", "We can read their books. Why can we read their books?"], ["Brix", "No water here. No food either."], ["Lowkey", "What happened to this world?"], ["Oz", "Dunno. But we're not finding out sat here."]],
   card: { eyebrow: "CHAPTER 02 COMPLETE", title: "The Long Walk", text: "No water, no safe home — just a question they can't forget. The Long Walk is the next chapter, coming soon.", next: "Continue to the Sanctuary ›" },
 };
