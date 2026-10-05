@@ -190,7 +190,7 @@ const LONG_WALK: Scene = {
   edges: [
     ["road", "bend"], ["road", "sign"], ["bend", "ruins"], ["bend", "deadtree"], ["sign", "sprout"],
     ["bend", "stream"], ["deadtree", "stream"], ["stream", "sprout"], ["stream", "trees"], ["sprout", "plateau"],
-    ["plateau", "ridge"], ["trees", "ridge"],
+    ["plateau", "slope"], ["slope", "ridge"], ["trees", "ridge"],
   ],
   spots: {
     road: { at: { x: 19, y: 80 }, words: "road|back|city", lines: { Oz: ["City's behind us. Good riddance."], Brix: ["Road's cracked but it goes somewhere."], Lowkey: ["Don't look back too long."] } },
@@ -202,6 +202,7 @@ const LONG_WALK: Scene = {
     sprout: { at: { x: 50, y: 62 }, words: "grass|sprout|plant|green", lines: { Oz: ["Wait… is that grass?! Out of the rock!"], Brix: ["Green shoots. Wasn't expecting that."], Lowkey: ["The ground feels different here. Awake."] } },
     trees: { at: { x: 66, y: 49 }, words: "tree|trees|leaf|leaves", lines: { Lowkey: ["Leaves. Alive ones."], Brix: ["Healthy trees. Roots find water."], Oz: ["Trees that aren't dead! Fancy."] } },
     plateau: { at: { x: 60, y: 72 }, words: "rock|plateau|flat", lines: { Brix: ["Solid rock. Good footing."], Oz: ["Big flat bit. Nap spot."], Lowkey: ["Greener the further we go."] } },
+    slope: { at: { x: 61, y: 57 }, words: "slope|up|climb", lines: { Oz: ["Up we go."], Brix: ["Steady climb. Watch the loose rock."], Lowkey: ["Higher. The air changes."] } },
     ridge: { at: { x: 70, y: 44 }, words: "ridge|edge|cliff|valley|overlook|view|top", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
   objectives: [{ spot: "ridge", tag: { label: "THE GREEN VALLEY", x: 80, y: 30 }, found: { Oz: ["Whoa. Look down there!", "Why is it so GREEN over there?!"], Brix: ["A valley. River, trees, flat ground.", "Lads, come see this."], Lowkey: ["Down there. Everything's alive.", "Come. Look."] } }],
