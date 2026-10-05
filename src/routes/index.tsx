@@ -648,7 +648,7 @@ function CommandCentre() {
     paint(v);
   }
   useEffect(() => {
-    if (prologue === "on" || phase !== "idle" || zoneId !== "sanctuary") return;
+    if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     let alive = true;
     const loop = async () => {
       while (alive) {

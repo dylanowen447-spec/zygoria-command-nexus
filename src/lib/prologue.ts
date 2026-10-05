@@ -171,7 +171,7 @@ const LIBRARY: Scene = {
   opening: [["Oz", "Books! Loads of them."], ["Brix", "Watch the shelves. They're leaning."], ["Lowkey", "Quiet. Like it's waiting."]],
   gather: { spot: "centre", at: { Oz: { x: 41, y: 62 }, Brix: { x: 58, y: 63 }, Lowkey: { x: 50, y: 57 } } },
   finale: [["Oz", "We can read their books. Why can we read their books?"], ["Brix", "No water here. No food either."], ["Lowkey", "What happened to this world?"], ["Oz", "Dunno. But we're not finding out sat here."]],
-  card: { eyebrow: "CHAPTER 02 COMPLETE", title: "The Long Walk", text: "No water, no safe home — just a question they can't forget. The Long Walk is the next chapter, coming soon.", next: "Continue to the Sanctuary ›" },
+  card: { eyebrow: "CHAPTER 02 COMPLETE", title: "The Long Walk", text: "No water, no safe home — just a question they can't forget. Time to walk.", next: "Begin Chapter 03 · The Long Walk ›" },
   story: "Inside the old stone building from the city: a crumbling hall full of fallen shelves, loose pages and light through a broken roof. No water here.",
   learned: {"desk": "Oz found a book by an old music machine and can somehow read it: it is full of written-down rhythms.", "pedestal": "Brix found a book on a stone stand and can somehow read it: plans for how things were built.", "window": "Lowkey found a book by the window and can somehow read it: names, places and unfamiliar stars."},
 };
