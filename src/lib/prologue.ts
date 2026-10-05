@@ -38,6 +38,8 @@ export type Scene = {
   gather: { spot: string; at: Record<Agent, Point> };
   finale: [Agent, string][];
   card: { eyebrow: string; title: string; text: string; next: string };
+  /** Scene note for live replies: only what the crew know at this moment. */
+  story: string;
 };
 
 export const ASPECT = 1520 / 1024;
@@ -87,6 +89,7 @@ const LANDING: Scene = {
   gather: { spot: "rim", at: { Oz: { x: 49, y: 37 }, Brix: { x: 67, y: 39 }, Lowkey: { x: 58, y: 34 } } },
   finale: [["Oz", "A city! Maybe someone's home."], ["Brix", "Looks dead from here."], ["Lowkey", "Dead things still have answers."], ["Oz", "Then let's go ask them."]],
   card: { eyebrow: "CHAPTER 01 COMPLETE", title: "Old City lies ahead", text: "The crew have spotted the ruined towers on the horizon.", next: "Walk to Old City ›" },
+  story: "Day one. You just hatched from your egg pod in a dusty Old Earth crater with the other two. You don't know where you are, who sent you or why. No Sanctuary, no shack, no home yet. You can see the pods, slabs, dead trees and a broken overpass. Only mention a distant city if you've spotted it.",
 };
 
 const OLD_CITY: Scene = {
@@ -124,6 +127,7 @@ const OLD_CITY: Scene = {
   gather: { spot: "library", at: { Oz: { x: 79, y: 41 }, Brix: { x: 91, y: 44 }, Lowkey: { x: 86, y: 32 } } },
   finale: [["Oz", "Doors are open!"], ["Brix", "Roof's holding. Mostly."], ["Lowkey", "Writing over the arch. I can read it."], ["Oz", "Then in we go."]],
   card: { eyebrow: "CHAPTER 02 · DISCOVERY", title: "The Library", text: "A crumbling library, its doors open.", next: "Enter the Library ›" },
+  story: "Day one, later. You've walked from the landing crater into a dead, silent Old City: an overturned bus, a fallen statue, a dry fountain, strange painted symbols. No home yet, no water found. You don't know what happened here. A stone building down a side lane may be worth a look.",
 };
 
 const LIBRARY: Scene = {
@@ -164,6 +168,7 @@ const LIBRARY: Scene = {
   gather: { spot: "centre", at: { Oz: { x: 41, y: 62 }, Brix: { x: 58, y: 63 }, Lowkey: { x: 50, y: 57 } } },
   finale: [["Oz", "We can read their books. Why can we read their books?"], ["Brix", "No water here. No food either."], ["Lowkey", "What happened to this world?"], ["Oz", "Dunno. But we're not finding out sat here."]],
   card: { eyebrow: "CHAPTER 02 COMPLETE", title: "The Long Walk", text: "No water, no safe home — just a question they can't forget. The Long Walk is the next chapter, coming soon.", next: "Continue to the Sanctuary ›" },
+  story: "Inside a crumbling library in Old City. Each of you has a book waiting; somehow you can read Old Earth writing and don't know why. No water, no home yet. The big question: what happened to this world? Never explain who sent you or what the symbols mean.",
 };
 
 export const PROLOGUE_SCENES: Scene[] = [LANDING, OLD_CITY, LIBRARY];
