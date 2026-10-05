@@ -30,7 +30,7 @@ export const CANON_TRUTH: string[] = [
   "The crew are obsessed with what this world is and what they mean to it — that is what they care about most.",
   "The crew have noticed the world seems to have WOKEN UP since they arrived: restored lights, systems and energy seem to stir in response to their rebuilding. They do not know why.",
   "Boulderpot is an established species (ZYG 005). Cards so far: ZYG 001-003 the trio, ZYG 004 Moxi, ZYG 005 Boulderpot; Shiny 001-003 the trio, Shiny 004 Shelton.",
-  "Lowkey has seen a distant repeating flash beyond the Sanctuary from his ridge. Once Brix's repaired workshop scanner (fixed with a copper coil from Oz's yellow pod) locks on, it points east of the river. Its origin is unknown — never explain what causes it.",
+  "A small hidden creature lives near the Sanctuary. The crew only learn about it step by step through the visitor's story notes — never mention a creature, dragon or Moxi unless the current story note does.",
   "First Genesis is the opening era: arrival, discovery, survival, rebuilding, mystery, hidden threats.",
 ];
 
@@ -63,7 +63,6 @@ export const DISCOVERED = {
     "Human survivors — hiding in caves, tunnels and ruins",
     "Cronk — known danger; a half-human, half-crocodile terror described by survivors; the trio have not fully met him yet",
     "Shelton — known danger; a turtle-like boss running a guarded work camp; the trio have not fully met him yet",
-    "Moxi — hidden somewhere in the Sanctuary; the crew have not found her yet",
   ],
   locations: [
     "The Sanctuary (home base)",
@@ -85,6 +84,7 @@ export const HIDDEN_FUTURE_CANON: string[] = [
   "Why the trio were sent, and that their memories were deliberately wiped or sealed before launch.",
   "The trio's future stronger Stage 2 evolved forms.",
   "The full history and purpose of the ancient dragons, and Moxi's wider importance to the story.",
+  "Moxi's existence and name — the crew only know what the current story note says about the hidden creature.",
   "Any future locations, allies, enemies, transformations or story outcomes not yet established in the canon notes.",
   "The full truth about the Network — what it really is remains larger and mysterious.",
 ];

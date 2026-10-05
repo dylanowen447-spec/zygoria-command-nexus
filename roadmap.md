@@ -30,3 +30,10 @@
 - [x] Arrival at the Sanctuary hand-off
 - [x] Opening is interactive like the Sanctuary: talk to the crew (memory-free, discovery-gated replies) and direct them
 - [x] Long Walk: pathing fits new artwork; Zigs walk staggered 2s+ behind each other when moving together
+
+## Deeper chapters + Moxi return loop
+- [x] L1 Moxi discovery story in Sanctuary (replaces flash mystery)
+- [x] L2 Moxi resident (uses supplied sprite)
+- [ ] L3 One small problem per chapter
+- [ ] L4 Longer Long Walk
+- [ ] L5 Sanctuary return events

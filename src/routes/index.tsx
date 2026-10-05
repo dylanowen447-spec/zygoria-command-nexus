@@ -11,12 +11,13 @@ import ozPortrait from "@/assets/oz-portrait.webp.asset.json";
 import ozCrewIcon from "@/assets/oz-crew-icon.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
+import { MoxiResident, MOXI_LINES } from "@/components/MoxiResident";
 import moxiUnderTree from "@/assets/moxi-under-tree.webp.asset.json";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
-import { EMPTY_STORY, SANCTUARY_SIGNAL, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
+import { EMPTY_STORY, MOXI_SPOT_AFTER, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
@@ -547,6 +548,7 @@ function CommandCentre() {
   const pendingBeat = useRef<StoryBeat | null>(null);
   const storyNote = useRef("");
   const [scannerEvent, setScannerEvent] = useState(false);
+  const [moxiSay, setMoxiSay] = useState<{ id: number; text: string } | null>(null);
   useEffect(() => {
     try { const saved = JSON.parse(localStorage.getItem(STORY_KEY) ?? "null"); if (saved && Array.isArray(saved.beats)) { storyRef.current = saved; setStory(saved); } } catch { /* optional */ }
   }, []);
@@ -570,6 +572,20 @@ function CommandCentre() {
       log("Oz", "New route discovered — Survivor Caves. Something is still active beyond the Sanctuary.");
     }
   }
+  // Real time in the Sanctuary (after the opening) counts toward Lowkey spotting movement; saved so reloads don't reset it.
+  useEffect(() => {
+    if (prologue !== "off" || zoneId !== "sanctuary" || storyRef.current.beats.includes("spotted")) return;
+    const id = setInterval(() => {
+      if (document.hidden || storyRef.current.beats.includes("spotted")) return;
+      let t = 0;
+      try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
+      if (t >= MOXI_SPOT_AFTER && phaseRef.current === "idle" && !visiting.current) {
+        clearInterval(id);
+        void playBeat(SANCTUARY_SIGNAL.beats[0]!, runId.current);
+      }
+    }, 5000);
+    return () => clearInterval(id);
+  }, [prologue, zoneId, story]);
   function log(agent: Agent, text: string) {
     setLogs(prev => [{ id: Date.now() + Math.random(), agent, text, time: now() }, ...prev].slice(0, 12));
   }
@@ -580,12 +596,19 @@ function CommandCentre() {
     if (prologue === "on") { setDraft(""); setPrologueCmd({ id: Date.now(), text }); return; }
     cancelVisit();
     setPlanningError("");
+    if (zoneRef.current === "sanctuary" && storyRef.current.beats.includes("trust") && /\bmoxi\b/i.test(text)) {
+      setDraft(""); const line = MOXI_LINES[Math.floor(Math.random() * MOXI_LINES.length)]!;
+      setMoxiSay({ id: Date.now(), text: line }); log("Lowkey", `Moxi: ${line}`); return;
+    }
     const order = zoneRef.current === "sanctuary" ? findUserCommand(text) : null;
     if (zoneRef.current === "sanctuary" && /\b(cook|grill|food|hungry|dinner|supper|feed me|eat|campfire|fire pit)\b/i.test(text)) {
       setDraft("");
       setPhase("working");
       const run = runId.current;
       await cookout(run);
+      // Once the hiding place is known, a cookout becomes the trust offering.
+      const trust = SANCTUARY_SIGNAL.beats.find(b => b.id === "trust")!;
+      if (run === runId.current && storyRef.current.beats.includes("hiding") && !storyRef.current.beats.includes("trust")) await playBeat(trust, run);
       if (run === runId.current) setPhase("idle");
       return;
     }
@@ -671,7 +694,6 @@ function CommandCentre() {
         let [a, b] = IDLE_CHATS[`${v}>${h}`]![Math.floor(Math.random() * 3)]!;
         const clues = SANCTUARY_SIGNAL.idle[lastBeat(SANCTUARY_SIGNAL, storyRef.current)]?.filter(c => c.pair[0] === v && c.pair[1] === h) ?? [];
         if (clues.length && Math.random() < 0.6) [a, b] = clues[Math.floor(Math.random() * clues.length)]!.lines;
-        if (v === "Lowkey" && !storyRef.current.beats.length && !clues.length && Math.random() < 0.5) [a, b] = ["Something keeps flashing past the river.", "Probably nothing. …Probably."];
         setBubble({ agent: v, text: a }); log(v, a);
         await wait(3200); if (run !== runId.current) return;
         setBubble({ agent: h, text: b }); log(h, b);
@@ -688,7 +710,7 @@ function CommandCentre() {
   const visitedZones = useMemo(() => [...new Set<ZoneId>([zoneId, ...missions.map(m => m.zone)])], [zoneId, missions]);
   const codexPages = useMemo(() => {
     const c = SANCTUARY_SIGNAL.codex, done = chapterDone(SANCTUARY_SIGNAL, story);
-    const page = done ? { ...c, category: "Old Earth discoveries" as const, level: "known" as const } : { id: c.id, category: "Old Earth discoveries" as const, name: "Unrecorded", description: "Something out past the river. We haven't worked out what yet.", location: null, recordedBy: null, level: "hidden" as const };
+    const page = done ? { ...c, category: "Creatures" as const, level: "known" as const } : { id: c.id, category: "Creatures" as const, name: "Unrecorded", description: story.beats.includes("spotted") ? "Something small moving near the trees. Lowkey's sure he saw it." : "Nothing recorded yet.", location: null, recordedBy: null, level: "hidden" as const };
     return [...canon.codexPages.filter(p => p.id !== c.id), page];
   }, [canon.codexPages, story]);
   const codexRecorded = useMemo(() => chapterDone(SANCTUARY_SIGNAL, story) ? [...world.discoveries, SANCTUARY_SIGNAL.codex.id] : world.discoveries, [world.discoveries, story]);
@@ -720,7 +742,8 @@ function CommandCentre() {
               <div className="location-tag lookout-tag"><span className="location-line"/> LOOKOUT</div>
               <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
               <div className="scene-depth" aria-hidden="true"><span className="depth-haze"/><span className="depth-ridge-shade"/><span className="depth-pool pool-shack"/><span className="depth-pool pool-workshop"/><span className="depth-pool pool-pods"/><span className="depth-pool pool-lookout"/><span className="depth-pool pool-bridge"/><span className="depth-river"/><span className="depth-fore"/></div>
-              <img className="moxi-scenery" src={moxiUnderTree.url} alt="Moxi, a tiny dragon peeking over rocks beneath the evergreen near Brix's workshop" draggable={false} />
+              {story.beats.includes("trust") && <MoxiResident say={moxiSay}/>}
+              {story.beats.includes("hiding") && !story.beats.includes("trust") && <img className="moxi-scenery" src={moxiUnderTree.url} alt="Moxi, a tiny dragon peeking over rocks beneath the evergreen near Brix's workshop" draggable={false} />}
               <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
             </>}
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}

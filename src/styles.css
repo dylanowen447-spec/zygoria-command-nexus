@@ -437,3 +437,11 @@
 .agent-marker.near-top:not(.near-left):not(.near-right) .idle-bubble{left:50%;right:auto;transform:translateX(-50%)}
 .agent-marker.near-top .marker-status{left:50%;right:auto;top:auto;bottom:calc(100% + 2px);transform:translateX(-50%)}
 }
+/* Moxi resident: her own hop strip, smaller than Oz; feet anchored at her point. */
+.moxi-resident{position:absolute;width:clamp(34px,5vw,64px);aspect-ratio:300/220;transform:translate(-50%,-100%);pointer-events:none;transition:opacity .6s ease}
+.moxi-resident.is-hidden{opacity:0}
+.moxi-sprite{position:absolute;inset:0;background-size:300% 100%;background-position:0 0;transform:scaleX(-1);filter:drop-shadow(0 2px 2px oklch(0.05 0.01 265 / 50%))}
+.moxi-resident.face-right .moxi-sprite{transform:none}
+.moxi-resident.is-walking .moxi-sprite{animation:moxiHop .45s steps(3) infinite}
+@keyframes moxiHop{from{background-position:0 0}to{background-position:150% 0}}
+.moxi-resident .idle-bubble{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);white-space:nowrap}
