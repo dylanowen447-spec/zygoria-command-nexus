@@ -9,7 +9,7 @@
 - Keep visual roles and HUD styling in the global design tokens and stylesheet so the world interface remains consistent.
 - Keep character sprites as inline SVG; route movement is painted per animation frame from client state along per-character walkable path nodes in artwork-percentage space (a layer locked to the image cover box), so feet land on the same ground at every screen shape, while CSS loops the limb walk cycle only during that movement, so walking is synced and never a position tween.
 - Character route walking and the limb step cycle ignore the reduced-motion preference; walking is the core interaction, so ambient effects are the only motion that gets disabled.
-- Oz and Lowkey render from single 6-frame sprite-sheet strips (idle, walk 1-4, thinking) via background-position; Brix also renders from its 6-frame sheet.
+- Oz renders from his supplied four-direction sprite atlas (front, left, right, back; rest plus six walk poses), selected by segment heading; Lowkey and Brix keep their existing 6-frame strips so only Oz changes visually.
 - Keep static Sanctuary creatures as decorative image overlays outside the agent simulation so discoveries do not alter movement or task state.
 - Crew AI runs as server-only Gateway calls: one routing call, then one call per handoff step that receives all earlier outputs, driven step-by-step by the client — so handoffs are genuine, never simulated.
 - Zygoria canon lives in one server-only module injected into every crew AI call; later dated entries override earlier ones — so all agents share one source of truth and never invent lore.
