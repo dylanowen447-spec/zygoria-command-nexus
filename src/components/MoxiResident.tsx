@@ -52,7 +52,7 @@ export function MoxiResident({ say }: { say: { id: number; text: string } | null
       while (alive) {
         await wait(4000 + Math.random() * 7000); if (!alive) return;
         if (idx === 0 && Math.random() < 0.3) { setHidden(true); await wait(9000); setHidden(false); continue; }
-        const choices = [0, 3, 5].filter(i => i !== idx);
+        const choices = [TREE, GRASS, PIER, SUMMIT, SUMMIT].filter(i => i !== idx);
         await go(choices[Math.floor(Math.random() * choices.length)]!);
         if (Math.random() < 0.35) { setBubble(MOXI_LINES[Math.floor(Math.random() * MOXI_LINES.length)]!); timers.push(setTimeout(() => alive && setBubble(null), 3000)); }
       }
