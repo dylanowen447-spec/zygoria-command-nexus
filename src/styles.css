@@ -422,3 +422,10 @@
 .cover-nav>button{border:1px solid var(--electric);background:transparent;color:var(--foreground);padding:6px 12px;cursor:pointer;letter-spacing:1px}
 .cover-nav>button:disabled{opacity:.35;cursor:default}
 .cover-nav>span{display:flex;gap:6px}
+
+/* Side flyout: near the top edge, bubble + status move beside the Zig instead of above */
+.agent-marker.near-top .idle-bubble{bottom:auto;top:4px;left:calc(100% + 4px);transform:none;animation:none}
+.agent-marker.near-top.near-right .idle-bubble{left:auto;right:calc(100% + 4px)}
+.agent-marker.near-top .marker-status{position:absolute;top:0;left:calc(100% + 4px);margin:0}
+.agent-marker.near-top.near-right .marker-status{left:auto;right:calc(100% + 4px)}
+.agent-marker.near-top:has(.idle-bubble) .marker-status{display:none}
