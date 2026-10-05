@@ -7,7 +7,7 @@ import type { Agent, Point } from "@/lib/zones";
 export const PROLOGUE_KEY = "zygoria-prologue-v1";
 
 type Lines = Record<Agent, string[]>;
-export type Spot = { at: Point; lines: Lines };
+export type Spot = { at: Point; lines: Lines; /** Words a visitor can use to send a Zig here. */ words?: string };
 export type Objective = {
   spot: string;
   /** Only this Zig can find it (e.g. their own book); otherwise anyone. */
@@ -41,6 +41,8 @@ export type Scene = {
 };
 
 export const ASPECT = 1520 / 1024;
+export const ACKS: Lines = { Oz: ["On it!", "Going, going!", "Ooh, yeah."], Brix: ["Fine.", "Right.", "On my way."], Lowkey: ["Going.", "Mm. I'll look.", "Already was."] };
+export const SHRUGS: Lines = { Oz: ["Dunno! Still working it out. Point me somewhere?"], Brix: ["Can't say yet. Tell me where to look."], Lowkey: ["Hard to say. Show me where."] };
 export const REACTIONS: Lines = { Oz: ["Ha. Fair.", "Weird.", "Told you."], Brix: ["Noted.", "Hm.", "Don't touch it."], Lowkey: ["Mm.", "Agreed.", "Careful."] };
 
 /**
@@ -65,18 +67,18 @@ const LANDING: Scene = {
     ["centre", "front"], ["front", "rubble"], ["front", "slabs"], ["overpass", "rubble"],
   ],
   spots: {
-    blue: { at: { x: 35, y: 63 }, lines: { Brix: ["Hull's cracked. Frame held.", "Big egg. Built to last."], Oz: ["Brix's egg is bigger than mine. Rude.", "Still glowing in there."], Lowkey: ["Still warm inside.", "Blue light. Like a heartbeat."] } },
-    yellow: { at: { x: 57, y: 60.5 }, lines: { Oz: ["My egg. Tiny. I like it.", "Came out of that? Me? Nice."], Brix: ["Wiring's cooked. Might salvage it later.", "Small, but the welds are clean."], Lowkey: ["Something still hums in there."] } },
-    red: { at: { x: 71, y: 64 }, lines: { Lowkey: ["Mine. Quiet in there.", "Red glow. Still fading."], Brix: ["Same build as mine. Someone made three.", "Shell's thicker on this one."], Oz: ["Lowkey's egg looks grumpy. Suits him."] } },
-    slabs: { at: { x: 31, y: 77 }, lines: { Brix: ["Poured stone. Old Earth built heavy.", "These were walls once."], Oz: ["Bet this was a wall. Now it's a seat."], Lowkey: ["Broken clean. A long time ago."] } },
-    trees: { at: { x: 21, y: 63 }, lines: { Lowkey: ["Nothing's grown here in years."], Oz: ["Even the trees gave up.", "Dead end. Literally."], Brix: ["Dry wood. Burns well, if we need it."] } },
-    centre: { at: { x: 57, y: 72 }, lines: { Oz: ["Hello? …Nobody. Great.", "Anyone? No? Cool."], Brix: ["Old track. Something walked here once."], Lowkey: ["Listen. Nothing.", "Too quiet."] } },
-    front: { at: { x: 63, y: 83 }, lines: { Oz: ["Dust in my headphones already."], Brix: ["Ground's firm. Good."], Lowkey: ["Wind's coming from the north."] } },
-    rubble: { at: { x: 85, y: 73 }, lines: { Oz: ["Bendy metal! Useful? Probably not."], Brix: ["Rusted through. Not worth carrying."], Lowkey: ["Wind's moved everything here."] } },
-    floor: { at: { x: 65, y: 54 }, lines: { Brix: ["Impact crater. We came in hard."], Oz: ["We made this hole? Brilliant."], Lowkey: ["Three landings. One crater. Odd."] } },
-    wall: { at: { x: 66, y: 42 }, lines: { Lowkey: ["Ground rises north. Better view up there."], Brix: ["Wall's loose. Mind your feet."], Oz: ["Climbing. My favourite. Not really."] } },
-    overpass: { at: { x: 82, y: 50 }, lines: { Brix: ["A road in the sky. Snapped in half."], Oz: ["Who builds roads up high?"], Lowkey: ["It led somewhere. Once."] } },
-    rim: { at: { x: 58, y: 34 }, lines: { Oz: [], Brix: [], Lowkey: [] } },
+    blue: { at: { x: 35, y: 63 }, words: "blue|big (egg|pod)|brix'?s (egg|pod)", lines: { Brix: ["Hull's cracked. Frame held.", "Big egg. Built to last."], Oz: ["Brix's egg is bigger than mine. Rude.", "Still glowing in there."], Lowkey: ["Still warm inside.", "Blue light. Like a heartbeat."] } },
+    yellow: { at: { x: 57, y: 60.5 }, words: "yellow|small(est)? (egg|pod)|tiny|oz'?s (egg|pod)", lines: { Oz: ["My egg. Tiny. I like it.", "Came out of that? Me? Nice."], Brix: ["Wiring's cooked. Might salvage it later.", "Small, but the welds are clean."], Lowkey: ["Something still hums in there."] } },
+    red: { at: { x: 71, y: 64 }, words: "red|lowkey'?s (egg|pod)", lines: { Lowkey: ["Mine. Quiet in there.", "Red glow. Still fading."], Brix: ["Same build as mine. Someone made three.", "Shell's thicker on this one."], Oz: ["Lowkey's egg looks grumpy. Suits him."] } },
+    slabs: { at: { x: 31, y: 77 }, words: "slab|concrete|stone", lines: { Brix: ["Poured stone. Old Earth built heavy.", "These were walls once."], Oz: ["Bet this was a wall. Now it's a seat."], Lowkey: ["Broken clean. A long time ago."] } },
+    trees: { at: { x: 21, y: 63 }, words: "tree", lines: { Lowkey: ["Nothing's grown here in years."], Oz: ["Even the trees gave up.", "Dead end. Literally."], Brix: ["Dry wood. Burns well, if we need it."] } },
+    centre: { at: { x: 57, y: 72 }, words: "middle|centre|center|path|track", lines: { Oz: ["Hello? …Nobody. Great.", "Anyone? No? Cool."], Brix: ["Old track. Something walked here once."], Lowkey: ["Listen. Nothing.", "Too quiet."] } },
+    front: { at: { x: 63, y: 83 }, words: "front", lines: { Oz: ["Dust in my headphones already."], Brix: ["Ground's firm. Good."], Lowkey: ["Wind's coming from the north."] } },
+    rubble: { at: { x: 85, y: 73 }, words: "rubble|metal|rebar", lines: { Oz: ["Bendy metal! Useful? Probably not."], Brix: ["Rusted through. Not worth carrying."], Lowkey: ["Wind's moved everything here."] } },
+    floor: { at: { x: 65, y: 54 }, words: "crater|hole", lines: { Brix: ["Impact crater. We came in hard."], Oz: ["We made this hole? Brilliant."], Lowkey: ["Three landings. One crater. Odd."] } },
+    wall: { at: { x: 66, y: 42 }, words: "rim|edge|climb|slope", lines: { Lowkey: ["Ground rises north. Better view up there."], Brix: ["Wall's loose. Mind your feet."], Oz: ["Climbing. My favourite. Not really."] } },
+    overpass: { at: { x: 82, y: 50 }, words: "bridge|overpass|road|highway", lines: { Brix: ["A road in the sky. Snapped in half."], Oz: ["Who builds roads up high?"], Lowkey: ["It led somewhere. Once."] } },
+    rim: { at: { x: 58, y: 34 }, words: "north|top|up there|view|horizon|city|tower|skyline", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
   objectives: [{ spot: "rim", tag: { label: "OLD CITY — DISTANT", x: 42, y: 16 }, found: { Lowkey: ["Towers. North, past the road.", "Over here."], Oz: ["Wait — there's a whole city out there!", "Lads! Up here!"], Brix: ["Buildings. Lots of them. Far off.", "Over here."] } }],
   unlock: { seen: 2, ms: 40000, maxMs: 100000 },
@@ -103,17 +105,17 @@ const OLD_CITY: Scene = {
     ["crossing", "fountain"], ["fountain", "tower"], ["front", "tower"], ["tower", "alley"], ["alley", "library"],
   ],
   spots: {
-    entry: { at: { x: 50, y: 86 }, lines: { Oz: ["Feet hurt already."], Brix: ["Main road in. Good landmark."], Lowkey: ["Remember the way back."] } },
-    front: { at: { x: 56, y: 72 }, lines: { Oz: ["Echoey. HELLO! …hello."], Brix: ["Cracked road. Firm enough."], Lowkey: ["Sound carries far here."] } },
-    crossing: { at: { x: 45, y: 58 }, lines: { Oz: ["Stripy road! Fancy."], Brix: ["Road markings. Wide street."], Lowkey: ["Lots of feet crossed here once."] } },
-    bus: { at: { x: 29, y: 65 }, lines: { Brix: ["Big machine. Lay down and never got up."], Oz: ["A house on wheels? Tipped over."], Lowkey: ["Many seats. Nobody in them."] } },
-    lights: { at: { x: 38, y: 54 }, lines: { Oz: ["Three eyes. All dead."], Brix: ["Signal post. No power for years."], Lowkey: ["It used to blink, I think."] } },
-    markings: { at: { x: 36, y: 41 }, lines: { Lowkey: ["These marks… I know them, somehow."], Brix: ["Painted symbols. Same one, everywhere."], Oz: ["Someone liked drawing this. A lot."] } },
-    statue: { at: { x: 47, y: 41 }, lines: { Oz: ["Big stone person. Fell over. Relatable."], Brix: ["Toppled off the plinth. Heavy job."], Lowkey: ["Someone they remembered."] } },
-    fountain: { at: { x: 60, y: 48 }, lines: { Brix: ["Dry fountain. No water here."], Oz: ["No water. Brilliant."], Lowkey: ["Dry for a long time."] } },
-    tower: { at: { x: 76, y: 58 }, lines: { Brix: ["That tower's leaning. Don't stand under it."], Oz: ["Another banner. Same symbol."], Lowkey: ["Hangs like a warning."] } },
-    alley: { at: { x: 85, y: 50 }, lines: { Lowkey: ["The lane keeps going. Steps, maybe."], Brix: ["Narrow, but passable."], Oz: ["Ooh, a side street."] } },
-    library: { at: { x: 86, y: 32 }, lines: { Oz: [], Brix: [], Lowkey: [] } },
+    entry: { at: { x: 50, y: 86 }, words: "back|entrance|way in", lines: { Oz: ["Feet hurt already."], Brix: ["Main road in. Good landmark."], Lowkey: ["Remember the way back."] } },
+    front: { at: { x: 56, y: 72 }, words: "plaza|square", lines: { Oz: ["Echoey. HELLO! …hello."], Brix: ["Cracked road. Firm enough."], Lowkey: ["Sound carries far here."] } },
+    crossing: { at: { x: 45, y: 58 }, words: "crossing|stripe|zebra", lines: { Oz: ["Stripy road! Fancy."], Brix: ["Road markings. Wide street."], Lowkey: ["Lots of feet crossed here once."] } },
+    bus: { at: { x: 29, y: 65 }, words: "bus|vehicle", lines: { Brix: ["Big machine. Lay down and never got up."], Oz: ["A house on wheels? Tipped over."], Lowkey: ["Many seats. Nobody in them."] } },
+    lights: { at: { x: 38, y: 54 }, words: "light|signal|traffic", lines: { Oz: ["Three eyes. All dead."], Brix: ["Signal post. No power for years."], Lowkey: ["It used to blink, I think."] } },
+    markings: { at: { x: 36, y: 41 }, words: "mark|symbol|paint|graffiti", lines: { Lowkey: ["These marks… I know them, somehow."], Brix: ["Painted symbols. Same one, everywhere."], Oz: ["Someone liked drawing this. A lot."] } },
+    statue: { at: { x: 47, y: 41 }, words: "statue", lines: { Oz: ["Big stone person. Fell over. Relatable."], Brix: ["Toppled off the plinth. Heavy job."], Lowkey: ["Someone they remembered."] } },
+    fountain: { at: { x: 60, y: 48 }, words: "fountain|water", lines: { Brix: ["Dry fountain. No water here."], Oz: ["No water. Brilliant."], Lowkey: ["Dry for a long time."] } },
+    tower: { at: { x: 76, y: 58 }, words: "tower|banner|flag", lines: { Brix: ["That tower's leaning. Don't stand under it."], Oz: ["Another banner. Same symbol."], Lowkey: ["Hangs like a warning."] } },
+    alley: { at: { x: 85, y: 50 }, words: "alley|lane|side street", lines: { Lowkey: ["The lane keeps going. Steps, maybe."], Brix: ["Narrow, but passable."], Oz: ["Ooh, a side street."] } },
+    library: { at: { x: 86, y: 32 }, words: "library|steps|door|arch|building", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
   objectives: [{ spot: "library", tag: { label: "THE LIBRARY", x: 68, y: 12 }, found: { Oz: ["Steps! Big doors!", "Lads, over here!"], Brix: ["Stone building. Still standing.", "Over here."], Lowkey: ["An archway. Words carved above it.", "Come."] } }],
   unlock: { seen: 2, ms: 35000, maxMs: 90000 },
@@ -140,16 +142,16 @@ const LIBRARY: Scene = {
     ["centre", "pages"], ["ladder", "gears"], ["shelves", "pedestal"],
   ],
   spots: {
-    entry: { at: { x: 50, y: 90 }, lines: { Oz: ["Big doors. Creaky."], Brix: ["Frame's sound."], Lowkey: ["Light only gets in from the roof."] } },
-    centre: { at: { x: 50, y: 70 }, lines: { Oz: ["Patterns on the floor. Dizzy."], Brix: ["Floor's solid. Tiles cracked."], Lowkey: ["A circle. Like a map."] } },
-    shelves: { at: { x: 36, y: 73 }, lines: { Brix: ["Shelves gave way. Too much weight."], Oz: ["So many books. Which one's the good one?"], Lowkey: ["Pages everywhere. Forgotten."] } },
-    gears: { at: { x: 61, y: 47 }, lines: { Brix: ["Gears. Big ones. I like these."], Oz: ["A wheel with teeth."], Lowkey: ["It turned once. For something."] } },
-    aisle: { at: { x: 66, y: 38 }, lines: { Lowkey: ["The aisles go further than the light."], Oz: ["Dark back there. I'll pass."], Brix: ["Roof's worse back here."] } },
-    pages: { at: { x: 60, y: 82 }, lines: { Oz: ["Loose pages. Smell old."], Brix: ["Paper. Burns fast. Careful."], Lowkey: ["Words, scattered."] } },
-    ladder: { at: { x: 63, y: 59 }, lines: { Oz: ["A ladder! Can't reach anything, though."], Brix: ["Rungs are rotten."], Lowkey: ["Up there, more books."] } },
-    desk: { at: { x: 36, y: 64 }, lines: { Oz: [], Brix: [], Lowkey: [] } },
-    pedestal: { at: { x: 48, y: 51 }, lines: { Oz: [], Brix: [], Lowkey: [] } },
-    window: { at: { x: 75, y: 63 }, lines: { Oz: [], Brix: [], Lowkey: [] } },
+    entry: { at: { x: 50, y: 90 }, words: "door|entrance", lines: { Oz: ["Big doors. Creaky."], Brix: ["Frame's sound."], Lowkey: ["Light only gets in from the roof."] } },
+    centre: { at: { x: 50, y: 70 }, words: "middle|floor|circle|mosaic", lines: { Oz: ["Patterns on the floor. Dizzy."], Brix: ["Floor's solid. Tiles cracked."], Lowkey: ["A circle. Like a map."] } },
+    shelves: { at: { x: 36, y: 73 }, words: "shel", lines: { Brix: ["Shelves gave way. Too much weight."], Oz: ["So many books. Which one's the good one?"], Lowkey: ["Pages everywhere. Forgotten."] } },
+    gears: { at: { x: 61, y: 47 }, words: "gear|wheel|machine", lines: { Brix: ["Gears. Big ones. I like these."], Oz: ["A wheel with teeth."], Lowkey: ["It turned once. For something."] } },
+    aisle: { at: { x: 66, y: 38 }, words: "aisle|dark|back", lines: { Lowkey: ["The aisles go further than the light."], Oz: ["Dark back there. I'll pass."], Brix: ["Roof's worse back here."] } },
+    pages: { at: { x: 60, y: 82 }, words: "page|paper", lines: { Oz: ["Loose pages. Smell old."], Brix: ["Paper. Burns fast. Careful."], Lowkey: ["Words, scattered."] } },
+    ladder: { at: { x: 63, y: 59 }, words: "ladder", lines: { Oz: ["A ladder! Can't reach anything, though."], Brix: ["Rungs are rotten."], Lowkey: ["Up there, more books."] } },
+    desk: { at: { x: 36, y: 64 }, words: "desk|gramophone|record|yellow", lines: { Oz: [], Brix: [], Lowkey: [] } },
+    pedestal: { at: { x: 48, y: 51 }, words: "pedestal|blue|stand", lines: { Oz: [], Brix: [], Lowkey: [] } },
+    window: { at: { x: 75, y: 63 }, words: "window|globe|red|star", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
   objectives: [
     { spot: "desk", owner: "Oz", tag: { label: "OZ'S BOOK", x: 18, y: 50 }, found: { Oz: ["Hang on… I can read this. How can I read this?", "It's all rhythms. Someone wrote songs down."], Brix: [], Lowkey: [] } },
