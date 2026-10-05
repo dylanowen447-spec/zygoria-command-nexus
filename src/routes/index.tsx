@@ -19,6 +19,8 @@ import { FieldCodex } from "@/components/FieldCodex";
 import { EMPTY_STORY, SANCTUARY_SIGNAL, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CreatorCredit } from "@/components/CreatorCredit";
+import { PrologueLanding } from "@/components/PrologueLanding";
+import { PROLOGUE_KEY } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 
@@ -98,6 +100,16 @@ function CommandCentre() {
   const worldRef = useRef<WorldState>(EMPTY_WORLD);
   const [acting, setActing] = useState<string | null>(null);
   const [changed, setChanged] = useState<string | null>(null);
+  const [prologue, setPrologue] = useState<"off" | "on">("off");
+  const [prologueRun, setPrologueRun] = useState(0);
+  useEffect(() => {
+    // Only brand-new visitors start at the landing; returning crews go straight home.
+    try { if (!["zygoria-welcome-v1", PROLOGUE_KEY, WORLD_KEY, STORY_KEY].some(k => localStorage.getItem(k))) setPrologue("on"); } catch { /* optional */ }
+  }, []);
+  function endPrologue() {
+    try { localStorage.setItem(PROLOGUE_KEY, "done"); } catch { /* optional */ }
+    setPrologue("off");
+  }
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(WORLD_KEY) ?? "null");
@@ -624,7 +636,7 @@ function CommandCentre() {
     paint(v);
   }
   useEffect(() => {
-    if (phase !== "idle" || zoneId !== "sanctuary") return;
+    if (prologue === "on" || phase !== "idle" || zoneId !== "sanctuary") return;
     let alive = true;
     const loop = async () => {
       while (alive) {
@@ -658,7 +670,7 @@ function CommandCentre() {
     };
     void loop();
     return () => { alive = false; };
-  }, [phase, zoneId]);
+  }, [phase, zoneId, prologue]);
   const visitedZones = useMemo(() => [...new Set<ZoneId>([zoneId, ...missions.map(m => m.zone)])], [zoneId, missions]);
   const codexPages = useMemo(() => {
     const c = SANCTUARY_SIGNAL.codex, done = chapterDone(SANCTUARY_SIGNAL, story);
@@ -680,10 +692,10 @@ function CommandCentre() {
     </header>
     <main className="command-layout">
       <div className="world-column">
-        <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> LIVE WORLD FEED <span className="eyebrow-line"/></div><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></div><div className="world-index"><CircleDot size={14}/> {zone.indexA} <span> / </span> {zone.indexB}</div></div>
-        <div className="zone-selector" role="group" aria-label="Zygoria zones"><span className="stage-chip" title={canon.stageSummary}>{canon.stage}</span>{ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
+        <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> LIVE WORLD FEED <span className="eyebrow-line"/></div>{prologue === "on" ? <><h1>Three <span>Eggs</span></h1><p>Day one on Old Earth.</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {zone.indexA} <span> / </span> {zone.indexB}</div></div>
+        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueRun(n => n + 1); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip" title={canon.stageSummary}>{canon.stage}</span>{ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
-          <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
+          {prologue === "on" ? <PrologueLanding key={prologueRun} onLog={log} onComplete={endPrologue} onSkip={endPrologue}/> : <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
             <div className="world-vignette"/>
             <div className="map-coordinate top-left">◉ &nbsp; {zone.label}</div>
@@ -708,11 +720,11 @@ function CommandCentre() {
             </Button>)}
             </div>
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
-          </div>
+          </div>}
           <WelcomeGuide />
           <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> 1 SANCTUARY</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>
         </div>
-        <form className="mission-form" onSubmit={submit}><div className="form-title"><span><Terminal size={16}/> NEW DIRECTIVE</span><span className="form-counter">{phase === "idle" ? "READY FOR INPUT" : phase === "planning" ? "SELECTING CREW" : "MISSION IN PROGRESS"}</span></div><div className="form-row"><span className="prompt-chevron">›</span><input aria-label="Enter a job for the crew" placeholder="What needs doing around Zygoria?" value={draft} onChange={e => setDraft(e.target.value)} maxLength={180} disabled={phase !== "idle"}/><Button className="dispatch-button" type="submit" disabled={!draft.trim() || phase !== "idle"}>{phase === "planning" ? "CHOOSING" : "DISPATCH"} <Send size={14}/></Button></div>{planningError && <p className="planning-error" role="alert">{planningError}</p>}<div className="form-foot"><span>DIRECTIVES ARE ROUTED THROUGH OZ</span><span>↵ TO SEND</span></div></form>
+        <form className="mission-form" onSubmit={submit}><div className="form-title"><span><Terminal size={16}/> NEW DIRECTIVE</span><span className="form-counter">{phase === "idle" ? "READY FOR INPUT" : phase === "planning" ? "SELECTING CREW" : "MISSION IN PROGRESS"}</span></div><div className="form-row"><span className="prompt-chevron">›</span><input aria-label="Enter a job for the crew" placeholder={prologue === "on" ? "The crew are finding their feet…" : "What needs doing around Zygoria?"} value={draft} onChange={e => setDraft(e.target.value)} maxLength={180} disabled={phase !== "idle" || prologue === "on"}/><Button className="dispatch-button" type="submit" disabled={!draft.trim() || phase !== "idle"}>{phase === "planning" ? "CHOOSING" : "DISPATCH"} <Send size={14}/></Button></div>{planningError && <p className="planning-error" role="alert">{planningError}</p>}<div className="form-foot"><span>DIRECTIVES ARE ROUTED THROUGH OZ</span><span>↵ TO SEND</span></div></form>
         <div className="roster-heading"><div className="section-label"><span className="section-symbol">✦</span> THE CREW <span className="label-count">/ 03</span></div><span className="roster-hint">SELECT AN AGENT TO INSPECT <ArrowDownRight size={14}/></span></div>
         <div className="crew-grid">{agents.map(agent => { const Icon = agent.icon; return <Button key={agent.name} variant="ghost" type="button" onClick={() => setSelected(agent.name)} className={`crew-item ${selected === agent.name ? "selected" : ""}`}><span className="crew-portrait"><img src={agent.image} alt="" /></span><span className="crew-info"><span className="crew-name">{agent.name} <Icon size={13}/></span><span className="crew-role">{agent.role}</span><span className="crew-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]} <span>· {agent.place}</span></span></span><ChevronRight className="crew-arrow" size={16}/></Button> })}</div>
       </div>
