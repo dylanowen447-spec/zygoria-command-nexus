@@ -29,7 +29,7 @@ export function MoxiResident({ say }: { say: { id: number; text: string } | null
     let alive = true, idx = 0, raf = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const wait = (ms: number) => new Promise<void>(r => timers.push(setTimeout(r, ms)));
-    const paint = () => { const e = el.current, p = pos.current; if (!e) return; e.style.left = `${p.x}%`; e.style.top = `${p.y}%`; e.style.zIndex = String(10 + Math.round(p.y * 10)); };
+    const paint = () => { const e = el.current, p = pos.current; if (!e) return; e.style.left = `${p.x}%`; e.style.top = `${p.y}%`; e.style.zIndex = String(10 + Math.round(p.y * 10)); e.classList.toggle("near-top", p.y < 26); };
     const go = (to: number) => new Promise<void>(resolve => {
       const pts = to > idx ? CHAIN.slice(idx + 1, to + 1) : CHAIN.slice(to, idx).reverse();
       let seg = 0, last = performance.now();
