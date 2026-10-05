@@ -110,7 +110,7 @@ export function PrologueLanding({ onLog, onComplete, onSkip }: Props) {
         const nodes = routeBetween(at[a], target);
         const jitter = { Oz: { x: -1, y: 0.6 }, Brix: { x: 1.2, y: 0 }, Lowkey: { x: 0, y: -0.6 } }[a];
         await walk(a, nodes.map((n, i) => { const p = LANDING.spots[n]!.at; return i === nodes.length - 1 ? { x: p.x + jitter.x, y: p.y + jitter.y } : p; }));
-        at[a] = target; heading[a] = undefined; seen[a].add(target);
+        at[a] = target; delete heading[a]; seen[a].add(target);
         if (!alive || discovered && target !== LANDING.objective) return;
         if (target === LANDING.objective) { discovered = true; await discover(a); return; }
         await wait(500);
