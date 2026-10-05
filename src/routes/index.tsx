@@ -463,7 +463,7 @@ function CommandCentre() {
   async function cookout(run: number) {
     const z = ZONES.sanctuary;
     const all: Agent[] = ["Oz", "Brix", "Lowkey"];
-    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 4, y: FIRE_PIT.y + 1 }, Brix: { x: FIRE_PIT.x + 4, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x, y: FIRE_PIT.y - 2.5 } };
+    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x - 3, y: FIRE_PIT.y - 4 } };
     const paths = Object.fromEntries(all.map(a => [a, [...toMeet(z, a), seat[a]]])) as Record<Agent, Point[]>;
     outing.current = all;
     const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(ms); return run === runId.current; };
