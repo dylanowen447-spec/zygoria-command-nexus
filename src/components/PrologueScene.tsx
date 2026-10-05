@@ -287,7 +287,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       <button type="button" onClick={onNext}>{scene.card.next}</button>
     </div>}
   </div>
-  // Skip control lives outside the game screen so mobile can place it below the map.
+  {/* Skip control lives outside the game screen so mobile can place it below the map. */}
   <button type="button" className="prologue-skip" onClick={onSkip}>Skip to the Sanctuary ›</button>
   </>;
 }
