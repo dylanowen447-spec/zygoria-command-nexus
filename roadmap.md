@@ -22,7 +22,7 @@
 
 ## Opening progression (First Genesis prologue)
 - [x] Chapter 01 Egg Landing: hatch, free exploration, skyline discovery, replay chip, skip
-- [ ] Old City exploration + Library entrance discovery
-- [ ] Library: each Zig finds and reads their book
+- [x] Old City exploration + Library entrance discovery
+- [x] Library: each Zig finds and reads their book
 - [ ] Long Walk: overnight shelter + crocodile footprint
 - [ ] Arrival at the Sanctuary hand-off
