@@ -38,3 +38,5 @@
 - [ ] L4 Longer Long Walk
 - [ ] L5 Sanctuary return events
 - [x] Moxi route: keep on open grass, off trees and river
+
+- [ ] Remove river-bank trees between Oz's shack and Moxi's evergreen in the Sanctuary artwork (user-marked area; no characters baked in)

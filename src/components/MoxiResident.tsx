@@ -2,10 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import moxiWalk from "@/assets/moxi-walk.png.asset.json";
 
 type P = { x: number; y: number };
-/** One walkable chain from her evergreen, past the crossroads fire pit, to the pier (artwork %). */
-const CHAIN: P[] = [{ x: 82, y: 84 }, { x: 72, y: 78 }, { x: 62, y: 73 }, { x: 54, y: 69 }, { x: 47, y: 71 }, { x: 41, y: 75 }];
+/** One walkable chain: her evergreen → open grass → pier → fire pit → crossroads → Lowkey's painted switchback → the lookout summit (artwork %). */
+const CHAIN: P[] = [
+  { x: 82, y: 84 }, { x: 72, y: 78 }, { x: 62, y: 73 }, { x: 54, y: 69 },
+  { x: 47, y: 71 }, { x: 41, y: 75 },
+  { x: 47, y: 71 }, { x: 54, y: 69 },
+  { x: 50, y: 63.5 }, { x: 53, y: 58.7 },
+  { x: 50.5, y: 54 }, { x: 50.7, y: 47 }, { x: 48, y: 43.8 }, { x: 47.5, y: 40.8 },
+  { x: 47, y: 38 }, { x: 49, y: 35.5 }, { x: 53.5, y: 32.5 }, { x: 55, y: 30 },
+  { x: 51, y: 26 }, { x: 49.5, y: 23.5 }, { x: 52, y: 21.5 }, { x: 56.5, y: 20.2 },
+];
+const TREE = 0, GRASS = 3, PIER = 5, SUMMIT = CHAIN.length - 1;
 const SPEED = 3.2;
-export const MOXI_LINES = ["Mm. Fish?", "…Hi.", "Shiny river. I like it here.", "I slept a long time. It's louder now. Nicer.", "Oz smells like smoke.", "Brix's hammer is too loud.", "Lowkey sees me. He always sees me.", "*happy chirp*"];
+export const MOXI_LINES = ["Mm. Fish?", "…Hi.", "Shiny river. I like it here.", "I slept a long time. It's louder now. Nicer.", "Oz smells like smoke.", "Brix's hammer is too loud.", "Lowkey sees me. He always sees me.", "*happy chirp*", "Up top. Wind is quiet.", "I can see everything from here."];
 
 /** Moxi as a permanent Sanctuary resident: hops along her own short trail, sometimes hides under the evergreen. */
 export function MoxiResident({ say }: { say: { id: number; text: string } | null }) {
@@ -20,7 +29,7 @@ export function MoxiResident({ say }: { say: { id: number; text: string } | null
     let alive = true, idx = 0, raf = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const wait = (ms: number) => new Promise<void>(r => timers.push(setTimeout(r, ms)));
-    const paint = () => { const e = el.current, p = pos.current; if (!e) return; e.style.left = `${p.x}%`; e.style.top = `${p.y}%`; e.style.zIndex = String(10 + Math.round(p.y * 10)); };
+    const paint = () => { const e = el.current, p = pos.current; if (!e) return; e.style.left = `${p.x}%`; e.style.top = `${p.y}%`; e.style.zIndex = String(10 + Math.round(p.y * 10)); e.classList.toggle("near-top", p.y < 26); };
     const go = (to: number) => new Promise<void>(resolve => {
       const pts = to > idx ? CHAIN.slice(idx + 1, to + 1) : CHAIN.slice(to, idx).reverse();
       let seg = 0, last = performance.now();
@@ -43,7 +52,7 @@ export function MoxiResident({ say }: { say: { id: number; text: string } | null
       while (alive) {
         await wait(4000 + Math.random() * 7000); if (!alive) return;
         if (idx === 0 && Math.random() < 0.3) { setHidden(true); await wait(9000); setHidden(false); continue; }
-        const choices = [0, 3, 5].filter(i => i !== idx);
+        const choices = [TREE, GRASS, PIER, SUMMIT, SUMMIT].filter(i => i !== idx);
         await go(choices[Math.floor(Math.random() * choices.length)]!);
         if (Math.random() < 0.35) { setBubble(MOXI_LINES[Math.floor(Math.random() * MOXI_LINES.length)]!); timers.push(setTimeout(() => alive && setBubble(null), 3000)); }
       }
