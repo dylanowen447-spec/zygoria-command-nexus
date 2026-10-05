@@ -402,3 +402,4 @@
 @keyframes pitFlicker{from{transform:translateX(-50%) scaleY(.9) skewX(-3deg)}to{transform:translateX(-50%) scaleY(1.08) skewX(3deg)}}
 @keyframes pitSpark{0%{opacity:1;transform:translate(-50%,-300%) scale(.4)}60%{opacity:1;transform:translate(-50%,0) scale(1.4)}100%{opacity:0;transform:translate(-50%,0) scale(2.2)}}
 @keyframes pitSizzle{from{transform:translateY(0)}to{transform:translateY(-1px)}}
+.fire-pit.fish-medium .pit-fish i{transform:scale(1.25)}.fire-pit.fish-large .pit-fish i{transform:scale(1.6)}.fire-pit.fish-medium.is-grilling .pit-fish i,.fire-pit.fish-large.is-grilling .pit-fish i{animation:none}

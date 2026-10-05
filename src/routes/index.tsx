@@ -460,6 +460,7 @@ function CommandCentre() {
   }
   /** Cookout: the crew meet at the crossroads fire pit; Brix lays kindling, Lowkey lights it, Oz grills tiny fish, everyone eats. */
   const [fire, setFire] = useState<"out" | "spark" | "lit" | "grilling" | "embers">("out");
+  const [fishSize, setFishSize] = useState<"small" | "medium" | "large">("small");
   async function cookout(run: number) {
     const z = ZONES.sanctuary;
     const all: Agent[] = ["Oz", "Brix", "Lowkey"];
@@ -467,8 +468,22 @@ function CommandCentre() {
     const paths = Object.fromEntries(all.map(a => [a, [...toMeet(z, a), seat[a]]])) as Record<Agent, Point[]>;
     outing.current = all;
     const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(ms); return run === runId.current; };
-    log("Oz", "Food? Sorted. Meet at the fire pit.");
-    await Promise.all(all.map(a => walk(a, paths[a], "central", run)));
+    const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
+    const r = Math.random();
+    const size: "small" | "medium" | "large" = r < 0.5 ? "small" : r < 0.85 ? "medium" : "large";
+    setFishSize(size);
+    log("Oz", "Food? Sorted. I'll grab a fish off the pier.");
+    // Oz detours to the end of the pier for the catch, then joins the others at the pit.
+    const home = HOME(z, "Oz"), pier: Point[] = [{ x: 29.5, y: 67.5 }, { x: 33, y: 73.5 }];
+    const ozRun = (async () => {
+      await walk("Oz", pier, "central", run);
+      if (run !== runId.current) return;
+      setBubble({ agent: "Oz", text: "Got one!" }); log("Oz", "Got one!");
+      await wait(1100);
+      if (run !== runId.current) return;
+      await walk("Oz", [pier[0]!, home, ...paths.Oz], "central", run);
+    })();
+    await Promise.all([ozRun, walk("Brix", paths.Brix, "central", run), walk("Lowkey", paths.Lowkey, "central", run)]);
     if (run !== runId.current) return;
     setFacing(p => ({ ...p, Oz: "right", Brix: "left" }));
     if (!await say("Brix", "Kindling's laid. Lowkey, give us the heat.")) return;
@@ -477,13 +492,23 @@ function CommandCentre() {
     setFire("lit");
     if (!await say("Lowkey", "Embers will hold.", 1400)) return;
     setFire("grilling");
-    if (!await say("Oz", "Fish on! Tiny ones, but they're ours.", 2600)) return;
+    const catchLine = { small: "Fish on! Tiny ones, but they're ours.", medium: "Fish on! Decent size, this lot.", large: "Fish on! Look at the size of this one!" }[size];
+    if (!await say("Oz", catchLine, 2600)) return;
     if (!await say("Brix", "Turn them, Oz. That one's going black.", 2000)) return;
     if (!await say("Oz", "Crispy is a flavour.", 1800)) return;
     if (!await say("Lowkey", "Not bad.", 1600)) return;
-    setBubble(null);
     setFire("embers");
-    await wait(1200);
+    // Short post-meal chat before everyone drifts home.
+    const afters: [Agent, string][][] = [
+      [["Oz", "Stomach's finally stopped rumbling."], ["Brix", "Because I told you when to flip it."], ["Lowkey", "The river gave us enough today."]],
+      [["Brix", "Good heat, Lowkey. Even cook."], ["Lowkey", "It held."], ["Oz", "And who got his boots wet? Me."]],
+      [["Oz", "Could eat three more."], ["Brix", "You'd be asleep after two."], ["Lowkey", "Full is enough."]],
+      [["Lowkey", "Quiet, after a meal."], ["Oz", "Best fish I've ever caught."], ["Brix", "Only fish you've ever caught."]],
+    ];
+    if (size === "large") afters.push([["Brix", "Big one, Oz. Well landed."], ["Oz", "Told you. Fishing legend."], ["Lowkey", "I'm full."]]);
+    for (const [who, text] of pick(afters)) if (!await say(who, text, 2200)) return;
+    setBubble(null);
+    await wait(800);
     if (run !== runId.current) return;
     await Promise.all(all.map(a => walk(a, [...paths[a].slice(0, -1).reverse(), HOME(z, a)], "home", run)));
     if (run !== runId.current) return;
