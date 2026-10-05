@@ -1,6 +1,7 @@
 import landingImg from "@/assets/zone-landing.jpg";
 import cityImg from "@/assets/zone-old-city.jpg";
 import libraryImg from "@/assets/zone-library.jpg";
+import walkImg from "@/assets/zone-long-walk.jpg";
 import type { Agent, Point } from "@/lib/zones";
 
 /** Saved once the visitor has lived through (or skipped) the opening. */
@@ -171,12 +172,50 @@ const LIBRARY: Scene = {
   opening: [["Oz", "Books! Loads of them."], ["Brix", "Watch the shelves. They're leaning."], ["Lowkey", "Quiet. Like it's waiting."]],
   gather: { spot: "centre", at: { Oz: { x: 41, y: 62 }, Brix: { x: 58, y: 63 }, Lowkey: { x: 50, y: 57 } } },
   finale: [["Oz", "We can read their books. Why can we read their books?"], ["Brix", "No water here. No food either."], ["Lowkey", "What happened to this world?"], ["Oz", "Dunno. But we're not finding out sat here."]],
-  card: { eyebrow: "CHAPTER 02 COMPLETE", title: "The Long Walk", text: "No water, no safe home — just a question they can't forget. Time to walk.", next: "Begin Chapter 03 · The Long Walk ›" },
+  card: { eyebrow: "CHAPTER 02 COMPLETE", title: "The Long Walk", text: "No water, no safe home — just a question they can't forget. Time to walk.", next: "Leave the city — Chapter 03 ›" },
   story: "Inside the old stone building from the city: a crumbling hall full of fallen shelves, loose pages and light through a broken roof. No water here.",
   learned: {"desk": "Oz found a book by an old music machine and can somehow read it: it is full of written-down rhythms.", "pedestal": "Brix found a book on a stone stand and can somehow read it: plans for how things were built.", "window": "Lowkey found a book by the window and can somehow read it: names, places and unfamiliar stars."},
 };
 
-export const PROLOGUE_SCENES: Scene[] = [LANDING, OLD_CITY, LIBRARY];
+const LONG_WALK: Scene = {
+  id: "long-walk",
+  title: ["The Long ", "Walk"],
+  sub: "Dead roads. Broken hills. Something stirring.",
+  chapter: "CHAPTER 03 · THE LONG WALK",
+  img: walkImg,
+  alt: "A cracked road winds out of grey ruins through dead hills; grass and a clean stream appear further on, and from a rocky ridge a lush green river valley shines below the mountains",
+  label: "OLD EARTH / THE LONG WALK",
+  bottom: "BROKEN HILLS — LEAVING OLD CITY",
+  spawn: { Oz: { from: { x: 13, y: 99 }, out: "road" }, Brix: { from: { x: 19, y: 99 }, out: "sign" }, Lowkey: { from: { x: 16, y: 99 }, out: "road" } },
+  edges: [
+    ["road", "bend"], ["road", "sign"], ["bend", "ruins"], ["bend", "deadtree"], ["sign", "sprout"],
+    ["bend", "stream"], ["deadtree", "stream"], ["stream", "sprout"], ["stream", "trees"], ["sprout", "plateau"],
+    ["plateau", "ridge"], ["trees", "ridge"],
+  ],
+  spots: {
+    road: { at: { x: 19, y: 80 }, words: "road|back|city", lines: { Oz: ["City's behind us. Good riddance."], Brix: ["Road's cracked but it goes somewhere."], Lowkey: ["Don't look back too long."] } },
+    bend: { at: { x: 29, y: 56 }, words: "bend|corner|road up", lines: { Oz: ["Uphill. Course it is."], Brix: ["Road winds. Saves the legs."], Lowkey: ["The hills go on and on."] } },
+    ruins: { at: { x: 18, y: 50 }, words: "ruin|tower|wall", lines: { Brix: ["Last of the city. Crumbling."], Oz: ["Nothing in there. Just dust."], Lowkey: ["Even the walls gave up."] } },
+    sign: { at: { x: 34, y: 68 }, words: "sign|post", lines: { Oz: ["A sign! It says… rust."], Brix: ["Pointed somewhere once."], Lowkey: ["Words worn off. Like everything."] } },
+    deadtree: { at: { x: 40, y: 44 }, words: "dead|tree|branch", lines: { Brix: ["Dead tree. Dry as bone."], Oz: ["Tree's had a rough day. Century."], Lowkey: ["Not even birds."] } },
+    stream: { at: { x: 45, y: 55 }, words: "stream|water|drink|river", lines: { Brix: ["Water. Running clear. Not rusty.", "Drinkable, I reckon."], Oz: ["WATER! Actual water!", "I'm drinking all of it."], Lowkey: ["It's moving. Nothing else here moves."] } },
+    sprout: { at: { x: 48, y: 66 }, words: "grass|sprout|plant|green", lines: { Oz: ["Wait… is that grass?! Out of the rock!"], Brix: ["Green shoots. Wasn't expecting that."], Lowkey: ["The ground feels different here. Awake."] } },
+    trees: { at: { x: 55, y: 46 }, words: "tree|trees|leaf|leaves", lines: { Lowkey: ["Leaves. Alive ones."], Brix: ["Healthy trees. Roots find water."], Oz: ["Trees that aren't dead! Fancy."] } },
+    plateau: { at: { x: 60, y: 72 }, words: "rock|plateau|flat", lines: { Brix: ["Solid rock. Good footing."], Oz: ["Big flat bit. Nap spot."], Lowkey: ["Greener the further we go."] } },
+    ridge: { at: { x: 67, y: 51 }, words: "ridge|edge|cliff|valley|overlook|view|top", lines: { Oz: [], Brix: [], Lowkey: [] } },
+  },
+  objectives: [{ spot: "ridge", tag: { label: "THE GREEN VALLEY", x: 80, y: 30 }, found: { Oz: ["Whoa. Look down there!", "Why is it so GREEN over there?!"], Brix: ["A valley. River, trees, flat ground.", "Lads, come see this."], Lowkey: ["Down there. Everything's alive.", "Come. Look."] } }],
+  unlock: { seen: 3, ms: 35000, maxMs: 95000 },
+  hints: { Oz: "That rock ledge — bet you can see for miles.", Brix: "Ground rises to an edge over there. Worth a look.", Lowkey: "The air past that ridge smells green." },
+  opening: [["Oz", "Out of the city. Finally."], ["Brix", "Need water. Soon."], ["Lowkey", "Keep walking. Something's out there."]],
+  gather: { spot: "ridge", at: { Oz: { x: 62, y: 55 }, Brix: { x: 70, y: 56 }, Lowkey: { x: 66, y: 48 } } },
+  finale: [["Oz", "It's like the whole world forgot to die down there."], ["Brix", "River. Trees. Flat ground. Could build there."], ["Lowkey", "It's been waiting."], ["Oz", "Then let's not keep it waiting."]],
+  card: { eyebrow: "CHAPTER 03 COMPLETE", title: "The Green Valley", text: "Beyond the dead hills, a valley full of life — a river bend, tall trees, mountains watching.", next: "Head down to the river — Chapter 04 ›" },
+  story: "After the Library you left Old City on foot searching for water. Dead roads, broken hills, dead trees, dust. The further you walk, the more you notice tiny signs of life you did not expect. You have no home and no idea where you are going. You have never seen any valley or river here.",
+  learned: { stream: "You found a clean running stream and drank: the first fresh water you've had.", sprout: "Green grass is pushing up through the rock — the land seems to be waking as you pass.", trees: "Living trees with fresh leaves grow further along the route.", ridge: "From a rocky ridge you saw a lush green valley below: a curving river, tall evergreens, mountains behind, and no buildings at all. You have never been there." },
+};
+
+export const PROLOGUE_SCENES: Scene[] = [LANDING, OLD_CITY, LIBRARY, LONG_WALK];
 
 /** Shortest node path over a scene's walkable graph (breadth-first). */
 export function routeBetween(scene: Scene, from: string, to: string): string[] {

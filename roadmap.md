@@ -26,6 +26,6 @@
 - [x] Library: each Zig finds and reads their book
 - [x] Strict opening order Landing → Old City → Library → Chapter 03 Long Walk → Sanctuary, with chapter labels
 - [x] Dylan Owen reader starts at Chapter 1 art and pages through in order
-- [ ] Long Walk as a full explorable scene (overnight shelter + crocodile footprint) — currently a Chapter 03 comic interlude
+- [x] Long Walk as a full explorable scene: dead → waking land → distant green valley (no buildings), from Chapter 3 art
 - [ ] Arrival at the Sanctuary hand-off
 - [x] Opening is interactive like the Sanctuary: talk to the crew (memory-free, discovery-gated replies) and direct them
