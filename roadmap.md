@@ -26,4 +26,4 @@
 - [x] Library: each Zig finds and reads their book
 - [ ] Long Walk: overnight shelter + crocodile footprint
 - [ ] Arrival at the Sanctuary hand-off
-- [ ] Opening is interactive like the Sanctuary: talk to the crew (real replies) and direct them
+- [x] Opening is interactive like the Sanctuary: talk to the crew (memory-free, discovery-gated replies) and direct them
