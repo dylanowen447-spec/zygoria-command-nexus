@@ -107,7 +107,7 @@ function CommandCentre() {
   const scene = PROLOGUE_SCENES[prologueStep]!;
   useEffect(() => {
     // Only brand-new visitors start at the landing; returning crews go straight home.
-    try { if (![PROLOGUE_KEY, WORLD_KEY, STORY_KEY].some(k => localStorage.getItem(k))) setPrologue("on"); } catch { /* optional */ }
+    try { if (!localStorage.getItem(PROLOGUE_KEY)) setPrologue("on"); } catch { /* optional */ }
   }, []);
   /** Strict order: Landing → Old City → Library → Long Walk (Chapter 03) → Sanctuary. */
   function nextPrologue() {
