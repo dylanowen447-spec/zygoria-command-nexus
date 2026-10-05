@@ -19,8 +19,8 @@ import { FieldCodex } from "@/components/FieldCodex";
 import { EMPTY_STORY, SANCTUARY_SIGNAL, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CreatorCredit } from "@/components/CreatorCredit";
-import { PrologueLanding } from "@/components/PrologueLanding";
-import { PROLOGUE_KEY } from "@/lib/prologue";
+import { PrologueScene } from "@/components/PrologueScene";
+import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 
@@ -101,10 +101,11 @@ function CommandCentre() {
   const [acting, setActing] = useState<string | null>(null);
   const [changed, setChanged] = useState<string | null>(null);
   const [prologue, setPrologue] = useState<"off" | "on">("off");
-  const [prologueRun, setPrologueRun] = useState(0);
+  const [prologueStep, setPrologueStep] = useState(0);
+  const scene = PROLOGUE_SCENES[prologueStep]!;
   useEffect(() => {
     // Only brand-new visitors start at the landing; returning crews go straight home.
-    try { if (!["zygoria-welcome-v1", PROLOGUE_KEY, WORLD_KEY, STORY_KEY].some(k => localStorage.getItem(k))) setPrologue("on"); } catch { /* optional */ }
+    try { if (![PROLOGUE_KEY, WORLD_KEY, STORY_KEY].some(k => localStorage.getItem(k))) setPrologue("on"); } catch { /* optional */ }
   }, []);
   function endPrologue() {
     try { localStorage.setItem(PROLOGUE_KEY, "done"); } catch { /* optional */ }
@@ -692,10 +693,10 @@ function CommandCentre() {
     </header>
     <main className="command-layout">
       <div className="world-column">
-        <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> LIVE WORLD FEED <span className="eyebrow-line"/></div>{prologue === "on" ? <><h1>Three <span>Eggs</span></h1><p>Day one on Old Earth.</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {zone.indexA} <span> / </span> {zone.indexB}</div></div>
-        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueRun(n => n + 1); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip" title={canon.stageSummary}>{canon.stage}</span>{ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
+        <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> LIVE WORLD FEED <span className="eyebrow-line"/></div>{prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {zone.indexA} <span> / </span> {zone.indexB}</div></div>
+        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip" title={canon.stageSummary}>{canon.stage}</span>{ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
-          {prologue === "on" ? <PrologueLanding key={prologueRun} onLog={log} onComplete={endPrologue} onSkip={endPrologue}/> : <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
+          {prologue === "on" ? <PrologueScene key={scene.id} scene={scene} onLog={log} onNext={() => prologueStep + 1 < PROLOGUE_SCENES.length ? setPrologueStep(prologueStep + 1) : endPrologue()} onSkip={endPrologue}/> : <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
             <div className="world-vignette"/>
             <div className="map-coordinate top-left">◉ &nbsp; {zone.label}</div>
