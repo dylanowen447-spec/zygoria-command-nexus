@@ -410,6 +410,8 @@
 /* Prologue — Chapter 01 landing */
 .prologue-skip{position:absolute;right:12px;bottom:72px;z-index:2100;padding:5px 10px;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--muted-foreground);background:oklch(0.14 0.03 270 / 0.75);border:1px solid var(--border);border-radius:6px;cursor:pointer}
 .prologue-skip:hover{color:var(--foreground);border-color:var(--electric)}
+/* Mobile only: skip control flows below the game screen instead of covering it. */
+@media(max-width:600px){.prologue-skip{position:static;display:block;width:calc(100% - 24px);margin:9px auto 2px;text-align:center;z-index:auto}}
 .prologue-found{animation:idle-bubble-in .6s ease-out}
 .prologue-card{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);z-index:2200;width:min(320px,86%);display:flex;flex-direction:column;gap:8px;padding:18px;text-align:center;background:oklch(0.14 0.04 270 / 0.94);border:1px solid var(--electric);border-radius:12px;box-shadow:0 0 30px oklch(0.7 0.18 230 / 0.3);animation:idle-bubble-in .4s ease-out}
 .prologue-card-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:var(--electric)}
