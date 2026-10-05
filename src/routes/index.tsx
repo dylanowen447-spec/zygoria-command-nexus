@@ -113,7 +113,7 @@ function CommandCentre() {
   function nextPrologue() {
     setPrologueStep(step => {
       if (step + 1 < PROLOGUE_SCENES.length) return step + 1;
-      setPrologue("walk");
+      endPrologue();
       return step;
     });
   }
