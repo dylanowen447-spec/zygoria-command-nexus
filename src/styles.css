@@ -445,3 +445,6 @@
 .moxi-resident.is-walking .moxi-sprite{animation:moxiHop .45s steps(3) infinite}
 @keyframes moxiHop{from{background-position:0 0}to{background-position:150% 0}}
 .moxi-resident .idle-bubble{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);white-space:nowrap}
+/* Sanctuary daylight: the old night-time shack overlay is hidden and the vignette is softened so the bright artwork shows through. */
+.world-image-wrap:has(.shack-definition) .shack-definition{visibility:hidden}
+.world-image-wrap:has(.shack-definition) .world-vignette{background:linear-gradient(180deg,oklch(0.08 0.015 260 / 22%),transparent 18%,transparent 78%,oklch(0.08 0.015 260 / 30%))}
