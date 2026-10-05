@@ -265,7 +265,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     return () => { alive = false; timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, [scene]);
 
-  return <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties}>
+  return <>
+  <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
     <div className="world-vignette"/>
     <div className="map-coordinate top-left">◉ &nbsp; {scene.label}</div>
