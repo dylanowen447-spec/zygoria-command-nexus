@@ -429,3 +429,11 @@
 .agent-marker.near-top .marker-status{position:absolute;top:0;left:calc(100% + 4px);margin:0}
 .agent-marker.near-top.near-right .marker-status{left:auto;right:calc(100% + 4px)}
 .agent-marker.near-top:has(.idle-bubble) .marker-status{display:none}
+@media(max-width:600px){
+.agent-marker .idle-bubble{max-width:120px}
+.agent-marker.near-left .idle-bubble{left:0;right:auto;transform:none}
+.agent-marker.near-right .idle-bubble{left:auto;right:0;transform:none}
+.agent-marker.near-top .idle-bubble{top:calc(100% + 4px);bottom:auto}
+.agent-marker.near-top:not(.near-left):not(.near-right) .idle-bubble{left:50%;right:auto;transform:translateX(-50%)}
+.agent-marker.near-top .marker-status{left:50%;right:auto;top:auto;bottom:calc(100% + 2px);transform:translateX(-50%)}
+}
