@@ -8,6 +8,7 @@ import { chooseJobRoute, getCanonState, runCrewStep } from "@/lib/job-planning.f
 import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type Agent, type Point, type ZoneId } from "@/lib/zones";
 import { findGroupPlan, findUserCommand, GROUP_OFFSETS } from "@/lib/group-plans";
 import ozPortrait from "@/assets/oz-portrait.webp.asset.json";
+import ozCrewIcon from "@/assets/oz-crew-icon.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
 import moxiUnderTree from "@/assets/moxi-under-tree.webp.asset.json";
@@ -28,7 +29,7 @@ type Step = { agent: Agent; activity: string; result: string; verdict: "pass" | 
 type Mission = { id: number; text: string; agent: Agent; reason: string; route: Agent[]; zone: ZoneId; group: boolean; steps: Step[]; done: number; error?: string; state: "Routing" | "Handoff" | "In progress" | "Complete"; time: string };
 type Log = { id: number; agent: Agent; text: string; time: string };
 const agents: { name: Agent; role: string; place: string; image: string; icon: typeof Sparkles }[] = [
-  { name: "Oz", role: "Coordinator / creative lead", place: "Riverside shack", image: ozPortrait.url, icon: Sparkles },
+  { name: "Oz", role: "Coordinator / creative lead", place: "Riverside shack", image: ozCrewIcon.url, icon: Sparkles },
   { name: "Brix", role: "Builder / technical", place: "Workshop / garage", image: brixPortrait.url, icon: Wrench },
   { name: "Lowkey", role: "Lore / research", place: "The wilds", image: lowkeyPortrait.url, icon: Crosshair },
 ];
