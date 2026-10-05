@@ -29,8 +29,11 @@ export const runCrewStep = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { runAgentStep } = await import("./job-planning.server.ts");
     if (data.prologue) {
-      // Opening chapters are lived in the moment: the crew only know what they've seen so far that day.
-      return runAgentStep(`IMPORTANT — PLAYING THE OPENING CHAPTERS LIVE. Ignore the "current chapter" in canon: right now it is ${data.story} The Sanctuary, shack, workshop, river home and everything after this moment have NOT happened yet; never mention them. Answer only from what you know right now, briefly, in your own voice.\n\nVisitor says: ${data.directive}`, data.agent, data.previous, data.finalReview, data.group);
+      // Opening chapters: no live story state, so the crew can't know about anything after this moment.
+      const key = process.env["LOVABLE_API_KEY"];
+      if (!key) throw new Error("The crew can't hear you right now.");
+      const { createPrologueCall } = await import("./ai/responses.ts");
+      return createPrologueCall(key, data.directive, data.agent, data.previous, data.story);
     }
     return runAgentStep(data.story ? `${data.directive}\n\n(Scene right now: ${data.story} Weave this in briefly and naturally, in your own voice.)` : data.directive, data.agent, data.previous, data.finalReview, data.group);
   });
