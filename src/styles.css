@@ -418,3 +418,7 @@
 .prologue-card strong{font-size:18px;color:var(--foreground)}
 .prologue-card p{font-size:12px;line-height:1.5;color:var(--muted-foreground);margin:0}
 .prologue-card button{margin-top:6px;padding:8px 12px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--background);background:var(--electric);border:0;border-radius:6px;cursor:pointer}
+.cover-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-family:var(--font-mono);font-size:11px}
+.cover-nav>button{border:1px solid var(--electric);background:transparent;color:var(--foreground);padding:6px 12px;cursor:pointer;letter-spacing:1px}
+.cover-nav>button:disabled{opacity:.35;cursor:default}
+.cover-nav>span{display:flex;gap:6px}
