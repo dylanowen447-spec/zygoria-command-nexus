@@ -407,7 +407,7 @@
 .prologue-skip{position:absolute;right:12px;bottom:34px;z-index:2100;padding:5px 10px;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--muted-foreground);background:oklch(0.14 0.03 270 / 0.75);border:1px solid var(--border);border-radius:6px;cursor:pointer}
 .prologue-skip:hover{color:var(--foreground);border-color:var(--electric)}
 .prologue-found{animation:idle-bubble-in .6s ease-out}
-.prologue-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2200;width:min(320px,86%);display:flex;flex-direction:column;gap:8px;padding:18px;text-align:center;background:oklch(0.14 0.04 270 / 0.94);border:1px solid var(--electric);border-radius:12px;box-shadow:0 0 30px oklch(0.7 0.18 230 / 0.3);animation:idle-bubble-in .4s ease-out}
+.prologue-card{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);z-index:2200;width:min(320px,86%);display:flex;flex-direction:column;gap:8px;padding:18px;text-align:center;background:oklch(0.14 0.04 270 / 0.94);border:1px solid var(--electric);border-radius:12px;box-shadow:0 0 30px oklch(0.7 0.18 230 / 0.3);animation:idle-bubble-in .4s ease-out}
 .prologue-card-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:var(--electric)}
 .prologue-card strong{font-size:18px;color:var(--foreground)}
 .prologue-card p{font-size:12px;line-height:1.5;color:var(--muted-foreground);margin:0}

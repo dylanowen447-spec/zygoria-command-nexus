@@ -46,7 +46,7 @@ export const LANDING = {
   opening: [["Oz", "Ow. Where are we?"], ["Brix", "Somewhere dead. Pods held, though."], ["Lowkey", "No voices. Just wind."], ["Oz", "Right. Let's have a look around."]] as [Agent, string][],
   reactions: { Oz: ["Ha. Fair.", "Weird.", "Told you."], Brix: ["Noted.", "Hm.", "Don't touch it."], Lowkey: ["Mm.", "Agreed.", "Careful."] } as Record<Agent, string[]>,
   hints: { Lowkey: "Light's different past the north rim.", Brix: "Ground slopes up behind the pods. Could see further.", Oz: "Bet you can see loads from up top." } as Record<Agent, string>,
-  gather: { Oz: { x: 53, y: 36 }, Brix: { x: 63, y: 37 }, Lowkey: { x: 58, y: 34 } } as Record<Agent, Point>,
+  gather: { Oz: { x: 49, y: 37 }, Brix: { x: 67, y: 39 }, Lowkey: { x: 58, y: 34 } } as Record<Agent, Point>,
   finale: [["Oz", "A city! Maybe someone's home."], ["Brix", "Looks dead from here."], ["Lowkey", "Dead things still have answers."], ["Oz", "Then let's go ask them."]] as [Agent, string][],
 };
 

@@ -174,7 +174,7 @@ export function PrologueLanding({ onLog, onComplete, onSkip }: Props) {
     <div className="map-coordinate top-left">◉ &nbsp; {LANDING.label}</div>
     <div className="map-coordinate top-right">CHAPTER 01 · THREE EGGS</div>
     <div className="world-stage">
-      {found && <div className="location-tag zone-tag prologue-found" style={{ left: "60%", top: "24%" }}><span className="location-line"/> OLD CITY — DISTANT</div>}
+      {found && <div className="location-tag zone-tag prologue-found" style={{ left: "42%", top: "16%" }}><span className="location-line"/> OLD CITY — DISTANT</div>}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), opacity: hatched ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${walking.includes(a) ? "is-walking" : ""}`}>
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>

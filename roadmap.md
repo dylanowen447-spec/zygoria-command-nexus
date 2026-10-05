@@ -19,3 +19,10 @@
 
 - [x] Zigs follow through on group plans they propose (lookout, workshop, shack, crossroads), spread out, then return home
 - [x] Replace only Oz's character artwork with the supplied new silhouette and directional walking frames; keep the other Zigs and world untouched.
+
+## Opening progression (First Genesis prologue)
+- [x] Chapter 01 Egg Landing: hatch, free exploration, skyline discovery, replay chip, skip
+- [ ] Old City exploration + Library entrance discovery
+- [ ] Library: each Zig finds and reads their book
+- [ ] Long Walk: overnight shelter + crocodile footprint
+- [ ] Arrival at the Sanctuary hand-off
