@@ -226,17 +226,19 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         let who: Agent[] = named.length ? named : everyone || (obj && !obj.owner) ? [...ALL] : [ALL.slice().sort((x, y) => dist(coords.current[x], scene.spots[spot]!.at) - dist(coords.current[y], scene.spots[spot]!.at))[0]!];
         if (obj?.owner) who = [who.includes(obj.owner) || !named.length ? obj.owner : who[0]!];
         if (obj) claimed.delete(spot);
-        who.forEach(z => send(z, spot));
+        who.forEach((z, i) => timers.push(setTimeout(() => alive && send(z, spot), i * 2000)));
         return;
       }
-      if (/\b(regroup|gather|come here|come back|meet up|stick together)\b/.test(t)) { (named.length ? named : ALL).forEach(z => send(z, hub)); return; }
+      if (/\b(regroup|gather|come here|come back|meet up|stick together)\b/.test(t)) { (named.length ? named : ALL).forEach((z, i) => timers.push(setTimeout(() => alive && send(z, hub), i * 2000))); return; }
       void chat(text, named.length ? named : everyone || /\?$/.test(t.trim()) ? [...ALL] : ["Oz"]);
     };
 
     async function gatherAll(finder: Agent) {
       await wait(1500);
       // Others finish their walk, then come over on the walkable trails.
-      await Promise.all(ALL.map(async z => {
+      await Promise.all(ALL.map(async (z, i) => {
+        // They set off one behind another, at least two seconds apart.
+        await wait(i * 2000);
         while (alive && heading[z]) await wait(200);
         if (!alive) return;
         const nodes = routeBetween(scene, at[z], scene.gather.spot);
@@ -258,7 +260,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       await wait(900);
       if (!alive) return;
       setShown(true);
-      await Promise.all(ALL.map((a, i) => wait(i * 500).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
+      await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
       if (!alive) return;
       for (const [who, text] of scene.opening) { say(who, text); await wait(2400); if (!alive) return; say(who, null); }
       ALL.forEach(a => void explore(a));
