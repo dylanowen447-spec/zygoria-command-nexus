@@ -18,3 +18,4 @@
 - [x] Distinct, restrained crew humour in dialogue: Oz impulsive, Brix dry, Lowkey deadpan; serious moments remain serious
 
 - [x] Zigs follow through on group plans they propose (lookout, workshop, shack, crossroads), spread out, then return home
+- [x] Replace only Oz's character artwork with the supplied new silhouette and directional walking frames; keep the other Zigs and world untouched.
