@@ -37,3 +37,4 @@
 - [ ] L3 One small problem per chapter (Old City locked Library door done)
 - [ ] L4 Longer Long Walk
 - [ ] L5 Sanctuary return events
+- [x] Moxi route: keep on open grass, off trees and river

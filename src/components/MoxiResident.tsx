@@ -3,7 +3,7 @@ import moxiWalk from "@/assets/moxi-walk.png.asset.json";
 
 type P = { x: number; y: number };
 /** One walkable chain from her evergreen, past the crossroads fire pit, to the pier (artwork %). */
-const CHAIN: P[] = [{ x: 87, y: 88 }, { x: 76, y: 80 }, { x: 64, y: 71 }, { x: 54, y: 66 }, { x: 42, y: 68 }, { x: 31, y: 69 }];
+const CHAIN: P[] = [{ x: 82, y: 84 }, { x: 72, y: 78 }, { x: 62, y: 73 }, { x: 54, y: 69 }, { x: 47, y: 71 }, { x: 41, y: 75 }];
 const SPEED = 3.2;
 export const MOXI_LINES = ["Mm. Fish?", "…Hi.", "Shiny river. I like it here.", "I slept a long time. It's louder now. Nicer.", "Oz smells like smoke.", "Brix's hammer is too loud.", "Lowkey sees me. He always sees me.", "*happy chirp*"];
 
