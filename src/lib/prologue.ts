@@ -16,6 +16,10 @@ export type Objective = {
   /** Lines the finder says, in order. */
   found: Lines;
   tag: { label: string; x: number; y: number };
+  /** Small puzzle: other objective spots that must be found before this one opens. */
+  needs?: string[];
+  /** What a Zig says on arriving while it's still shut. */
+  locked?: Lines;
 };
 export type Scene = {
   id: string;
@@ -124,15 +128,25 @@ const OLD_CITY: Scene = {
     alley: { at: { x: 85, y: 50 }, words: "alley|lane|side street", lines: { Lowkey: ["The lane keeps going. Steps, maybe."], Brix: ["Narrow, but passable."], Oz: ["Ooh, a side street."] } },
     library: { at: { x: 86, y: 32 }, words: "library|steps|door|arch|building", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
-  objectives: [{ spot: "library", tag: { label: "THE LIBRARY", x: 68, y: 12 }, found: { Oz: ["Steps! Big doors!", "Lads, over here!"], Brix: ["Stone building. Still standing.", "Over here."], Lowkey: ["An archway. Words carved above it.", "Come."] } }],
+  objectives: [
+    { spot: "markings", owner: "Lowkey", tag: { label: "THE SIGN", x: 30, y: 33 }, found: { Lowkey: ["Same symbol as the big doors down the lane.", "It's not decoration. It points the way in — the side bolt."], Oz: [], Brix: [] } },
+    { spot: "bus", owner: "Brix", tag: { label: "IRON BAR", x: 22, y: 58 }, found: { Brix: ["Loose bar on this wreck.", "Good lever. Taking it."], Oz: [], Lowkey: [] } },
+    { spot: "library", needs: ["markings", "bus"], tag: { label: "THE LIBRARY", x: 68, y: 12 },
+      locked: { Oz: ["Big doors… chained shut. Rude.", "Need something to open these."], Brix: ["Chained. Rusted solid.", "Need a lever."], Lowkey: ["Locked. There's a mark on the bolt.", "I've seen that mark somewhere."] },
+      found: { Oz: ["Bar in the bolt — Brix, heave!", "It's OPEN! Lads, over here!"], Brix: ["Bar in the bolt. Heave.", "Open. Over here."], Lowkey: ["The bolt the sign showed. Bar here.", "It gives. Come."] } },
+  ],
   unlock: { seen: 2, ms: 35000, maxMs: 90000 },
-  hints: { Lowkey: "There's a lane off to the right. Steps at the end.", Brix: "Building down that side street's still standing.", Oz: "What's down that alley? Only one way to find out." },
+  hints: { Lowkey: "Those painted marks keep repeating. And there's a lane off to the right.", Brix: "Building down that side street. Might need tools to get in.", Oz: "What's down that alley? Only one way to find out." },
   opening: [["Oz", "Whoa. Big."], ["Brix", "Dead. All of it."], ["Lowkey", "Something here wants to be found."]],
   gather: { spot: "library", at: { Oz: { x: 79, y: 41 }, Brix: { x: 91, y: 44 }, Lowkey: { x: 86, y: 32 } } },
   finale: [["Oz", "Doors are open!"], ["Brix", "Roof's holding. Mostly."], ["Lowkey", "Writing over the arch. I can read it."], ["Oz", "Then in we go."]],
-  card: { eyebrow: "CHAPTER 02 · DISCOVERY", title: "The Library", text: "A crumbling library, its doors open.", next: "Enter the Library ›" },
+  card: { eyebrow: "CHAPTER 02 · DISCOVERY", title: "The Library", text: "A crumbling library — chained shut, until you read the sign and found the bar.", next: "Enter the Library ›" },
   story: "Day one, later. You walked from the landing crater into a dead, silent city: an overturned bus, a fallen statue, a dry fountain, strange painted symbols. You do not know what happened here and have found no water.",
-  learned: {"library": "Down a side lane you found an old stone building with open doors and words carved over the arch that you can somehow read."},
+  learned: {
+    markings: "Lowkey worked out the painted symbol matches a bolt on some big doors down a side lane.",
+    bus: "Brix pulled a loose iron bar off the overturned bus to use as a lever.",
+    library: "Down a side lane you found an old stone library chained shut; with Lowkey's sign and Brix's iron bar you forced the bolt open. Words carved over the arch, you can somehow read them.",
+  },
 };
 
 const LIBRARY: Scene = {

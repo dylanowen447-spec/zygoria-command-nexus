@@ -34,6 +34,6 @@
 ## Deeper chapters + Moxi return loop
 - [x] L1 Moxi discovery story in Sanctuary (replaces flash mystery)
 - [x] L2 Moxi resident (uses supplied sprite)
-- [ ] L3 One small problem per chapter
+- [ ] L3 One small problem per chapter (Old City locked Library door done)
 - [ ] L4 Longer Long Walk
 - [ ] L5 Sanctuary return events

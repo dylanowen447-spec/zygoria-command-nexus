@@ -116,7 +116,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         const taken = new Set(ALL.filter(z => z !== a).flatMap(z => [at[z], heading[z]].filter(Boolean) as string[]));
         const ordered = orders[a];
         delete orders[a];
-        const goal = ordered ? undefined : unlockedAt ? scene.objectives.find(o => !claimed.has(o.spot) && (!o.owner || o.owner === a) && !taken.has(o.spot)) : undefined;
+        const goal = ordered ? undefined : unlockedAt ? scene.objectives.find(o => !claimed.has(o.spot) && (!o.owner || o.owner === a) && !taken.has(o.spot) && (o.needs ?? []).every(n => found.has(n))) : undefined;
         let target: string;
         if (ordered) { target = ordered; if (objectiveSpots.has(ordered)) claimed.add(ordered); }
         else if (goal && (Math.random() < 0.4 || performance.now() - unlockedAt > 25000)) { target = goal.spot; claimed.add(goal.spot); }
@@ -144,6 +144,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
           say(a, `Not mine. ${objective.owner}, this one's yours.`); claimed.delete(objective.spot);
           orders[objective.owner] = objective.spot; if (heading[objective.owner]) cancel[objective.owner] = true;
           await nap(a, 2400); say(a, null); continue;
+        }
+        if (objective && objective.needs && !objective.needs.every(n => found.has(n))) {
+          // Still shut: they react, then go back to poking around for the missing pieces.
+          claimed.delete(objective.spot);
+          setFacing(f => ({ ...f, [a]: "right" }));
+          for (const text of objective.locked?.[a] ?? []) { say(a, text); await wait(2600); if (!alive) return; }
+          say(a, null); await wait(1200); continue;
         }
         if (objective) {
           found.add(objective.spot);
