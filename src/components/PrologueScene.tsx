@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
-import { ASPECT, REACTIONS, routeBetween, type Scene } from "@/lib/prologue";
+import { ACKS, ASPECT, REACTIONS, SHRUGS, routeBetween, type Scene } from "@/lib/prologue";
+import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
@@ -15,10 +16,12 @@ const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 30, 0), 1) * 0
 const dist = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ASPECT);
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
 
-type Props = { scene: Scene; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void };
+type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void };
 
 /** One prologue area: the Zigs explore its walkable graph on their own and only notice objectives after looking around. */
-export function PrologueScene({ scene, onLog, onNext, onSkip }: Props) {
+export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) {
+  const handler = useRef<(text: string) => void>(() => undefined);
+  useEffect(() => { if (command) handler.current(command.text); }, [command]);
   const coords = useRef<Record<Agent, Point>>(Object.fromEntries(ALL.map(a => [a, { ...scene.spawn[a].from }])) as Record<Agent, Point>);
   const markers = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const [shown, setShown] = useState(false);
@@ -43,7 +46,13 @@ export function PrologueScene({ scene, onLog, onNext, onSkip }: Props) {
       el.style.setProperty("--depth", depthFor(p.y));
       el.style.setProperty("z-index", String(10 + Math.round(p.y * 10)), "important");
     };
-    const say = (a: Agent, text: string | null) => { setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) logRef.current(a, text); };
+    const talking = new Set<Agent>();
+    const orders: Partial<Record<Agent, string>> = {};
+    const cancel: Partial<Record<Agent, boolean>> = {};
+    // While a Zig is answering the visitor, their own exploring chatter stays quiet.
+    const say = (a: Agent, text: string | null, force = false) => { if (talking.has(a) && !force) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) logRef.current(a, text); };
+    /** A pause that ends early when the visitor gives this Zig an order. */
+    const nap = async (a: Agent, ms: number) => { const end = performance.now() + ms; while (alive && performance.now() < end && !orders[a]) await wait(150); };
     const walk = (a: Agent, pts: Point[]) => new Promise<void>(resolve => {
       if (!pts.length) return resolve();
       const face = (t: Point) => {
@@ -56,6 +65,7 @@ export function PrologueScene({ scene, onLog, onNext, onSkip }: Props) {
       setWalking(w => w.includes(a) ? w : [...w, a]);
       const step = (time: number) => {
         if (!alive) return;
+        if (cancel[a]) { cancel[a] = false; setWalking(w => w.filter(x => x !== a)); resolve(); return; }
         let budget = Math.min(time - last, 64) / 1000 * SPEED;
         last = time;
         while (budget > 0 && seg < pts.length) {
@@ -76,6 +86,7 @@ export function PrologueScene({ scene, onLog, onNext, onSkip }: Props) {
     const seen: Record<Agent, Set<string>> = { Oz: new Set(), Brix: new Set(), Lowkey: new Set() };
     const used = new Set<string>();
     const claimed = new Set<string>();
+    const found = new Set<string>();
     let unlockedAt = 0, finished = false;
     const start = performance.now();
     const line = (a: Agent, spot: string) => {
@@ -102,9 +113,12 @@ export function PrologueScene({ scene, onLog, onNext, onSkip }: Props) {
           timers.push(setTimeout(() => alive && say(hinter, null), 3000));
         }
         const taken = new Set(ALL.filter(z => z !== a).flatMap(z => [at[z], heading[z]].filter(Boolean) as string[]));
-        const goal = unlockedAt ? scene.objectives.find(o => !claimed.has(o.spot) && (!o.owner || o.owner === a) && !taken.has(o.spot)) : undefined;
+        const ordered = orders[a];
+        delete orders[a];
+        const goal = ordered ? undefined : unlockedAt ? scene.objectives.find(o => !claimed.has(o.spot) && (!o.owner || o.owner === a) && !taken.has(o.spot)) : undefined;
         let target: string;
-        if (goal && (Math.random() < 0.4 || performance.now() - unlockedAt > 25000)) { target = goal.spot; claimed.add(goal.spot); }
+        if (ordered) { target = ordered; if (objectiveSpots.has(ordered)) claimed.add(ordered); }
+        else if (goal && (Math.random() < 0.4 || performance.now() - unlockedAt > 25000)) { target = goal.spot; claimed.add(goal.spot); }
         else {
           let options = Object.keys(scene.spots).filter(s => s !== at[a] && !taken.has(s) && !objectiveSpots.has(s));
           const unseen = options.filter(s => !seen[a].has(s));
@@ -115,10 +129,23 @@ export function PrologueScene({ scene, onLog, onNext, onSkip }: Props) {
         }
         heading[a] = target;
         await walk(a, pathTo(a, routeBetween(scene, at[a], target)));
-        at[a] = target; delete heading[a]; seen[a].add(target);
+        delete heading[a];
         if (!alive || finished) return;
+        if (orders[a]) {
+          // Interrupted mid-walk: carry on from the nearest node on the graph.
+          at[a] = Object.keys(scene.spots).sort((x, y) => dist(scene.spots[x]!.at, coords.current[a]) - dist(scene.spots[y]!.at, coords.current[a]))[0]!;
+          if (objectiveSpots.has(target) && !found.has(target)) claimed.delete(target);
+          continue;
+        }
+        at[a] = target; seen[a].add(target);
         const objective = scene.objectives.find(o => o.spot === target);
+        if (objective && objective.owner && objective.owner !== a) {
+          say(a, `Not mine. ${objective.owner}, this one's yours.`); claimed.delete(objective.spot);
+          orders[objective.owner] = objective.spot; if (heading[objective.owner]) cancel[objective.owner] = true;
+          await nap(a, 2400); say(a, null); continue;
+        }
         if (objective) {
+          found.add(objective.spot);
           setFound(f => [...f, objective.spot]);
           setFacing(f => ({ ...f, [a]: "right" }));
           for (const text of objective.found[a]) { say(a, text); await wait(2800); if (!alive) return; }
@@ -132,9 +159,9 @@ export function PrologueScene({ scene, onLog, onNext, onSkip }: Props) {
           await wait(1500);
           continue;
         }
-        await wait(500);
-        const l = line(a, target);
-        if (l) { say(a, l); await wait(2600); if (!alive || finished) return; say(a, null); }
+        await nap(a, 500);
+        const l = orders[a] ? null : line(a, target);
+        if (l) { say(a, l); await nap(a, 2600); if (!alive || finished) return; say(a, null); }
         // Someone nearby sometimes answers back.
         const near = ALL.find(z => z !== a && dist(coords.current[z], coords.current[a]) < 14 && !heading[z]);
         if (near && Math.random() < 0.35) {
@@ -144,9 +171,66 @@ export function PrologueScene({ scene, onLog, onNext, onSkip }: Props) {
           if (!alive) return;
           say(near, null);
         }
-        await wait(1200 + Math.random() * 3500);
+        await nap(a, 1200 + Math.random() * 3500);
       }
     }
+
+    const hub = scene.spots.centre ? "centre" : "front";
+    const send = (z: Agent, spot: string) => {
+      orders[z] = spot;
+      if (heading[z]) cancel[z] = true;
+      say(z, pick(ACKS[z]), true);
+      timers.push(setTimeout(() => alive && say(z, null, true), 1600));
+    };
+    /** Real in-character replies, scoped to what the crew know in this scene. */
+    async function chat(text: string, speakers: Agent[]) {
+      const previous: { agent: Agent; result: string }[] = [];
+      for (const z of speakers) {
+        talking.add(z);
+        setBubbles(b => ({ ...b, [z]: "…" }));
+        let reply: string;
+        try {
+          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: scene.story } });
+          reply = out.result.replace(/\s+/g, " ").trim().slice(0, 220);
+        } catch { reply = pick(SHRUGS[z]); }
+        if (!alive) return;
+        previous.push({ agent: z, result: reply });
+        say(z, reply, true);
+        await wait(Math.min(7000, 2200 + reply.length * 35));
+        if (!alive) return;
+        say(z, null, true);
+        talking.delete(z);
+      }
+    }
+    handler.current = (text: string) => {
+      if (finished) return;
+      const t = text.toLowerCase();
+      const named = ALL.filter(z => new RegExp(`\\b${z.toLowerCase()}\\b`).test(t));
+      const everyone = /\b(everyone|everybody|all|lads|crew|guys|you lot|together)\b/.test(t);
+      const owned = scene.objectives.filter(o => o.owner && !found.has(o.spot));
+      if (/\b(books?|read)\b/.test(t) && owned.length) {
+        for (const o of owned) if (!named.length || named.includes(o.owner!)) { claimed.delete(o.spot); send(o.owner!, o.spot); }
+        return;
+      }
+      if (scene.id === "landing" && /\b(eggs?|pods?)\b/.test(t) && !/blue|yellow|red|big|small|tiny/.test(t)) {
+        const own: Record<Agent, string> = { Oz: "yellow", Brix: "blue", Lowkey: "red" };
+        (named.length ? named : ALL).forEach(z => send(z, own[z]));
+        return;
+      }
+      const spot = Object.keys(scene.spots).find(k => scene.spots[k]!.words && new RegExp(`\\b(${scene.spots[k]!.words})`).test(t));
+      const verb = /\b(go|check|look|head|walk|see|explore|investigate|search|find|visit|inspect|try|move|climb)\b/.test(t);
+      if (spot && (verb || named.length)) {
+        const obj = scene.objectives.find(o => o.spot === spot);
+        if (obj && found.has(spot)) { const z = obj.owner ?? named[0] ?? "Oz"; say(z, "Already found that one.", true); timers.push(setTimeout(() => alive && say(z, null, true), 2000)); return; }
+        let who: Agent[] = named.length ? named : everyone || (obj && !obj.owner) ? [...ALL] : [ALL.slice().sort((x, y) => dist(coords.current[x], scene.spots[spot]!.at) - dist(coords.current[y], scene.spots[spot]!.at))[0]!];
+        if (obj?.owner) who = [who.includes(obj.owner) || !named.length ? obj.owner : who[0]!];
+        if (obj) claimed.delete(spot);
+        who.forEach(z => send(z, spot));
+        return;
+      }
+      if (/\b(regroup|gather|come here|come back|meet up|stick together)\b/.test(t)) { (named.length ? named : ALL).forEach(z => send(z, hub)); return; }
+      void chat(text, named.length ? named : everyone || /\?$/.test(t.trim()) ? [...ALL] : ["Oz"]);
+    };
 
     async function gatherAll(finder: Agent) {
       await wait(1500);
