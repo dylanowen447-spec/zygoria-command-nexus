@@ -18,6 +18,7 @@ import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
 import { EMPTY_STORY, SANCTUARY_SIGNAL, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 import { WelcomeGuide } from "@/components/WelcomeGuide";
+import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
 import { PrologueScene } from "@/components/PrologueScene";
 import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
@@ -100,7 +101,7 @@ function CommandCentre() {
   const worldRef = useRef<WorldState>(EMPTY_WORLD);
   const [acting, setActing] = useState<string | null>(null);
   const [changed, setChanged] = useState<string | null>(null);
-  const [prologue, setPrologue] = useState<"off" | "on">("off");
+  const [prologue, setPrologue] = useState<"off" | "on" | "walk">("off");
   const [prologueStep, setPrologueStep] = useState(0);
   const [prologueCmd, setPrologueCmd] = useState<{ id: number; text: string } | null>(null);
   const scene = PROLOGUE_SCENES[prologueStep]!;
@@ -108,6 +109,14 @@ function CommandCentre() {
     // Only brand-new visitors start at the landing; returning crews go straight home.
     try { if (![PROLOGUE_KEY, WORLD_KEY, STORY_KEY].some(k => localStorage.getItem(k))) setPrologue("on"); } catch { /* optional */ }
   }, []);
+  /** Strict order: Landing → Old City → Library → Long Walk (Chapter 03) → Sanctuary. */
+  function nextPrologue() {
+    setPrologueStep(step => {
+      if (step + 1 < PROLOGUE_SCENES.length) return step + 1;
+      setPrologue("walk");
+      return step;
+    });
+  }
   function endPrologue() {
     try { localStorage.setItem(PROLOGUE_KEY, "done"); } catch { /* optional */ }
     setPrologue("off");
@@ -639,7 +648,7 @@ function CommandCentre() {
     paint(v);
   }
   useEffect(() => {
-    if (prologue === "on" || phase !== "idle" || zoneId !== "sanctuary") return;
+    if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     let alive = true;
     const loop = async () => {
       while (alive) {
@@ -695,10 +704,10 @@ function CommandCentre() {
     </header>
     <main className="command-layout">
       <div className="world-column">
-        <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> LIVE WORLD FEED <span className="eyebrow-line"/></div>{prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {zone.indexA} <span> / </span> {zone.indexB}</div></div>
-        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip" title={canon.stageSummary}>{canon.stage}</span>{ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
+        <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> LIVE WORLD FEED <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {zone.indexA} <span> / </span> {zone.indexB}</div></div>
+        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip" title={canon.stageSummary}>{prologue === "on" ? scene.chapter.split(" · ")[0] : prologue === "walk" ? "CHAPTER 03" : canon.stage}</span>{ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
-          {prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={() => prologueStep + 1 < PROLOGUE_SCENES.length ? setPrologueStep(prologueStep + 1) : endPrologue()} onSkip={endPrologue}/> : <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
+          {prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="Chapter 3, The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">CHAPTER 03 · THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="Chapter 03"><span className="prologue-card-eyebrow">CHAPTER 03 · THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river — Chapter 04 ›</button></div></div> : <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
             <div className="world-vignette"/>
             <div className="map-coordinate top-left">◉ &nbsp; {zone.label}</div>
