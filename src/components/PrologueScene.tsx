@@ -265,7 +265,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     return () => { alive = false; timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, [scene]);
 
-  return <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties}>
+  return <>
+  <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
     <div className="world-vignette"/>
     <div className="map-coordinate top-left">◉ &nbsp; {scene.label}</div>
@@ -279,12 +280,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       </Button>; })}
     </div>
     <div className="map-coordinate bottom-left"><MapPin size={12}/> {scene.bottom}</div>
-    <button type="button" className="prologue-skip" onClick={onSkip}>Skip to the Sanctuary ›</button>
     {done && <div className="prologue-card" role="dialog" aria-label={scene.card.eyebrow}>
       <span className="prologue-card-eyebrow">{scene.card.eyebrow}</span>
       <strong>{scene.card.title}</strong>
       <p>{scene.card.text}</p>
       <button type="button" onClick={onNext}>{scene.card.next}</button>
     </div>}
-  </div>;
+  </div>
+  {/* Skip control lives outside the game screen so mobile can place it below the map. */}
+  <button type="button" className="prologue-skip" onClick={onSkip}>Skip to the Sanctuary ›</button>
+  </>;
 }
