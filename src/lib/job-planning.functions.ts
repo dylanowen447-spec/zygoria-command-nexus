@@ -20,13 +20,20 @@ export const chooseJobRoute = createServerFn({ method: "POST" })
   });
 
 export const runCrewStep = createServerFn({ method: "POST" })
-  .inputValidator((input: { directive: string; agent: Agent; previous: { agent: Agent; result: string }[]; finalReview: boolean; group?: boolean; story?: string }) => {
+  .inputValidator((input: { directive: string; agent: Agent; previous: { agent: Agent; result: string }[]; finalReview: boolean; group?: boolean; story?: string; prologue?: boolean }) => {
     if (!isAgent(input?.agent)) throw new Error("Unknown crew member.");
     const previous = Array.isArray(input.previous) ? input.previous.slice(0, 4) : [];
     for (const p of previous) if (!isAgent(p?.agent) || typeof p.result !== "string") throw new Error("Invalid handoff.");
-    return { directive: checkDirective(input.directive), agent: input.agent, previous: previous.map(p => ({ agent: p.agent, result: p.result.slice(0, 1500) })), finalReview: input.finalReview === true, group: input.group === true, story: typeof input.story === "string" ? input.story.slice(0, 400) : "" };
+    return { directive: checkDirective(input.directive), agent: input.agent, previous: previous.map(p => ({ agent: p.agent, result: p.result.slice(0, 1500) })), finalReview: input.finalReview === true, group: input.group === true, story: typeof input.story === "string" ? input.story.slice(0, 400) : "", prologue: input.prologue === true };
   })
   .handler(async ({ data }) => {
     const { runAgentStep } = await import("./job-planning.server.ts");
+    if (data.prologue) {
+      // Opening chapters: no live story state, so the crew can't know about anything after this moment.
+      const key = process.env["LOVABLE_API_KEY"];
+      if (!key) throw new Error("The crew can't hear you right now.");
+      const { createPrologueCall } = await import("./ai/responses.ts");
+      return createPrologueCall(key, data.directive, data.agent, data.previous, data.story);
+    }
     return runAgentStep(data.story ? `${data.directive}\n\n(Scene right now: ${data.story} Weave this in briefly and naturally, in your own voice.)` : data.directive, data.agent, data.previous, data.finalReview, data.group);
   });

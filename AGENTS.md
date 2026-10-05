@@ -23,3 +23,4 @@
 - Story chapters live in src/lib/story.ts (client state, localStorage); each zone adds a chapter of conversation-triggered beats that can unlock the next zone — so progression stays modular.
 - The crossroads fire pit cookout is a client-only scripted sequence triggered by food/cook words in the Sanctuary, bypassing AI routing — so it always plays reliably.
 - The opening prologue (src/lib/prologue.ts + src/components/PrologueScene.tsx) is a sequence of self-contained scenes (landing → Old City → Library) shown instead of the Sanctuary for brand-new visitors only; Zigs explore a walkable node graph independently and the objective spot unlocks only after they've looked around — so the existing Sanctuary systems stay untouched.
+- Prologue chat uses a dedicated AI call without the live story state, fed only the scene's starting note plus notes for objectives found so far — so the freshly hatched crew can't know about the Sanctuary or anything they haven't discovered.
