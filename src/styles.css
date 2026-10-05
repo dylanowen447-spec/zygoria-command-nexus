@@ -439,6 +439,7 @@
 }
 /* Moxi resident: her own hop strip, smaller than Oz; feet anchored at her point. */
 .moxi-resident{position:absolute;width:clamp(34px,5vw,64px);aspect-ratio:300/220;transform:translate(-50%,-100%);pointer-events:none;transition:opacity .6s ease}
+@media(min-width:901px){.moxi-resident{width:clamp(68px,10vw,128px)}}
 .moxi-resident.is-hidden{opacity:0}
 .moxi-sprite{position:absolute;inset:0;background-size:300% 100%;background-position:0 0;transform:scaleX(-1);filter:drop-shadow(0 2px 2px oklch(0.05 0.01 265 / 50%))}
 .moxi-resident.face-right .moxi-sprite{transform:none}
