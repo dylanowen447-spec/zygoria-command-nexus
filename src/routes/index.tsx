@@ -19,6 +19,8 @@ import { FieldCodex } from "@/components/FieldCodex";
 import { EMPTY_STORY, SANCTUARY_SIGNAL, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CreatorCredit } from "@/components/CreatorCredit";
+import { PrologueLanding } from "@/components/PrologueLanding";
+import { PROLOGUE_KEY } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 
