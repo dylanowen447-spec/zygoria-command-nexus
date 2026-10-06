@@ -52,6 +52,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     const cancel: Partial<Record<Agent, boolean>> = {};
     // While a Zig is answering the visitor, their own exploring chatter stays quiet.
     const say = (a: Agent, text: string | null, force = false) => { if (talking.has(a) && !force) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) logRef.current(a, text); };
+    /** Reading time: short lines at least 3.2s, long lines up to 6s, then a 1s breath. */
+    const hold = (text: string) => Math.min(6000, Math.max(3200, 1800 + text.length * 45));
+    const GAP = 1000;
+    // Only one Zig chatters at a time while exploring.
+    let floorUntil = 0;
+    const floorFree = () => performance.now() > floorUntil;
+    const takeFloor = (text: string) => { floorUntil = performance.now() + hold(text) + GAP; };
     /** A pause that ends early when the visitor gives this Zig an order. */
     const nap = async (a: Agent, ms: number) => { const end = performance.now() + ms; while (alive && performance.now() < end && !orders[a]) await wait(150); };
     const walk = (a: Agent, pts: Point[]) => new Promise<void>(resolve => {
