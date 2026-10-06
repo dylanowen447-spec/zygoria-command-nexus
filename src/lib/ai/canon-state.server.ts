@@ -76,7 +76,7 @@ export const DISCOVERED = {
 };
 
 /** Zones the crew can currently travel to. Unlock or lock a zone here and the UI and routing update automatically. */
-export const UNLOCKED_ZONES = ["sanctuary", "ruins", "caves", "cronk", "shelton"] as const;
+export const UNLOCKED_ZONES = ["sanctuary", "ruins", "caves", "shelton", "cronk"] as const;
 
 /** True information the agents must NOT reveal, reference or hint at yet. */
 export const HIDDEN_FUTURE_CANON: string[] = [
