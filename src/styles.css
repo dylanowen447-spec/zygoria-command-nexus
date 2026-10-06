@@ -190,6 +190,10 @@
   .world-stage .brix-wordmark{width:86.2px}
   .world-stage .lowkey-wordmark,.world-stage .marker-lowkey.on-ridge .lowkey-wordmark{width:92.2px}
   .world-stage .agent-marker .marker-status{transform:translateY(-65px)}
+  /* Sprites grow upward from their feet on desktop, so each bubble clears that Zig's own head. */
+  .world-stage .marker-oz .idle-bubble{bottom:calc(100% + 20px)}
+  .world-stage .marker-lowkey .idle-bubble{bottom:calc(100% + 28px)}
+  .world-stage .marker-brix .idle-bubble{bottom:calc(100% + 58px)}
   .world-stage .task-energy{width:10px;height:10px;margin:-5px 0 0 -5px}
 }
 /* The summit sits near the artwork's upper edge: keep Lowkey fully visible on narrower desktop frames. */
