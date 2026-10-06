@@ -44,3 +44,5 @@
 - [x] Moxi resting spot on marked grass + route along drawn trails
 - [x] Restore Zigs' autonomous wandering after click-to-move
 - [x] Visiting Zigs stand beside each other, not on top
+
+- [x] Moxi discovery easier: broader word matches + crew hints toward each next step

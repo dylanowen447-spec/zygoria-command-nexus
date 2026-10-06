@@ -52,30 +52,30 @@ export const SANCTUARY_SIGNAL: StoryChapter = {
     {
       id: "dragon",
       requires: ["spotted"],
-      match: /lowkey|moved|movement|saw|see|seen|what (was|is) (it|that)|bird|trees|creature|something/i,
+      match: /lowkey|mov|saw|see|seen|what|where|bird|tree|creature|something|thing|animal|look|who|huh|\?/i,
       note: "Lowkey thinks what he saw was small and scaly — almost like a tiny dragon. He isn't sure and doesn't know its name. Oz and Brix haven't heard yet.",
       lines: [["Lowkey", "Small. Scaly. Wings, I think."], ["Lowkey", "Looked like a dragon. A tiny one. Don't tell me I'm seeing things."]],
     },
     {
       id: "told",
       requires: ["dragon"],
-      match: /dragon|lowkey (says|saw|said|reckons|thinks)|tell (oz|brix)|oz|brix/i,
+      match: /dragon|tell|told|say|oz|brix|crew|everyone|guys|lads|believe|really|wow|cool/i,
       note: "The visitor has told Oz and Brix that Lowkey saw a tiny dragon. Oz is thrilled, Brix is sceptical but curious. They decide to look for signs. Nobody knows its name.",
       lines: [["Oz", "A DRAGON? Here? Lowkey, why didn't you lead with that!"], ["Brix", "Dragons. Right. …We'll look for tracks before anyone gets excited."]],
     },
     {
       id: "clues",
       requires: ["told"],
-      match: /track|clue|sign|search|look|investigate|find|claw|footprint|scorch|bridge|river/i,
+      match: /track|clue|sign|search|look|investigat|find|claw|foot|print|scorch|bridge|river|explore|hunt|check|go|yes|ok|sure/i,
       note: "The crew found clues: little claw marks on the bridge rocks, a patch of scorched grass, and a fish skeleton picked clean. The trail leads toward the trees by Brix's workshop.",
       lines: [["Lowkey", "Claw marks on the bridge rocks. Small ones."], ["Brix", "Scorched grass here. Something breathed on it."], ["Oz", "And someone's been eating fish. Not me. For once."]],
     },
     {
       id: "hiding",
       requires: ["clues"],
-      match: /tree|evergreen|pine|workshop|hide|hiding|trail|follow|where/i,
+      match: /tree|evergreen|pine|workshop|hide|hiding|trail|follow|where|go|check|look|find|yes|ok|sure/i,
       note: "The crew followed the trail to the evergreen beside Brix's workshop. Something small is peeking out from the rocks underneath, too nervous to come out. It might need a reason to trust them — like food.",
-      lines: [["Brix", "Under the evergreen. By my workshop. Of course it is."], ["Lowkey", "There. Eyes. It's watching us."], ["Oz", "It's scared. We need to give it a reason to trust us."]],
+      lines: [["Brix", "Under the evergreen. By my workshop. Of course it is."], ["Lowkey", "There. Eyes. It's watching us."], ["Oz", "It's scared. We need to give it a reason to trust us. Maybe if we cook something…"]],
     },
     {
       // Fired after a cookout once the hiding place is known.
@@ -87,11 +87,11 @@ export const SANCTUARY_SIGNAL: StoryChapter = {
     },
   ],
   idle: {
-    spotted: [{ pair: ["Lowkey", "Oz"], lines: ["Saw something move by the trees.", "Like what?"] }],
-    dragon: [{ pair: ["Lowkey", "Brix"], lines: ["I know what I saw.", "Nobody said anything."] }],
-    told: [{ pair: ["Oz", "Brix"], lines: ["Do dragons like fish?", "Find one first."] }],
-    clues: [{ pair: ["Brix", "Lowkey"], lines: ["Those claw marks are fresh.", "Toward the trees."] }],
-    hiding: [{ pair: ["Oz", "Brix"], lines: ["What do dragons eat?", "Looks like fish, from the bones."] }],
+    spotted: [{ pair: ["Lowkey", "Oz"], lines: ["Saw something move by the trees.", "Ask him what it was, Voice."] }],
+    dragon: [{ pair: ["Lowkey", "Brix"], lines: ["I know what I saw.", "Then tell us, Voice. What did he see?"] }],
+    told: [{ pair: ["Oz", "Brix"], lines: ["Do dragons leave tracks?", "Only one way to find out. Say the word and we'll search."] }],
+    clues: [{ pair: ["Brix", "Lowkey"], lines: ["Those claw marks are fresh.", "They lead to the trees. We should follow."] }],
+    hiding: [{ pair: ["Oz", "Brix"], lines: ["What do dragons eat?", "Fish bones everywhere. Maybe cook it some food."] }],
     trust: [
       { pair: ["Oz", "Lowkey"], lines: ["Moxi stole another fish.", "She's earned it."] },
       { pair: ["Brix", "Oz"], lines: ["She's been sleeping by my bench.", "She likes you!"] },
