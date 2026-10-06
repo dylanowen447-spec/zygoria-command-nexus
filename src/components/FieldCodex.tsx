@@ -16,12 +16,24 @@ const PORTRAITS: Record<string, string> = { oz: ozPortrait.url, brix: brixPortra
 const ZONE_IMAGES: Record<string, ZoneId> = { sanctuary: "sanctuary", ruins: "ruins", caves: "caves", swamp: "cronk", camp: "shelton" };
 const KEY = "zygoria-codex-v1";
 
-export function FieldCodex({ pages, logs, visited, currentZone, recorded = [] }: { pages: readonly Page[]; logs: Log[]; visited: ZoneId[]; currentZone: ZoneId; recorded?: string[] }) {
+const OPENING_NOTE: Record<string, string> = { oz: "Freshly hatched from the yellow pod. Quick, curious, already talking.", brix: "Climbed out of the big blue pod. Strong, steady, likes fixing things.", lowkey: "Came out of the red pod quietly. Watches everything.", pods: "Three egg-shaped pods: yellow, red and blue. We woke up inside them.", ruins: "A dead city of broken towers and empty roads. Someone lived here once." };
+const GATED: Record<string, string> = { survivors: "caves", caves: "caves", shelton: "shelton", camp: "shelton", cronk: "cronk", swamp: "cronk" };
+export function FieldCodex({ pages: allPages, logs, visited, currentZone, recorded = [], stage = 3 }: { pages: readonly Page[]; logs: Log[]; visited: ZoneId[]; currentZone: ZoneId; recorded?: string[]; stage?: number }) {
+  // Only what the crew has actually seen in the world: opening chapters know the Zigs, pods (and ruins from Chapter 2); later places unlock by visiting.
+  const pages = allPages.map(page => {
+    if (stage < 3) {
+      const ok = ["oz", "brix", "lowkey", "pods"].includes(page.id) || (page.id === "ruins" && stage >= 1);
+      return ok ? { ...page, description: OPENING_NOTE[page.id] ?? page.description, location: stage === 0 ? "Landing site" : "On the road", level: page.id === "ruins" ? "partial" as const : page.level } : { ...page, level: "hidden" as const };
+    }
+    const zone = GATED[page.id];
+    return zone && !visited.includes(zone as ZoneId) ? { ...page, level: "hidden" as const } : page;
+  });
+  const maxChapter = Math.min(stage, CHRONICLES.length - 1);
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<Category>("Characters");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [chronicles, setChronicles] = useState(false);
-  const [chapter, setChapter] = useState(3);
+  const [chapter, setChapter] = useState(maxChapter);
   const [found, setFound] = useState<string[]>([]);
   const [restored, setRestored] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -72,6 +84,7 @@ export function FieldCodex({ pages, logs, visited, currentZone, recorded = [] }:
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  useEffect(() => { setChapter(maxChapter); }, [maxChapter]);
   const selected = pages.find(page => page.id === selectedId && page.category === category);
   const list = pages.filter(page => page.category === category);
   const visibleCount = pages.filter(page => page.level !== "hidden").length;
@@ -87,9 +100,9 @@ export function FieldCodex({ pages, logs, visited, currentZone, recorded = [] }:
         <header className="codex-head"><div><div className="codex-eyebrow">FIELD JOURNAL / {currentZone === "sanctuary" ? "HOME" : ZONES[currentZone].short}</div><h2>Zygoria Codex</h2><p>Notes from a world still being understood.</p></div><Button ref={closeRef} type="button" variant="ghost" size="icon" className="codex-close" onClick={close} aria-label="Close codex"><X size={17}/></Button></header>
         <div className="codex-bookmark"><BookOpen size={15}/><span>{fullyKnown} known · {incomplete} incomplete · {pages.length - visibleCount} unrecorded</span></div>
         <nav className="codex-tabs" aria-label="Codex sections"><Button type="button" variant="ghost" className={`codex-tab ${chronicles ? "is-active" : ""}`} aria-current={chronicles ? "page" : undefined} onClick={() => { setChronicles(true); setSelectedId(null); }}>Chronicles<span>{CHRONICLES.length}</span></Button>{CATEGORIES.map(item => <Button key={item} type="button" variant="ghost" className={`codex-tab ${!chronicles && category === item ? "is-active" : ""}`} aria-current={!chronicles && category === item ? "page" : undefined} onClick={() => { setChronicles(false); setCategory(item); setSelectedId(null); }}>{item}<span>{pages.filter(page => page.category === item).length}</span></Button>)}</nav>
-        {chronicles ? <div className="codex-body"><div className="codex-section-title"><span>First Genesis · Chapter {chapter + 1} of {CHRONICLES.length}</span><small>{chapter === 3 ? "YOU ARE HERE" : "MEMORY"}</small></div>
+        {chronicles ? <div className="codex-body"><div className="codex-section-title"><span>First Genesis · Chapter {chapter + 1} of {maxChapter + 1}</span><small>{chapter === maxChapter ? "YOU ARE HERE" : "MEMORY"}</small></div>
           <figure className="chronicle-page"><a href={CHRONICLES[chapter]!.img} target="_blank" rel="noreferrer"><img src={CHRONICLES[chapter]!.img} alt={`Chapter ${chapter + 1}: ${CHRONICLES[chapter]!.title}`}/></a><figcaption><h3>{CHRONICLES[chapter]!.title}</h3><p>{CHRONICLES[chapter]!.text}</p></figcaption></figure>
-          <div className="chronicle-nav"><Button type="button" variant="outline" disabled={chapter === 0} onClick={() => setChapter(c => c - 1)}>‹ PREV</Button><span>{CHRONICLES.map((c, i) => <button key={c.n} type="button" className={`chronicle-dot ${i === chapter ? "is-active" : ""}`} aria-label={`Chapter ${c.n}`} onClick={() => setChapter(i)}/>)}</span><Button type="button" variant="outline" disabled={chapter === CHRONICLES.length - 1} onClick={() => setChapter(c => c + 1)}>NEXT ›</Button></div>
+          <div className="chronicle-nav"><Button type="button" variant="outline" disabled={chapter === 0} onClick={() => setChapter(c => c - 1)}>‹ PREV</Button><span>{CHRONICLES.slice(0, maxChapter + 1).map((c, i) => <button key={c.n} type="button" className={`chronicle-dot ${i === chapter ? "is-active" : ""}`} aria-label={`Chapter ${c.n}`} onClick={() => setChapter(i)}/>)}</span><Button type="button" variant="outline" disabled={chapter >= maxChapter} onClick={() => setChapter(c => c + 1)}>NEXT ›</Button></div>
         </div> :
         <div className="codex-body"><div className="codex-section-title"><span>{category}</span><small>{String(list.length).padStart(2, "0")} ENTRIES</small></div>
           <div className="codex-list">{list.map(page => {
