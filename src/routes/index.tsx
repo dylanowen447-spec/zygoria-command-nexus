@@ -701,7 +701,7 @@ function CommandCentre() {
     for (const seg of extra) {
       chain(seg);
       const a = add(seg[0]!), b = add(seg[seg.length - 1]!);
-      link(a, snap(seg[0]!)); link(b, snap(seg[seg.length - 1]!));
+      for (const [i, p] of [[a, seg[0]!], [b, seg[seg.length - 1]!]] as const) { const s = snap(p); if (distance(nodes[s]!, p) < 12) link(i, s); }
     }
     return { nodes, edges };
   }, []);
