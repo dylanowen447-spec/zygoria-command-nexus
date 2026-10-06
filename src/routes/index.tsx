@@ -676,6 +676,77 @@ function CommandCentre() {
     setPositions(prev => ({ ...prev, [v]: "home" }));
     paint(v);
   }
+  // ---- Point-and-click: Oz walks where the visitor clicks, along the Sanctuary's walkable trails ----
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const ozAway = useRef(false);
+  const [clickMark, setClickMark] = useState<{ id: number; x: number; y: number } | null>(null);
+  const walkGraph = useMemo(() => {
+    const z = ZONES.sanctuary, nodes: Point[] = [], edges: number[][] = [];
+    const add = (p: Point) => { let i = nodes.findIndex(n => distance(n, p) < 1.2); if (i < 0) { i = nodes.length; nodes.push({ ...p }); edges.push([]); } return i; };
+    const link = (a: number, b: number) => { if (a !== b && !edges[a]!.includes(b)) { edges[a]!.push(b); edges[b]!.push(a); } };
+    const chain = (pts: Point[]) => { let prev = -1; for (const p of pts) { const i = add(p); if (prev >= 0) link(prev, i); prev = i; } };
+    (["Oz", "Brix", "Lowkey"] as Agent[]).forEach(a => chain([HOME(z, a), ...z.paths[a]]));
+    if (z.work.Brix) chain([HOME(z, "Brix"), ...z.work.Brix]);
+    chain([z.paths.Oz.at(-1)!, z.paths.Brix.at(-1)!]);
+    return { nodes, edges };
+  }, []);
+  const nearestNode = (p: Point) => walkGraph.nodes.reduce((best, n, i) => distance(n, p) < distance(walkGraph.nodes[best]!, p) ? i : best, 0);
+  function routeNodes(from: Point, to: Point): Point[] {
+    const s = nearestNode(from), t = nearestNode(to), prev = new Map<number, number>([[s, -1]]), queue = [s];
+    while (queue.length) { const c = queue.shift()!; if (c === t) break; for (const n of walkGraph.edges[c]!) if (!prev.has(n)) { prev.set(n, c); queue.push(n); } }
+    const out: Point[] = []; for (let c = t; c >= 0 && prev.has(c); c = prev.get(c)!) out.unshift(walkGraph.nodes[c]!);
+    return out;
+  }
+  const canClick = () => phaseRef.current === "idle" && prologue === "off" && zoneRef.current === "sanctuary";
+  async function ozTo(p: Point, exact: boolean, arrive?: (run: number) => Promise<void> | void) {
+    if (!canClick()) return;
+    if (visiting.current || outing.current.length) cancelVisit();
+    const run = ++runId.current;
+    setWalking(w => w.filter(a => a !== "Oz"));
+    const pts = routeNodes(coords.current.sanctuary.Oz, p);
+    if (exact && pts.length && distance(pts.at(-1)!, p) < 5) pts.push(p);
+    ozAway.current = true; spots.current.sanctuary.Oz = "central";
+    await walk("Oz", pts.length ? pts : [p], "central", run);
+    if (run !== runId.current) return;
+    setClickMark(null);
+    await arrive?.(run);
+  }
+  /** Before any job or scripted moment, Oz strolls back home along the trails. */
+  async function ozHome() {
+    if (!ozAway.current) return;
+    ozAway.current = false;
+    const run = ++runId.current;
+    setClickMark(null); setBubble(null);
+    const home = HOME(ZONES.sanctuary, "Oz");
+    await walk("Oz", [...routeNodes(coords.current.sanctuary.Oz, home), home], "home", run);
+    spots.current.sanctuary.Oz = "home";
+  }
+  async function chatAt(run: number, lines: [Agent, string][]) {
+    for (const [a, t] of lines) { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(3400); }
+    if (run === runId.current) setBubble(null);
+  }
+  const GREET: Record<string, [string, string][]> = {
+    Brix: [["Alright, Brix? What you building?", "Something that works. Unlike your speakers."], ["Need a hand?", "Need you not touching things."]],
+    Lowkey: [["Seen anything good?", "A few things. Not telling yet."], ["You always this quiet?", "Mostly."]],
+  };
+  function onWorldClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (zoneId !== "sanctuary" || !stageRef.current || (e.target as HTMLElement).closest("button,a,.welcome-card")) return;
+    if (!canClick()) return;
+    const r = stageRef.current.getBoundingClientRect();
+    const p = { x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100 };
+    if (distance(p, FIRE_PIT) < 4) { void dispatchDirective("cook me some food"); return; }
+    const obj = WORLD_OBJECTS.find(o => o.zone === "sanctuary" && distance(objectPoint(o), p) < 4);
+    setClickMark({ id: Date.now(), ...p });
+    if (obj) { const lvl = worldRef.current.levels[obj.id] ?? 0; void ozTo(objectPoint(obj), false, run => chatAt(run, [["Oz", `${obj.name}. ${obj.states[lvl]}. Noted.`]])); return; }
+    void ozTo(p, true);
+  }
+  function onAgentClick(a: Agent) {
+    setSelected(a);
+    if (a === "Oz" || !canClick()) return;
+    const at = coords.current.sanctuary[a];
+    setClickMark({ id: Date.now(), ...at });
+    void ozTo(at, false, run => { const [o, r] = GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!; return chatAt(run, [["Oz", o], [a, r]]); });
+  }
   useEffect(() => {
     if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     let alive = true;
