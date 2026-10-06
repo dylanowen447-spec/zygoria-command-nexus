@@ -785,10 +785,19 @@ function CommandCentre() {
     for (const [a, t] of lines) { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(3400); }
     if (run === runId.current) setBubble(null);
   }
-  const GREET: Record<string, [string, string][]> = {
-    Brix: [["Alright, Brix? What you building?", "Something that works. Unlike your speakers."], ["Need a hand?", "Need you not touching things."]],
-    Lowkey: [["Seen anything good?", "A few things. Not telling yet."], ["You always this quiet?", "Mostly."]],
+  const GREET: Record<string, [Agent, string][][]> = {
+    Brix: [
+      [["Oz", "Alright, Brix? What you building?"], ["Brix", "Something that works. Unlike your speakers."], ["Oz", "My speakers are perfect."], ["Brix", "They hum in B flat. Constantly."]],
+      [["Oz", "Need a hand?"], ["Brix", "Need you not touching things."], ["Oz", "I touched one thing."], ["Brix", "It was on fire, Oz."]],
+      [["Oz", "That workshop's loud today."], ["Brix", "That's the sound of progress."], ["Oz", "Sounds like a bin falling down stairs."]],
+    ],
+    Lowkey: [
+      [["Oz", "Seen anything good?"], ["Lowkey", "A few things. Not telling yet."], ["Oz", "Come on, give us one."], ["Lowkey", "…Clouds."]],
+      [["Oz", "You always this quiet?"], ["Lowkey", "Mostly."], ["Oz", "Doesn't it get boring?"], ["Lowkey", "Not when you're around."]],
+      [["Oz", "Boo!"], ["Lowkey", "Saw you coming from the bridge."], ["Oz", "…Right. Course you did."]],
+    ],
   };
+  const visitLines = (a: Agent) => GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!;
   function onWorldClick(e: React.MouseEvent<HTMLDivElement>) {
     if (zoneId !== "sanctuary" || !stageRef.current || (e.target as HTMLElement).closest("button,a,.welcome-card")) return;
     if (!canClick()) return;
@@ -798,6 +807,9 @@ function CommandCentre() {
     const obj = WORLD_OBJECTS.find(o => o.zone === "sanctuary" && distance(objectPoint(o), p) < 4);
     setClickMark({ id: Date.now(), ...p });
     if (obj) { const lvl = worldRef.current.levels[obj.id] ?? 0; void ozTo(objectPoint(obj), false, run => chatAt(run, [["Oz", `${obj.name}. ${obj.states[lvl]}. Noted.`]])); return; }
+    // Clicking near Brix's workshop or Lowkey's lookout sends Oz over for a visit.
+    const host = (["Brix", "Lowkey"] as Agent[]).find(a => distance(HOME(ZONES.sanctuary, a), p) < 7);
+    if (host) { void ozTo(coords.current.sanctuary[host], false, run => chatAt(run, visitLines(host))); return; }
     void ozTo(p, true);
   }
   function onAgentClick(a: Agent) {
@@ -805,14 +817,14 @@ function CommandCentre() {
     if (a === "Oz" || !canClick()) return;
     const at = coords.current.sanctuary[a];
     setClickMark({ id: Date.now(), ...at });
-    void ozTo(at, false, run => { const [o, r] = GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!; return chatAt(run, [["Oz", o], [a, r]]); });
+    void ozTo(at, false, run => chatAt(run, visitLines(a)));
   }
   useEffect(() => {
     if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     let alive = true;
     const loop = async () => {
       while (alive) {
-        await wait(22000 + Math.random() * 20000);
+        await wait(14000 + Math.random() * 12000);
         if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || outing.current.length || ozAway.current) continue;
         const z = ZONES.sanctuary, all: Agent[] = ["Oz", "Brix", "Lowkey"];
         const v = all[Math.floor(Math.random() * 3)]!;
@@ -823,19 +835,19 @@ function CommandCentre() {
         const there = [...toMeet(z, v), ...toHome(z, h).slice(0, -2)];
         log(v, `Wandering over to see ${h}.`);
         await walk(v, there, "central", run);
-        if (run !== runId.current || !alive) return;
+        if (!alive) return; if (run !== runId.current) { visiting.current = null; continue; }
         const hx = HOME(z, h).x, vx = coords.current.sanctuary[v].x;
         setFacing(p => ({ ...p, [v]: hx < vx ? "left" : "right", [h]: hx < vx ? "right" : "left" }));
         let [a, b] = IDLE_CHATS[`${v}>${h}`]![Math.floor(Math.random() * 3)]!;
         const clues = SANCTUARY_SIGNAL.idle[lastBeat(SANCTUARY_SIGNAL, storyRef.current)]?.filter(c => c.pair[0] === v && c.pair[1] === h) ?? [];
         if (clues.length && Math.random() < 0.6) [a, b] = clues[Math.floor(Math.random() * clues.length)]!.lines;
         setBubble({ agent: v, text: a }); log(v, a);
-        await wait(3200); if (run !== runId.current) return;
+        await wait(3200); if (run !== runId.current) { visiting.current = null; continue; }
         setBubble({ agent: h, text: b }); log(h, b);
-        await wait(3200); if (run !== runId.current) return;
+        await wait(3200); if (run !== runId.current) { visiting.current = null; continue; }
         setBubble(null);
         await walk(v, [...there.slice(0, -1).reverse(), HOME(z, v)], "home", run);
-        if (run !== runId.current) return;
+        if (run !== runId.current) { visiting.current = null; continue; }
         visiting.current = null;
       }
     };
