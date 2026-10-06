@@ -819,6 +819,46 @@ function CommandCentre() {
     setClickMark({ id: Date.now(), ...at });
     void ozTo(at, false, run => chatAt(run, visitLines(a)));
   }
+  // Ambient crew moments in the outer zones — short scripted exchanges while idle, never during jobs or story scenes.
+  useEffect(() => {
+    if (prologue !== "off" || phase !== "idle" || zoneId === "sanctuary") return;
+    const MOMENTS: Record<string, [Agent, string][][]> = {
+      ruins: [
+        [["Oz", "What's this? Some kind of shiny hat?"], ["Brix", "It's a hubcap."], ["Oz", "It's a hat now."]],
+        [["Brix", "Half these wires still carry something."], ["Lowkey", "Or they remember carrying something."], ["Oz", "Wires don't remember, Lowkey."], ["Lowkey", "You sure?"]],
+        [["Oz", "Who builds a city and just leaves?"], ["Lowkey", "Maybe they didn't choose to."]],
+      ],
+      caves: [
+        [["Oz", "HELLO!"], ["Oz", "…It said hello back."], ["Brix", "That's an echo."], ["Oz", "Rude echo. Copied me."], ["Lowkey", "…"]],
+        [["Brix", "Air's moving down there. Means there's a way through."], ["Lowkey", "Or something breathing."], ["Oz", "Thanks for that, Lowkey."]],
+        [["Lowkey", "Footprints. Old ones."], ["Oz", "Ours?"], ["Lowkey", "No."]],
+      ],
+      cronk: [
+        [["Oz", "This mud's eating my feet."], ["Brix", "Keep moving then."], ["Lowkey", "Something big walked here."]],
+        [["Brix", "Scrap in the reeds. Bent, not rusted through."], ["Lowkey", "Bent by what?"], ["Oz", "Let's… not find out today."]],
+        [["Oz", "Did that log just move?"], ["Lowkey", "Logs don't blink."]],
+      ],
+      shelton: [
+        [["Lowkey", "Fence lines. Fresh posts."], ["Brix", "Someone's still building out here."], ["Oz", "Nobody invited us."]],
+        [["Oz", "Reckon they'd like a visit?"], ["Brix", "Reckon they'd like us gone."], ["Lowkey", "Stay low."]],
+      ],
+    };
+    let alive = true;
+    (async () => {
+      while (alive) {
+        await wait(16000 + Math.random() * 14000);
+        if (!alive || phaseRef.current !== "idle") continue;
+        const set = MOMENTS[zoneRef.current]; if (!set) continue;
+        const run = runId.current;
+        for (const [a, t] of set[Math.floor(Math.random() * set.length)]!) {
+          if (!alive || run !== runId.current || phaseRef.current !== "idle") break;
+          setBubble({ agent: a, text: t }); log(a, t); await wait(3400);
+        }
+        if (alive && run === runId.current) setBubble(null);
+      }
+    })();
+    return () => { alive = false; };
+  }, [phase, zoneId, prologue]);
   useEffect(() => {
     if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     let alive = true;
