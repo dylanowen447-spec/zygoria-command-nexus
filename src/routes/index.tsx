@@ -797,6 +797,7 @@ function CommandCentre() {
       [["Oz", "Boo!"], ["Lowkey", "Saw you coming from the bridge."], ["Oz", "…Right. Course you did."]],
     ],
   };
+  const beside = (a: Agent) => { const p = coords.current.sanctuary[a]; return { x: p.x + (p.x > 50 ? -6 : 6), y: p.y + 1 }; };
   const visitLines = (a: Agent) => GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!;
   function onWorldClick(e: React.MouseEvent<HTMLDivElement>) {
     if (zoneId !== "sanctuary" || !stageRef.current || (e.target as HTMLElement).closest("button,a,.welcome-card")) return;
@@ -809,7 +810,7 @@ function CommandCentre() {
     if (obj) { const lvl = worldRef.current.levels[obj.id] ?? 0; void ozTo(objectPoint(obj), false, run => chatAt(run, [["Oz", `${obj.name}. ${obj.states[lvl]}. Noted.`]])); return; }
     // Clicking near Brix's workshop or Lowkey's lookout sends Oz over for a visit.
     const host = (["Brix", "Lowkey"] as Agent[]).find(a => distance(HOME(ZONES.sanctuary, a), p) < 7);
-    if (host) { void ozTo(coords.current.sanctuary[host], false, run => chatAt(run, visitLines(host))); return; }
+    if (host) { void ozTo(beside(host), true, run => chatAt(run, visitLines(host))); return; }
     void ozTo(p, true);
   }
   function onAgentClick(a: Agent) {
@@ -817,7 +818,7 @@ function CommandCentre() {
     if (a === "Oz" || !canClick()) return;
     const at = coords.current.sanctuary[a];
     setClickMark({ id: Date.now(), ...at });
-    void ozTo(at, false, run => chatAt(run, visitLines(a)));
+    void ozTo(beside(a), true, run => chatAt(run, visitLines(a)));
   }
   // Ambient crew moments in the outer zones — short scripted exchanges while idle, never during jobs or story scenes.
   useEffect(() => {
