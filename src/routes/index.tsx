@@ -579,7 +579,7 @@ function CommandCentre() {
       if (document.hidden || storyRef.current.beats.includes("spotted")) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= MOXI_SPOT_AFTER && phaseRef.current === "idle" && !visiting.current) {
+      if (t >= MOXI_SPOT_AFTER && phaseRef.current === "idle" && !visiting.current && !ozAway.current) {
         clearInterval(id);
         void playBeat(SANCTUARY_SIGNAL.beats[0]!, runId.current);
       }
@@ -598,6 +598,7 @@ function CommandCentre() {
   /** Shared directive pipeline — the input form and the field guide's ask buttons both use it. */
   async function dispatchDirective(text: string) {
     if (prologue === "on") { setPrologueCmd({ id: Date.now(), text }); return; }
+    await ozHome();
     cancelVisit();
     setPlanningError("");
     if (zoneRef.current === "sanctuary" && storyRef.current.beats.includes("trust") && /\bmoxi\b/i.test(text)) {
@@ -676,13 +677,84 @@ function CommandCentre() {
     setPositions(prev => ({ ...prev, [v]: "home" }));
     paint(v);
   }
+  // ---- Point-and-click: Oz walks where the visitor clicks, along the Sanctuary's walkable trails ----
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const ozAway = useRef(false);
+  const [clickMark, setClickMark] = useState<{ id: number; x: number; y: number } | null>(null);
+  const walkGraph = useMemo(() => {
+    const z = ZONES.sanctuary, nodes: Point[] = [], edges: number[][] = [];
+    const add = (p: Point) => { let i = nodes.findIndex(n => distance(n, p) < 1.2); if (i < 0) { i = nodes.length; nodes.push({ ...p }); edges.push([]); } return i; };
+    const link = (a: number, b: number) => { if (a !== b && !edges[a]!.includes(b)) { edges[a]!.push(b); edges[b]!.push(a); } };
+    const chain = (pts: Point[]) => { let prev = -1; for (const p of pts) { const i = add(p); if (prev >= 0) link(prev, i); prev = i; } };
+    (["Oz", "Brix", "Lowkey"] as Agent[]).forEach(a => chain([HOME(z, a), ...z.paths[a]]));
+    if (z.work.Brix) chain([HOME(z, "Brix"), ...z.work.Brix]);
+    chain([z.paths.Oz.at(-1)!, z.paths.Brix.at(-1)!]);
+    return { nodes, edges };
+  }, []);
+  const nearestNode = (p: Point) => walkGraph.nodes.reduce((best, n, i) => distance(n, p) < distance(walkGraph.nodes[best]!, p) ? i : best, 0);
+  function routeNodes(from: Point, to: Point): Point[] {
+    const s = nearestNode(from), t = nearestNode(to), prev = new Map<number, number>([[s, -1]]), queue = [s];
+    while (queue.length) { const c = queue.shift()!; if (c === t) break; for (const n of walkGraph.edges[c]!) if (!prev.has(n)) { prev.set(n, c); queue.push(n); } }
+    const out: Point[] = []; for (let c = t; c >= 0 && prev.has(c); c = prev.get(c)!) out.unshift(walkGraph.nodes[c]!);
+    return out;
+  }
+  const canClick = () => phaseRef.current === "idle" && prologue === "off" && zoneRef.current === "sanctuary";
+  async function ozTo(p: Point, exact: boolean, arrive?: (run: number) => Promise<void> | void) {
+    if (!canClick()) return;
+    if (visiting.current || outing.current.length) cancelVisit();
+    const run = ++runId.current;
+    setWalking(w => w.filter(a => a !== "Oz"));
+    const pts = routeNodes(coords.current.sanctuary.Oz, p);
+    if (exact && pts.length && distance(pts.at(-1)!, p) < 5) pts.push(p);
+    ozAway.current = true; spots.current.sanctuary.Oz = "central";
+    await walk("Oz", pts.length ? pts : [p], "central", run);
+    if (run !== runId.current) return;
+    setClickMark(null);
+    await arrive?.(run);
+  }
+  /** Before any job or scripted moment, Oz strolls back home along the trails. */
+  async function ozHome() {
+    if (!ozAway.current) return;
+    ozAway.current = false;
+    const run = ++runId.current;
+    setClickMark(null); setBubble(null);
+    const home = HOME(ZONES.sanctuary, "Oz");
+    await walk("Oz", [...routeNodes(coords.current.sanctuary.Oz, home), home], "home", run);
+    spots.current.sanctuary.Oz = "home";
+  }
+  async function chatAt(run: number, lines: [Agent, string][]) {
+    for (const [a, t] of lines) { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(3400); }
+    if (run === runId.current) setBubble(null);
+  }
+  const GREET: Record<string, [string, string][]> = {
+    Brix: [["Alright, Brix? What you building?", "Something that works. Unlike your speakers."], ["Need a hand?", "Need you not touching things."]],
+    Lowkey: [["Seen anything good?", "A few things. Not telling yet."], ["You always this quiet?", "Mostly."]],
+  };
+  function onWorldClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (zoneId !== "sanctuary" || !stageRef.current || (e.target as HTMLElement).closest("button,a,.welcome-card")) return;
+    if (!canClick()) return;
+    const r = stageRef.current.getBoundingClientRect();
+    const p = { x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100 };
+    if (distance(p, FIRE_PIT) < 4) { void dispatchDirective("cook me some food"); return; }
+    const obj = WORLD_OBJECTS.find(o => o.zone === "sanctuary" && distance(objectPoint(o), p) < 4);
+    setClickMark({ id: Date.now(), ...p });
+    if (obj) { const lvl = worldRef.current.levels[obj.id] ?? 0; void ozTo(objectPoint(obj), false, run => chatAt(run, [["Oz", `${obj.name}. ${obj.states[lvl]}. Noted.`]])); return; }
+    void ozTo(p, true);
+  }
+  function onAgentClick(a: Agent) {
+    setSelected(a);
+    if (a === "Oz" || !canClick()) return;
+    const at = coords.current.sanctuary[a];
+    setClickMark({ id: Date.now(), ...at });
+    void ozTo(at, false, run => { const [o, r] = GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!; return chatAt(run, [["Oz", o], [a, r]]); });
+  }
   useEffect(() => {
     if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     let alive = true;
     const loop = async () => {
       while (alive) {
         await wait(22000 + Math.random() * 20000);
-        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || outing.current.length) continue;
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || outing.current.length || ozAway.current) continue;
         const z = ZONES.sanctuary, all: Agent[] = ["Oz", "Brix", "Lowkey"];
         const v = all[Math.floor(Math.random() * 3)]!;
         const others = all.filter(a => a !== v);
@@ -735,7 +807,7 @@ function CommandCentre() {
         <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> {prologue === "off" ? "LIVE WORLD FEED" : "FIRST GENESIS"} <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {prologue === "on" ? <>{scene.chapter.split(" · ")[0]} <span> / </span> {scene.chapter.split(" · ")[1]}</> : prologue === "walk" ? <>CHAPTER 03 <span> / </span> THE LONG WALK</> : <>{zone.indexA} <span> / </span> {zone.indexB}</>}</div></div>
         <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter.split(" · ")[0] : prologue === "walk" ? "CHAPTER 03" : canon.stage}</span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
-          {prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="Chapter 3, The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">CHAPTER 03 · THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="Chapter 03"><span className="prologue-card-eyebrow">CHAPTER 03 · THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river — Chapter 04 ›</button></div></div> : <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
+          {prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="Chapter 3, The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">CHAPTER 03 · THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="Chapter 03"><span className="prologue-card-eyebrow">CHAPTER 03 · THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river — Chapter 04 ›</button></div></div> : <div onClick={onWorldClick} className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""} ${zone.id === "sanctuary" ? "is-clickable" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
             <div className="world-vignette"/>
             <div className="map-coordinate top-left">◉ &nbsp; {zone.label}</div>
@@ -751,12 +823,13 @@ function CommandCentre() {
               <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
             </>}
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}
-            <div className="world-stage">
+            <div className="world-stage" ref={stageRef}>
+            {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/></svg>
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%` }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
-             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => setSelected(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
+             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => onAgentClick(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
               <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
             </Button>)}
             </div>
