@@ -410,6 +410,16 @@ function CommandCentre() {
     }
     const beat = pendingBeat.current;
     pendingBeat.current = null; storyNote.current = "";
+    // Each Zig speaks their answer in a speech bubble, one after another, like the opening chapters.
+    for (const st of done) {
+      if (run !== runId.current) return;
+      const line = st.result.replace(/\s+/g, " ").trim().slice(0, 220);
+      if (!line) continue;
+      setBubble({ agent: st.agent, text: line });
+      await wait(Math.min(7000, Math.max(3200, 1800 + line.length * 45)));
+      if (run !== runId.current) return;
+      setBubble(null); await wait(1000);
+    }
     if (beat && done.length) await playBeat(beat, run);
     if (run !== runId.current) return;
     setMission(id, () => ({ state: "Complete", done: done.length }));
