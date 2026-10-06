@@ -47,6 +47,8 @@ export type Scene = {
   story: string;
   /** Added to the scene note once each objective spot has been found in play. */
   learned: Record<string, string>;
+  /** Small oddities a Zig spots on their own while poking around (flavour only). */
+  curios?: Lines;
 };
 
 export const ASPECT = 1520 / 1024;
