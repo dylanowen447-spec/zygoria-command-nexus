@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import moxiWalk from "@/assets/moxi-walk.png.asset.json";
 
 type P = { x: number; y: number };
-/** One walkable chain: her evergreen → open grass → pier → fire pit → crossroads → Lowkey's painted switchback → the lookout summit (artwork %). */
+/** One walkable chain along the visitor-drawn trails: resting grass below the workshop → crossroads V → bridge trail → switchback → lookout (artwork %). */
 const CHAIN: P[] = [
-  { x: 82, y: 84 }, { x: 72, y: 78 }, { x: 62, y: 73 }, { x: 54, y: 69 },
-  { x: 47, y: 71 }, { x: 41, y: 75 },
-  { x: 47, y: 71 }, { x: 54, y: 69 },
+  { x: 60, y: 68 }, { x: 57, y: 72.5 }, { x: 52, y: 67 }, { x: 48, y: 63 },
+  { x: 42, y: 63 }, { x: 36, y: 64 },
+  { x: 42, y: 63 }, { x: 48, y: 63 },
   { x: 50, y: 63.5 }, { x: 53, y: 58.7 },
   { x: 50.5, y: 54 }, { x: 50.7, y: 47 }, { x: 48, y: 43.8 }, { x: 47.5, y: 40.8 },
   { x: 47, y: 38 }, { x: 49, y: 35.5 }, { x: 53.5, y: 32.5 }, { x: 55, y: 30 },

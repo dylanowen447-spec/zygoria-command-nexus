@@ -725,6 +725,9 @@ function CommandCentre() {
     if (run !== runId.current) return;
     setClickMark(null);
     await arrive?.(run);
+    // After a short look around, Oz drifts home so the crew's own wandering resumes.
+    await wait(8000);
+    if (run === runId.current && ozAway.current) await ozHome();
   }
   /** Before any job or scripted moment, Oz strolls back home along the trails. */
   async function ozHome() {
