@@ -224,7 +224,6 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         await wait(Math.min(7000, Math.max(3200, 1800 + reply.length * 45)));
         if (!alive) return;
         say(z, null, true); await wait(GAP);
-        talking.delete(z);
       }
     }
     let heardVoice = false, awaitingName = false;
