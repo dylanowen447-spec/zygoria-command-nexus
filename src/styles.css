@@ -308,6 +308,9 @@
 .welcome-tip svg{color:var(--violet);flex:none}
 .welcome-enter{margin-top:14px;width:100%;height:36px;border-radius:2px!important;font:700 10px var(--font-mono)!important;letter-spacing:1.5px;background:color-mix(in oklab,var(--electric) 12%,transparent)!important;border:1px solid color-mix(in oklab,var(--electric) 45%,transparent)!important;color:var(--electric)!important}
 .welcome-enter:hover{background:color-mix(in oklab,var(--electric) 22%,transparent)!important;box-shadow:0 0 18px oklch(0.65 0.17 218 / 30%)}
+.welcome-asks{margin:7px 0 0;padding:0;list-style:none;display:grid;gap:5px}
+.welcome-asks button{display:block;width:100%;text-align:left;padding:7px 9px;border:1px solid color-mix(in oklab,var(--electric) 30%,transparent);background:color-mix(in oklab,var(--electric) 5%,transparent);font:11px/1.3 var(--font-body);color:var(--muted-foreground);cursor:pointer;transition:border-color .15s,color .15s,background .15s,box-shadow .15s}
+.welcome-asks button:hover{color:var(--foreground);border-color:var(--electric);background:color-mix(in oklab,var(--electric) 12%,transparent);box-shadow:0 0 10px oklch(0.65 0.17 218 / 18%)}
 .welcome-tab{position:absolute;left:10px;bottom:70px;z-index:8;height:26px;padding:0 10px;border-radius:2px!important;font:700 9px var(--font-mono)!important;letter-spacing:1.5px;color:var(--electric)!important;border-color:color-mix(in oklab,var(--electric) 40%,transparent)!important;background:oklch(0.09 0.025 259 / 88%)!important;box-shadow:0 0 14px oklch(0.65 0.17 218 / 18%)}
 .welcome-tab:hover{border-color:var(--electric)!important;background:var(--surface-raised)!important}
 @media(max-width:600px){
@@ -326,6 +329,8 @@
 .welcome-jobs li:before{content:'“';position:static;display:inline;width:auto;height:auto;background:none;box-shadow:none;color:var(--dim)}
 .welcome-jobs li:after{content:'” · ';color:var(--dim)}
 .welcome-jobs li:last-child:after{content:'”'}
+.welcome-asks{gap:4px}
+.welcome-asks button{padding:6px 8px;font-size:9.5px}
 .welcome-note{font-size:9.5px;margin-top:6px;line-height:1.35}
 .welcome-tip{margin-top:6px;padding:5px 8px;font-size:8.5px}
 .welcome-enter{margin-top:7px;height:28px;font-size:9px!important}

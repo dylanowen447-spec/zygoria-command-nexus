@@ -593,7 +593,11 @@ function CommandCentre() {
     event.preventDefault();
     const text = draft.trim();
     if (!text || phase !== "idle") return;
-    if (prologue === "on") { setDraft(""); setPrologueCmd({ id: Date.now(), text }); return; }
+    void dispatchDirective(text);
+  }
+  /** Shared directive pipeline — the input form and the field guide's ask buttons both use it. */
+  async function dispatchDirective(text: string) {
+    if (prologue === "on") { setPrologueCmd({ id: Date.now(), text }); return; }
     cancelVisit();
     setPlanningError("");
     if (zoneRef.current === "sanctuary" && storyRef.current.beats.includes("trust") && /\bmoxi\b/i.test(text)) {
@@ -758,7 +762,7 @@ function CommandCentre() {
             </div>
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>}
-          <WelcomeGuide />
+          <WelcomeGuide onAsk={text => { if (phase === "idle") { setDraft(text); void dispatchDirective(text); } }} />
           <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> {prologue === "on" ? scene.chapter : prologue === "walk" ? "CHAPTER 03 · THE LONG WALK" : "1 SANCTUARY"}</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>
         </div>
         <form className="mission-form" onSubmit={submit}><div className="form-title"><span><Terminal size={16}/> NEW DIRECTIVE</span><span className="form-counter">{phase === "idle" ? "READY FOR INPUT" : phase === "planning" ? "SELECTING CREW" : "MISSION IN PROGRESS"}</span></div><div className="form-row"><span className="prompt-chevron">›</span><input aria-label="Enter a job for the crew" placeholder={prologue === "on" ? "Talk to the crew, or send them somewhere…" : "What needs doing around Zygoria?"} value={draft} onChange={e => setDraft(e.target.value)} maxLength={180} disabled={phase !== "idle"}/><Button className="dispatch-button" type="submit" disabled={!draft.trim() || phase !== "idle"}>{phase === "planning" ? "CHOOSING" : "DISPATCH"} <Send size={14}/></Button></div>{planningError && <p className="planning-error" role="alert">{planningError}</p>}<div className="form-foot"><span>DIRECTIVES ARE ROUTED THROUGH OZ</span><span>↵ TO SEND</span></div></form>
