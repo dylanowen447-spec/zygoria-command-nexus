@@ -616,7 +616,7 @@ function CommandCentre() {
       setMoxiSay({ id: Date.now(), text: line }); log("Lowkey", `Moxi: ${line}`); return;
     }
     const order = zoneRef.current === "sanctuary" ? findUserCommand(text) : null;
-    if (zoneRef.current === "sanctuary" && /\b(cook|grill|food|hungry|dinner|supper|feed me|eat|campfire|fire pit)\b/i.test(text)) {
+    if (zoneRef.current === "sanctuary" && /\b(cook\w*|grill\w*|fish\w*|bbq|barbe?cue|food|hungry|starving|dinner|supper|lunch|breakfast|meal|feed|eat\w*|campfire|fire ?pit|light (a|the) fire|start (a|the) fire)\b/i.test(text)) {
       setDraft("");
       setPhase("working");
       const run = runId.current;
