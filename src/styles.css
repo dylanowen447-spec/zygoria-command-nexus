@@ -451,3 +451,5 @@
 /* Sanctuary daylight: the old night-time shack overlay is hidden and the vignette is softened so the bright artwork shows through. */
 .world-image-wrap:has(.shack-definition) .shack-definition{visibility:hidden}
 .world-image-wrap:has(.shack-definition) .world-vignette{background:linear-gradient(180deg,oklch(0.08 0.015 260 / 22%),transparent 18%,transparent 78%,oklch(0.08 0.015 260 / 30%))}
+
+.codex-card{display:block;width:min(100%,240px);margin:0 auto 12px;border-radius:10px;box-shadow:0 6px 24px hsl(0 0% 0% / .5)}

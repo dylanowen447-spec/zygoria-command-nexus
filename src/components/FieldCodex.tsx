@@ -5,13 +5,14 @@ import { ZONES, type ZoneId } from "@/lib/zones";
 import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
+import kronkCard from "@/assets/kronk-card.png.asset.json";
 import { CHRONICLES } from "@/lib/chronicles";
 
 type Category = "Characters" | "Creatures" | "Locations" | "Objects" | "Old Earth discoveries" | "Network-related discoveries" | "Unsolved mysteries";
 type Page = { id: string; category: Category; name: string; description: string; location: string | null; recordedBy: string | null; level: "known" | "partial" | "hidden" };
 type Log = { text: string; zone: ZoneId; done: boolean; results: string };
 const CATEGORIES: Category[] = ["Characters", "Creatures", "Locations", "Objects", "Old Earth discoveries", "Network-related discoveries", "Unsolved mysteries"];
-const PORTRAITS: Record<string, string> = { oz: ozPortrait.url, brix: brixPortrait.url, lowkey: lowkeyPortrait.url };
+const PORTRAITS: Record<string, string> = { oz: ozPortrait.url, brix: brixPortrait.url, lowkey: lowkeyPortrait.url, cronk: kronkCard.url };
 const ZONE_IMAGES: Record<string, ZoneId> = { sanctuary: "sanctuary", ruins: "ruins", caves: "caves", swamp: "cronk", camp: "shelton" };
 const KEY = "zygoria-codex-v1";
 
@@ -100,7 +101,7 @@ export function FieldCodex({ pages, logs, visited, currentZone, recorded = [] }:
             </Button>;
           })}</div>
           {selected && <div className="codex-detail" aria-live="polite"><div className="codex-detail-label">{selected.level === "hidden" ? "BLANK PAGE" : selected.level === "partial" ? "INCOMPLETE RECORD" : "FIELD RECORD"}</div>
-            <h3>{selected.level === "hidden" ? "Unrecorded" : selected.name}</h3><p>{selected.description}</p>
+            {selected.level !== "hidden" && selected.id === "cronk" && <img className="codex-card" src={kronkCard.url} alt="Kronk, Shiny 010: The Boss trading card"/>}<h3>{selected.level === "hidden" ? "Unrecorded" : selected.name}</h3><p>{selected.description}</p>
             {selected.level !== "hidden" && <div className="codex-detail-meta"><span><MapPin size={13}/> {selected.location ? `Known location · ${selected.location}` : "Location not yet recorded"}</span><span><BookOpen size={13}/> {selected.recordedBy ? `Recorded by ${selected.recordedBy}` : "Crew journal"}</span><span>{selected.level === "partial" ? "DISCOVERY STATUS · INCOMPLETE" : "DISCOVERY STATUS · KNOWN"}</span></div>}
           </div>}
           {!selected && <div className="codex-quiet">Choose a page to read the crew's notes.</div>}
