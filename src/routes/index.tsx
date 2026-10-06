@@ -298,7 +298,7 @@ function CommandCentre() {
   }, [current]);
   /** One real handoff: the previous owner stops, the new owner walks to collect and works while its AI call processes all earlier outputs. */
   async function runStep(id: number, directive: string, agent: Agent, previous: Step[], finalReview: boolean, solo: boolean, group: boolean, run: number): Promise<Step | null> {
-    const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview, group, story: storyNote.current } });
+    const call = runCrewStep({ data: { directive, agent, previous: previous.map(p => ({ agent: p.agent, result: p.result })), finalReview, group, story: (() => { let n = ""; try { n = localStorage.getItem("zygoria-voice-name") || ""; } catch { /* private mode */ } return [n ? `The voice from the sky is called ${n}; occasionally call them by name.` : "", storyNote.current].filter(Boolean).join(" "); })() } });
     call.catch(() => undefined);
     const meetName = ZONES[zoneRef.current].meetName;
     const zoneName = ZONES[zoneRef.current].short.toLowerCase();
