@@ -1,5 +1,22 @@
 import type { Agent } from "@/lib/zones";
 
+/** Split into sentences without lookbehind — older Safari (pre-16.4 iPads) fails to even parse (?<=…). */
+function sentences(text: string): string[] {
+  const out: string[] = [];
+  let buf = "";
+  for (let i = 0; i < text.length; i++) {
+    buf += text[i];
+    if (/[.!?]/.test(text[i]!) && (i + 1 >= text.length || /\s/.test(text[i + 1]!))) {
+      const s = buf.trim();
+      if (s) out.push(s);
+      buf = "";
+    }
+  }
+  const rest = buf.trim();
+  if (rest) out.push(rest);
+  return out;
+}
+
 /** Sanctuary places the crew can actually walk to together, keyed to whose spot it is. */
 export type PlanPlace = { id: "lookout" | "workshop" | "shack" | "crossroads"; name: string; owner: Agent | null; spot: "home" | "work" | "central" };
 
