@@ -43,4 +43,4 @@
 - [x] Chapter 1 wake-up: amnesia + star lines, then explore (voice event kept)
 - [x] Moxi resting spot on marked grass + route along drawn trails
 - [x] Restore Zigs' autonomous wandering after click-to-move
-- [ ] Visiting Zigs stand beside each other, not on top
+- [x] Visiting Zigs stand beside each other, not on top
