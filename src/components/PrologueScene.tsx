@@ -210,8 +210,29 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         talking.delete(z);
       }
     }
+    let heardVoice = false;
+    async function firstContact() {
+      const lines: [Agent, string][] = [
+        ["Oz", "...What was that?"],
+        ["Brix", "Wasn't me."],
+        ["Lowkey", "Wasn't me either."],
+        ["Oz", "Right. Brilliant. We've been awake five minutes and the sky's talking to us."],
+        ["Brix", "Can you hear us?"],
+        ["Lowkey", "Apparently it can."],
+        ["Oz", "Oi, mysterious voice. You got a name?"],
+      ];
+      ALL.forEach(z => talking.add(z));
+      for (const [who, line] of lines) {
+        say(who, line, true);
+        await wait(Math.min(4200, 1800 + line.length * 30));
+        if (!alive) return;
+        say(who, null, true);
+      }
+      ALL.forEach(z => talking.delete(z));
+    }
     handler.current = (text: string) => {
       if (finished) return;
+      if (scene.id === "landing" && !heardVoice) { heardVoice = true; void firstContact(); return; }
       const t = text.toLowerCase();
       const named = ALL.filter(z => new RegExp(`\\b${z.toLowerCase()}\\b`).test(t));
       const everyone = /\b(everyone|everybody|all|lads|crew|guys|you lot|together)\b/.test(t);
