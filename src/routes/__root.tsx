@@ -100,6 +100,12 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){function at(n){n=Math.trunc(n)||0;if(n<0)n+=this.length;if(n<0||n>=this.length)return undefined;return this[n];}[Array,String].forEach(function(C){if(!C.prototype.at)Object.defineProperty(C.prototype,'at',{value:at,writable:true,configurable:true});});if(!Object.hasOwn)Object.hasOwn=function(o,k){return Object.prototype.hasOwnProperty.call(o,k);};if(!Array.prototype.findLast)Object.defineProperty(Array.prototype,'findLast',{value:function(f){for(var i=this.length-1;i>=0;i--)if(f(this[i],i,this))return this[i];},writable:true,configurable:true});})();",
+          }}
+        />
         <HeadContent />
       </head>
       <body>
