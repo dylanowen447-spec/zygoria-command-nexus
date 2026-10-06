@@ -76,7 +76,7 @@ export const DISCOVERED = {
 };
 
 /** Zones the crew can currently travel to. Unlock or lock a zone here and the UI and routing update automatically. */
-export const UNLOCKED_ZONES = ["sanctuary", "ruins", "caves", "cronk", "shelton"] as const;
+export const UNLOCKED_ZONES = ["sanctuary", "ruins", "caves", "shelton", "cronk"] as const;
 
 /** True information the agents must NOT reveal, reference or hint at yet. */
 export const HIDDEN_FUTURE_CANON: string[] = [
@@ -96,15 +96,15 @@ export const CODEX_PAGES = [
   { id: "brix", category: "Characters", name: "Brix", description: "Builder of the crew. His workshop holds the settlement's repairs and salvaged machinery.", location: "The Sanctuary", recordedBy: null, level: "known" },
   { id: "lowkey", category: "Characters", name: "Lowkey", description: "Quiet observer of Old Earth's ruins. He sometimes watches the moon from the mountain overlook above home.", location: "The Sanctuary", recordedBy: null, level: "known" },
   { id: "survivors", category: "Characters", name: "The Survivors", description: "People shelter in caves, tunnels and ruins. The crew are helping with safety, water and shelter.", location: "Survivor Caves", recordedBy: null, level: "known" },
-  { id: "cronk", category: "Characters", name: "Kronk", description: "Survivors warn of a crocodilian danger in the swamp. The crew have not fully met him.", location: "Swamp territory", recordedBy: null, level: "partial" },
   { id: "shelton", category: "Characters", name: "Shelton", description: "A turtle-like boss holds a guarded work camp. The crew have not fully met him.", location: "Work camp", recordedBy: null, level: "partial" },
+  { id: "cronk", category: "Characters", name: "Kronk", description: "Survivors warn of a crocodilian danger in the swamp. The crew have not fully met him.", location: "Swamp territory", recordedBy: null, level: "partial" },
   { id: "unrecorded-creature-1", category: "Creatures", name: "Unrecorded", description: "We haven’t discovered enough about this yet.", location: null, recordedBy: null, level: "hidden" },
   { id: "unrecorded-creature-2", category: "Creatures", name: "Unrecorded", description: "We’ll have to explore further before we can fill this in.", location: null, recordedBy: null, level: "hidden" },
   { id: "sanctuary", category: "Locations", name: "The Sanctuary", description: "The crew's rebuilt home beside the river: shack, workshop, lookout, crossroads and arrival site.", location: "Ruined Cambridge region", recordedBy: null, level: "known" },
   { id: "ruins", category: "Locations", name: "Old Earth Ruins", description: "The remains of the old city around the Sanctuary. Much of it is still unexplored.", location: "Cambridge region", recordedBy: null, level: "partial" },
   { id: "caves", category: "Locations", name: "Survivor Caves", description: "Shelter for the people left behind. The crew know people are living there.", location: null, recordedBy: null, level: "partial" },
-  { id: "swamp", category: "Locations", name: "Swamp Territory", description: "Kronk's territory. The crew know it is dangerous, but have not mapped it all.", location: null, recordedBy: null, level: "partial" },
   { id: "camp", category: "Locations", name: "Work Camp", description: "Shelton's guarded camp. More must be learned about what happens inside.", location: null, recordedBy: null, level: "partial" },
+  { id: "swamp", category: "Locations", name: "Swamp Territory", description: "Kronk's territory. The crew know it is dangerous, but have not mapped it all.", location: null, recordedBy: null, level: "partial" },
   { id: "pods", category: "Objects", name: "The Arrival Pods", description: "Three egg-shaped stasis pods remain near the Sanctuary: Oz's yellow, Lowkey's red and Brix's blue.", location: "The Sanctuary", recordedBy: null, level: "known" },
   { id: "workshop", category: "Objects", name: "Brix's Workshop", description: "An improvised place of tools, scrap and half-built repairs.", location: "The Sanctuary", recordedBy: "Brix", level: "known" },
   { id: "salvage", category: "Old Earth discoveries", name: "Salvaged machinery", description: "Old cables, machines and recovered parts are being studied and put to use. What else remains is unclear.", location: "Old Earth Ruins", recordedBy: "Brix", level: "partial" },
