@@ -40,3 +40,4 @@
 - [x] Moxi route: keep on open grass, off trees and river
 
 - [ ] Remove river-bank trees between Oz's shack and Moxi's evergreen in the Sanctuary artwork (user-marked area; no characters baked in)
+- [x] Chapter 1 wake-up: amnesia + star lines, then explore (voice event kept)
