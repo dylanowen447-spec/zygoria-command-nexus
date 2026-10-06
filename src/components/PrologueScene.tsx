@@ -168,7 +168,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
           continue;
         }
         await nap(a, 500);
-        const l = orders[a] ? null : line(a, target);
+        const curio = scene.curios?.[a].filter(c => !used.has(c)) ?? [];
+        const l = orders[a] ? null : curio.length && Math.random() < 0.25 ? (() => { const c = pick(curio); used.add(c); return c; })() : line(a, target);
         if (l) { say(a, l); await nap(a, 2600); if (!alive || finished) return; say(a, null); }
         // Someone nearby sometimes answers back.
         const near = ALL.find(z => z !== a && dist(coords.current[z], coords.current[a]) < 14 && !heading[z]);
