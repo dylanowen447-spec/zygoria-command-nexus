@@ -170,7 +170,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
           setFacing(f => ({ ...f, [a]: "right" }));
           for (const text of objective.found[a]) { takeFloor(text); say(a, text); await wait(hold(text)); say(a, null); await wait(GAP); if (!alive) return; }
           say(a, null);
-          if (scene.objectives.every(o => claimed.has(o.spot)) && !finished) {
+          if (scene.objectives.every(o => found.has(o.spot)) && !finished) {
             // Wait for any other finder to finish reading before the group gathers.
             finished = true;
             await gatherAll(a);
