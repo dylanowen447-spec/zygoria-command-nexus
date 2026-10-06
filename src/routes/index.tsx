@@ -112,12 +112,11 @@ function CommandCentre() {
   }, []);
   /** Strict order: Landing → Old City → Library → Long Walk (Chapter 03) → Sanctuary. */
   function nextPrologue() {
-    setPrologueStep(step => {
-      if (step + 1 < PROLOGUE_SCENES.length) return step + 1;
-      endPrologue();
-      return step;
-    });
+    if (prologueStep + 1 < PROLOGUE_SCENES.length) setPrologueStep(prologueStep + 1);
+    else setBuilding(true);
   }
+  const [building, setBuilding] = useState(false);
+  const finishBuild = useCallback(() => { setBuilding(false); endPrologue(); }, []);
   function endPrologue() {
     try { localStorage.setItem(PROLOGUE_KEY, "done"); } catch { /* optional */ }
     setPrologue("off");
