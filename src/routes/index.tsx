@@ -637,6 +637,38 @@ function CommandCentre() {
       if (run === runId.current) setPhase("idle");
       return;
     }
+    // Conversation (greetings, questions, chat) is answered on the spot in speech bubbles, like the opening chapters.
+    const lower = text.toLowerCase().trim();
+    const taskWords = /\b(fix|repair|build|make|craft|scan|scout|patrol|check|inspect|clean|gather|collect|upgrade|tune|install|search|explore|investigate|map|survey|guard|plant|dig)\b/;
+    const isChat = /\?$/.test(lower) || /^(hi|hello|hey|oi|yo|sup|morning|evening|alright|how|what|who|why|where|when|tell|are|do|did|can you|have you|is|thanks|thank)\b/.test(lower) || !taskWords.test(lower);
+    if (isChat && zoneRef.current === "sanctuary") {
+      setDraft("");
+      setPhase("working");
+      const run = runId.current;
+      const all: Agent[] = ["Oz", "Brix", "Lowkey"];
+      const named = all.filter(a => new RegExp(`\\b${a.toLowerCase()}\\b`).test(lower));
+      const everyone = /\b(everyone|everybody|all|lads|crew|guys|you lot|team)\b/.test(lower);
+      const speakers = named.length ? named : everyone ? all : ["Oz" as Agent];
+      let vn = ""; try { vn = localStorage.getItem("zygoria-voice-name") || ""; } catch { /* private mode */ }
+      const previous: { agent: Agent; result: string }[] = [];
+      for (const z of speakers) {
+        if (run !== runId.current) return;
+        setBubble({ agent: z, text: "…" });
+        let reply: string;
+        try {
+          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: vn ? `The voice from the sky is called ${vn}; occasionally call them by name. Reply conversationally in one or two short sentences.` : "Reply conversationally in one or two short sentences." } });
+          reply = out.result.replace(/\s+/g, " ").trim().slice(0, 220);
+        } catch { reply = z === "Oz" ? "Lost my train of thought. Again?" : z === "Brix" ? "Didn't catch that." : "Hm."; }
+        if (run !== runId.current) return;
+        previous.push({ agent: z, result: reply });
+        setBubble({ agent: z, text: reply }); log(z, reply);
+        await wait(Math.min(7000, Math.max(3200, 1800 + reply.length * 45)));
+        if (run !== runId.current) return;
+        setBubble(null); await wait(1000);
+      }
+      if (run === runId.current) setPhase("idle");
+      return;
+    }
     setFinishedId(null);
     setPhase("planning");
     setSelected("Oz");
