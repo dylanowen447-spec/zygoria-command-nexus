@@ -812,7 +812,7 @@ function CommandCentre() {
     let alive = true;
     const loop = async () => {
       while (alive) {
-        await wait(22000 + Math.random() * 20000);
+        await wait(14000 + Math.random() * 12000);
         if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || outing.current.length || ozAway.current) continue;
         const z = ZONES.sanctuary, all: Agent[] = ["Oz", "Brix", "Lowkey"];
         const v = all[Math.floor(Math.random() * 3)]!;
@@ -823,19 +823,19 @@ function CommandCentre() {
         const there = [...toMeet(z, v), ...toHome(z, h).slice(0, -2)];
         log(v, `Wandering over to see ${h}.`);
         await walk(v, there, "central", run);
-        if (run !== runId.current || !alive) return;
+        if (!alive) return; if (run !== runId.current) { visiting.current = null; continue; }
         const hx = HOME(z, h).x, vx = coords.current.sanctuary[v].x;
         setFacing(p => ({ ...p, [v]: hx < vx ? "left" : "right", [h]: hx < vx ? "right" : "left" }));
         let [a, b] = IDLE_CHATS[`${v}>${h}`]![Math.floor(Math.random() * 3)]!;
         const clues = SANCTUARY_SIGNAL.idle[lastBeat(SANCTUARY_SIGNAL, storyRef.current)]?.filter(c => c.pair[0] === v && c.pair[1] === h) ?? [];
         if (clues.length && Math.random() < 0.6) [a, b] = clues[Math.floor(Math.random() * clues.length)]!.lines;
         setBubble({ agent: v, text: a }); log(v, a);
-        await wait(3200); if (run !== runId.current) return;
+        await wait(3200); if (run !== runId.current) { visiting.current = null; continue; }
         setBubble({ agent: h, text: b }); log(h, b);
-        await wait(3200); if (run !== runId.current) return;
+        await wait(3200); if (run !== runId.current) { visiting.current = null; continue; }
         setBubble(null);
         await walk(v, [...there.slice(0, -1).reverse(), HOME(z, v)], "home", run);
-        if (run !== runId.current) return;
+        if (run !== runId.current) { visiting.current = null; continue; }
         visiting.current = null;
       }
     };
