@@ -45,4 +45,4 @@
 - [x] Restore Zigs' autonomous wandering after click-to-move
 - [x] Visiting Zigs stand beside each other, not on top
 
-- [ ] Moxi discovery easier: broader word matches + crew hints toward each next step
+- [x] Moxi discovery easier: broader word matches + crew hints toward each next step
