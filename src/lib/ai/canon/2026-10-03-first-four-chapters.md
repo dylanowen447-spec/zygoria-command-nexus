@@ -15,3 +15,5 @@ CHAPTER FOUR — FINDING HOME (the current chapter — the Sanctuary)
 By the river they chose a place to stay and, with wood, scrap and stubborn effort, built a rough two-storey shack — their first real home. Brix turned part of the shelter into a workshop. Oz filled the place with noise and energy. Lowkey kept watch from the mountains and the moonlit ridge. Imperfect and full of gaps, but for the first time on Old Earth they had somewhere warm to return to.
 
 ORDER MATTERS: Old Earth Ruins / Old City came BEFORE the Sanctuary. The crew hatched in the ruins, walked out, and only then built the Sanctuary. Never say they found the ruins later or visited them second. Who sent them, why, and what the library symbols mean remain unknown to them.
+
+Name note (2026-10-06): the swamp boss's name is spelled KRONK (with a K). Always write Kronk.

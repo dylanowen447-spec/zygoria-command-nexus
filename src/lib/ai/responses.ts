@@ -58,7 +58,7 @@ Also choose the Zyg zone where this work happens ("zone"):
 - "sanctuary": anything at the home base — the shack, workshop, lookout, crossroads, crew matters, story or creative work.
 - "ruins": the Old Earth ruins — salvage, exploring the dead city, recovering old technology.
 - "caves": the survivor caves — the hidden human survivors, food, shelter, helping people.
-- "cronk": the swamp territory — tracking, rats, or anything to do with Cronk.
+- "cronk": the swamp territory — tracking, rats, or anything to do with Kronk.
 - "shelton": the guarded work camp — anything involving Shelton, the guards or the workers.
 Pick "sanctuary" unless the directive clearly points somewhere else.
 Also decide whether this is a CREW CONVERSATION ("group"):

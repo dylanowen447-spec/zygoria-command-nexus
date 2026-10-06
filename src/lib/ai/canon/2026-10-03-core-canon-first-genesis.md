@@ -613,7 +613,7 @@ The story should remain grounded around those threats rather than jumping immedi
 ==================================================
 CRONK
 
-Cronk is one of the major early enemies.
+Kronk is one of the major early enemies.
 
 He is a humanoid crocodilian warlord.
 
@@ -631,15 +631,15 @@ Rough equipment.
 
 Cartoon/stylised appearance.
 
-Cronk controls or commands rat-like minions.
+Kronk controls or commands rat-like minions.
 
 Human survivors tell frightening stories about him before the Zigs meet him directly.
 
-Cronk should initially feel like the biggest threat imaginable.
+Kronk should initially feel like the biggest threat imaginable.
 
 Do not weaken his presence by immediately mentioning universe-level enemies.
 
-Cronk represents a real physical threat to the emerging settlement.
+Kronk represents a real physical threat to the emerging settlement.
 
 The humans fear travelling near:
 
@@ -649,7 +649,7 @@ The valleys.
 
 The mountains close to his territory.
 
-First Genesis should spend meaningful time building toward the confrontation with Cronk.
+First Genesis should spend meaningful time building toward the confrontation with Kronk.
 
 ==================================================
 SHELTON
@@ -674,7 +674,7 @@ He has guards and human workers.
 
 The Zigs eventually discover what is happening at the camp and must decide how to help the people there.
 
-Shelton is separate from Cronk.
+Shelton is separate from Kronk.
 
 They should have different personalities, territories and motivations.
 
@@ -757,9 +757,9 @@ The opening First Genesis story currently follows approximately this progression
 7. The Underground
     They discover human survivors.
 8. The Name That Echoes
-    Stories begin spreading about Cronk.
+    Stories begin spreading about Kronk.
 9. The Black Water
-    The threat of the swamp and Cronk becomes real.
+    The threat of the swamp and Kronk becomes real.
 
 Later chapters continue the community, training and confrontation arcs.
 
@@ -915,7 +915,7 @@ FIRST GENESIS MUST FEEL LOCAL.
 
 To Ozzy, Brix and Lowkey:
 
-Cronk is terrifying.
+Kronk is terrifying.
 
 Finding food matters.
 
@@ -1147,7 +1147,7 @@ Old Earth:
 Interpret surviving machinery or records.
 
 Swamp Territory:
-Find a safe path while learning more about Cronk.
+Find a safe path while learning more about Kronk.
 
 Work Camp:
 Discover what Shelton is doing and find a way to help the workers.
@@ -1171,7 +1171,7 @@ Red hood, dark face, fast/mystical aesthetic.
 Moxi:
 Pink/magenta, red wings, cyan/blue eyes and crystal details, black horns/claws.
 
-Cronk:
+Kronk:
 Humanoid crocodile, rusty armour, rough stylised warlord appearance.
 
 Shelton:

@@ -334,15 +334,15 @@ Rebuilding human civilisation becomes a major First Genesis storyline.
 
 CRONK
 
-Cronk is an evolved crocodilian survivor.
+Kronk is an evolved crocodilian survivor.
 
 He is humanoid, intelligent and dangerous.
 
 He controls territory with mutant rat minions.
 
-The rats follow Cronk’s orders and perform work for him.
+The rats follow Kronk’s orders and perform work for him.
 
-Cronk should be introduced gradually.
+Kronk should be introduced gradually.
 
 Human survivors initially describe him without necessarily knowing his name — essentially as a terrifying half-human, half-crocodile creature.
 
