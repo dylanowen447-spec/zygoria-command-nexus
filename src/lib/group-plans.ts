@@ -1,5 +1,22 @@
 import type { Agent } from "@/lib/zones";
 
+/** Split into sentences without lookbehind — older Safari (pre-16.4 iPads) fails to even parse (?<=…). */
+function sentences(text: string): string[] {
+  const out: string[] = [];
+  let buf = "";
+  for (let i = 0; i < text.length; i++) {
+    buf += text[i];
+    if (/[.!?]/.test(text[i]!) && (i + 1 >= text.length || /\s/.test(text[i + 1]!))) {
+      const s = buf.trim();
+      if (s) out.push(s);
+      buf = "";
+    }
+  }
+  const rest = buf.trim();
+  if (rest) out.push(rest);
+  return out;
+}
+
 /** Sanctuary places the crew can actually walk to together, keyed to whose spot it is. */
 export type PlanPlace = { id: "lookout" | "workshop" | "shack" | "crossroads"; name: string; owner: Agent | null; spot: "home" | "work" | "central" };
 
@@ -17,7 +34,7 @@ const EVERYONE = /\b(all|everyone|lads|together|us three|the three of us|you lot
 /** Finds the plan the Zigs themselves proposed in their replies, if the Sanctuary can represent it. */
 export function findGroupPlan(lines: { agent: Agent; text: string }[], speakers: Agent[]): { place: PlanPlace; who: Agent[]; proposer: Agent } | null {
   for (const { agent, text } of lines) {
-    for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+    for (const sentence of sentences(text)) {
       if (!PROPOSAL.test(sentence)) continue;
       const hit = PLACES.find(p => p.match.test(sentence));
       if (!hit) continue;
@@ -31,7 +48,7 @@ export function findGroupPlan(lines: { agent: Agent; text: string }[], speakers:
 /** A visitor's direct order ("everyone head to the lookout", "Oz and Brix go to the shack"). */
 const ORDER = /\b(go|head|walk|meet|gather|assemble|move|get|come|run|hike|climb|take)\b/i;
 export function findUserCommand(directive: string): { place: PlanPlace; who: Agent[]; proposer: Agent } | null {
-  for (const sentence of directive.split(/(?<=[.!?])\s+/)) {
+  for (const sentence of sentences(directive)) {
     if (!ORDER.test(sentence) && !PROPOSAL.test(sentence)) continue;
     const hit = PLACES.find(p => p.match.test(sentence));
     if (!hit) continue;
