@@ -46,4 +46,4 @@
 - [x] Visiting Zigs stand beside each other, not on top
 
 - [x] Moxi discovery easier: broader word matches + crew hints toward each next step
-- [ ] Cookout: fire not starting / no speech bubble (phone)
+- [x] Cookout: fire not starting / no speech bubble (phone)
