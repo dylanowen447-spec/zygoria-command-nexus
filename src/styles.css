@@ -491,3 +491,6 @@
 .click-mark{position:absolute;width:18px;height:9px;margin:-4.5px 0 0 -9px;border:2px solid var(--electric);border-radius:50%;box-shadow:0 0 10px var(--electric);pointer-events:none;z-index:5;animation:clickMark 1.2s ease-out infinite}
 @keyframes clickMark{from{transform:scale(.5);opacity:1}to{transform:scale(1.6);opacity:.2}}
 .build-interlude .build-zig .idle-bubble{left:auto!important;right:0;transform:none!important;max-width:min(200px,60cqw)!important}
+/* Speaking Zigs sit above every passing character so their bubble is never walked over. */
+.world-stage .agent-marker{z-index:var(--z,10)!important}
+.world-stage .agent-marker:has(.idle-bubble){z-index:calc(1500 + var(--z,10))!important}
