@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import cover from "@/assets/zygoria-book-one-cover.png.asset.json";
 import { CHRONICLES } from "@/lib/chronicles";
 
-/** Chapter art in story order, starting at Chapter 1, with the Book One cover last. */
+/** Book One cover first, then the four chapters in story order — reads like a real book. */
 const PAGES = [
-  ...CHRONICLES.map(c => ({ img: c.img, label: `CHAPTER ${String(c.n).padStart(2, "0")} · ${c.title.toUpperCase()}`, alt: `Chapter ${c.n}: ${c.title}` })),
   { img: cover.url, label: "BOOK ONE · COVER", alt: "Zygoria: First Genesis Book One cover by Dylan Owen, showing Oz, Brix and Lowkey" },
+  ...CHRONICLES.map(c => ({ img: c.img, label: `CHAPTER ${String(c.n).padStart(2, "0")} · ${c.title.toUpperCase()}`, alt: `Chapter ${c.n}: ${c.title}` })),
 ];
 
 export function CreatorCredit() {
@@ -37,7 +38,7 @@ export function CreatorCredit() {
       <span className="creator-badge-year">2026</span>
       <span className="creator-badge-cta">Book One ›</span>
     </button>
-    {open && <div className="cover-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}>
+    {open && createPortal(<div className="cover-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}>
       <div className="cover-dialog" role="dialog" aria-modal="true" aria-label="Zygoria: First Genesis, Book One">
         <button ref={closeRef} type="button" className="cover-close" onClick={close} aria-label="Close"><X size={16} /></button>
         <img className="cover-art" src={current.img} alt={current.alt} />
@@ -48,6 +49,6 @@ export function CreatorCredit() {
           <button type="button" disabled={page === PAGES.length - 1} onClick={() => setPage(p => p + 1)}>Next ›</button>
         </div>
       </div>
-    </div>}
+    </div>, document.body)}
   </>;
 }
