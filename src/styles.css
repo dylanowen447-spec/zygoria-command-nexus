@@ -469,11 +469,17 @@
 .codex-card{display:block;width:min(100%,240px);margin:0 auto 12px;border-radius:10px;box-shadow:0 6px 24px hsl(0 0% 0% / .5)}
 
 /* Long Walk → Sanctuary build interlude */
-.build-interlude .build-crew { position: absolute; inset: 0; pointer-events: none; }
+/* Crew layer locked to the artwork's cover box; tiny Zigs building far off in the green valley by the water. */
+.build-interlude{container-type:size}
+.build-interlude .build-crew { position: absolute; left:50%; top:50%; width:max(100cqw,calc(100cqh * 1.4906)); height:max(100cqh,calc(100cqw / 1.4906)); transform:translate(-50%,-50%); pointer-events: none; z-index:3; }
 .build-interlude .build-zig { position: absolute; transform: translate(-50%, -100%); }
-.build-interlude .build-oz { left: 46%; top: 82%; }
-.build-interlude .build-brix { left: 58%; top: 84%; }
-.build-interlude .build-lowkey { left: 72%; top: 66%; }
+.build-interlude .build-zig .sprite-stage { transform: scale(.42); transform-origin: 50% 100%; }
+.build-interlude .build-oz { left: 76%; top: 41%; }
+.build-interlude .build-brix { left: 79.5%; top: 41.5%; }
+.build-interlude .build-lowkey { left: 82.5%; top: 39.5%; }
+.build-interlude .build-zig .idle-bubble { bottom: calc(100% - 38px) !important; }
+/* Oz's directional sheet (7 cols × 4 rows): show his forward rest frame, never the whole atlas. */
+.build-interlude .build-oz .sheet-frames { background-size: 700% 400%; background-position: 0 0; }
 .build-interlude .build-zig.is-working { animation: build-bob .5s ease-in-out infinite; }
 .build-interlude .build-zig .idle-bubble { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: max-content; max-width: 220px; white-space: normal; }
 @keyframes build-bob { 50% { transform: translate(-50%, -104%); } }
