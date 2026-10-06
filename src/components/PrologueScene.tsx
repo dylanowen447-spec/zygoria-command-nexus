@@ -199,7 +199,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         setBubbles(b => ({ ...b, [z]: "…" }));
         let reply: string;
         try {
-          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: [scene.story, ...[...found].map(f => scene.learned[f]).filter(Boolean)].join(" "), prologue: true } });
+          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: [scene.story, voiceName() ? `The voice from the sky is called ${voiceName()}; occasionally call them by name.` : "", ...[...found].map(f => scene.learned[f]).filter(Boolean)].join(" "), prologue: true } });
           reply = out.result.replace(/\s+/g, " ").trim().slice(0, 220);
         } catch { reply = pick(SHRUGS[z]); }
         if (!alive) return;
@@ -211,7 +211,18 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         talking.delete(z);
       }
     }
-    let heardVoice = false;
+    let heardVoice = false, awaitingName = false;
+    const voiceName = () => { try { return localStorage.getItem("zygoria-voice-name") || ""; } catch { return ""; } };
+    async function nameReply(raw: string) {
+      const cleaned = raw.replace(/^(hi|hello|hey|oi)[,!.\s]*/i, "").replace(/^(my name is|my name's|i am|i'm|im|call me|it's|its|it is|name's)\s+/i, "").replace(/[^\p{L}\p{N}' -]/gu, "").trim().split(/\s+/).slice(0, 2).join(" ").slice(0, 20);
+      if (!cleaned) { awaitingName = true; void chat(raw, ["Oz"]); return; }
+      const name = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+      try { localStorage.setItem("zygoria-voice-name", name); } catch { /* private mode */ }
+      const lines: [Agent, string][] = [["Oz", `${name}? Nice. Sky's got a name.`], ["Brix", `Right, ${name}. Point us somewhere useful.`], ["Lowkey", `${name}. I'll remember that.`]];
+      ALL.forEach(z => talking.add(z));
+      for (const [who, line] of lines) { say(who, line, true); await wait(2400); if (!alive) return; say(who, null, true); }
+      ALL.forEach(z => talking.delete(z));
+    }
     async function firstContact() {
       const lines: [Agent, string][] = [
         ["Oz", "...What was that?"],
@@ -230,10 +241,12 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         say(who, null, true);
       }
       ALL.forEach(z => talking.delete(z));
+      awaitingName = true;
     }
     handler.current = (text: string) => {
       if (finished) return;
       if (scene.id === "landing" && !heardVoice) { heardVoice = true; void firstContact(); return; }
+      if (awaitingName) { awaitingName = false; void nameReply(text); return; }
       const t = text.toLowerCase();
       const named = ALL.filter(z => new RegExp(`\\b${z.toLowerCase()}\\b`).test(t));
       const everyone = /\b(everyone|everybody|all|lads|crew|guys|you lot|together)\b/.test(t);
