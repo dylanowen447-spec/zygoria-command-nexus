@@ -1,5 +1,6 @@
+import { BuildInterlude } from "@/components/BuildInterlude";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { Activity, ArrowDownRight, ArrowRight, Check, ChevronRight, CircleDot, Command, Cpu, Crosshair, Hexagon, MapPin, Radio, Send, Signal, Sparkles, Terminal, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
@@ -112,12 +113,11 @@ function CommandCentre() {
   }, []);
   /** Strict order: Landing → Old City → Library → Long Walk (Chapter 03) → Sanctuary. */
   function nextPrologue() {
-    setPrologueStep(step => {
-      if (step + 1 < PROLOGUE_SCENES.length) return step + 1;
-      endPrologue();
-      return step;
-    });
+    if (prologueStep + 1 < PROLOGUE_SCENES.length) setPrologueStep(prologueStep + 1);
+    else setBuilding(true);
   }
+  const [building, setBuilding] = useState(false);
+  const finishBuild = useCallback(() => { setBuilding(false); endPrologue(); }, []);
   function endPrologue() {
     try { localStorage.setItem(PROLOGUE_KEY, "done"); } catch { /* optional */ }
     setPrologue("off");
@@ -735,7 +735,7 @@ function CommandCentre() {
         <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> {prologue === "off" ? "LIVE WORLD FEED" : "FIRST GENESIS"} <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {prologue === "on" ? <>{scene.chapter.split(" · ")[0]} <span> / </span> {scene.chapter.split(" · ")[1]}</> : prologue === "walk" ? <>CHAPTER 03 <span> / </span> THE LONG WALK</> : <>{zone.indexA} <span> / </span> {zone.indexB}</>}</div></div>
         <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip" title={canon.stageSummary}>{prologue === "on" ? scene.chapter.split(" · ")[0] : prologue === "walk" ? "CHAPTER 03" : canon.stage}</span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
-          {prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="Chapter 3, The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">CHAPTER 03 · THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="Chapter 03"><span className="prologue-card-eyebrow">CHAPTER 03 · THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river — Chapter 04 ›</button></div></div> : <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
+          {prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="Chapter 3, The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">CHAPTER 03 · THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="Chapter 03"><span className="prologue-card-eyebrow">CHAPTER 03 · THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river — Chapter 04 ›</button></div></div> : <div className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
             <div className="world-vignette"/>
             <div className="map-coordinate top-left">◉ &nbsp; {zone.label}</div>

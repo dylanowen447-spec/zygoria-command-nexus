@@ -462,3 +462,17 @@
 .world-image-wrap:has(.shack-definition) .world-vignette{background:linear-gradient(180deg,oklch(0.08 0.015 260 / 22%),transparent 18%,transparent 78%,oklch(0.08 0.015 260 / 30%))}
 
 .codex-card{display:block;width:min(100%,240px);margin:0 auto 12px;border-radius:10px;box-shadow:0 6px 24px hsl(0 0% 0% / .5)}
+
+/* Long Walk → Sanctuary build interlude */
+.build-interlude .build-crew { position: absolute; inset: 0; pointer-events: none; }
+.build-interlude .build-zig { position: absolute; transform: translate(-50%, -100%); }
+.build-interlude .build-oz { left: 46%; top: 82%; }
+.build-interlude .build-brix { left: 58%; top: 84%; }
+.build-interlude .build-lowkey { left: 72%; top: 66%; }
+.build-interlude .build-zig.is-working { animation: build-bob .5s ease-in-out infinite; }
+.build-interlude .build-zig .idle-bubble { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: max-content; max-width: 220px; white-space: normal; }
+@keyframes build-bob { 50% { transform: translate(-50%, -104%); } }
+.build-interlude .build-fade { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; background: var(--background); opacity: 0; transition: opacity 1.6s ease; pointer-events: none; text-align: center; padding: 1rem; }
+.build-interlude .build-fade.is-on { opacity: .92; }
+.build-interlude .build-fade span { font-size: 1.2rem; letter-spacing: .08em; color: var(--foreground); }
+.build-interlude .build-fade em { color: var(--muted-foreground); font-style: italic; }
