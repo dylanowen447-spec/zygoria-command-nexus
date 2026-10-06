@@ -34,7 +34,7 @@ const EVERYONE = /\b(all|everyone|lads|together|us three|the three of us|you lot
 /** Finds the plan the Zigs themselves proposed in their replies, if the Sanctuary can represent it. */
 export function findGroupPlan(lines: { agent: Agent; text: string }[], speakers: Agent[]): { place: PlanPlace; who: Agent[]; proposer: Agent } | null {
   for (const { agent, text } of lines) {
-    for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+    for (const sentence of sentences(text)) {
       if (!PROPOSAL.test(sentence)) continue;
       const hit = PLACES.find(p => p.match.test(sentence));
       if (!hit) continue;
@@ -48,7 +48,7 @@ export function findGroupPlan(lines: { agent: Agent; text: string }[], speakers:
 /** A visitor's direct order ("everyone head to the lookout", "Oz and Brix go to the shack"). */
 const ORDER = /\b(go|head|walk|meet|gather|assemble|move|get|come|run|hike|climb|take)\b/i;
 export function findUserCommand(directive: string): { place: PlanPlace; who: Agent[]; proposer: Agent } | null {
-  for (const sentence of directive.split(/(?<=[.!?])\s+/)) {
+  for (const sentence of sentences(directive)) {
     if (!ORDER.test(sentence) && !PROPOSAL.test(sentence)) continue;
     const hit = PLACES.find(p => p.match.test(sentence));
     if (!hit) continue;
