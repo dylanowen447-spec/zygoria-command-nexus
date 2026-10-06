@@ -192,7 +192,7 @@
   .world-stage .agent-marker .marker-status{transform:translateY(-65px)}
   /* Sprites grow upward from their feet on desktop, so each bubble clears that Zig's own head. */
   .world-stage .marker-oz .idle-bubble{bottom:calc(100% + 20px)}
-  .world-stage .marker-lowkey .idle-bubble{bottom:calc(100% + 28px)}
+  .world-stage .marker-lowkey .idle-bubble{bottom:calc(100% + 38px)}
   .world-stage .marker-brix .idle-bubble{bottom:calc(100% + 58px)}
   .world-stage .task-energy{width:10px;height:10px;margin:-5px 0 0 -5px}
 }
