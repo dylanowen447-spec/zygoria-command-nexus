@@ -113,6 +113,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     async function explore(a: Agent) {
       await wait(800 + Math.random() * 2400);
       while (alive && !finished) {
+        // Hold the wander while answering the Voice, then a quiet beat before carrying on.
+        while (alive && (talking.has(a) || !floorFree())) await wait(200);
         const elapsed = performance.now() - start;
         if (!unlockedAt && (ALL.every(z => seen[z].size >= scene.unlock.seen) && elapsed > scene.unlock.ms || elapsed > scene.unlock.maxMs)) {
           unlockedAt = performance.now();
@@ -202,6 +204,12 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     /** Real in-character replies, scoped to what the crew know in this scene. */
     async function chat(text: string, speakers: Agent[]) {
       const previous: { agent: Agent; result: string }[] = [];
+      floorUntil = Infinity;
+      speakers.forEach(z => talking.add(z));
+      try { await chatInner(text, speakers, previous); }
+      finally { speakers.forEach(z => talking.delete(z)); floorUntil = performance.now() + 2000; }
+    }
+    async function chatInner(text: string, speakers: Agent[], previous: { agent: Agent; result: string }[]) {
       for (const z of speakers) {
         talking.add(z);
         setBubbles(b => ({ ...b, [z]: "…" }));
