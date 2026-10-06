@@ -689,6 +689,20 @@ function CommandCentre() {
     (["Oz", "Brix", "Lowkey"] as Agent[]).forEach(a => chain([HOME(z, a), ...z.paths[a]]));
     if (z.work.Brix) chain([HOME(z, "Brix"), ...z.work.Brix]);
     chain([z.paths.Oz.at(-1)!, z.paths.Brix.at(-1)!]);
+    // Visitor-drawn extra trails (crossroads V, centre track, workshop frontage); ends join the nearest existing trail.
+    const base = nodes.length;
+    const snap = (p: Point) => { let b = 0; for (let i = 1; i < base; i++) if (distance(nodes[i]!, p) < distance(nodes[b]!, p)) b = i; return b; };
+    const extra: Point[][] = [
+      [{ x: 48, y: 62 }, { x: 52, y: 67 }, { x: 57, y: 72.5 }],
+      [{ x: 58, y: 62 }, { x: 58, y: 68 }, { x: 58, y: 73.5 }],
+      [{ x: 57, y: 72.5 }, { x: 58, y: 73.5 }, { x: 63, y: 64 }, { x: 68, y: 57 }],
+      [{ x: 73.5, y: 53.5 }, { x: 80, y: 57 }, { x: 86, y: 60.5 }, { x: 91.5, y: 64 }],
+    ];
+    for (const seg of extra) {
+      chain(seg);
+      const a = add(seg[0]!), b = add(seg[seg.length - 1]!);
+      link(a, snap(seg[0]!)); link(b, snap(seg[seg.length - 1]!));
+    }
     return { nodes, edges };
   }, []);
   const nearestNode = (p: Point) => walkGraph.nodes.reduce((best, n, i) => distance(n, p) < distance(walkGraph.nodes[best]!, p) ? i : best, 0);
