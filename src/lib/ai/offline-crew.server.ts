@@ -14,7 +14,7 @@ export function offlineRoute(directive: string) {
   const d = directive.toLowerCase();
   const zone: ZoneId = has(d, ["ruin", "salvage", "old earth", "terminal", "bridge"]) ? "ruins"
     : has(d, ["cave", "survivor", "crate", "lantern"]) ? "caves"
-    : has(d, ["cronk", "swamp", "rat", "flare"]) ? "cronk"
+    : has(d, ["cronk", "kronk", "swamp", "rat", "flare"]) ? "cronk"
     : has(d, ["shelton", "camp", "guard", "gate"]) ? "shelton" : "sanctuary";
   const group = has(d, ["you lot", "all of you", "crew", "lads", "you all", "everyone", "what do you think", "how are you", "what next", "do you like"])
     || (!/\b(oz|ozzy|brix|lowkey)\b/.test(d) && (/\?\s*$/.test(d) || /^(who|what|where|why|how|tell me|is|are|do|does|can)\b/.test(d)));

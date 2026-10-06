@@ -146,7 +146,7 @@ export const ZONES: Record<ZoneId, Zone> = {
   cronk: {
     id: "cronk",
     chip: "SWAMP",
-    title: ["Cronk's ", "Territory"],
+    title: ["Kronk's ", "Territory"],
     sub: "His swamp. His rules. Watch your step.",
     indexA: "SWAMP",
     indexB: "HOSTILE",
@@ -155,7 +155,7 @@ export const ZONES: Record<ZoneId, Zone> = {
     short: "CRONK'S TERRITORY",
     meetName: "mud trail",
     img: swampImg,
-    alt: "Cronk's swamp territory: murky dead water, twisted trees, sunken machinery and rat silhouettes among the reeds under a heavy dusk sky",
+    alt: "Kronk's swamp territory: murky dead water, twisted trees, sunken machinery and rat silhouettes among the reeds under a heavy dusk sky",
     aspect: ZONE_ASPECT,
     tags: [
       { label: "CRONK'S TERRITORY", x: 72, y: 38 },
