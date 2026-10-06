@@ -2,12 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import cover from "@/assets/zygoria-book-one-cover.png.asset.json";
+import ch5 from "@/assets/chapter-5.png.asset.json";
+import ch6 from "@/assets/chapter-6.png.asset.json";
+import ch7 from "@/assets/chapter-7.png.asset.json";
 import { CHRONICLES } from "@/lib/chronicles";
 
-/** Book One cover first, then the four chapters in story order — reads like a real book. */
+/** Book One cover first, then the chapters in story order — reads like a real book. Later chapters live only here so the in-game Codex stays spoiler-free. */
+const LATER = [
+  { n: 5, title: "Moxi", img: ch5.url },
+  { n: 6, title: "The Underground", img: ch6.url },
+  { n: 7, title: "The Name That Echoes", img: ch7.url },
+];
 const PAGES = [
   { img: cover.url, label: "BOOK ONE · COVER", alt: "Zygoria: First Genesis Book One cover by Dylan Owen, showing Oz, Brix and Lowkey" },
-  ...CHRONICLES.map(c => ({ img: c.img, label: `CHAPTER ${String(c.n).padStart(2, "0")} · ${c.title.toUpperCase()}`, alt: `Chapter ${c.n}: ${c.title}` })),
+  ...[...CHRONICLES, ...LATER].map(c => ({ img: c.img, label: `CHAPTER ${String(c.n).padStart(2, "0")} · ${c.title.toUpperCase()}`, alt: `Chapter ${c.n}: ${c.title}` })),
 ];
 
 export function CreatorCredit() {
