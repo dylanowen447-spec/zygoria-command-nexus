@@ -38,7 +38,7 @@ export function CreatorCredit() {
       <span className="creator-badge-year">2026</span>
       <span className="creator-badge-cta">Book One ›</span>
     </button>
-    {open && <div className="cover-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}>
+    {open && createPortal(<div className="cover-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}>
       <div className="cover-dialog" role="dialog" aria-modal="true" aria-label="Zygoria: First Genesis, Book One">
         <button ref={closeRef} type="button" className="cover-close" onClick={close} aria-label="Close"><X size={16} /></button>
         <img className="cover-art" src={current.img} alt={current.alt} />
@@ -49,6 +49,6 @@ export function CreatorCredit() {
           <button type="button" disabled={page === PAGES.length - 1} onClick={() => setPage(p => p + 1)}>Next ›</button>
         </div>
       </div>
-    </div>}
+    </div>, document.body)}
   </>;
 }
