@@ -4,6 +4,7 @@ import crewObsession from "./canon/2026-10-02-crew-obsession.md?raw";
 import undiscoveredAnswers from "./canon/2026-10-02-undiscovered-answers.md?raw";
 import crewHumour from "./canon/2026-10-02-crew-humour.md?raw";
 import coreCanon from "./canon/2026-10-03-core-canon-first-genesis.md?raw";
+import survivorsUnderground from "./canon/2026-10-06-survivors-underground.md?raw";
 import firstChapters from "./canon/2026-10-03-first-four-chapters.md?raw";
 /**
  * Zygoria canon — the single source of truth the crew reads on every directive.
@@ -19,6 +20,7 @@ export const ZYGORIA_CANON_ENTRIES: { date: string; notes: string }[] = [
   // Core First Genesis canon. Much of it is hidden world truth: the crew only know what CURRENTLY_KNOWN says; Network/Zyg Spark depth stays secret.
   { date: "2026-10-03", notes: coreCanon },
   { date: "2026-10-03", notes: firstChapters },
+  { date: "2026-10-06", notes: survivorsUnderground },
 ];
 
 export function canonPrompt() {
