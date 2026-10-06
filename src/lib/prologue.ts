@@ -98,7 +98,7 @@ const LANDING: Scene = {
   gather: { spot: "rim", at: { Oz: { x: 49, y: 37 }, Brix: { x: 67, y: 39 }, Lowkey: { x: 58, y: 34 } } },
   finale: [["Oz", "A city! Maybe someone's home."], ["Brix", "Looks dead from here."], ["Lowkey", "Dead things still have answers."], ["Oz", "Then let's go ask them."]],
   card: { eyebrow: "CHAPTER 01 COMPLETE", title: "Old City lies ahead", text: "The crew have spotted the ruined towers on the horizon.", next: "Walk to Old City ›" },
-  story: "Day one. You just hatched from egg pods in a dusty crater with the other two. You can see the pods, concrete slabs, dead trees and a broken overpass. Nothing else is known.",
+  story: "Day one. You just hatched from egg pods in a dusty crater with the other two. You seem to have crash landed and remember nothing at all — not who you are or where you came from. Lowkey wondered if you came from a faint star visible through the dust; nobody knows. You can see the pods, concrete slabs, dead trees and a broken overpass. Nothing else is known.",
   learned: {"rim": "You have spotted a distant ruined city of towers to the north."},
 };
 
