@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import cover from "@/assets/zygoria-book-one-cover.png.asset.json";
 import { CHRONICLES } from "@/lib/chronicles";
