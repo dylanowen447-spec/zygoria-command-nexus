@@ -143,6 +143,7 @@ const OLD_CITY: Scene = {
   gather: { spot: "library", at: { Oz: { x: 79, y: 41 }, Brix: { x: 91, y: 44 }, Lowkey: { x: 86, y: 32 } } },
   finale: [["Oz", "Doors are open!"], ["Brix", "Roof's holding. Mostly."], ["Lowkey", "Writing over the arch. I can read it."], ["Oz", "Then in we go."]],
   card: { eyebrow: "CHAPTER 02 · DISCOVERY", title: "The Library", text: "A crumbling library — chained shut, until you read the sign and found the bar.", next: "Enter the Library ›" },
+  curios: { Oz: ["Found a little cog. Pocketing it.", "A tin with a picture of a fish on it. Empty. Tragic."], Brix: ["Copper wire. Keeping that.", "Bolts here were cut, not rusted. Someone salvaged this."], Lowkey: ["Torn scrap of paper. 'River… downstream… others.' The rest is gone.", "Small tracks in the dust. Not ours."] },
   story: "Day one, later. You walked from the landing crater into a dead, silent city: an overturned bus, a fallen statue, a dry fountain, strange painted symbols. You do not know what happened here and have found no water.",
   learned: {
     markings: "Lowkey worked out the painted symbol matches a bolt on some big doors down a side lane.",
@@ -228,6 +229,7 @@ const LONG_WALK: Scene = {
   gather: { spot: "ridge", at: { Oz: { x: 63, y: 47 }, Brix: { x: 72, y: 47 }, Lowkey: { x: 67, y: 43 } } },
   finale: [["Oz", "It's like the whole world forgot to die down there."], ["Brix", "River. Trees. Flat ground. Could build there."], ["Lowkey", "It's been waiting."], ["Oz", "Then let's not keep it waiting."]],
   card: { eyebrow: "CHAPTER 03 COMPLETE", title: "The Green Valley", text: "Beyond the dead hills, a valley full of life — a river bend, tall trees, mountains watching.", next: "Head down to the river — Chapter 04 ›" },
+  curios: { Oz: ["Was that smoke? Way off, past the hills. …Gone now.", "Blue flicker over the mountains. Tell me you saw that."], Brix: ["Old fence post. Someone fenced this land once.", "Big claw marks on this rock. Fresh-ish. Let's not hang about."], Lowkey: ["Footprints. Small. Heading the same way we are.", "Something big dragged itself through here. Towards water."] },
   story: "After the Library you left Old City on foot searching for water. Dead roads, broken hills, dead trees, dust. The further you walk, the more you notice tiny signs of life you did not expect. You have no home and no idea where you are going. You have never seen any valley or river here.",
   learned: { stream: "You found a clean running stream and drank: the first fresh water you've had.", sprout: "Green grass is pushing up through the rock — the land seems to be waking as you pass.", trees: "Living trees with fresh leaves grow further along the route.", ridge: "From a rocky ridge you saw a lush green valley below: a curving river, tall evergreens, mountains behind, and no buildings at all. You have never been there." },
 };
