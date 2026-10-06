@@ -117,8 +117,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         if (!unlockedAt && (ALL.every(z => seen[z].size >= scene.unlock.seen) && elapsed > scene.unlock.ms || elapsed > scene.unlock.maxMs)) {
           unlockedAt = performance.now();
           const hinter = pick(ALL);
-          say(hinter, scene.hints[hinter]);
-          timers.push(setTimeout(() => alive && say(hinter, null), 3000));
+          takeFloor(scene.hints[hinter]); say(hinter, scene.hints[hinter]);
+          timers.push(setTimeout(() => alive && say(hinter, null), hold(scene.hints[hinter])));
         }
         const taken = new Set(ALL.filter(z => z !== a).flatMap(z => [at[z], heading[z]].filter(Boolean) as string[]));
         const ordered = orders[a];
@@ -156,14 +156,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
           // Still shut: they react, then go back to poking around for the missing pieces.
           claimed.delete(objective.spot);
           setFacing(f => ({ ...f, [a]: "right" }));
-          for (const text of objective.locked?.[a] ?? []) { say(a, text); await wait(2600); if (!alive) return; }
+          for (const text of objective.locked?.[a] ?? []) { takeFloor(text); say(a, text); await wait(hold(text)); say(a, null); await wait(GAP); if (!alive) return; }
           say(a, null); await wait(1200); continue;
         }
         if (objective) {
           found.add(objective.spot);
           setFound(f => [...f, objective.spot]);
           setFacing(f => ({ ...f, [a]: "right" }));
-          for (const text of objective.found[a]) { say(a, text); await wait(2800); if (!alive) return; }
+          for (const text of objective.found[a]) { takeFloor(text); say(a, text); await wait(hold(text)); say(a, null); await wait(GAP); if (!alive) return; }
           say(a, null);
           if (scene.objectives.every(o => claimed.has(o.spot)) && !finished) {
             // Wait for any other finder to finish reading before the group gathers.
@@ -177,13 +177,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         await nap(a, 500);
         const curio = scene.curios?.[a].filter(c => !used.has(c)) ?? [];
         const l = orders[a] ? null : curio.length && Math.random() < 0.25 ? (() => { const c = pick(curio); used.add(c); return c; })() : line(a, target);
-        if (l) { say(a, l); await nap(a, 2600); if (!alive || finished) return; say(a, null); }
+        if (l && floorFree()) { takeFloor(l); say(a, l); await nap(a, hold(l)); if (!alive || finished) return; say(a, null); }
         // Someone nearby sometimes answers back.
         const near = ALL.find(z => z !== a && dist(coords.current[z], coords.current[a]) < 14 && !heading[z]);
-        if (near && Math.random() < 0.35) {
+        if (near && Math.random() < 0.35 && floorFree()) {
+          await wait(GAP); if (!alive) return;
           setFacing(f => ({ ...f, [near]: coords.current[a].x < coords.current[near].x ? "left" : "right" }));
-          say(near, pick(REACTIONS[near]));
-          await wait(1800);
+          const r = pick(REACTIONS[near]); takeFloor(r); say(near, r);
+          await wait(hold(r));
           if (!alive) return;
           say(near, null);
         }
@@ -212,9 +213,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         if (!alive) return;
         previous.push({ agent: z, result: reply });
         say(z, reply, true);
-        await wait(Math.min(7000, 2200 + reply.length * 35));
+        await wait(Math.min(7000, Math.max(3200, 1800 + reply.length * 45)));
         if (!alive) return;
-        say(z, null, true);
+        say(z, null, true); await wait(GAP);
         talking.delete(z);
       }
     }
@@ -227,7 +228,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       try { localStorage.setItem("zygoria-voice-name", name); } catch { /* private mode */ }
       const lines: [Agent, string][] = [["Oz", `${name}? Nice. Sky's got a name.`], ["Brix", `Right, ${name}. Point us somewhere useful.`], ["Lowkey", `${name}. I'll remember that.`]];
       ALL.forEach(z => talking.add(z));
-      for (const [who, line] of lines) { say(who, line, true); await wait(2400); if (!alive) return; say(who, null, true); }
+      for (const [who, line] of lines) { say(who, line, true); await wait(hold(line)); if (!alive) return; say(who, null, true); await wait(GAP); }
       ALL.forEach(z => talking.delete(z));
     }
     async function firstContact() {
@@ -243,9 +244,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       ALL.forEach(z => talking.add(z));
       for (const [who, line] of lines) {
         say(who, line, true);
-        await wait(Math.min(4200, 1800 + line.length * 30));
+        await wait(hold(line));
         if (!alive) return;
-        say(who, null, true);
+        say(who, null, true); await wait(GAP);
       }
       ALL.forEach(z => talking.delete(z));
       awaitingName = true;
@@ -299,7 +300,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const cx = ALL.reduce((t, z) => t + coords.current[z].x, 0) / 3;
       setFacing(Object.fromEntries(ALL.map(z => [z, coords.current[z].x <= cx ? "right" : "left"])) as Record<Agent, "left" | "right">);
       for (const [who, text] of scene.finale) {
-        say(who, text); await wait(2600); if (!alive) return; say(who, null);
+        say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP);
       }
       setDone(true);
     }
@@ -311,7 +312,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       setShown(true);
       await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
       if (!alive) return;
-      for (const [who, text] of scene.opening) { say(who, text); await wait(2400); if (!alive) return; say(who, null); }
+      for (const [who, text] of scene.opening) { say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP); }
       ALL.forEach(a => void explore(a));
     })();
     return () => { alive = false; timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
