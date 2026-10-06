@@ -14,6 +14,8 @@ const SPEED = 4.2; // a little slower than home: they are cautious here
 const WORDMARK: Record<Agent, { url: string; cls: string }> = { Oz: { url: ozWordmark.url, cls: "oz-wordmark" }, Brix: { url: brixWordmark.url, cls: "brix-wordmark" }, Lowkey: { url: lowkeyWordmark.url, cls: "lowkey-wordmark" } };
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 30, 0), 1) * 0.22).toFixed(3);
 const dist = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ASPECT);
+/** On phones the map is short, so bubbles drop below the Zig much sooner. */
+const topLine = () => (typeof window !== "undefined" && window.innerWidth <= 600 ? 55 : 34);
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
 
 type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void };
@@ -43,7 +45,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const el = markers.current[a], p = coords.current[a];
       if (!el) return;
       el.style.left = `${p.x}%`; el.style.top = `${p.y}%`;
-      el.classList.toggle("near-top", p.y < 34); el.classList.toggle("near-right", p.x > 62); el.classList.toggle("near-left", p.x < 38);
+      el.classList.toggle("near-top", p.y < topLine()); el.classList.toggle("near-right", p.x > 62); el.classList.toggle("near-left", p.x < 38);
       el.style.setProperty("--depth", depthFor(p.y));
       el.style.setProperty("z-index", String(10 + Math.round(p.y * 10)), "important");
     };
@@ -51,7 +53,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     const orders: Partial<Record<Agent, string>> = {};
     const cancel: Partial<Record<Agent, boolean>> = {};
     // While a Zig is answering the visitor, their own exploring chatter stays quiet.
-    const say = (a: Agent, text: string | null, force = false) => { if (talking.has(a) && !force) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) logRef.current(a, text); };
+    let voiceBusy = false;
+    const say = (a: Agent, text: string | null, force = false) => { if ((voiceBusy || talking.has(a)) && !force && text) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) logRef.current(a, text); };
     /** Reading time: short lines at least 3.2s, long lines up to 6s, then a 1s breath. */
     const hold = (text: string) => Math.min(6000, Math.max(3200, 1800 + text.length * 45));
     const GAP = 1000;
@@ -204,10 +207,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     /** Real in-character replies, scoped to what the crew know in this scene. */
     async function chat(text: string, speakers: Agent[]) {
       const previous: { agent: Agent; result: string }[] = [];
-      floorUntil = Infinity;
+      floorUntil = Infinity; voiceBusy = true; setBubbles({});
       speakers.forEach(z => talking.add(z));
       try { await chatInner(text, speakers, previous); }
-      finally { speakers.forEach(z => talking.delete(z)); floorUntil = performance.now() + 2000; }
+      finally { speakers.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000; }
     }
     async function chatInner(text: string, speakers: Agent[], previous: { agent: Agent; result: string }[]) {
       for (const z of speakers) {
@@ -234,9 +237,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const name = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
       try { localStorage.setItem("zygoria-voice-name", name); } catch { /* private mode */ }
       const lines: [Agent, string][] = [["Oz", `${name}? Nice. Sky's got a name.`], ["Brix", `Right, ${name}. Point us somewhere useful.`], ["Lowkey", `${name}. I'll remember that.`]];
-      ALL.forEach(z => talking.add(z));
+      ALL.forEach(z => talking.add(z)); voiceBusy = true; floorUntil = Infinity; setBubbles({});
       for (const [who, line] of lines) { say(who, line, true); await wait(hold(line)); if (!alive) return; say(who, null, true); await wait(GAP); }
-      ALL.forEach(z => talking.delete(z));
+      ALL.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000;
     }
     async function firstContact() {
       const lines: [Agent, string][] = [
@@ -248,14 +251,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         ["Lowkey", "Apparently it can."],
         ["Oz", "Oi, mysterious voice. You got a name?"],
       ];
-      ALL.forEach(z => talking.add(z));
+      ALL.forEach(z => talking.add(z)); voiceBusy = true; floorUntil = Infinity; setBubbles({});
       for (const [who, line] of lines) {
         say(who, line, true);
         await wait(hold(line));
         if (!alive) return;
         say(who, null, true); await wait(GAP);
       }
-      ALL.forEach(z => talking.delete(z));
+      ALL.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000;
       awaitingName = true;
     }
     handler.current = (text: string) => {
@@ -333,7 +336,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     <div className="map-coordinate top-right">{scene.chapter}</div>
     <div className="world-stage">
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < 34 ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${walking.includes(a) ? "is-walking" : ""}`}>
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${walking.includes(a) ? "is-walking" : ""}`}>
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>

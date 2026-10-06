@@ -142,14 +142,14 @@ function CommandCentre() {
   const statuses: Record<Agent, Status> = { Oz: statusFor("Oz"), Brix: statusFor("Brix"), Lowkey: statusFor("Lowkey") };
   useEffect(() => () => { runId.current++; timers.current.forEach(clearTimeout); frames.current.forEach(cancelAnimationFrame); }, []);
   const markerStyle = (agent: Agent) => ({ left: `${coords.current[zoneId][agent].x}%`, top: `${coords.current[zoneId][agent].y}%`, "--depth": depthFor(coords.current[zoneId][agent].y), zIndex: 10 + Math.round(coords.current[zoneId][agent].y * 10) }) as CSSProperties;
-  const edgeCls = (agent: Agent) => `${coords.current[zoneId][agent].y < 34 ? "near-top" : ""} ${coords.current[zoneId][agent].x > 62 ? "near-right" : ""} ${coords.current[zoneId][agent].x < 38 ? "near-left" : ""}`;
+  const edgeCls = (agent: Agent) => `${coords.current[zoneId][agent].y < (typeof window !== "undefined" && window.innerWidth <= 600 ? 55 : 34) ? "near-top" : ""} ${coords.current[zoneId][agent].x > 62 ? "near-right" : ""} ${coords.current[zoneId][agent].x < 38 ? "near-left" : ""}`;
   function paint(agent: Agent) {
     const el = markerRefs.current[agent];
     if (!el) return;
     const p = coords.current[zoneRef.current][agent];
     el.style.left = `${p.x}%`;
     el.style.top = `${p.y}%`;
-    el.classList.toggle("near-top", p.y < 34); el.classList.toggle("near-right", p.x > 62); el.classList.toggle("near-left", p.x < 38);
+    el.classList.toggle("near-top", p.y < (typeof window !== "undefined" && window.innerWidth <= 600 ? 55 : 34)); el.classList.toggle("near-right", p.x > 62); el.classList.toggle("near-left", p.x < 38);
     el.style.setProperty("--depth", depthFor(p.y));
     // Whoever stands lower on the ground draws in front, so nobody vanishes behind another Zig.
     el.style.setProperty("z-index", String(10 + Math.round(p.y * 10)), "important");
