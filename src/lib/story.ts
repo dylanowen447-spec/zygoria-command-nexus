@@ -103,7 +103,7 @@ export const STORY_CHAPTERS: StoryChapter[] = [SANCTUARY_SIGNAL];
 export const STORY_KEY = "zygoria-story-v1";
 /** Seconds spent in the Sanctuary after the opening; Lowkey spots movement at MOXI_SPOT_AFTER. */
 export const SANCTUARY_TIME_KEY = "zygoria-sanctuary-time-v1";
-export const MOXI_SPOT_AFTER = 180;
+export const MOXI_SPOT_AFTER = 60;
 export type StoryState = { beats: string[] };
 export const EMPTY_STORY: StoryState = { beats: [] };
 
