@@ -179,7 +179,7 @@
 .moxi-scenery{filter:drop-shadow(0 2px 2px oklch(0.05 0.01 265 / 50%))}
 @media (prefers-reduced-motion:reduce){.depth-pool{animation:none}}
 /* Path layer locked to the artwork's cover box so path nodes (image %) land on the same ground at every screen shape */
-.world-image-wrap{container-type:size}
+.world-image-wrap{container-type:size;isolation:isolate;transform:translateZ(0)}
 .world-stage{position:absolute;left:50%;top:50%;width:max(100cqw,calc(100cqh * 1.4906));height:max(100cqh,calc(100cqw / 1.4906));transform:translate(-50%,-50%);z-index:4;pointer-events:none}
 .world-stage .agent-marker{pointer-events:auto}
 .world-stage .world-trails{opacity:.55}
@@ -400,7 +400,7 @@
 /* Creator credit floats on the side so it is visible without scrolling. */
 .creator-dock{position:fixed;left:16px;bottom:16px;z-index:1500}
 .creator-dock .creator-badge{background:oklch(0.14 0.03 265 / 88%);backdrop-filter:blur(8px);box-shadow:0 4px 18px oklch(0.05 0.01 265 / 60%)}
-@media(max-width:600px){.creator-dock{left:8px;bottom:8px}.creator-dock .creator-badge{padding:4px 9px;gap:5px;font-size:7.5px}.creator-dock .creator-badge-name{font-size:10px}.creator-dock .creator-badge-cta{padding-left:5px}}
+@media(max-width:600px){.creator-dock{left:8px;bottom:8px}.creator-dock .creator-badge{padding:4px 9px;gap:5px;font-size:7.5px;background:oklch(0.14 0.03 265 / 96%);backdrop-filter:none}.creator-dock .creator-badge-name{font-size:10px}.creator-dock .creator-badge-cta{padding-left:5px}}
 
 /* Crossroads fire pit: artwork-percentage overlay, lit only during a cookout */
 .fire-pit{--fire-core:hsl(45 100% 70%);--fire-mid:hsl(25 100% 55%);--fire-edge:hsl(8 90% 45%);--fire-stone:hsl(220 10% 28%);--spark:hsl(195 100% 80%);position:absolute;width:4.2%;aspect-ratio:2/1;transform:translate(-50%,-50%);z-index:1500;pointer-events:none}
