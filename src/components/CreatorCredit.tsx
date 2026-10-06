@@ -3,10 +3,10 @@ import { X } from "lucide-react";
 import cover from "@/assets/zygoria-book-one-cover.png.asset.json";
 import { CHRONICLES } from "@/lib/chronicles";
 
-/** Chapter art in story order, starting at Chapter 1, with the Book One cover last. */
+/** Book One cover first, then the four chapters in story order — reads like a real book. */
 const PAGES = [
-  ...CHRONICLES.map(c => ({ img: c.img, label: `CHAPTER ${String(c.n).padStart(2, "0")} · ${c.title.toUpperCase()}`, alt: `Chapter ${c.n}: ${c.title}` })),
   { img: cover.url, label: "BOOK ONE · COVER", alt: "Zygoria: First Genesis Book One cover by Dylan Owen, showing Oz, Brix and Lowkey" },
+  ...CHRONICLES.map(c => ({ img: c.img, label: `CHAPTER ${String(c.n).padStart(2, "0")} · ${c.title.toUpperCase()}`, alt: `Chapter ${c.n}: ${c.title}` })),
 ];
 
 export function CreatorCredit() {
