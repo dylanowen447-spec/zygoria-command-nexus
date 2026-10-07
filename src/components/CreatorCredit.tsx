@@ -15,7 +15,7 @@ const LATER = [
 ];
 const PAGES = [
   { img: cover.url, label: "BOOK ONE · COVER", alt: "Zygoria: First Genesis Book One cover by Dylan Owen, showing Oz, Brix and Lowkey" },
-  ...[...CHRONICLES, ...LATER].map(c => ({ img: c.img, label: `CHAPTER ${String(c.n).padStart(2, "0")} · ${c.title.toUpperCase()}`, alt: `Chapter ${c.n}: ${c.title}` })),
+  ...[...CHRONICLES, ...LATER].map(c => ({ img: c.img, label: c.title.toUpperCase(), alt: `Chapter ${c.n}: ${c.title}` })),
 ];
 
 export function CreatorCredit() {
