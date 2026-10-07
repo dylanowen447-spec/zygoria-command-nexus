@@ -6,6 +6,7 @@ import crewHumour from "./canon/2026-10-02-crew-humour.md?raw";
 import coreCanon from "./canon/2026-10-03-core-canon-first-genesis.md?raw";
 import survivorsUnderground from "./canon/2026-10-06-survivors-underground.md?raw";
 import firstChapters from "./canon/2026-10-03-first-four-chapters.md?raw";
+import chaptersFiveToEight from "./canon/2026-10-07-chapters-five-to-eight.md?raw";
 /**
  * Zygoria canon — the single source of truth the crew reads on every directive.
  * Add notes as dated entries in order; when a later entry says something changed, it overrides earlier ones.
@@ -21,6 +22,8 @@ export const ZYGORIA_CANON_ENTRIES: { date: string; notes: string }[] = [
   { date: "2026-10-03", notes: coreCanon },
   { date: "2026-10-03", notes: firstChapters },
   { date: "2026-10-06", notes: survivorsUnderground },
+  // Chapters 5-8 are hidden future canon: true, but never revealed until the story state unlocks them.
+  { date: "2026-10-07", notes: chaptersFiveToEight },
 ];
 
 export function canonPrompt() {

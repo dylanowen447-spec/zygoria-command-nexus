@@ -87,6 +87,10 @@ export const HIDDEN_FUTURE_CANON: string[] = [
   "Any future locations, allies, enemies, transformations or story outcomes not yet established in the canon notes.",
   "That any humans survived at all, or that people live underground — the crew believe the world is empty of people until they descend through the cave entrance.",
   "The full truth about the Network — what it really is remains larger and mysterious.",
+  "Oz's MP3 player: he will scavenge a scratched black MP3 player in the ruins, Brix will repair it, and Oz's own spark will power it — music becomes his personal spark. Until that happens, the crew know nothing about music players.",
+  "Moxi's past: her silver cybernetic spine plates and a half-remembered soft female voice whispering her name link her to whoever prepared this world. Nobody in-world knows this, including Moxi.",
+  "The underground human sanctuary and its people: Orin the cynical elder, and the younger survivors Mara and Vale. The crew will only meet them after descending through the cave entrance, and the survivors will later found Settlement One near the valley.",
+  "The Black Water swamp across the northern ridge: toxic yellow-green smoke, Kronk poisoning the basin, and the expedition the crew will mount against him.",
 ];
 
 /** Visitor-safe journal pages. These descriptions are limited to what the crew currently knows.
