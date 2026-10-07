@@ -656,7 +656,7 @@ function CommandCentre() {
       if (document.hidden || beats.includes("spotted")) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= MP3_AFTER && phaseRef.current === "idle" && !visiting.current && !ozAway.current) {
+      if (t >= MP3_AFTER && phaseRef.current === "idle" && !visiting.current && !choring.current && !ozAway.current) {
         clearInterval(id);
         if (beats.includes("mp3")) void playBeat(SANCTUARY_SIGNAL.beats[0]!, runId.current);
         else void mp3Scene();
@@ -768,6 +768,8 @@ function CommandCentre() {
     const v = visiting.current;
     visiting.current = null;
     setBubble(null);
+    const c = choring.current;
+    if (c) { choring.current = null; runId.current++; coords.current.sanctuary[c] = { ...HOME(ZONES.sanctuary, c) }; spots.current.sanctuary[c] = "home"; setActing(null); setWalking(w => w.filter(x => x !== c)); setPositions(prev => ({ ...prev, [c]: "home" })); paint(c); }
     if (outing.current.length) {
       const back = outing.current; outing.current = [];
       runId.current++;
@@ -821,7 +823,7 @@ function CommandCentre() {
   const canClick = () => phaseRef.current === "idle" && prologue === "off" && zoneRef.current === "sanctuary";
   async function ozTo(p: Point, exact: boolean, arrive?: (run: number) => Promise<void> | void) {
     if (!canClick()) return;
-    if (visiting.current || outing.current.length) cancelVisit();
+    if (visiting.current || choring.current || outing.current.length) cancelVisit();
     const run = ++runId.current;
     setWalking(w => w.filter(a => a !== "Oz"));
     const pts = routeNodes(coords.current.sanctuary.Oz, p);
@@ -930,8 +932,8 @@ function CommandCentre() {
     let alive = true;
     const loop = async () => {
       while (alive) {
-        await wait(14000 + Math.random() * 12000);
-        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || outing.current.length || ozAway.current) continue;
+        await wait(9000 + Math.random() * 6000);
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || choring.current || outing.current.length || ozAway.current) continue;
         const z = ZONES.sanctuary, all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
         const v = all[Math.floor(Math.random() * all.length)]!;
         const others = all.filter(a => a !== v);
