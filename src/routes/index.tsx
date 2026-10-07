@@ -18,7 +18,7 @@ import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
-import { EMPTY_STORY, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
+import { EMPTY_STORY, MOXI_SCENE, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 const MP3_AFTER = 120;
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
