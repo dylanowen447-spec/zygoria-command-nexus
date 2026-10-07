@@ -403,7 +403,7 @@ function CommandCentre() {
     const done: Step[] = [];
     if (missionZone !== "sanctuary") {
       setZoneId(missionZone);
-      setPositions({ Oz: "home", Brix: "home", Lowkey: "home" });
+      setPositions({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
       await wait(700);
       if (run !== runId.current) return;
     }
@@ -441,7 +441,7 @@ function CommandCentre() {
     setFinishedId(id);
     const changes = done.filter(s => s.change).length;
     log(done.at(-1)?.agent ?? "Oz", `Directive complete — ${changes} world change${changes === 1 ? "" : "s"} made. ${missionZone === "sanctuary" ? "Standing by." : "Heading back to the Sanctuary."}`);
-    await Promise.all((["Oz", "Brix", "Lowkey"] as Agent[]).map(a => goTo(a, "home", run)));
+    await Promise.all((["Oz", "Brix", "Lowkey", "Moxi"] as Agent[]).map(a => goTo(a, "home", run)));
     if (missionZone !== "sanctuary") setZoneId("sanctuary");
     setTimeout(() => setFinishedId(prev => prev === id ? null : prev), 2500);
     if (missionZone === "sanctuary" && run === runId.current) {
@@ -512,8 +512,9 @@ function CommandCentre() {
   const [fishSize, setFishSize] = useState<"small" | "medium" | "large">("small");
   async function cookout(run: number) {
     const z = ZONES.sanctuary;
-    const all: Agent[] = ["Oz", "Brix", "Lowkey"];
-    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x - 3, y: FIRE_PIT.y - 4 } };
+    const moxiIn = storyRef.current.beats.includes("trust");
+    const all: Agent[] = moxiIn ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
+    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x - 3, y: FIRE_PIT.y - 4 }, Moxi: { x: FIRE_PIT.x + 4, y: FIRE_PIT.y + 4 } };
     const paths = Object.fromEntries(all.map(a => [a, [...toMeet(z, a), seat[a]]])) as Record<Agent, Point[]>;
     outing.current = all;
     const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(Math.min(6000, Math.max(ms, 3200, 1800 + text.length * 45))); setBubble(null); await wait(1000); return run === runId.current; };
@@ -546,6 +547,7 @@ function CommandCentre() {
     if (!await say("Brix", "Turn them, Oz. That one's going black.", 2000)) return;
     if (!await say("Oz", "Crispy is a flavour.", 1800)) return;
     if (!await say("Lowkey", "Not bad.", 1600)) return;
+    if (moxiIn && !await say("Moxi", "Mm. Fish.", 1400)) return;
     setFire("embers");
     // Short post-meal chat before everyone drifts home.
     const afters: [Agent, string][][] = [
