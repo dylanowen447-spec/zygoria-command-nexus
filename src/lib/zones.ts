@@ -5,6 +5,8 @@ import swampImg from "@/assets/zone-swamp.jpg";
 import campImg from "@/assets/zone-camp.jpg";
 
 export type Agent = "Oz" | "Brix" | "Lowkey";
+/** The full Sanctuary crew once Moxi joins: the three Zigs plus Moxi. The prologue only ever uses Agent. */
+export type CrewAgent = Agent | "Moxi";
 export type Point = { x: number; y: number };
 export type ZoneId = "sanctuary" | "ruins" | "caves" | "cronk" | "shelton";
 
