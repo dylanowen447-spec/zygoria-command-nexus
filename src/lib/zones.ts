@@ -68,11 +68,15 @@ export const ZONES: Record<ZoneId, Zone> = {
       Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
       // Summit of the mountain overlook (Lowkey's resting spot) → down the painted switchback → open grass east of the pines → crossroads.
       Lowkey: [{ x: 55, y: 19 }, { x: 52, y: 21.5 }, { x: 49.5, y: 23.5 }, { x: 51, y: 26 }, { x: 55, y: 30 }, { x: 53.5, y: 32.5 }, { x: 49, y: 35.5 }, { x: 47, y: 38 }, { x: 47.5, y: 40.8 }, { x: 48, y: 43.8 }, { x: 50.7, y: 47 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
+      // Moxi's grass spot below the workshop → crossroads V → the crossroads
+      Moxi: [{ x: 60, y: 68 }, { x: 57, y: 72.5 }, { x: 52, y: 67 }, { x: 48, y: 63 }, { x: 47, y: 60.5 }],
     },
     // Work spots reached from home along open ground: Brix at his workshop, Lowkey winding uphill on the painted mountain path.
     work: {
       Brix: [{ x: 67.5, y: 54.6 }, { x: 71, y: 52.8 }],
       Lowkey: [{ x: 47, y: 38 }, { x: 49, y: 35.5 }, { x: 53.5, y: 32.5 }, { x: 55, y: 30 }, { x: 51, y: 26 }, { x: 49.5, y: 23.5 }, { x: 52, y: 21.5 }, { x: 55, y: 19 }],
+      // Moxi putters around the evergreen by the workshop where she was found
+      Moxi: [{ x: 63, y: 64 }, { x: 66, y: 60 }],
     },
   },
   ruins: {
@@ -100,10 +104,14 @@ export const ZONES: Record<ZoneId, Zone> = {
       Brix: [{ x: 68, y: 74 }, { x: 63, y: 70 }, { x: 57.5, y: 66.5 }, { x: 52.5, y: 63.8 }],
       // On the old road before the bridge approach → down the open road → the clearing
       Lowkey: [{ x: 47, y: 53 }, { x: 48, y: 56.5 }, { x: 49, y: 60 }, { x: 50, y: 62.8 }],
+      // Moxi trots along the open dirt behind Oz → the clearing
+      Moxi: [{ x: 26, y: 75 }, { x: 32, y: 71 }, { x: 38, y: 67.5 }, { x: 44, y: 64.5 }],
     },
     work: {
       // Oz inspects the rubble shelf left of centre
       Oz: [{ x: 34, y: 68.5 }, { x: 36, y: 65.5 }, { x: 36, y: 64 }],
+      // Moxi digs for shiny things on the near rubble edge
+      Moxi: [{ x: 30, y: 70 }, { x: 28, y: 67 }],
       // Brix works the salvage mound on the right
       Brix: [{ x: 71, y: 69.5 }, { x: 73, y: 66.5 }, { x: 73.5, y: 64 }],
       // Lowkey observes from the road before the bridge span
@@ -135,10 +143,14 @@ export const ZONES: Record<ZoneId, Zone> = {
       Brix: [{ x: 66, y: 68 }, { x: 61, y: 65.5 }, { x: 56, y: 63.5 }, { x: 52, y: 62.2 }],
       // Front of the cave slope → down to the clearing
       Lowkey: [{ x: 49, y: 57 }, { x: 50, y: 59 }, { x: 51.5, y: 60.8 }, { x: 52, y: 62 }],
+      // Moxi skirts the left edge of the clearing → cave clearing
+      Moxi: [{ x: 33, y: 69 }, { x: 39, y: 66 }, { x: 45, y: 63.8 }, { x: 50, y: 62.6 }],
     },
     work: {
       // Oz checks the fish racks by the stream
       Oz: [{ x: 38, y: 63.5 }, { x: 35.5, y: 61 }, { x: 34, y: 58.5 }],
+      // Moxi noses around the rocks at the clearing's edge
+      Moxi: [{ x: 36, y: 65 }, { x: 33, y: 62 }],
       // Brix works the crates by the cave entrance
       Brix: [{ x: 63, y: 63.5 }, { x: 62, y: 60 }, { x: 61.5, y: 57 }],
       // Lowkey watches the cave mouth threshold
@@ -170,10 +182,14 @@ export const ZONES: Record<ZoneId, Zone> = {
       Brix: [{ x: 77, y: 71 }, { x: 75, y: 67.5 }, { x: 73.5, y: 63.5 }, { x: 72, y: 60.3 }],
       // Upper bank near the warning sign → down the bank → the mud trail bend
       Lowkey: [{ x: 81, y: 64 }, { x: 78.5, y: 62.5 }, { x: 75.5, y: 61.3 }, { x: 72, y: 60.3 }],
+      // Moxi keeps to the lower mud track behind Oz → the mud trail bend
+      Moxi: [{ x: 63, y: 80 }, { x: 66, y: 73 }, { x: 69, y: 66 }, { x: 71, y: 60.8 }],
     },
     work: {
       // Oz scopes the rise below the warning sign
       Oz: [{ x: 74, y: 56 }, { x: 76, y: 52.5 }, { x: 77.5, y: 49.5 }],
+      // Moxi sniffs the reeds at the edge of the track
+      Moxi: [{ x: 66, y: 64 }, { x: 64, y: 60 }],
       // Brix works the debris at the water's edge
       Brix: [{ x: 70.5, y: 63 }, { x: 69.5, y: 60.5 }],
       // Lowkey creeps toward the warning sign
@@ -205,10 +221,14 @@ export const ZONES: Record<ZoneId, Zone> = {
       Brix: [{ x: 61, y: 72 }, { x: 57, y: 70 }, { x: 53.5, y: 68 }, { x: 50, y: 66.3 }],
       // Lower right yard → across the yard → camp yard centre
       Lowkey: [{ x: 70, y: 77 }, { x: 63, y: 72.5 }, { x: 56, y: 68.8 }, { x: 50, y: 66.3 }],
+      // Moxi hugs the left fence line → camp yard centre
+      Moxi: [{ x: 35, y: 74 }, { x: 40, y: 71.5 }, { x: 45, y: 69 }, { x: 49, y: 66.8 }],
     },
     work: {
       // Oz works near the container gate end
       Oz: [{ x: 44, y: 63.5 }, { x: 44.5, y: 60.5 }],
+      // Moxi roots through the scrap by the fence
+      Moxi: [{ x: 41, y: 65 }, { x: 40, y: 62 }],
       // Brix works the tool rack end of the yard
       Brix: [{ x: 65, y: 68.5 }, { x: 66.5, y: 65.5 }, { x: 67, y: 63 }],
       // Lowkey observes from the yard below the watchtower light
@@ -219,8 +239,8 @@ export const ZONES: Record<ZoneId, Zone> = {
 
 export const ZONE_LIST: Zone[] = [ZONES.sanctuary, ZONES.ruins, ZONES.caves, ZONES.cronk, ZONES.shelton];
 
-export const HOME = (z: Zone, agent: Agent) => z.paths[agent][0]!;
-export const toMeet = (z: Zone, agent: Agent) => z.paths[agent].slice(1);
-export const toHome = (z: Zone, agent: Agent) => z.paths[agent].slice(0, -1).reverse();
-export const trailPoints = (z: Zone, agent: Agent) =>
+export const HOME = (z: Zone, agent: CrewAgent) => z.paths[agent][0]!;
+export const toMeet = (z: Zone, agent: CrewAgent) => z.paths[agent].slice(1);
+export const toHome = (z: Zone, agent: CrewAgent) => z.paths[agent].slice(0, -1).reverse();
+export const trailPoints = (z: Zone, agent: CrewAgent) =>
   [...(z.work[agent] ?? []).slice().reverse(), ...z.paths[agent]].map(p => `${p.x},${p.y}`).join(" ");
