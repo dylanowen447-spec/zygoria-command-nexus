@@ -18,7 +18,8 @@ import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
-import { EMPTY_STORY, MOXI_SPOT_AFTER, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
+import { EMPTY_STORY, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
+const MP3_AFTER = 120;
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
@@ -582,16 +583,56 @@ function CommandCentre() {
       log("Oz", "New route discovered — Survivor Caves. Something is still active beyond the Sanctuary.");
     }
   }
-  // Real time in the Sanctuary (after the opening) counts toward Lowkey spotting movement; saved so reloads don't reset it.
+  /** Chapter 5: Oz brings his scavenged MP3 player to Brix, who repairs it; Oz sparks the battery and music plays. */
+  async function mp3Scene() {
+    const run = ++runId.current;
+    setPhase("working");
+    commitStory({ beats: [...storyRef.current.beats, "mp3-start"] });
+    const say = async (a: Agent, t: string) => { setBubble({ agent: a, text: t }); log(a, t); await wait(Math.min(6000, Math.max(3200, 1800 + t.length * 45))); setBubble(null); await wait(900); return run === runId.current; };
+    if (!await say("Oz", "Hang on. Found this in the city rubble. Been carrying it the whole way.")) return;
+    const spot = beside("Brix");
+    outing.current = ["Oz"];
+    await walk("Oz", [...routeNodes(coords.current.sanctuary.Oz, spot), spot], "central", run);
+    if (run !== runId.current) return;
+    const bx = coords.current.sanctuary.Brix.x, ox = coords.current.sanctuary.Oz.x;
+    setFacing(p => ({ ...p, Oz: bx < ox ? "left" : "right", Brix: bx < ox ? "right" : "left" }));
+    if (!await say("Oz", "Brix! Think you can wake it up?")) return;
+    if (!await say("Brix", "Cracked case. Corroded board. Give it here.")) return;
+    setActing("sanc-workbench");
+    log("Brix", "Tinkering at the workbench…");
+    await wait(2600); if (run !== runId.current) return;
+    if (!await say("Brix", "Board's fixed. Battery's stone dead though.")) return;
+    setActing(null);
+    if (!await say("Oz", "Leave the battery to me. Just a tiny jolt…")) return;
+    setScannerEvent(true); await wait(1200); setScannerEvent(false);
+    setRadioKick(k => k + 1);
+    if (!await say("Oz", "It works! Actual music!")) return;
+    if (!await say("Brix", "Told you. Good as new.")) return;
+    if (!await say("Lowkey", "…Better than silence.")) return;
+    commitStory({ beats: [...storyRef.current.beats, "mp3"] });
+    const home = HOME(ZONES.sanctuary, "Oz");
+    await walk("Oz", [...routeNodes(coords.current.sanctuary.Oz, home), home], "home", run);
+    spots.current.sanctuary.Oz = "home";
+    outing.current = [];
+    if (run !== runId.current) return;
+    await wait(2500);
+    // The music draws something out of the trees — straight into Moxi's discovery.
+    if (run === runId.current && !storyRef.current.beats.includes("spotted")) await playBeat(SANCTUARY_SIGNAL.beats[0]!, run);
+    if (run === runId.current) setPhase("idle");
+  }
+  // Real time in the Sanctuary (after the opening) counts toward the Chapter 5 MP3 scene; saved so reloads don't reset it.
   useEffect(() => {
-    if (prologue !== "off" || zoneId !== "sanctuary" || storyRef.current.beats.includes("spotted")) return;
+    const b = storyRef.current.beats;
+    if (prologue !== "off" || zoneId !== "sanctuary" || b.includes("spotted")) return;
     const id = setInterval(() => {
-      if (document.hidden || storyRef.current.beats.includes("spotted")) return;
+      const beats = storyRef.current.beats;
+      if (document.hidden || beats.includes("spotted")) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= MOXI_SPOT_AFTER && phaseRef.current === "idle" && !visiting.current && !ozAway.current) {
+      if (t >= MP3_AFTER && phaseRef.current === "idle" && !visiting.current && !ozAway.current) {
         clearInterval(id);
-        void playBeat(SANCTUARY_SIGNAL.beats[0]!, runId.current);
+        if (beats.includes("mp3")) void playBeat(SANCTUARY_SIGNAL.beats[0]!, runId.current);
+        else void mp3Scene();
       }
     }, 5000);
     return () => clearInterval(id);
@@ -656,7 +697,7 @@ function CommandCentre() {
         setBubble({ agent: z, text: "…" });
         let reply: string;
         try {
-          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: vn ? `The voice from the sky is called ${vn}; occasionally call them by name. Reply conversationally in one or two short sentences.` : "Reply conversationally in one or two short sentences." } });
+          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: (storyRef.current.beats.includes("mp3") ? "UNLOCKED (Chapter 5 happened): Oz found a scratched MP3 player in the ruins, Brix repaired the board, Oz sparked the battery and it now plays music through his headphones. " : "") + (vn ? `The voice from the sky is called ${vn}; occasionally call them by name. ` : "") + "Reply conversationally in one or two short sentences." } });
           reply = out.result.replace(/\s+/g, " ").trim().slice(0, 220);
         } catch { reply = z === "Oz" ? "Lost my train of thought. Again?" : z === "Brix" ? "Didn't catch that." : "Hm."; }
         if (run !== runId.current) return;
@@ -909,6 +950,7 @@ function CommandCentre() {
     setPositions({ Oz: "home", Brix: "home", Lowkey: "home" });
     setWalking([]);
   }
+  const sancChapter = story.beats.includes("trust") ? ["CHAPTER 06", "MOXI"] : story.beats.includes("mp3-start") ? ["CHAPTER 05", "OZ'S MP3"] : ["CHAPTER 04", "FINDING HOME"];
   return <div className="command-app">
     <header className="command-header">
       <div className="brand-lockup"><div className="brand-mark"><Hexagon size={25} strokeWidth={1.5}/><span>Z</span></div><div className="brand-copy"><div className="brand-title">ZYGORIA<span className="brand-tm">™</span></div><div className="brand-subtitle"><span className="brand-subtitle-rule"/>FIRST GENESIS<span className="brand-subtitle-rule"/></div></div></div>
@@ -916,8 +958,8 @@ function CommandCentre() {
     </header>
     <main className="command-layout">
       <div className="world-column">
-        <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> {prologue === "off" ? "LIVE WORLD FEED" : "FIRST GENESIS"} <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {prologue === "on" ? <>{scene.chapter.split(" · ")[0]} <span> / </span> {scene.chapter.split(" · ")[1]}</> : prologue === "walk" ? <>CHAPTER 03 <span> / </span> THE LONG WALK</> : <>{zone.indexA} <span> / </span> {zone.indexB}</>}</div></div>
-        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter.split(" · ")[0] : prologue === "walk" ? "CHAPTER 03" : canon.stage}</span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
+        <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> {prologue === "off" ? "LIVE WORLD FEED" : "FIRST GENESIS"} <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {prologue === "on" ? <>{scene.chapter.split(" · ")[0]} <span> / </span> {scene.chapter.split(" · ")[1]}</> : prologue === "walk" ? <>CHAPTER 03 <span> / </span> THE LONG WALK</> : zoneId === "sanctuary" ? <>{sancChapter[0]} <span> / </span> {sancChapter[1]}</> : <>{zone.indexA} <span> / </span> {zone.indexB}</>}</div></div>
+        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter.split(" · ")[0] : prologue === "walk" ? "CHAPTER 03" : zoneId === "sanctuary" ? sancChapter[0] : canon.stage}</span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
           {prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="Chapter 3, The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">CHAPTER 03 · THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="Chapter 03"><span className="prologue-card-eyebrow">CHAPTER 03 · THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river — Chapter 04 ›</button></div></div> : <div onClick={onWorldClick} className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""} ${zone.id === "sanctuary" ? "is-clickable" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
