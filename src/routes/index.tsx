@@ -18,7 +18,8 @@ import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
-import { EMPTY_STORY, MOXI_SPOT_AFTER, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
+import { EMPTY_STORY, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
+const MP3_AFTER = 120;
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
@@ -582,16 +583,56 @@ function CommandCentre() {
       log("Oz", "New route discovered — Survivor Caves. Something is still active beyond the Sanctuary.");
     }
   }
-  // Real time in the Sanctuary (after the opening) counts toward Lowkey spotting movement; saved so reloads don't reset it.
+  /** Chapter 5: Oz brings his scavenged MP3 player to Brix, who repairs it; Oz sparks the battery and music plays. */
+  async function mp3Scene() {
+    const run = ++runId.current;
+    setPhase("working");
+    commitStory({ beats: [...storyRef.current.beats, "mp3-start"] });
+    const say = async (a: Agent, t: string) => { setBubble({ agent: a, text: t }); log(a, t); await wait(Math.min(6000, Math.max(3200, 1800 + t.length * 45))); setBubble(null); await wait(900); return run === runId.current; };
+    if (!await say("Oz", "Hang on. Found this in the city rubble. Been carrying it the whole way.")) return;
+    const spot = beside("Brix");
+    outing.current = ["Oz"];
+    await walk("Oz", [...routeNodes(coords.current.sanctuary.Oz, spot), spot], "central", run);
+    if (run !== runId.current) return;
+    const bx = coords.current.sanctuary.Brix.x, ox = coords.current.sanctuary.Oz.x;
+    setFacing(p => ({ ...p, Oz: bx < ox ? "left" : "right", Brix: bx < ox ? "right" : "left" }));
+    if (!await say("Oz", "Brix! Think you can wake it up?")) return;
+    if (!await say("Brix", "Cracked case. Corroded board. Give it here.")) return;
+    setActing("sanc-workbench");
+    log("Brix", "Tinkering at the workbench…");
+    await wait(2600); if (run !== runId.current) return;
+    if (!await say("Brix", "Board's fixed. Battery's stone dead though.")) return;
+    setActing(null);
+    if (!await say("Oz", "Leave the battery to me. Just a tiny jolt…")) return;
+    setScannerEvent(true); await wait(1200); setScannerEvent(false);
+    setRadioKick(k => k + 1);
+    if (!await say("Oz", "It works! Actual music!")) return;
+    if (!await say("Brix", "Told you. Good as new.")) return;
+    if (!await say("Lowkey", "…Better than silence.")) return;
+    commitStory({ beats: [...storyRef.current.beats, "mp3"] });
+    const home = HOME(ZONES.sanctuary, "Oz");
+    await walk("Oz", [...routeNodes(coords.current.sanctuary.Oz, home), home], "home", run);
+    spots.current.sanctuary.Oz = "home";
+    outing.current = [];
+    if (run !== runId.current) return;
+    await wait(2500);
+    // The music draws something out of the trees — straight into Moxi's discovery.
+    if (run === runId.current && !storyRef.current.beats.includes("spotted")) await playBeat(SANCTUARY_SIGNAL.beats[0]!, run);
+    if (run === runId.current) setPhase("idle");
+  }
+  // Real time in the Sanctuary (after the opening) counts toward the Chapter 5 MP3 scene; saved so reloads don't reset it.
   useEffect(() => {
-    if (prologue !== "off" || zoneId !== "sanctuary" || storyRef.current.beats.includes("spotted")) return;
+    const b = storyRef.current.beats;
+    if (prologue !== "off" || zoneId !== "sanctuary" || b.includes("spotted")) return;
     const id = setInterval(() => {
-      if (document.hidden || storyRef.current.beats.includes("spotted")) return;
+      const beats = storyRef.current.beats;
+      if (document.hidden || beats.includes("spotted")) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= MOXI_SPOT_AFTER && phaseRef.current === "idle" && !visiting.current && !ozAway.current) {
+      if (t >= MP3_AFTER && phaseRef.current === "idle" && !visiting.current && !ozAway.current) {
         clearInterval(id);
-        void playBeat(SANCTUARY_SIGNAL.beats[0]!, runId.current);
+        if (beats.includes("mp3")) void playBeat(SANCTUARY_SIGNAL.beats[0]!, runId.current);
+        else void mp3Scene();
       }
     }, 5000);
     return () => clearInterval(id);
