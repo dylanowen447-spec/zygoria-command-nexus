@@ -1,3 +1,4 @@
+import { StartCover } from "@/components/StartCover";
 import { BuildInterlude } from "@/components/BuildInterlude";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
@@ -1055,7 +1056,7 @@ function CommandCentre() {
   /** Moxi becomes a full crew agent once the trust scene has played. */
   const moxiJoined = story.beats.includes("trust");
   const crew = moxiJoined ? [...agents, MOXI_AGENT] : agents;
-  return <div className="command-app">
+  return <div className="command-app"><StartCover/>
     <header className="command-header">
       <div className="brand-lockup"><div className="brand-mark"><Hexagon size={25} strokeWidth={1.5}/><span>Z</span></div><div className="brand-copy"><div className="brand-title">ZYGORIA<span className="brand-tm">™</span></div><div className="brand-subtitle"><span className="brand-subtitle-rule"/>FIRST GENESIS<span className="brand-subtitle-rule"/></div></div></div>
       <div className="header-right"><ShackRadio trigger={radioKick}/><div className="live-indicator"><span className="live-dot"/> WORLD ONLINE</div><div className="header-divider"/><div className="header-coordinate"><Signal size={14}/> 47° N / 09° E</div><div className="header-avatar">Z</div></div>
