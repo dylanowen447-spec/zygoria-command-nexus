@@ -103,6 +103,7 @@ function CommandCentre() {
   const [world, setWorld] = useState<WorldState>(EMPTY_WORLD);
   const worldRef = useRef<WorldState>(EMPTY_WORLD);
   const [acting, setActing] = useState<string | null>(null);
+  const [mp3Task, setMp3Task] = useState<null | "broke" | "fixed">(null);
   const [changed, setChanged] = useState<string | null>(null);
   const [prologue, setPrologue] = useState<"off" | "on" | "walk">("off");
   const [prologueStep, setPrologueStep] = useState(0);
@@ -599,6 +600,7 @@ function CommandCentre() {
     if (!await say("Oz", "Brix! Think you can wake it up?")) return;
     if (!await say("Brix", "Cracked case. Corroded board. Give it here.")) return;
     setActing("sanc-workbench");
+    setMp3Task("broke");
     log("Brix", "Tinkering at the workbench…");
     await wait(2600); if (run !== runId.current) return;
     if (!await say("Brix", "Board's fixed. Battery's stone dead though.")) return;
@@ -606,9 +608,13 @@ function CommandCentre() {
     if (!await say("Oz", "Leave the battery to me. Just a tiny jolt…")) return;
     setScannerEvent(true); await wait(1200); setScannerEvent(false);
     setRadioKick(k => k + 1);
+    setMp3Task("fixed");
     if (!await say("Oz", "It works! Actual music!")) return;
+    if (!await say("Oz", "Whoa. I feel… more alive. More jolted. Locked in.")) return;
+    if (!await say("Oz", "That power feels GOOD.")) return;
     if (!await say("Brix", "Told you. Good as new.")) return;
     if (!await say("Lowkey", "…Better than silence.")) return;
+    setMp3Task(null);
     commitStory({ beats: [...storyRef.current.beats, "mp3"] });
     const home = HOME(ZONES.sanctuary, "Oz");
     await walk("Oz", [...routeNodes(coords.current.sanctuary.Oz, home), home], "home", run);
@@ -982,6 +988,7 @@ function CommandCentre() {
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/></svg>
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%` }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
+            {mp3Task && zoneId === "sanctuary" && (() => { const p = objectPoint(WORLD_OBJECTS.find(o => o.id === "sanc-workbench")!); return <div className={`world-object wo-brix mp3-task ${mp3Task === "fixed" ? "is-max" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }}><span className="wo-ring"/><span className="wo-label">MP3 PLAYER · {mp3Task === "fixed" ? "FIXED" : "BROKE"}</span></div>; })()}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
              {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => onAgentClick(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
               <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>

@@ -498,3 +498,7 @@
 .marker-brix.is-walking .sheet-frames{animation:ozWalk .66s steps(4,end) infinite!important}
 .marker-brix.is-walking .sheet-shadow{animation:cycleShadow .66s ease-in-out infinite}
 .world-image-wrap .marker-brix.facing-left .sprite-stage{scale:-1 1}
+
+/* Chapter 5 MP3 task label: always visible while the repair scene plays; red while broke, green once fixed. */
+.world-object.mp3-task .wo-label{opacity:1;bottom:26px;border-color:oklch(0.65 0.2 25);color:oklch(0.75 0.18 25)}
+.world-object.mp3-task.is-max .wo-label{border-color:var(--green);color:var(--green)}
