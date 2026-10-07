@@ -30,6 +30,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const [walking, setWalking] = useState<Agent[]>([]);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "right", Lowkey: "left" });
   const [ozDir, setOzDir] = useState<"down" | "left" | "right" | "up">("down");
+  const [brixDir, setBrixDir] = useState<"down" | "left" | "right" | "up">("down");
   const [bubbles, setBubbles] = useState<Partial<Record<Agent, string>>>({});
   const [found, setFound] = useState<string[]>([]);
   const [done, setDone] = useState(false);
@@ -68,7 +69,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       if (!pts.length) return resolve();
       const face = (t: Point) => {
         const o = coords.current[a], dx = t.x - o.x, dy = t.y - o.y;
-        if (a === "Oz" && (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3)) setOzDir(Math.abs(dy) > Math.abs(dx) * 0.7 ? (dy < 0 ? "up" : "down") : (dx < 0 ? "left" : "right"));
+        if ((a === "Oz" || a === "Brix") && (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3)) { const d = Math.abs(dy) > Math.abs(dx) * 0.7 ? (dy < 0 ? "up" : "down") : (dx < 0 ? "left" : "right"); if (a === "Oz") setOzDir(d); else setBrixDir(d); }
         if (Math.abs(dx) >= 0.3) setFacing(f => ({ ...f, [a]: dx < 0 ? "left" : "right" }));
       };
       let seg = 0, last = performance.now();
@@ -336,7 +337,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     <div className="map-coordinate top-right">{scene.chapter}</div>
     <div className="world-stage">
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${walking.includes(a) ? "is-walking" : ""}`}>
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""}`}>
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>
