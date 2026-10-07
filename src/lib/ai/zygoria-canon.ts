@@ -25,6 +25,8 @@ export const ZYGORIA_CANON_ENTRIES: { date: string; notes: string }[] = [
   { date: "2026-10-06", notes: survivorsUnderground },
   // Chapters 5-8 are hidden future canon: true, but never revealed until the story state unlocks them.
   { date: "2026-10-07", notes: chaptersFiveToEight },
+  // Moxi's own memory and personality rules: child memories only, never a lore dump, her parents' fate is never established.
+  { date: "2026-10-07", notes: moxiAgentMemory },
 ];
 
 export function canonPrompt() {
