@@ -701,7 +701,7 @@ function CommandCentre() {
       // Once something has been spotted, a cookout becomes the trust offering (fail-safe: no need to ask "what?" first).
       const trust = SANCTUARY_SIGNAL.beats.find(b => b.id === "trust")!;
       if (run === runId.current && storyRef.current.beats.includes("spotted") && !storyRef.current.beats.includes("trust")) {
-        if (!storyRef.current.beats.includes("hiding")) commitStory("hiding");
+        if (!storyRef.current.beats.includes("hiding")) commitStory({ ...storyRef.current, beats: [...storyRef.current.beats, "hiding"] });
         await playBeat(trust, run);
       }
       if (run === runId.current) setPhase("idle");
