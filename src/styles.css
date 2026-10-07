@@ -135,9 +135,12 @@
 @keyframes ozDirectionalWalk{0%,100%{background-position-x:16.6667%}16.66%{background-position-x:33.3333%}33.33%{background-position-x:50%}50%{background-position-x:66.6667%}66.66%{background-position-x:83.3333%}83.33%{background-position-x:100%}}
 .sheet-lowkey{width:66px;height:70px;transform:translateX(-50%) scale(.86);transform-origin:center bottom}.sheet-lowkey .sheet-shadow{opacity:.45}
 @media(max-width:600px){.sheet-lowkey{width:50px;height:54px}}
+/* Lowkey stands 10% smaller on desktop; phone size and her feet anchor stay put. */
+@media(min-width:901px){.sheet-lowkey{transform:translateX(-50%) scale(.774)}}
 
 .sheet-brix{width:51px;height:73px;bottom:-4px;transform:translateX(-50%) scale(1.12);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
-@media(max-width:600px){.sheet-brix{width:61px;height:88px;bottom:-3px}}
+/* On phones Brix is 30% smaller; desktop size and his feet anchor stay put. */
+@media(max-width:600px){.sheet-brix{width:61px;height:88px;bottom:-3px;transform:translateX(-50%) scale(.784)}}
 /* Brix's supplied directional sheet: seven columns (rest + six strides) and four rows (front, left, right, back), same layout as Oz. */
 .marker-brix .sheet-frames{background-size:700% 400%;background-position:0 0}
 .marker-brix.is-walking.brix-facing-left .sheet-frames{background-position:0 33.3333%}
