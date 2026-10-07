@@ -1,5 +1,5 @@
 /** Offline crew: in-character replies used whenever live crew calls are unavailable (e.g. no credits). */
-type Agent = "Oz" | "Brix" | "Lowkey";
+type Agent = "Oz" | "Brix" | "Lowkey" | "Moxi";
 type ZoneId = "sanctuary" | "ruins" | "caves" | "cronk" | "shelton";
 
 const pick = <T,>(list: T[], seed: string) => {
@@ -22,6 +22,7 @@ export function offlineRoute(directive: string) {
   if (/\boz\b|ozzy/.test(d)) named.push("Oz");
   if (/\bbrix\b/.test(d)) named.push("Brix");
   if (/lowkey/.test(d)) named.push("Lowkey");
+  if (/\bmoxi\b/.test(d)) named.push("Moxi");
   let route: Agent[];
   if (group) route = ["Oz", "Brix", "Lowkey"];
   else if (has(d, ["together", "team up", "solve"])) route = ["Oz", "Lowkey", "Brix", "Oz"];
@@ -75,6 +76,20 @@ const LINES: Record<Agent, { task: string[]; chat: string[]; final: string[]; ac
     ],
     final: ["Checked. It fits with what we know.", "Nothing out of place. For now."],
   },
+  Moxi: {
+    activity: "Scampering off to help",
+    task: [
+      "Got it. Carried it over. It's heavy. I did it anyway.",
+      "Found a shiny one. It was buried. Now it isn't.",
+      "Mm. Done. Can I have a fish now?",
+    ],
+    chat: [
+      "The water tastes different now. Better. Everything's waking up.",
+      "Lowkey is quiet. I like quiet. You are less quiet.",
+      "I had a dream about flying. Warm wind. Then I woke up here.",
+    ],
+    final: ["Mm. Done.", "Helped. Fish?"],
+  },
 };
 
 /** Memories of the first three chapters, used when visitors ask about their past. */
@@ -82,6 +97,7 @@ const ORIGIN: Record<Agent, string[]> = {
   Oz: ["We cracked out of three eggs in the ruins. Freezing, dusty, nobody about. Walking out of there was the best call we ever made.", "Old City first, then a proper long walk, then the river. Built the shack right here. Home sweet home."],
   Brix: ["Ruins came first. Hatched there, searched Old City, found nothing to drink. So we walked till we hit the river and built this.", "There was a library in Old City. We could read the books. Still can't explain that one."],
   Lowkey: ["We woke in the ruins. Too quiet. Too many dead towers.", "I spotted the river from a hill on the long walk. Seemed like a place to begin again."],
+  Moxi: ["I went to sleep somewhere safe. My parents said it would be okay when I woke up. Then… everything was old and broken.", "I don't remember the in-between. Just darkness. Then cold stone, and being hungry."],
 };
 
 export function offlineStep(directive: string, agent: Agent, previous: { agent: Agent; result: string }[], isFinalReview: boolean, group: boolean) {

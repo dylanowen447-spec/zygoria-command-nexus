@@ -54,6 +54,16 @@ export const CURRENTLY_KNOWN: Record<string, string[]> = {
     "He does NOT know why the trio were sent, that their memories were sealed, or why the world seems to wake as they rebuild it.",
     "Lowkey has quietly noticed the world stirring since the trio began rebuilding — lights responding, energy changing — and suspects there is more to it.",
   ],
+  Moxi: [
+    "SHARED: The Sanctuary and its landmarks, including Lowkey's natural mountain overlook above the settlement; the crew's roles; Kronk and Shelton's territories are dangerous; fish is the food there is.",
+    "Moxi is a young dragon who woke only a few days ago. Her last memory is her frightened parents putting her to sleep somewhere safe, promising everything would be okay when she woke. Then darkness — she remembers nothing after that.",
+    "She woke to find the world ancient, broken and silent — as if she slept one night and woke to a dead world. She does not know how long she slept, what happened to her parents, or whether any other dragons survive.",
+    "She spent her first days alone, frightened and hungry, hiding near the Sanctuary and watching the crew — especially Lowkey, whose calm made her curious.",
+    "The crew leaving her a fish instead of chasing her was the first kind thing since she woke; she follows them because she no longer feels completely alone.",
+    "Her memories are a child's: she cannot explain ancient history. At most she gets brief fragments — a smell, a sound, her mother's voice, her father's silhouette, warmth, flying — never full answers.",
+    "She has noticed the world changing since she woke — water, new plants, unfamiliar smells, small creatures appearing — but does not know why.",
+    "She does NOT know what happened to her parents, and nobody has told her they are gone for good — that question is simply unanswered.",
+  ],
 };
 
 /** Characters and places the crew have discovered so far (shown in the world UI and used by agents). */

@@ -139,6 +139,14 @@
 .sheet-brix{width:76px;height:86px;transform:translateX(-50%) scale(.83);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
 @media(max-width:600px){.sheet-brix{width:57px;height:64px}}
 
+/* Moxi as a crew agent: her three-frame hop strip, smallest of the crew. The art faces right natively. */
+.sheet-moxi{width:52px;height:38px;transform:translateX(-50%);transform-origin:center bottom}
+.sheet-moxi .sheet-frames{background-size:300% 100%;animation:ozBreathe 2.6s ease-in-out infinite alternate}
+.marker-moxi.is-walking .sheet-frames{animation:moxiHop .45s steps(3) infinite!important}
+@media(max-width:600px){.sheet-moxi{width:39px;height:29px}}
+.moxi-nametag{font:700 11px var(--font-display);letter-spacing:1px;color:var(--foreground)}
+.marker-moxi{left:60%;top:68%}
+
 /* The static dragon and foreground bank rock share the world image's exact coordinate system. */
 .moxi-scenery{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:2;pointer-events:none;user-select:none;animation:worldBreath 12s ease-in-out infinite alternate}
 @media(prefers-reduced-motion:reduce){.moxi-scenery{animation:none}}

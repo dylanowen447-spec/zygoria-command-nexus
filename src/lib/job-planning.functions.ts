@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
-type Agent = "Oz" | "Brix" | "Lowkey";
-const isAgent = (a: unknown): a is Agent => a === "Oz" || a === "Brix" || a === "Lowkey";
+type Agent = "Oz" | "Brix" | "Lowkey" | "Moxi";
+const isAgent = (a: unknown): a is Agent => a === "Oz" || a === "Brix" || a === "Lowkey" || a === "Moxi";
 export const getCanonState = createServerFn({ method: "GET" }).handler(async () => {
   const { STORY_STAGE, UNLOCKED_ZONES, CODEX_PAGES } = await import("./ai/canon-state.server.ts");
   return { stage: STORY_STAGE.number, stageLabel: STORY_STAGE.label, stageSummary: STORY_STAGE.summary, unlockedZones: UNLOCKED_ZONES, codexPages: CODEX_PAGES };

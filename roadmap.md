@@ -47,3 +47,8 @@
 
 - [x] Moxi discovery easier: broader word matches + crew hints toward each next step
 - [x] Cookout: fire not starting / no speech bubble (phone)
+
+## Moxi as a crew agent
+- [x] Moxi joins the crew roster after the trust beat: zone paths, work spots, world objects, task routing, AI voice, crew panel, cookout seat, idle visits
+- [x] Moxi agent memory canon note (2026-10-07): child memories only, fragments not lore dumps, parents' fate never established
+- [ ] User to test: give Moxi a job ("Moxi, fetch a fish") after she joins

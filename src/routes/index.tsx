@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { ShackRadio } from "@/components/ShackRadio";
 import { chooseJobRoute, getCanonState, runCrewStep } from "@/lib/job-planning.functions";
-import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type Agent, type Point, type ZoneId } from "@/lib/zones";
+import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type CrewAgent, type Point, type ZoneId } from "@/lib/zones";
 import { findGroupPlan, findUserCommand, GROUP_OFFSETS } from "@/lib/group-plans";
 import ozPortrait from "@/assets/oz-portrait.webp.asset.json";
 import ozCrewIcon from "@/assets/oz-crew-icon.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
-import { MoxiResident, MOXI_LINES } from "@/components/MoxiResident";
 import moxiUnderTree from "@/assets/moxi-under-tree.webp.asset.json";
+import moxiPortrait from "@/assets/moxi-sanctuary.webp.asset.json";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
@@ -28,6 +28,8 @@ import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 
+/** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
+type Agent = CrewAgent;
 const TASK_STAGES = ["TASK RECEIVED", "ASSIGNED", "MOVING TO SITE", "PERFORMING ACTION", "WORLD CHANGED", "PASSING ON", "COMPLETE"];
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
 type Stop = "home" | "central";
@@ -39,6 +41,8 @@ const agents: { name: Agent; role: string; place: string; image: string; icon: t
   { name: "Brix", role: "Builder / technical", place: "Workshop / garage", image: brixPortrait.url, icon: Wrench },
   { name: "Lowkey", role: "Lore / research", place: "The wilds", image: lowkeyPortrait.url, icon: Crosshair },
 ];
+/** Moxi joins the roster only after the crew earn her trust. */
+const MOXI_AGENT = { name: "Moxi" as Agent, role: "Helper / fetcher", place: "The evergreen", image: moxiPortrait.url, icon: Activity };
 const startLogs: Log[] = [
   { id: 1, agent: "Oz", text: "Command link established.", time: "SYSTEM" },
   { id: 2, agent: "Brix", text: "Systems rebooting.", time: "SYSTEM" },
@@ -52,7 +56,7 @@ const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZON
 const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 /** Where each sprite's hand sits relative to its feet, in px (facing right). */
-const HAND: Record<Agent, { x: number; y: number }> = { Oz: { x: 8, y: -14 }, Lowkey: { x: 9, y: -16 }, Brix: { x: 12, y: -19 } };
+const HAND: Record<Agent, { x: number; y: number }> = { Oz: { x: 8, y: -14 }, Lowkey: { x: 9, y: -16 }, Brix: { x: 12, y: -19 }, Moxi: { x: 7, y: -8 } };
 
 /** Short in-character exchanges for idle visits: [visitor line, host reply]. */
 const IDLE_CHATS: Record<string, [string, string][]> = {
@@ -62,6 +66,12 @@ const IDLE_CHATS: Record<string, [string, string][]> = {
   "Lowkey>Brix": [["Something's humming under the ruins.", "Humming how? Electrical or creepy?"], ["Your workshop glows from the ridge.", "That'll be the bad wiring."], ["The moon looked different tonight.", "The moon doesn't change, Lowkey. ...Does it?"]],
   "Oz>Lowkey": [["Made it to the top! Barely. Why's it so high?", "It's a mountain."], ["What are you looking at?", "Everything."], ["Bet I can see my shack from here.", "You can. You left the lamp on."]],
   "Brix>Lowkey": [["Climbed all this way to check the view's still working.", "It is."], ["Anything out there I should worry about?", "Not yet."], ["Wind's strong. You'll want a windbreak up here.", "I like the wind."]],
+  "Oz>Moxi": [["Alright, Moxi? What you got there?", "Shiny. Mine now."], ["Race you to the pier!", "…You will lose."]],
+  "Brix>Moxi": [["You've been sleeping on my bench again.", "It's warm."], ["Don't eat the bolts, Moxi.", "…They were shiny."]],
+  "Lowkey>Moxi": [["Quiet spot, this.", "Mm. Yours is quieter. Up top."], ["You following me, little one?", "…Maybe."]],
+  "Moxi>Oz": [["Your music is loud.", "That's the point!"], ["Fish?", "Just ate, Moxi. …Fine, one."]],
+  "Moxi>Brix": [["Your hammer is too loud.", "It gets the job done."], ["I watched you fix things. You break them first.", "That's… called repair."]],
+  "Moxi>Lowkey": [["You see me. You always see me.", "Hard to miss a dragon."], ["The stars moved. That one should be there.", "…I'll keep an eye on it."]],
 };
 
 export const Route = createFileRoute("/")({
@@ -85,9 +95,9 @@ function CommandCentre() {
   const [selected, setSelected] = useState<Agent | null>(null);
   const [phase, setPhase] = useState<"idle" | "planning" | "routing" | "handoff" | "working">("idle");
   const [planningError, setPlanningError] = useState("");
-  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home" });
+  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
   const [walking, setWalking] = useState<Agent[]>([]);
-  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left" });
+  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left", Moxi: "left" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const frames = useRef<number[]>([]);
   const runId = useRef(0);
@@ -95,7 +105,7 @@ function CommandCentre() {
   const zoneRef = useRef<ZoneId>("sanctuary");
   zoneRef.current = zoneId;
   const zone = ZONES[zoneId];
-  const coords = useRef<Record<ZoneId, Record<Agent, Point>>>(Object.fromEntries(ZONE_LIST.map(z => [z.id, { Oz: { ...HOME(z, "Oz") }, Brix: { ...HOME(z, "Brix") }, Lowkey: { ...HOME(z, "Lowkey") } }])) as Record<ZoneId, Record<Agent, Point>>);
+  const coords = useRef<Record<ZoneId, Record<Agent, Point>>>(Object.fromEntries(ZONE_LIST.map(z => [z.id, { Oz: { ...HOME(z, "Oz") }, Brix: { ...HOME(z, "Brix") }, Lowkey: { ...HOME(z, "Lowkey") }, Moxi: { ...HOME(z, "Moxi") } }])) as Record<ZoneId, Record<Agent, Point>>);
   const markerRefs = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const [current, setCurrent] = useState<Agent | null>(null);
   const [finishedId, setFinishedId] = useState<number | null>(null);
@@ -141,7 +151,7 @@ function CommandCentre() {
   const assigned = active && active.state !== "Complete" ? current : null;
   // Only the task owner is active: walking = Working (travelling), stationary = Thinking pose; everyone else is Idle.
   const statusFor = (a: Agent): Status => phase === "planning" && a === "Oz" ? "Thinking" : current === a && phase !== "idle" ? walking.includes(a) ? "Working" : "Thinking" : "Idle";
-  const statuses: Record<Agent, Status> = { Oz: statusFor("Oz"), Brix: statusFor("Brix"), Lowkey: statusFor("Lowkey") };
+  const statuses: Record<Agent, Status> = { Oz: statusFor("Oz"), Brix: statusFor("Brix"), Lowkey: statusFor("Lowkey"), Moxi: statusFor("Moxi") };
   useEffect(() => () => { runId.current++; timers.current.forEach(clearTimeout); frames.current.forEach(cancelAnimationFrame); }, []);
   const markerStyle = (agent: Agent) => ({ left: `${coords.current[zoneId][agent].x}%`, top: `${coords.current[zoneId][agent].y}%`, "--depth": depthFor(coords.current[zoneId][agent].y), zIndex: 10 + Math.round(coords.current[zoneId][agent].y * 10), "--z": 10 + Math.round(coords.current[zoneId][agent].y * 10) }) as CSSProperties;
   const edgeCls = (agent: Agent) => `${coords.current[zoneId][agent].y < (typeof window !== "undefined" && window.innerWidth <= 600 ? 55 : 34) ? "near-top" : ""} ${coords.current[zoneId][agent].x > 62 ? "near-right" : ""} ${coords.current[zoneId][agent].x < 38 ? "near-left" : ""}`;
@@ -213,7 +223,7 @@ function CommandCentre() {
   }
   const setMission = (id: number, patch: (m: Mission) => Partial<Mission>) => setMissions(prev => prev.map(m => m.id === id ? { ...m, ...patch(m) } : m));
   type Spot = "home" | "central" | "work";
-  const spots = useRef<Record<ZoneId, Record<Agent, Spot>>>(Object.fromEntries(ZONE_LIST.map(z => [z.id, { Oz: "home", Brix: "home", Lowkey: "home" }])) as Record<ZoneId, Record<Agent, Spot>>);
+  const spots = useRef<Record<ZoneId, Record<Agent, Spot>>>(Object.fromEntries(ZONE_LIST.map(z => [z.id, { Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" }])) as Record<ZoneId, Record<Agent, Spot>>);
   function pathBetween(agent: Agent, from: Spot, to: Spot): Point[] {
     const z = ZONES[zoneRef.current];
     const work = z.work[agent];
@@ -393,7 +403,7 @@ function CommandCentre() {
     const done: Step[] = [];
     if (missionZone !== "sanctuary") {
       setZoneId(missionZone);
-      setPositions({ Oz: "home", Brix: "home", Lowkey: "home" });
+      setPositions({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
       await wait(700);
       if (run !== runId.current) return;
     }
@@ -431,7 +441,7 @@ function CommandCentre() {
     setFinishedId(id);
     const changes = done.filter(s => s.change).length;
     log(done.at(-1)?.agent ?? "Oz", `Directive complete — ${changes} world change${changes === 1 ? "" : "s"} made. ${missionZone === "sanctuary" ? "Standing by." : "Heading back to the Sanctuary."}`);
-    await Promise.all((["Oz", "Brix", "Lowkey"] as Agent[]).map(a => goTo(a, "home", run)));
+    await Promise.all((["Oz", "Brix", "Lowkey", "Moxi"] as Agent[]).map(a => goTo(a, "home", run)));
     if (missionZone !== "sanctuary") setZoneId("sanctuary");
     setTimeout(() => setFinishedId(prev => prev === id ? null : prev), 2500);
     if (missionZone === "sanctuary" && run === runId.current) {
@@ -502,8 +512,9 @@ function CommandCentre() {
   const [fishSize, setFishSize] = useState<"small" | "medium" | "large">("small");
   async function cookout(run: number) {
     const z = ZONES.sanctuary;
-    const all: Agent[] = ["Oz", "Brix", "Lowkey"];
-    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x - 3, y: FIRE_PIT.y - 4 } };
+    const moxiIn = storyRef.current.beats.includes("trust");
+    const all: Agent[] = moxiIn ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
+    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x - 3, y: FIRE_PIT.y - 4 }, Moxi: { x: FIRE_PIT.x + 4, y: FIRE_PIT.y + 4 } };
     const paths = Object.fromEntries(all.map(a => [a, [...toMeet(z, a), seat[a]]])) as Record<Agent, Point[]>;
     outing.current = all;
     const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(Math.min(6000, Math.max(ms, 3200, 1800 + text.length * 45))); setBubble(null); await wait(1000); return run === runId.current; };
@@ -536,6 +547,7 @@ function CommandCentre() {
     if (!await say("Brix", "Turn them, Oz. That one's going black.", 2000)) return;
     if (!await say("Oz", "Crispy is a flavour.", 1800)) return;
     if (!await say("Lowkey", "Not bad.", 1600)) return;
+    if (moxiIn && !await say("Moxi", "Mm. Fish.", 1400)) return;
     setFire("embers");
     // Short post-meal chat before everyone drifts home.
     const afters: [Agent, string][][] = [
@@ -560,7 +572,6 @@ function CommandCentre() {
   const pendingBeat = useRef<StoryBeat | null>(null);
   const storyNote = useRef("");
   const [scannerEvent, setScannerEvent] = useState(false);
-  const [moxiSay, setMoxiSay] = useState<{ id: number; text: string } | null>(null);
   useEffect(() => {
     try { const saved = JSON.parse(localStorage.getItem(STORY_KEY) ?? "null"); if (saved && Array.isArray(saved.beats)) { storyRef.current = saved; setStory(saved); } } catch { /* optional */ }
   }, []);
@@ -573,8 +584,7 @@ function CommandCentre() {
       // Moxi steps out first so she can take part in the conversation.
       commitStory({ beats: [...storyRef.current.beats, beat.id] });
       for (const [who, text] of MOXI_SCENE) {
-        if (who === "Moxi") { setBubble(null); setMoxiSay({ id: Date.now(), text }); log("Lowkey", `Moxi: ${text}`); }
-        else { setBubble({ agent: who, text }); log(who, text); }
+        setBubble({ agent: who, text }); log(who, text);
         await wait(Math.min(5000, Math.max(3000, 1600 + text.length * 40))); if (run !== runId.current) return;
       }
       setBubble(null);
@@ -669,10 +679,6 @@ function CommandCentre() {
     await ozHome();
     cancelVisit();
     setPlanningError("");
-    if (zoneRef.current === "sanctuary" && storyRef.current.beats.includes("trust") && /\bmoxi\b/i.test(text)) {
-      setDraft(""); const line = MOXI_LINES[Math.floor(Math.random() * MOXI_LINES.length)]!;
-      setMoxiSay({ id: Date.now(), text: line }); log("Lowkey", `Moxi: ${line}`); return;
-    }
     const order = zoneRef.current === "sanctuary" ? findUserCommand(text) : null;
     if (zoneRef.current === "sanctuary" && /\b(cook\w*|grill\w*|fish\w*|bbq|barbe?cue|food|hungry|starving|dinner|supper|lunch|breakfast|meal|feed|eat\w*|campfire|fire ?pit|light (a|the) fire|start (a|the) fire)\b/i.test(text)) {
       setDraft("");
@@ -703,7 +709,7 @@ function CommandCentre() {
       setDraft("");
       setPhase("working");
       const run = runId.current;
-      const all: Agent[] = ["Oz", "Brix", "Lowkey"];
+      const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
       const named = all.filter(a => new RegExp(`\\b${a.toLowerCase()}\\b`).test(lower));
       const everyone = /\b(everyone|everybody|all|lads|crew|guys|you lot|team)\b/.test(lower);
       const speakers = named.length ? named : everyone ? all : ["Oz" as Agent];
@@ -767,7 +773,7 @@ function CommandCentre() {
       runId.current++;
       for (const a of back) { coords.current.sanctuary[a] = { ...HOME(ZONES.sanctuary, a) }; spots.current.sanctuary[a] = "home"; paint(a); }
       setWalking([]);
-      setPositions({ Oz: "home", Brix: "home", Lowkey: "home" });
+      setPositions({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
     }
     if (!v) return;
     runId.current++;
@@ -866,8 +872,9 @@ function CommandCentre() {
     const obj = WORLD_OBJECTS.find(o => o.zone === "sanctuary" && distance(objectPoint(o), p) < 4);
     setClickMark({ id: Date.now(), ...p });
     if (obj) { const lvl = worldRef.current.levels[obj.id] ?? 0; void ozTo(objectPoint(obj), false, run => chatAt(run, [["Oz", `${obj.name}. ${obj.states[lvl]}. Noted.`]])); return; }
-    // Clicking near Brix's workshop or Lowkey's lookout sends Oz over for a visit.
-    const host = (["Brix", "Lowkey"] as Agent[]).find(a => distance(HOME(ZONES.sanctuary, a), p) < 7);
+    // Clicking near Brix's workshop, Lowkey's lookout or Moxi's grass spot sends Oz over for a visit.
+    const hosts: Agent[] = storyRef.current.beats.includes("trust") ? ["Brix", "Lowkey", "Moxi"] : ["Brix", "Lowkey"];
+    const host = hosts.find(a => distance(HOME(ZONES.sanctuary, a), p) < 7);
     if (host) { void ozTo(beside(host), true, run => chatAt(run, visitLines(host))); return; }
     void ozTo(p, true);
   }
@@ -925,10 +932,10 @@ function CommandCentre() {
       while (alive) {
         await wait(14000 + Math.random() * 12000);
         if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || outing.current.length || ozAway.current) continue;
-        const z = ZONES.sanctuary, all: Agent[] = ["Oz", "Brix", "Lowkey"];
-        const v = all[Math.floor(Math.random() * 3)]!;
+        const z = ZONES.sanctuary, all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
+        const v = all[Math.floor(Math.random() * all.length)]!;
         const others = all.filter(a => a !== v);
-        const h = others[Math.floor(Math.random() * 2)]!;
+        const h = others[Math.floor(Math.random() * others.length)]!;
         const run = runId.current;
         visiting.current = v;
         const there = [...toMeet(z, v), ...toHome(z, h).slice(0, -2)];
@@ -964,10 +971,13 @@ function CommandCentre() {
   function selectZone(z: ZoneId) {
     if (phase !== "idle" || z === zoneId) return;
     setZoneId(z);
-    setPositions({ Oz: "home", Brix: "home", Lowkey: "home" });
+    setPositions({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
     setWalking([]);
   }
   const sancChapter = story.beats.includes("trust") ? ["MOXI"] : story.beats.includes("mp3-start") ? ["OZ'S MP3"] : ["FINDING HOME"];
+  /** Moxi becomes a full crew agent once the trust scene has played. */
+  const moxiJoined = story.beats.includes("trust");
+  const crew = moxiJoined ? [...agents, MOXI_AGENT] : agents;
   return <div className="command-app">
     <header className="command-header">
       <div className="brand-lockup"><div className="brand-mark"><Hexagon size={25} strokeWidth={1.5}/><span>Z</span></div><div className="brand-copy"><div className="brand-title">ZYGORIA<span className="brand-tm">™</span></div><div className="brand-subtitle"><span className="brand-subtitle-rule"/>FIRST GENESIS<span className="brand-subtitle-rule"/></div></div></div>
@@ -989,34 +999,33 @@ function CommandCentre() {
               <div className="location-tag lookout-tag"><span className="location-line"/> LOOKOUT</div>
               <div className="scene-atmosphere" aria-hidden="true"><span className="river-light"/><span className="workshop-light"/></div>
               <div className="scene-depth" aria-hidden="true"><span className="depth-haze"/><span className="depth-ridge-shade"/><span className="depth-pool pool-shack"/><span className="depth-pool pool-workshop"/><span className="depth-pool pool-pods"/><span className="depth-pool pool-lookout"/><span className="depth-pool pool-bridge"/><span className="depth-river"/><span className="depth-fore"/></div>
-              {story.beats.includes("trust") && <MoxiResident say={moxiSay}/>}
               {story.beats.includes("hiding") && !story.beats.includes("trust") && <img className="moxi-scenery" src={moxiUnderTree.url} alt="Moxi, a tiny dragon peeking over rocks beneath the evergreen near Brix's workshop" draggable={false} />}
               <div className="location-tag central-tag"><span className="location-line"/> CROSSROADS</div>
             </>}
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
-            <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/></svg>
+            <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/>{moxiJoined && <polyline points={trailPoints(zone, "Moxi")}/>}</svg>
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%` }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
             {mp3Task && zoneId === "sanctuary" && (() => { const p = objectPoint(WORLD_OBJECTS.find(o => o.id === "sanc-workbench")!); return <div className={`world-object wo-brix mp3-task ${mp3Task === "fixed" ? "is-max" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }}><span className="wo-ring"/><span className="wo-label">MP3 PLAYER · {mp3Task === "fixed" ? "FIXED" : "BROKE"}</span></div>; })()}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
-             {agents.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => onAgentClick(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
-              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
+             {crew.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => onAgentClick(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
+              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : agent.name === "Moxi" ? <span className="moxi-nametag">MOXI</span> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
             </Button>)}
             </div>
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>}
           <WelcomeGuide onAsk={text => { if (phase === "idle") { setDraft(text); void dispatchDirective(text); } }} />
-          <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>3 AGENTS CONNECTED <span className="footer-cross">✦</span> {prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : "1 SANCTUARY"}</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>
+          <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>{crew.length} AGENTS CONNECTED <span className="footer-cross">✦</span> {prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : "1 SANCTUARY"}</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>
         </div>
         <form className="mission-form" onSubmit={submit}><div className="form-title"><span><Terminal size={16}/> NEW DIRECTIVE</span><span className="form-counter">{phase === "idle" ? "READY FOR INPUT" : phase === "planning" ? "SELECTING CREW" : "MISSION IN PROGRESS"}</span></div><div className="form-row"><span className="prompt-chevron">›</span><input aria-label="Enter a job for the crew" placeholder={prologue === "on" ? "Talk to the crew, or send them somewhere…" : "What needs doing around Zygoria?"} value={draft} onChange={e => setDraft(e.target.value)} maxLength={180} disabled={phase !== "idle"}/><Button className="dispatch-button" type="submit" disabled={!draft.trim() || phase !== "idle"}>{phase === "planning" ? "CHOOSING" : "DISPATCH"} <Send size={14}/></Button></div>{planningError && <p className="planning-error" role="alert">{planningError}</p>}<div className="form-foot"><span>DIRECTIVES ARE ROUTED THROUGH OZ</span><span>↵ TO SEND</span></div></form>
-        <div className="roster-heading"><div className="section-label"><span className="section-symbol">✦</span> THE CREW <span className="label-count">/ 03</span></div><span className="roster-hint">SELECT AN AGENT TO INSPECT <ArrowDownRight size={14}/></span></div>
-        <div className="crew-grid">{agents.map(agent => { const Icon = agent.icon; return <Button key={agent.name} variant="ghost" type="button" onClick={() => setSelected(agent.name)} className={`crew-item ${selected === agent.name ? "selected" : ""}`}><span className="crew-portrait"><img src={agent.image} alt="" /></span><span className="crew-info"><span className="crew-name">{agent.name} <Icon size={13}/></span><span className="crew-role">{agent.role}</span><span className="crew-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]} <span>· {prologue === "off" ? agent.place : "Exploring"}</span></span></span><ChevronRight className="crew-arrow" size={16}/></Button> })}</div>
+        <div className="roster-heading"><div className="section-label"><span className="section-symbol">✦</span> THE CREW <span className="label-count">/ {String(crew.length).padStart(2, "0")}</span></div><span className="roster-hint">SELECT AN AGENT TO INSPECT <ArrowDownRight size={14}/></span></div>
+        <div className="crew-grid">{crew.map(agent => { const Icon = agent.icon; return <Button key={agent.name} variant="ghost" type="button" onClick={() => setSelected(agent.name)} className={`crew-item ${selected === agent.name ? "selected" : ""}`}><span className="crew-portrait"><img src={agent.image} alt="" /></span><span className="crew-info"><span className="crew-name">{agent.name} <Icon size={13}/></span><span className="crew-role">{agent.role}</span><span className="crew-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]} <span>· {prologue === "off" ? agent.place : "Exploring"}</span></span></span><ChevronRight className="crew-arrow" size={16}/></Button> })}</div>
       </div>
       <aside className="intel-panel"><div className="intel-top"><div className="intel-heading"><span><Activity size={17}/> MISSION CONTROL</span><span className="panel-id">PANEL_01</span></div><div className="intel-subhead">REAL-TIME OPERATIONAL OVERVIEW</div><FieldCodex pages={codexPages} logs={codexLogs} visited={visitedZones} currentZone={zoneId} recorded={codexRecorded} stage={prologue === "off" ? 3 : prologue === "walk" ? 2 : Math.max(0, (parseInt(scene.chapter.replace(/\D+/, ""), 10) || 1) - 1)}/></div>
-        <section className="intel-section current-section"><div className="panel-section-heading"><span><span className="section-square"/> CURRENT DIRECTIVE</span><span className="section-number">01 / 03</span></div>{active && (active.state !== "Complete" || finishedId === active.id) ? <div className={`current-task ${active.state === "Complete" ? "is-complete" : ""}`}><div className="task-status-line"><span className="task-state">{active.state === "Complete" ? <Check size={12}/> : <span className="live-dot"/>}{active.state.toUpperCase()}</span><span>#{String(active.id).slice(-4)}</span></div><p>{active.text}</p><div className="assigned-row"><span>{active.state === "Complete" ? "COMPLETED BY" : "ASSIGNED TO"}</span><span className="assigned-agent"><img src={agents.find(a => a.name === (assigned ?? active.agent))?.image ?? ozPortrait.url} alt=""/>{assigned ?? active.agent}{active.state === "Complete" ? <Check size={12}/> : <ArrowRight size={12}/>}</span></div><div className="assignment-reason"><strong>ROUTE · {active.route.map((a, i) => i < active.steps.length ? `${a.toUpperCase()} ✓` : i === active.steps.length && active.state !== "Complete" ? `[${a.toUpperCase()}]` : a.toUpperCase()).join(" → ")}</strong><span>{active.reason} · ZONE: {ZONES[active.zone].short}</span></div><div className="task-progress stages-7">{TASK_STAGES.map((s, i) => <span key={s} className={i <= (active.state === "Complete" ? 6 : taskStage) ? "lit" : ""}/>)}</div><div className="progress-labels stage-now"><span>STAGE {(active.state === "Complete" ? 6 : taskStage) + 1}/7</span><span>{TASK_STAGES[active.state === "Complete" ? 6 : taskStage]}</span></div>{active.steps.filter(st => st.change).map((st, i) => <div className="world-change-line" key={i}>✦ {st.change!.name.toUpperCase()} · {st.change!.from} → {st.change!.to}</div>)}</div> : <div className="empty-directive"><div className="empty-orbit"><Command size={25}/></div><strong>{phase === "planning" ? "CHOOSING CREW" : "AWAITING DIRECTIVE"}</strong><span>{phase === "planning" ? "Oz is reviewing the job." : "The crew is standing by."}</span><div className="empty-line"/></div>}</section>
-        {prologue === "off" && <section className="intel-section"><div className="panel-section-heading"><span><span className="section-square"/> WORLD STATE · {zone.short}</span><span className="section-number">{WORLD_OBJECTS.filter(o => o.zone === zoneId && (world.levels[o.id] ?? 0) > 0).length}/3</span></div><div className="world-state-list">{WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-state-row level-${lvl}`}><span>{o.name}<small>{o.agent.toUpperCase()}</small></span><b>{o.states[lvl]}</b></div>; })}</div></section>}
+        <section className="intel-section current-section"><div className="panel-section-heading"><span><span className="section-square"/> CURRENT DIRECTIVE</span><span className="section-number">01 / 03</span></div>{active && (active.state !== "Complete" || finishedId === active.id) ? <div className={`current-task ${active.state === "Complete" ? "is-complete" : ""}`}><div className="task-status-line"><span className="task-state">{active.state === "Complete" ? <Check size={12}/> : <span className="live-dot"/>}{active.state.toUpperCase()}</span><span>#{String(active.id).slice(-4)}</span></div><p>{active.text}</p><div className="assigned-row"><span>{active.state === "Complete" ? "COMPLETED BY" : "ASSIGNED TO"}</span><span className="assigned-agent"><img src={crew.find(a => a.name === (assigned ?? active.agent))?.image ?? ozPortrait.url} alt=""/>{assigned ?? active.agent}{active.state === "Complete" ? <Check size={12}/> : <ArrowRight size={12}/>}</span></div><div className="assignment-reason"><strong>ROUTE · {active.route.map((a, i) => i < active.steps.length ? `${a.toUpperCase()} ✓` : i === active.steps.length && active.state !== "Complete" ? `[${a.toUpperCase()}]` : a.toUpperCase()).join(" → ")}</strong><span>{active.reason} · ZONE: {ZONES[active.zone].short}</span></div><div className="task-progress stages-7">{TASK_STAGES.map((s, i) => <span key={s} className={i <= (active.state === "Complete" ? 6 : taskStage) ? "lit" : ""}/>)}</div><div className="progress-labels stage-now"><span>STAGE {(active.state === "Complete" ? 6 : taskStage) + 1}/7</span><span>{TASK_STAGES[active.state === "Complete" ? 6 : taskStage]}</span></div>{active.steps.filter(st => st.change).map((st, i) => <div className="world-change-line" key={i}>✦ {st.change!.name.toUpperCase()} · {st.change!.from} → {st.change!.to}</div>)}</div> : <div className="empty-directive"><div className="empty-orbit"><Command size={25}/></div><strong>{phase === "planning" ? "CHOOSING CREW" : "AWAITING DIRECTIVE"}</strong><span>{phase === "planning" ? "Oz is reviewing the job." : "The crew is standing by."}</span><div className="empty-line"/></div>}</section>
+        {prologue === "off" && <section className="intel-section"><div className="panel-section-heading"><span><span className="section-square"/> WORLD STATE · {zone.short}</span><span className="section-number">{WORLD_OBJECTS.filter(o => o.zone === zoneId && (world.levels[o.id] ?? 0) > 0).length}/{WORLD_OBJECTS.filter(o => o.zone === zoneId).length}</span></div><div className="world-state-list">{WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-state-row level-${lvl}`}><span>{o.name}<small>{o.agent.toUpperCase()}</small></span><b>{o.states[lvl]}</b></div>; })}</div></section>}
         <section className="intel-section"><div className="panel-section-heading"><span><span className="section-square"/> TASK HISTORY</span><span className="section-number">{String(missions.length).padStart(2,"0")}</span></div>{missions.length ? <div className="history-list">{missions.map(m => <div className="history-item" key={m.id}><span className={`history-icon ${m.state === "Complete" ? "done" : ""}`}>{m.state === "Complete" ? <Check size={13}/> : <ArrowRight size={13}/>}</span><div><strong>{m.text}</strong><small>{m.route.join(" → ")} · {ZONES[m.zone].short} · {m.time}</small><small>{m.reason}</small>{m.error && <small className="planning-error">{m.error}</small>}{m.steps.slice(0, m.done).map((st, i) => <div className="task-result" key={i}><b>{st.agent.toUpperCase()} · {i > 0 && i === m.steps.length - 1 && st.agent === "Oz" && m.state === "Complete" ? "FINAL REVIEW" : st.verdict === "conflict" ? "CANON CONFLICT" : "RESULT"}</b>{st.change && <small className="world-change-line">✦ {st.change.name} · {st.change.from} → {st.change.to}{st.change.discovery ? " · CODEX UPDATED" : ""}</small>}<p>{st.result}</p></div>)}</div><span className="history-state">{m.state === "Complete" ? "DONE" : m.state === "Routing" ? "ROUTING" : m.state === "Handoff" ? "HANDOFF" : "ACTIVE"}</span></div>)}</div> : <div className="empty-list">NO MISSIONS LOGGED YET <span>— 00</span></div>}</section>
         <section className="intel-section activity-section"><div className="panel-section-heading"><span><span className="section-square"/> ACTIVITY LOG</span><Radio size={13} className="radio-icon"/></div><div className="activity-list">{logs.slice(0, 6).map(entry => <div className="activity-item" key={entry.id}><span className="activity-node"/><div><span className="activity-agent">{entry.agent}</span><span className="activity-text">{entry.text}</span><small>{entry.time}</small></div></div>)}</div></section>
         <div className="intel-bottom"><Cpu size={15}/> ZYGORIA SYSTEMS <span>AI ROUTING LIVE</span></div>

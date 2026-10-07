@@ -1,4 +1,4 @@
-import type { Agent } from "@/lib/zones";
+import type { Agent, CrewAgent } from "@/lib/zones";
 
 /** Split into sentences without lookbehind — older Safari (pre-16.4 iPads) fails to even parse (?<=…). */
 function sentences(text: string): string[] {
@@ -32,13 +32,13 @@ const PROPOSAL = /\b(let'?s|lets|we('ll| should| could| go| head)|come on|follow
 const EVERYONE = /\b(all|everyone|lads|together|us three|the three of us|you lot|both of you)\b/i;
 
 /** Finds the plan the Zigs themselves proposed in their replies, if the Sanctuary can represent it. */
-export function findGroupPlan(lines: { agent: Agent; text: string }[], speakers: Agent[]): { place: PlanPlace; who: Agent[]; proposer: Agent } | null {
+export function findGroupPlan(lines: { agent: CrewAgent; text: string }[], speakers: CrewAgent[]): { place: PlanPlace; who: CrewAgent[]; proposer: CrewAgent } | null {
   for (const { agent, text } of lines) {
     for (const sentence of sentences(text)) {
       if (!PROPOSAL.test(sentence)) continue;
       const hit = PLACES.find(p => p.match.test(sentence));
       if (!hit) continue;
-      const who: Agent[] = EVERYONE.test(sentence) ? ["Oz", "Brix", "Lowkey"] : [...new Set<Agent>([agent, ...speakers])];
+      const who: CrewAgent[] = EVERYONE.test(sentence) ? ["Oz", "Brix", "Lowkey"] : [...new Set<CrewAgent>([agent, ...speakers])];
       return { place: hit.place, who, proposer: agent };
     }
   }
@@ -47,13 +47,13 @@ export function findGroupPlan(lines: { agent: Agent; text: string }[], speakers:
 
 /** A visitor's direct order ("everyone head to the lookout", "Oz and Brix go to the shack"). */
 const ORDER = /\b(go|head|walk|meet|gather|assemble|move|get|come|run|hike|climb|take)\b/i;
-export function findUserCommand(directive: string): { place: PlanPlace; who: Agent[]; proposer: Agent } | null {
+export function findUserCommand(directive: string): { place: PlanPlace; who: CrewAgent[]; proposer: CrewAgent } | null {
   for (const sentence of sentences(directive)) {
     if (!ORDER.test(sentence) && !PROPOSAL.test(sentence)) continue;
     const hit = PLACES.find(p => p.match.test(sentence));
     if (!hit) continue;
-    const named = (["Oz", "Brix", "Lowkey"] as Agent[]).filter(a => new RegExp(`\\b${a}\\b`, "i").test(sentence));
-    const who: Agent[] = named.length && !EVERYONE.test(sentence) ? named : ["Oz", "Brix", "Lowkey"];
+    const named = (["Oz", "Brix", "Lowkey", "Moxi"] as CrewAgent[]).filter(a => new RegExp(`\\b${a}\\b`, "i").test(sentence));
+    const who: CrewAgent[] = named.length && !EVERYONE.test(sentence) ? named : ["Oz", "Brix", "Lowkey"];
     return { place: hit.place, who, proposer: hit.place.owner && who.includes(hit.place.owner) ? hit.place.owner : who[0]! };
   }
   return null;
