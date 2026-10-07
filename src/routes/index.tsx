@@ -95,9 +95,9 @@ function CommandCentre() {
   const [selected, setSelected] = useState<Agent | null>(null);
   const [phase, setPhase] = useState<"idle" | "planning" | "routing" | "handoff" | "working">("idle");
   const [planningError, setPlanningError] = useState("");
-  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home" });
+  const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
   const [walking, setWalking] = useState<Agent[]>([]);
-  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left" });
+  const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left", Moxi: "left" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const frames = useRef<number[]>([]);
   const runId = useRef(0);
@@ -105,7 +105,7 @@ function CommandCentre() {
   const zoneRef = useRef<ZoneId>("sanctuary");
   zoneRef.current = zoneId;
   const zone = ZONES[zoneId];
-  const coords = useRef<Record<ZoneId, Record<Agent, Point>>>(Object.fromEntries(ZONE_LIST.map(z => [z.id, { Oz: { ...HOME(z, "Oz") }, Brix: { ...HOME(z, "Brix") }, Lowkey: { ...HOME(z, "Lowkey") } }])) as Record<ZoneId, Record<Agent, Point>>);
+  const coords = useRef<Record<ZoneId, Record<Agent, Point>>>(Object.fromEntries(ZONE_LIST.map(z => [z.id, { Oz: { ...HOME(z, "Oz") }, Brix: { ...HOME(z, "Brix") }, Lowkey: { ...HOME(z, "Lowkey") }, Moxi: { ...HOME(z, "Moxi") } }])) as Record<ZoneId, Record<Agent, Point>>);
   const markerRefs = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const [current, setCurrent] = useState<Agent | null>(null);
   const [finishedId, setFinishedId] = useState<number | null>(null);
@@ -151,7 +151,7 @@ function CommandCentre() {
   const assigned = active && active.state !== "Complete" ? current : null;
   // Only the task owner is active: walking = Working (travelling), stationary = Thinking pose; everyone else is Idle.
   const statusFor = (a: Agent): Status => phase === "planning" && a === "Oz" ? "Thinking" : current === a && phase !== "idle" ? walking.includes(a) ? "Working" : "Thinking" : "Idle";
-  const statuses: Record<Agent, Status> = { Oz: statusFor("Oz"), Brix: statusFor("Brix"), Lowkey: statusFor("Lowkey") };
+  const statuses: Record<Agent, Status> = { Oz: statusFor("Oz"), Brix: statusFor("Brix"), Lowkey: statusFor("Lowkey"), Moxi: statusFor("Moxi") };
   useEffect(() => () => { runId.current++; timers.current.forEach(clearTimeout); frames.current.forEach(cancelAnimationFrame); }, []);
   const markerStyle = (agent: Agent) => ({ left: `${coords.current[zoneId][agent].x}%`, top: `${coords.current[zoneId][agent].y}%`, "--depth": depthFor(coords.current[zoneId][agent].y), zIndex: 10 + Math.round(coords.current[zoneId][agent].y * 10), "--z": 10 + Math.round(coords.current[zoneId][agent].y * 10) }) as CSSProperties;
   const edgeCls = (agent: Agent) => `${coords.current[zoneId][agent].y < (typeof window !== "undefined" && window.innerWidth <= 600 ? 55 : 34) ? "near-top" : ""} ${coords.current[zoneId][agent].x > 62 ? "near-right" : ""} ${coords.current[zoneId][agent].x < 38 ? "near-left" : ""}`;
@@ -223,7 +223,7 @@ function CommandCentre() {
   }
   const setMission = (id: number, patch: (m: Mission) => Partial<Mission>) => setMissions(prev => prev.map(m => m.id === id ? { ...m, ...patch(m) } : m));
   type Spot = "home" | "central" | "work";
-  const spots = useRef<Record<ZoneId, Record<Agent, Spot>>>(Object.fromEntries(ZONE_LIST.map(z => [z.id, { Oz: "home", Brix: "home", Lowkey: "home" }])) as Record<ZoneId, Record<Agent, Spot>>);
+  const spots = useRef<Record<ZoneId, Record<Agent, Spot>>>(Object.fromEntries(ZONE_LIST.map(z => [z.id, { Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" }])) as Record<ZoneId, Record<Agent, Spot>>);
   function pathBetween(agent: Agent, from: Spot, to: Spot): Point[] {
     const z = ZONES[zoneRef.current];
     const work = z.work[agent];
