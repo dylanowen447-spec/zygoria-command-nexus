@@ -960,6 +960,63 @@ function CommandCentre() {
     void loop();
     return () => { alive = false; };
   }, [phase, zoneId, prologue]);
+  // Living camp: between visits, idle Zigs potter off on little chores or mutter to themselves — never during jobs or scenes.
+  const choring = useRef<Agent | null>(null);
+  const bubbleRef = useRef(bubble);
+  bubbleRef.current = bubble;
+  useEffect(() => {
+    if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
+    const z = ZONES.sanctuary;
+    const CHORES: Record<Agent, { path: Point[]; obj?: string; lines: string[] }[]> = {
+      Oz: [
+        { path: [{ x: 29.5, y: 67.5 }, { x: 33, y: 73.5 }], lines: ["Water's calm. Fish are hiding.", "One day I'll catch a big one.", "Pier's still wobbly. Lovely."] },
+        { path: z.paths.Oz.slice(1, 3), obj: "sanc-speakers", lines: ["Bit more bass…", "Testing, testing… perfect.", "That hum? Character."] },
+      ],
+      Brix: [{ path: z.work.Brix ?? [], obj: "sanc-workbench", lines: ["Loose bolt. Always a loose bolt.", "Hold still, you.", "That'll hold. Probably."] }],
+      Lowkey: [{ path: z.paths.Lowkey.slice(1, 4), lines: ["Wind's turning.", "Clouds over the ruins.", "…Something moved. Gone now."] }],
+      Moxi: [{ path: z.work.Moxi ?? [], lines: ["Shiny.", "Bug. Mine.", "Warm spot."] }],
+    };
+    const THOUGHTS: Record<Agent, string[]> = {
+      Oz: ["Could murder a hot pasty right now.", "Anyone else hear that? No? Just me.", "I'm basically the heart of this place."],
+      Brix: ["Need more scrap.", "Who moved my spanner?", "Roof needs patching before rain."],
+      Lowkey: ["Air smells like rain off the river.", "Quiet. Good.", "The ridge sees everything."],
+      Moxi: ["Mm.", "Fish later.", "…Sleepy."],
+    };
+    let alive = true;
+    (async () => {
+      await wait(4000);
+      while (alive) {
+        await wait(6000 + Math.random() * 4000);
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || outing.current.length || choring.current) continue;
+        const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
+        const free = all.filter(a => a !== visiting.current && !(a === "Oz" && ozAway.current));
+        const a = free[Math.floor(Math.random() * free.length)];
+        if (!a) continue;
+        const pick = <T,>(l: T[]) => l[Math.floor(Math.random() * l.length)]!;
+        const run = runId.current;
+        if (Math.random() < 0.35) {
+          if (bubbleRef.current) continue;
+          const t = pick(THOUGHTS[a]); setBubble({ agent: a, text: t }); log(a, t);
+          await wait(3200); if (run === runId.current && bubbleRef.current?.text === t) setBubble(null);
+          continue;
+        }
+        const chore = pick(CHORES[a]);
+        if (!chore.path.length) continue;
+        choring.current = a;
+        await walk(a, chore.path, "central", run);
+        if (!alive || run !== runId.current) { choring.current = null; continue; }
+        if (chore.obj) setActing(chore.obj);
+        if (!bubbleRef.current) { const t = pick(chore.lines); setBubble({ agent: a, text: t }); log(a, t); }
+        await wait(3200);
+        if (chore.obj) setActing(o => o === chore.obj ? null : o);
+        setBubble(b => b?.agent === a ? null : b);
+        if (run !== runId.current) { choring.current = null; continue; }
+        await walk(a, [...chore.path.slice(0, -1).reverse(), HOME(z, a)], "home", run);
+        choring.current = null;
+      }
+    })();
+    return () => { alive = false; };
+  }, [phase, zoneId, prologue]);
   const visitedZones = useMemo(() => [...new Set<ZoneId>([zoneId, ...missions.map(m => m.zone)])], [zoneId, missions]);
   const codexPages = useMemo(() => {
     const c = SANCTUARY_SIGNAL.codex, done = chapterDone(SANCTUARY_SIGNAL, story);
