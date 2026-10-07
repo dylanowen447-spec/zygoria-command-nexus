@@ -24,7 +24,7 @@ export function MoxiResident({ say }: { say: { id: number; text: string } | null
   const [left, setLeft] = useState(true);
   const [hidden, setHidden] = useState(false);
   const [bubble, setBubble] = useState<string | null>(null);
-  useEffect(() => { if (!say) return; setHidden(false); setBubble(say.text); const t = setTimeout(() => setBubble(null), 3500); return () => clearTimeout(t); }, [say]);
+  useEffect(() => { if (!say) return; setHidden(false); setBubble(say.text); const t = setTimeout(() => setBubble(null), Math.max(3200, 1600 + say.text.length * 40)); return () => clearTimeout(t); }, [say]);
   useEffect(() => {
     let alive = true, idx = 0, raf = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];

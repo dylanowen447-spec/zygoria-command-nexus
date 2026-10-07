@@ -76,6 +76,44 @@ export const SANCTUARY_SIGNAL: StoryChapter = {
   },
 };
 
+/** The Moxi scene from Dylan's manuscript, played once when she steps out. */
+export const MOXI_SCENE: ["Moxi" | Agent, string][] = [
+  ["Oz", "Hello."],
+  ["Moxi", "*sneezes right in Oz's face*"],
+  ["Oz", "It spat on me."],
+  ["Lowkey", "It sneezed."],
+  ["Oz", "Same result."],
+  ["Moxi", "You are loud."],
+  ["Oz", "It talks."],
+  ["Moxi", "Yes."],
+  ["Brix", "What are you?"],
+  ["Moxi", "I am Moxi."],
+  ["Brix", "Moxi is your name? And what are you?"],
+  ["Moxi", "Moxi."],
+  ["Oz", "I like her."],
+  ["Lowkey", "Dragon."],
+  ["Oz", "You're quite small."],
+  ["Moxi", "You are smaller."],
+  ["Oz", "I meant for a dragon."],
+  ["Brix", "Where did you come from?"],
+  ["Moxi", "Over there."],
+  ["Lowkey", "Before there."],
+  ["Moxi", "I was sleeping. Somewhere dark. Cold stone."],
+  ["Moxi", "I remember my mother. She carried me. Big dragons. They were afraid."],
+  ["Lowkey", "Of what?"],
+  ["Moxi", "I don't know. She said I would wake when it was safe."],
+  ["Brix", "When did you wake up?"],
+  ["Moxi", "Three days."],
+  ["Oz", "Did they come?"],
+  ["Lowkey", "What did you eat?"],
+  ["Moxi", "Fish."],
+  ["Oz", "You can catch fish? She's staying."],
+  ["Moxi", "The stars moved. That one should be there."],
+  ["Oz", "What if you were asleep for a really long time?"],
+  ["Moxi", "My mother said she would come."],
+  ["Oz", "She still might."],
+];
+
 export const STORY_CHAPTERS: StoryChapter[] = [SANCTUARY_SIGNAL];
 export const STORY_KEY = "zygoria-story-v1";
 /** Seconds spent in the Sanctuary after the opening; Lowkey spots movement at MOXI_SPOT_AFTER. */
