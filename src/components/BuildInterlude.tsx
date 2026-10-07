@@ -52,7 +52,7 @@ export function BuildInterlude({ onDone }: { onDone: () => void }) {
   return <div className="world-image-wrap prologue-scene build-interlude">
     <img className="world-image" src={walkImg} width={1520} height={1024} alt="The crew settle on flat green ground by the river" />
     <div className="world-vignette"/>
-    <div className="map-coordinate top-right">CHAPTER 04 · FINDING HOME</div>
+    <div className="map-coordinate top-right">FINDING HOME</div>
     <div className="build-crew">
       {(["Lowkey", "Brix", "Oz"] as Agent[]).map(a => <div key={a} className={`build-zig build-${a.toLowerCase()} ${beat.who === a ? "is-speaking" : ""} ${a !== "Lowkey" && step > 0 && !fade ? "is-working" : ""}`}>
         {beat.who === a && <span className="idle-bubble">{beat.text}</span>}
