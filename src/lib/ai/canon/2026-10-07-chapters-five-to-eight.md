@@ -2,6 +2,8 @@
 
 These chapters are FUTURE story. They are true in the world, but the crew have NOT lived them yet. Treat everything below as hidden future canon: never reveal, reference, hint at or foreshadow any of it until the story state explicitly unlocks it. If a visitor asks about music, people, survivors, Moxi's past or Kronk's swamp, answer in character with what the crew currently know — which is nothing of this.
 
+CHRONOLOGY: Chapter 5 (Oz's MP3) happens BEFORE Moxi is found. The MP3 player is scavenged and repaired while the creature is still only a hidden watcher; Moxi steps out and joins the crew in Chapter 6, after the music. Never imply Moxi was already around when the MP3 player was fixed.
+
 ## Chapter 5 — Oz's MP3
 - Oz scavenged a scratched black MP3 player in the ruins and brings it to Brix's workshop.
 - Brix repairs the circuit board; Oz feeds the battery a measured electric pulse from his own spark. Music plays through Oz's headphones for the first time.
