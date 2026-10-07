@@ -682,14 +682,28 @@ function CommandCentre() {
     cancelVisit();
     setPlanningError("");
     const order = zoneRef.current === "sanctuary" ? findUserCommand(text) : null;
-    if (zoneRef.current === "sanctuary" && /\b(cook\w*|grill\w*|fish\w*|bbq|barbe?cue|food|hungry|starving|dinner|supper|lunch|breakfast|meal|feed|eat\w*|campfire|fire ?pit|light (a|the) fire|start (a|the) fire)\b/i.test(text)) {
+    const cookWords = /\b(cook\w*|grill\w*|fish\w*|bbq|barbe?cue|food|hungry|starving|dinner|supper|lunch|breakfast|meal|feed|eat\w*|campfire|fire ?pit|light (a|the) fire|start (a|the) fire)\b/i;
+    const sb = storyRef.current.beats;
+    // Story first: once Lowkey has spotted something, any non-cooking reply investigates the evergreen.
+    if (zoneRef.current === "sanctuary" && sb.includes("spotted") && !sb.includes("hiding") && !cookWords.test(text)) {
+      setDraft("");
+      setPhase("working");
+      const run = runId.current;
+      await playBeat(SANCTUARY_SIGNAL.beats.find(b => b.id === "hiding")!, run);
+      if (run === runId.current) setPhase("idle");
+      return;
+    }
+    if (zoneRef.current === "sanctuary" && cookWords.test(text)) {
       setDraft("");
       setPhase("working");
       const run = runId.current;
       await cookout(run);
-      // Once the hiding place is known, a cookout becomes the trust offering.
+      // Once something has been spotted, a cookout becomes the trust offering (fail-safe: no need to ask "what?" first).
       const trust = SANCTUARY_SIGNAL.beats.find(b => b.id === "trust")!;
-      if (run === runId.current && storyRef.current.beats.includes("hiding") && !storyRef.current.beats.includes("trust")) await playBeat(trust, run);
+      if (run === runId.current && storyRef.current.beats.includes("spotted") && !storyRef.current.beats.includes("trust")) {
+        if (!storyRef.current.beats.includes("hiding")) commitStory("hiding");
+        await playBeat(trust, run);
+      }
       if (run === runId.current) setPhase("idle");
       return;
     }
