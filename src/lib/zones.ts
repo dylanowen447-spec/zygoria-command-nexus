@@ -36,9 +36,9 @@ export type Zone = {
   /** Landmark tags rendered on the scene. */
   tags: ZoneTag[];
   /** Walkable route for each character, from their spot in this zone to the meeting area. */
-  paths: Record<Agent, Point[]>;
+  paths: Record<CrewAgent, Point[]>;
   /** Work spots reached from the character's own route along open ground. */
-  work: Partial<Record<Agent, Point[]>>;
+  work: Partial<Record<CrewAgent, Point[]>>;
 };
 
 /** Aspect of the Sanctuary artwork; zone artwork is generated at the same ratio. */
