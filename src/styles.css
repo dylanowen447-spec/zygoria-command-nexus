@@ -136,8 +136,17 @@
 .sheet-lowkey{width:66px;height:70px;transform:translateX(-50%) scale(.86);transform-origin:center bottom}.sheet-lowkey .sheet-shadow{opacity:.45}
 @media(max-width:600px){.sheet-lowkey{width:50px;height:54px}}
 
-.sheet-brix{width:76px;height:86px;transform:translateX(-50%) scale(.83);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
-@media(max-width:600px){.sheet-brix{width:57px;height:64px}}
+.sheet-brix{width:71px;height:82px;bottom:-4px;transform:translateX(-50%) scale(.83);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
+@media(max-width:600px){.sheet-brix{width:53px;height:61px;bottom:-3px}}
+/* Brix's supplied directional sheet: seven columns (rest + six strides) and four rows (front, left, right, back), same layout as Oz. */
+.marker-brix .sheet-frames{background-size:700% 400%;background-position:0 0}
+.marker-brix.is-walking.brix-facing-left .sheet-frames{background-position:0 33.3333%}
+.marker-brix.is-walking.brix-facing-right .sheet-frames{background-position:0 66.6667%}
+.marker-brix.is-walking.brix-facing-up .sheet-frames{background-position:0 100%}
+.marker-brix:not(.is-walking) .sheet-frames{background-position:0 0}
+.world-image-wrap .marker-brix.is-walking.facing-left .sprite-stage{scale:1 1}
+.marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .66s step-end infinite,ozBounce .33s ease-in-out infinite alternate!important}
+@keyframes brixDirectionalWalk{0%,100%{background-position-x:16.6667%}16.66%{background-position-x:33.3333%}33.33%{background-position-x:50%}50%{background-position-x:66.6667%}66.66%{background-position-x:83.3333%}83.33%{background-position-x:100%}}
 
 /* Moxi as a crew agent: her three-frame hop strip, smallest of the crew. The art faces right natively. */
 .sheet-moxi{width:52px;height:38px;transform:translateX(-50%);transform-origin:center bottom}

@@ -1,5 +1,5 @@
 import ozSheet from "@/assets/oz-directions.webp.asset.json";
-import brixSheet from "@/assets/brix-sheet.webp.asset.json";
+import brixSheet from "@/assets/brix-directions.png.asset.json";
 import lowkeySheet from "@/assets/lowkey-sheet.webp.asset.json";
 import moxiSheet from "@/assets/moxi-walk.png.asset.json";
 
