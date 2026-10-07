@@ -103,6 +103,7 @@ function CommandCentre() {
   const [world, setWorld] = useState<WorldState>(EMPTY_WORLD);
   const worldRef = useRef<WorldState>(EMPTY_WORLD);
   const [acting, setActing] = useState<string | null>(null);
+  const [mp3Task, setMp3Task] = useState<null | "broke" | "fixed">(null);
   const [changed, setChanged] = useState<string | null>(null);
   const [prologue, setPrologue] = useState<"off" | "on" | "walk">("off");
   const [prologueStep, setPrologueStep] = useState(0);
