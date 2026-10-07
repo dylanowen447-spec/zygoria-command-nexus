@@ -773,7 +773,7 @@ function CommandCentre() {
       runId.current++;
       for (const a of back) { coords.current.sanctuary[a] = { ...HOME(ZONES.sanctuary, a) }; spots.current.sanctuary[a] = "home"; paint(a); }
       setWalking([]);
-      setPositions({ Oz: "home", Brix: "home", Lowkey: "home" });
+      setPositions({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
     }
     if (!v) return;
     runId.current++;
@@ -872,8 +872,9 @@ function CommandCentre() {
     const obj = WORLD_OBJECTS.find(o => o.zone === "sanctuary" && distance(objectPoint(o), p) < 4);
     setClickMark({ id: Date.now(), ...p });
     if (obj) { const lvl = worldRef.current.levels[obj.id] ?? 0; void ozTo(objectPoint(obj), false, run => chatAt(run, [["Oz", `${obj.name}. ${obj.states[lvl]}. Noted.`]])); return; }
-    // Clicking near Brix's workshop or Lowkey's lookout sends Oz over for a visit.
-    const host = (["Brix", "Lowkey"] as Agent[]).find(a => distance(HOME(ZONES.sanctuary, a), p) < 7);
+    // Clicking near Brix's workshop, Lowkey's lookout or Moxi's grass spot sends Oz over for a visit.
+    const hosts: Agent[] = storyRef.current.beats.includes("trust") ? ["Brix", "Lowkey", "Moxi"] : ["Brix", "Lowkey"];
+    const host = hosts.find(a => distance(HOME(ZONES.sanctuary, a), p) < 7);
     if (host) { void ozTo(beside(host), true, run => chatAt(run, visitLines(host))); return; }
     void ozTo(p, true);
   }
@@ -931,10 +932,10 @@ function CommandCentre() {
       while (alive) {
         await wait(14000 + Math.random() * 12000);
         if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || outing.current.length || ozAway.current) continue;
-        const z = ZONES.sanctuary, all: Agent[] = ["Oz", "Brix", "Lowkey"];
-        const v = all[Math.floor(Math.random() * 3)]!;
+        const z = ZONES.sanctuary, all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
+        const v = all[Math.floor(Math.random() * all.length)]!;
         const others = all.filter(a => a !== v);
-        const h = others[Math.floor(Math.random() * 2)]!;
+        const h = others[Math.floor(Math.random() * others.length)]!;
         const run = runId.current;
         visiting.current = v;
         const there = [...toMeet(z, v), ...toHome(z, h).slice(0, -2)];
@@ -970,7 +971,7 @@ function CommandCentre() {
   function selectZone(z: ZoneId) {
     if (phase !== "idle" || z === zoneId) return;
     setZoneId(z);
-    setPositions({ Oz: "home", Brix: "home", Lowkey: "home" });
+    setPositions({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
     setWalking([]);
   }
   const sancChapter = story.beats.includes("trust") ? ["MOXI"] : story.beats.includes("mp3-start") ? ["OZ'S MP3"] : ["FINDING HOME"];
