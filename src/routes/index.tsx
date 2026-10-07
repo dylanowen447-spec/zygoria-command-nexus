@@ -41,6 +41,8 @@ const agents: { name: Agent; role: string; place: string; image: string; icon: t
   { name: "Brix", role: "Builder / technical", place: "Workshop / garage", image: brixPortrait.url, icon: Wrench },
   { name: "Lowkey", role: "Lore / research", place: "The wilds", image: lowkeyPortrait.url, icon: Crosshair },
 ];
+/** Moxi joins the roster only after the crew earn her trust. */
+const MOXI_AGENT = { name: "Moxi" as Agent, role: "Helper / fetcher", place: "The evergreen", image: moxiPortrait.url, icon: Activity };
 const startLogs: Log[] = [
   { id: 1, agent: "Oz", text: "Command link established.", time: "SYSTEM" },
   { id: 2, agent: "Brix", text: "Systems rebooting.", time: "SYSTEM" },
@@ -54,7 +56,7 @@ const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZON
 const now = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 /** Where each sprite's hand sits relative to its feet, in px (facing right). */
-const HAND: Record<Agent, { x: number; y: number }> = { Oz: { x: 8, y: -14 }, Lowkey: { x: 9, y: -16 }, Brix: { x: 12, y: -19 } };
+const HAND: Record<Agent, { x: number; y: number }> = { Oz: { x: 8, y: -14 }, Lowkey: { x: 9, y: -16 }, Brix: { x: 12, y: -19 }, Moxi: { x: 7, y: -8 } };
 
 /** Short in-character exchanges for idle visits: [visitor line, host reply]. */
 const IDLE_CHATS: Record<string, [string, string][]> = {
@@ -64,6 +66,12 @@ const IDLE_CHATS: Record<string, [string, string][]> = {
   "Lowkey>Brix": [["Something's humming under the ruins.", "Humming how? Electrical or creepy?"], ["Your workshop glows from the ridge.", "That'll be the bad wiring."], ["The moon looked different tonight.", "The moon doesn't change, Lowkey. ...Does it?"]],
   "Oz>Lowkey": [["Made it to the top! Barely. Why's it so high?", "It's a mountain."], ["What are you looking at?", "Everything."], ["Bet I can see my shack from here.", "You can. You left the lamp on."]],
   "Brix>Lowkey": [["Climbed all this way to check the view's still working.", "It is."], ["Anything out there I should worry about?", "Not yet."], ["Wind's strong. You'll want a windbreak up here.", "I like the wind."]],
+  "Oz>Moxi": [["Alright, Moxi? What you got there?", "Shiny. Mine now."], ["Race you to the pier!", "…You will lose."]],
+  "Brix>Moxi": [["You've been sleeping on my bench again.", "It's warm."], ["Don't eat the bolts, Moxi.", "…They were shiny."]],
+  "Lowkey>Moxi": [["Quiet spot, this.", "Mm. Yours is quieter. Up top."], ["You following me, little one?", "…Maybe."]],
+  "Moxi>Oz": [["Your music is loud.", "That's the point!"], ["Fish?", "Just ate, Moxi. …Fine, one."]],
+  "Moxi>Brix": [["Your hammer is too loud.", "It gets the job done."], ["I watched you fix things. You break them first.", "That's… called repair."]],
+  "Moxi>Lowkey": [["You see me. You always see me.", "Hard to miss a dragon."], ["The stars moved. That one should be there.", "…I'll keep an eye on it."]],
 };
 
 export const Route = createFileRoute("/")({
