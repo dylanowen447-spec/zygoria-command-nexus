@@ -68,9 +68,6 @@ export const SANCTUARY_SIGNAL: StoryChapter = {
   ],
   idle: {
     spotted: [{ pair: ["Lowkey", "Oz"], lines: ["Saw something move by the trees.", "Ask him what it was, Voice."] }],
-    dragon: [{ pair: ["Lowkey", "Brix"], lines: ["I know what I saw.", "Then tell us, Voice. What did he see?"] }],
-    told: [{ pair: ["Oz", "Brix"], lines: ["Do dragons leave tracks?", "Only one way to find out. Say the word and we'll search."] }],
-    clues: [{ pair: ["Brix", "Lowkey"], lines: ["Those claw marks are fresh.", "They lead to the trees. We should follow."] }],
     hiding: [{ pair: ["Oz", "Brix"], lines: ["What do dragons eat?", "Fish bones everywhere. Maybe cook it some food."] }],
     trust: [
       { pair: ["Oz", "Lowkey"], lines: ["Moxi stole another fish.", "She's earned it."] },
