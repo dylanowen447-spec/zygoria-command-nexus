@@ -575,6 +575,12 @@ function CommandCentre() {
     }
     setBubble(null);
     commitStory({ beats: [...storyRef.current.beats, beat.id] });
+    if (beat.id === "trust") {
+      setMoxiSay({ id: Date.now(), text: "You are loud" });
+      log("Lowkey", "Moxi: You are loud");
+      await wait(3500);
+      if (run !== runId.current) return;
+    }
     if (beat.id === "fixed") {
       setScannerEvent(true); setActing("sanc-workbench");
       log("Brix", "Workshop lights flicker — the scanner pulses awake.");
