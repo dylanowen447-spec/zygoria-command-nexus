@@ -18,7 +18,7 @@ import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import { FieldCodex } from "@/components/FieldCodex";
-import { EMPTY_STORY, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
+import { EMPTY_STORY, MOXI_SCENE, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 const MP3_AFTER = 120;
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
@@ -569,18 +569,23 @@ function CommandCentre() {
     try { localStorage.setItem(STORY_KEY, JSON.stringify(next)); } catch { /* optional */ }
   }
   async function playBeat(beat: StoryBeat, run: number) {
+    if (beat.id === "trust") {
+      // Moxi steps out first so she can take part in the conversation.
+      commitStory({ beats: [...storyRef.current.beats, beat.id] });
+      for (const [who, text] of MOXI_SCENE) {
+        if (who === "Moxi") { setBubble(null); setMoxiSay({ id: Date.now(), text }); log("Lowkey", `Moxi: ${text}`); }
+        else { setBubble({ agent: who, text }); log(who, text); }
+        await wait(Math.min(5000, Math.max(3000, 1600 + text.length * 40))); if (run !== runId.current) return;
+      }
+      setBubble(null);
+      return;
+    }
     for (const [who, text] of beat.lines) {
       setBubble({ agent: who, text }); log(who, text);
       await wait(3000); if (run !== runId.current) return;
     }
     setBubble(null);
     commitStory({ beats: [...storyRef.current.beats, beat.id] });
-    if (beat.id === "trust") {
-      setMoxiSay({ id: Date.now(), text: "You are loud" });
-      log("Lowkey", "Moxi: You are loud");
-      await wait(3500);
-      if (run !== runId.current) return;
-    }
     if (beat.id === "fixed") {
       setScannerEvent(true); setActing("sanc-workbench");
       log("Brix", "Workshop lights flicker — the scanner pulses awake.");
