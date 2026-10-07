@@ -999,7 +999,7 @@ function CommandCentre() {
         if (Math.random() < 0.35) {
           if (bubbleRef.current) continue;
           const t = pick(THOUGHTS[a]); setBubble({ agent: a, text: t }); log(a, t);
-          await wait(3200); if (run === runId.current && bubbleRef.current?.text === t) setBubble(null);
+          await wait(3200); if (run === runId.current && (bubbleRef.current as { text: string } | null)?.text === t) setBubble(null);
           continue;
         }
         const chore = pick(CHORES[a]);
