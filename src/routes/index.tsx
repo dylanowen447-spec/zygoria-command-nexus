@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { ShackRadio } from "@/components/ShackRadio";
 import { chooseJobRoute, getCanonState, runCrewStep } from "@/lib/job-planning.functions";
-import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type Agent, type Point, type ZoneId } from "@/lib/zones";
+import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type CrewAgent, type Point, type ZoneId } from "@/lib/zones";
 import { findGroupPlan, findUserCommand, GROUP_OFFSETS } from "@/lib/group-plans";
 import ozPortrait from "@/assets/oz-portrait.webp.asset.json";
 import ozCrewIcon from "@/assets/oz-crew-icon.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
-import { MoxiResident, MOXI_LINES } from "@/components/MoxiResident";
 import moxiUnderTree from "@/assets/moxi-under-tree.webp.asset.json";
+import moxiPortrait from "@/assets/moxi-sanctuary.webp.asset.json";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
@@ -28,6 +28,8 @@ import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 
+/** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
+type Agent = CrewAgent;
 const TASK_STAGES = ["TASK RECEIVED", "ASSIGNED", "MOVING TO SITE", "PERFORMING ACTION", "WORLD CHANGED", "PASSING ON", "COMPLETE"];
 type Status = "Idle" | "Thinking" | "Working" | "Waiting";
 type Stop = "home" | "central";
