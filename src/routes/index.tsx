@@ -600,6 +600,7 @@ function CommandCentre() {
     if (!await say("Oz", "Brix! Think you can wake it up?")) return;
     if (!await say("Brix", "Cracked case. Corroded board. Give it here.")) return;
     setActing("sanc-workbench");
+    setMp3Task("broke");
     log("Brix", "Tinkering at the workbench…");
     await wait(2600); if (run !== runId.current) return;
     if (!await say("Brix", "Board's fixed. Battery's stone dead though.")) return;
@@ -607,9 +608,13 @@ function CommandCentre() {
     if (!await say("Oz", "Leave the battery to me. Just a tiny jolt…")) return;
     setScannerEvent(true); await wait(1200); setScannerEvent(false);
     setRadioKick(k => k + 1);
+    setMp3Task("fixed");
     if (!await say("Oz", "It works! Actual music!")) return;
+    if (!await say("Oz", "Whoa. I feel… more alive. More jolted. Locked in.")) return;
+    if (!await say("Oz", "That power feels GOOD.")) return;
     if (!await say("Brix", "Told you. Good as new.")) return;
     if (!await say("Lowkey", "…Better than silence.")) return;
+    setMp3Task(null);
     commitStory({ beats: [...storyRef.current.beats, "mp3"] });
     const home = HOME(ZONES.sanctuary, "Oz");
     await walk("Oz", [...routeNodes(coords.current.sanctuary.Oz, home), home], "home", run);
