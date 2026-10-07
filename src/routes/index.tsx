@@ -572,7 +572,6 @@ function CommandCentre() {
   const pendingBeat = useRef<StoryBeat | null>(null);
   const storyNote = useRef("");
   const [scannerEvent, setScannerEvent] = useState(false);
-  const [moxiSay, setMoxiSay] = useState<{ id: number; text: string } | null>(null);
   useEffect(() => {
     try { const saved = JSON.parse(localStorage.getItem(STORY_KEY) ?? "null"); if (saved && Array.isArray(saved.beats)) { storyRef.current = saved; setStory(saved); } } catch { /* optional */ }
   }, []);
@@ -585,8 +584,7 @@ function CommandCentre() {
       // Moxi steps out first so she can take part in the conversation.
       commitStory({ beats: [...storyRef.current.beats, beat.id] });
       for (const [who, text] of MOXI_SCENE) {
-        if (who === "Moxi") { setBubble(null); setMoxiSay({ id: Date.now(), text }); log("Lowkey", `Moxi: ${text}`); }
-        else { setBubble({ agent: who, text }); log(who, text); }
+        setBubble({ agent: who, text }); log(who, text);
         await wait(Math.min(5000, Math.max(3000, 1600 + text.length * 40))); if (run !== runId.current) return;
       }
       setBubble(null);
@@ -681,10 +679,6 @@ function CommandCentre() {
     await ozHome();
     cancelVisit();
     setPlanningError("");
-    if (zoneRef.current === "sanctuary" && storyRef.current.beats.includes("trust") && /\bmoxi\b/i.test(text)) {
-      setDraft(""); const line = MOXI_LINES[Math.floor(Math.random() * MOXI_LINES.length)]!;
-      setMoxiSay({ id: Date.now(), text: line }); log("Lowkey", `Moxi: ${line}`); return;
-    }
     const order = zoneRef.current === "sanctuary" ? findUserCommand(text) : null;
     if (zoneRef.current === "sanctuary" && /\b(cook\w*|grill\w*|fish\w*|bbq|barbe?cue|food|hungry|starving|dinner|supper|lunch|breakfast|meal|feed|eat\w*|campfire|fire ?pit|light (a|the) fire|start (a|the) fire)\b/i.test(text)) {
       setDraft("");
@@ -715,7 +709,7 @@ function CommandCentre() {
       setDraft("");
       setPhase("working");
       const run = runId.current;
-      const all: Agent[] = ["Oz", "Brix", "Lowkey"];
+      const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
       const named = all.filter(a => new RegExp(`\\b${a.toLowerCase()}\\b`).test(lower));
       const everyone = /\b(everyone|everybody|all|lads|crew|guys|you lot|team)\b/.test(lower);
       const speakers = named.length ? named : everyone ? all : ["Oz" as Agent];
