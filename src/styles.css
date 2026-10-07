@@ -494,3 +494,7 @@
 /* Speaking Zigs sit above every passing character so their bubble is never walked over. */
 .world-stage .agent-marker{z-index:var(--z,10)!important}
 .world-stage .agent-marker:has(.idle-bubble){z-index:calc(1500 + var(--z,10))!important}
+/* Brix: steadier, heavier step (his frames already carry the stride bob) and no flip-back between waypoints. */
+.marker-brix.is-walking .sheet-frames{animation:ozWalk .66s steps(4,end) infinite!important}
+.marker-brix.is-walking .sheet-shadow{animation:cycleShadow .66s ease-in-out infinite}
+.world-image-wrap .marker-brix.facing-left .sprite-stage{scale:-1 1}
