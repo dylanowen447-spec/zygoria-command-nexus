@@ -1,13 +1,14 @@
 import { createAgentStepCall, createRouteCall } from "./ai/responses.ts";
 import { offlineRoute, offlineStep } from "./ai/offline-crew.server.ts";
 
-export type Agent = "Oz" | "Brix" | "Lowkey";
-const isAgent = (a: string): a is Agent => a === "Oz" || a === "Brix" || a === "Lowkey";
+export type Agent = "Oz" | "Brix" | "Lowkey" | "Moxi";
+const isAgent = (a: string): a is Agent => a === "Oz" || a === "Brix" || a === "Lowkey" || a === "Moxi";
 
 const undiscoveredReply: Record<Agent, string> = {
   Oz: "We haven't figured that out yet. Let's find out.",
   Brix: "Haven't found anything that tells us yet. I'll keep looking.",
   Lowkey: "We haven't discovered that yet. There's more to this place than we know.",
+  Moxi: "Mm. Haven't found that yet.",
 };
 
 /** Keep internal lore labels out of the visitor-facing conversation even if a model echoes old notes. */
