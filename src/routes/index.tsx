@@ -656,7 +656,9 @@ function CommandCentre() {
       if (document.hidden || beats.includes("spotted")) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= MP3_AFTER && phaseRef.current === "idle" && !visiting.current && !choring.current && !ozAway.current) {
+      if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current) {
+        // Story time wins over idle strolls and chores: call everyone back first.
+        if (visiting.current || choring.current || outing.current.length) cancelVisit();
         clearInterval(id);
         if (beats.includes("mp3")) void playBeat(SANCTUARY_SIGNAL.beats[0]!, runId.current);
         else void mp3Scene();
