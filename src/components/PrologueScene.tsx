@@ -34,6 +34,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const [bubbles, setBubbles] = useState<Partial<Record<Agent, string>>>({});
   const [found, setFound] = useState<string[]>([]);
   const [done, setDone] = useState(false);
+  const zap = useRef<(p: Point) => void>(() => undefined);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [bolts, setBolts] = useState<{ id: number; d: string; x: number; y: number }[]>([]);
+  const [jolt, setJolt] = useState(0);
   const logRef = useRef(onLog);
   logRef.current = onLog;
 
@@ -262,6 +266,25 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       ALL.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000;
       awaitingName = true;
     }
+    // Oz's zap: crew reactions are drawn from varied pools by who is closest, with cooldown and random silence.
+    let zapQuietUntil = 0; let lastLine = "";
+    const ZAP: Record<string, [Agent, string][][]> = {
+      Brix: [[["Brix", "Oi! Careful, Oz!"]], [["Brix", "Watch where you point that!"]], [["Brix", "You nearly welded my elbow."], ["Oz", "Nearly."]], [["Brix", "Ground yourself, mate."]], [["Brix", "Keep that away from me."], ["Oz", "Can't help it. I'm electric."]], [["Brix", "That's my good arm, Oz."]]],
+      Lowkey: [[["Lowkey", "Oz. Watch it."]], [["Lowkey", "Don't set the grass alight."]], [["Lowkey", "…Static hazard."]], [["Lowkey", "Do that again and I'm walking ahead."]], [["Lowkey", "Felt that in my teeth."], ["Oz", "Sorry. Mostly."]], [["Lowkey", "You're a walking short circuit."]]],
+      none: [[["Oz", "Whoa! Still got charge in me."]], [["Oz", "Zap!"]], [["Oz", "Did you see that arc?"], ["Brix", "Be careful, Oz."]], [["Oz", "Tickles."]], [["Oz", "Antenna surge!"], ["Lowkey", "Point it at the sky next time."]], [["Brix", "Careful, Oz. Things round here are old."]], [["Lowkey", "Something's making him spark."]], [["Oz", "Where's that coming from?"]]],
+    };
+    zap.current = (p: Point) => {
+      const now = performance.now();
+      if (voiceBusy || talking.size || now < zapQuietUntil || Math.random() < 0.3) return;
+      const near = (["Brix", "Lowkey"] as Agent[]).filter(z => dist(coords.current[z], p) < 9).sort((x, y) => dist(coords.current[x], p) - dist(coords.current[y], p))[0];
+      const pool = ZAP[near ?? "none"]!.filter(set => set[0]![1] !== lastLine);
+      const set = pool[Math.floor(Math.random() * pool.length)]!;
+      lastLine = set[0]![1]; zapQuietUntil = now + 4000 + set.length * 2500;
+      set.forEach(([who, line], i) => {
+        timers.push(setTimeout(() => alive && say(who, line), 300 + i * 2300));
+        timers.push(setTimeout(() => alive && setBubbles(b => b[who] === line ? { ...b, [who]: undefined } : b), 300 + i * 2300 + 2100));
+      });
+    };
     handler.current = (text: string) => {
       if (finished) return;
       if (scene.id === "landing" && !heardVoice) { heardVoice = true; void firstContact(); return; }
@@ -335,9 +358,24 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     <div className="world-vignette"/>
     <div className="map-coordinate top-left">◉ &nbsp; {scene.label}</div>
     <div className="map-coordinate top-right">{scene.chapter}</div>
-    <div className="world-stage">
+    <div className="world-stage" ref={stageRef} onPointerDown={e => {
+      if ((e.target as HTMLElement).closest("button")) return;
+      const r = stageRef.current!.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
+      const o = coords.current.Oz, sx = o.x, sy = o.y - 5;
+      const pts: string[] = [`${sx},${sy}`];
+      for (let i = 1; i < 7; i++) { const t = i / 7; pts.push(`${sx + (x - sx) * t + (Math.random() - 0.5) * 3},${sy + (y - sy) * t + (Math.random() - 0.5) * 3}`); }
+      pts.push(`${x},${y}`);
+      const id = performance.now();
+      setBolts(b => [...b.slice(-3), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
+      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 420);
+      zap.current({ x, y });
+    }}>
+      <svg className="zap-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        {bolts.map(b => <g key={b.id}><path className="zap-glow" d={b.d}/><path className="zap-core" d={b.d}/><circle className="zap-hit" cx={b.x} cy={b.y} r="1.2"/></g>)}
+      </svg>
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""}`}>
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""}`}>
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>
