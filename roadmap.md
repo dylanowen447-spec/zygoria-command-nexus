@@ -56,3 +56,14 @@
 - Hide on-screen path lines (keep routes) — done
 - Brix walks only on trails, never over the salvage yard — done
 - [x] Food fills to 100% on eating; 9-minute Sanctuary day/night cycle
+- [x] Moon glow softened at peak night; night sky wash must never fully cover the back mountain or buildings
+- [x] Lowkey must render behind the fire pit (depth layering), never in front of the flames
+
+## Sanctuary sleep mechanic (uploaded brief 2026-10-08)
+- [ ] Oz: clickable riverside shack with "Go to Sleep" -> walks existing paths, enters door, sprite hidden, Zzz from roof
+- [ ] Brix: finishes activity, walks to workshop, enters, Zzz above workshop, rare line "Finally. Some peace and quiet."
+- [ ] Lowkey: new handmade rock hatch under his lookout (overlay art, artwork preserved), opens, climbs in, closes, Zzz from rock
+- [ ] Moxi: curls up beside the campfire, eyes closed, occasional Zzz
+- [ ] Night routine: sprites vanish only at entrances, Zzz at all three spots, fire fades to embers, hunger + thirst drain paused
+- [ ] Morning: short skippable sequence, sunrise, Zzz gone, Oz/Brix/Lowkey emerge, Moxi stretches and stands, routines resume
+- [ ] Rest restored by sleep; food and water NOT auto-refilled. No duplicate agents, no stuck/invisible agents after waking.

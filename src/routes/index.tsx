@@ -32,6 +32,8 @@ import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectF
 import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
 import waterTankImg from "@/assets/water-tank.png";
 import { WATER_FLOOR, WATER_DRAIN_MS, BOTTLE_MAX, DRINK_WORDS, DRINK_LINES, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
+import { REST_START, REST_FLOOR, REST_DRAIN_MS, REST_WORDS, clampRest, loadRest, saveRest, REST_LINES, BEDTIME_LINES, WAKE_LINES } from "@/lib/sleep";
+import rockHatch from "@/assets/rock-hatch.png";
 
 /** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
 type Agent = CrewAgent;
@@ -63,6 +65,15 @@ const BRIX_TO_TANK: Point[] = [{ x: 67.5, y: 54.6 }, { x: 71, y: 52.8 }, { x: 73
 const RIVER_FILL: Point[] = [{ x: 80, y: 57 }, { x: 73.5, y: 53.5 }, { x: 71, y: 52.8 }, { x: 68, y: 57 }, { x: 63, y: 64 }, { x: 58, y: 73.5 }];
 const TANK_KEY = "zygoria-tank-v1";
 const TANK_LOW = 25;
+/** Bedtime: each crew member's own door, the pace they wake on, and where their Zzz rise from (artwork %). */
+const BED: Record<Agent, { door: Point; out: Point; zzz: Point }> = {
+  Oz: { door: { x: 18, y: 56.5 }, out: { x: 19.5, y: 58.5 }, zzz: { x: 13, y: 41 } },
+  Brix: { door: { x: 74.5, y: 47 }, out: { x: 73, y: 49.5 }, zzz: { x: 76.5, y: 34.5 } },
+  Lowkey: { door: { x: 48.5, y: 36.5 }, out: { x: 49, y: 38.4 }, zzz: { x: 48.5, y: 29.5 } },
+  Moxi: { door: { x: 46, y: 49 }, out: { x: 46, y: 49.5 }, zzz: { x: 46, y: 42.5 } },
+};
+/** How long the night lasts before morning arrives (skippable). */
+const NAP_MS = 16000;
 const WALK_SPEED = 5.5; // percent of world width per second
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZONES.sanctuary.aspect);
@@ -93,7 +104,7 @@ function DayNight() {
   // 10 min loop: 0-4 day, 4-5 dusk, 5-9 night, 9-10 dawn (continuous at wrap)
   const night = t < .4 ? 0 : t < .5 ? (t - .4) / .1 : t < .9 ? 1 : 1 - (t - .9) / .1;
   const warm = Math.max(0, 1 - Math.abs(t - .45) / .05) + Math.max(0, 1 - Math.abs(t - .95) / .05);
-  return <div className="day-night" aria-hidden="true" style={{ "--night": night.toFixed(3), "--warm": Math.min(1, warm).toFixed(3) } as CSSProperties}><div className="night-sky"><span className="moon"/></div></div>;
+  return <div className="day-night" aria-hidden="true" style={{ "--night": night.toFixed(3), "--warm": Math.min(1, warm).toFixed(3) } as CSSProperties}><div className="night-sky"/><span className="moon"/></div>;
 }
 
 export const Route = createFileRoute("/")({
@@ -119,6 +130,14 @@ function CommandCentre() {
   const [planningError, setPlanningError] = useState("");
   const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
   const [walking, setWalking] = useState<Agent[]>([]);
+  /** Bedtime: off → everyone walks to their own door → asleep at home → waking at sunrise. */
+  const [sleepStage, setSleepStage] = useState<"off" | "settling" | "asleep" | "waking">("off");
+  const [inBed, setInBed] = useState<Record<Agent, boolean>>({ Oz: false, Brix: false, Lowkey: false, Moxi: false });
+  const [curled, setCurled] = useState(false);
+  const [hatchOpen, setHatchOpen] = useState(false);
+  const [sleepPrompt, setSleepPrompt] = useState(false);
+  const sleepRef = useRef(false);
+  const napSkip = useRef<(() => void) | null>(null);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left", Moxi: "left" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const frames = useRef<number[]>([]);
@@ -680,7 +699,7 @@ function CommandCentre() {
     if (prologue !== "off" || zoneId !== "sanctuary" || b.includes("spotted")) return;
     const id = setInterval(() => {
       const beats = storyRef.current.beats;
-      if (document.hidden || beats.includes("spotted")) return;
+      if (document.hidden || beats.includes("spotted") || sleepRef.current) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
       if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current) {
@@ -725,6 +744,14 @@ function CommandCentre() {
       setPhase("working");
       const run = runId.current;
       await drink(run);
+      if (run === runId.current) setPhase("idle");
+      return;
+    }
+    if (zoneRef.current === "sanctuary" && prologue === "off" && REST_WORDS.test(text) && !cookWords.test(text)) {
+      setDraft("");
+      setPhase("working");
+      const run = runId.current;
+      await bedtime(run);
       if (run === runId.current) setPhase("idle");
       return;
     }
@@ -822,7 +849,7 @@ function CommandCentre() {
   useEffect(() => {
     const inSanc = prologue === "off";
     const floor = inSanc ? SANCTUARY_FLOOR : PROLOGUE_FLOOR;
-    const id = setInterval(() => setHunger(h => { const n = h > floor ? clampHunger(h - 1, floor) : h; if (n !== h) saveHunger(n); return n; }), inSanc ? SANCTUARY_DRAIN_MS : PROLOGUE_DRAIN_MS);
+    const id = setInterval(() => { if (sleepRef.current) return; setHunger(h => { const n = h > floor ? clampHunger(h - 1, floor) : h; if (n !== h) saveHunger(n); return n; }); }, inSanc ? SANCTUARY_DRAIN_MS : PROLOGUE_DRAIN_MS);
     return () => clearInterval(id);
   }, [prologue]);
   useEffect(() => {
@@ -844,9 +871,30 @@ function CommandCentre() {
   useEffect(() => { const s = loadWater(); setWater(s.water); bottlesRef.current = s.bottles; }, []);
   useEffect(() => {
     if (prologue !== "off") return;
-    const id = setInterval(() => setWater(w => { const n = w > WATER_FLOOR ? clampWater(w - 1) : w; if (n !== w) saveWater(n, bottlesRef.current); return n; }), WATER_DRAIN_MS);
+    const id = setInterval(() => { if (sleepRef.current) return; setWater(w => { const n = w > WATER_FLOOR ? clampWater(w - 1) : w; if (n !== w) saveWater(n, bottlesRef.current); return n; }); }, WATER_DRAIN_MS);
     return () => clearInterval(id);
   }, [prologue]);
+  /** Crew rest: drifts down slowly in the Sanctuary and is restored by a night's sleep in their own homes. */
+  const [rest, setRest] = useState(REST_START);
+  const restSaid = useRef<number[]>([]);
+  useEffect(() => { setRest(loadRest()); }, []);
+  useEffect(() => {
+    if (prologue !== "off") return;
+    const id = setInterval(() => { if (sleepRef.current) return; setRest(r => { const n = r > REST_FLOOR ? clampRest(r - 1) : r; if (n !== r) saveRest(n); return n; }); }, REST_DRAIN_MS);
+    return () => clearInterval(id);
+  }, [prologue]);
+  useEffect(() => {
+    if (prologue !== "off") return;
+    restSaid.current = restSaid.current.filter(t => rest <= t);
+    const t = ([10, 20, 40] as const).find(x => rest <= x && !restSaid.current.includes(x));
+    if (!t || bubble || phase !== "idle") return;
+    restSaid.current.push(t);
+    const opts = REST_LINES[t];
+    const [who, text] = opts[Math.floor(Math.random() * opts.length)]!;
+    setBubble({ agent: who as Agent, text }); log(who as Agent, text);
+    const tm = setTimeout(() => setBubble(b => b?.text === text ? null : b), 3600);
+    return () => clearTimeout(tm);
+  }, [rest, prologue, bubble, phase]);
   useEffect(() => {
     if (prologue !== "off") return;
     waterSaid.current = waterSaid.current.filter(t => water <= t);
@@ -983,13 +1031,65 @@ function CommandCentre() {
     return { nodes, edges };
   }, []);
   const nearestNode = (p: Point) => walkGraph.nodes.reduce((best, n, i) => distance(n, p) < distance(walkGraph.nodes[best]!, p) ? i : best, 0);
+  /** Bedtime: each crew member walks to their own door, slips inside, and Zzz rise from home. */
+  async function bedtime(run: number) {
+    if (sleepRef.current) return;
+    sleepRef.current = true;
+    setSleepPrompt(false);
+    setSleepStage("settling");
+    const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
+    const say = async (agent: Agent, text: string, ms = 1500) => {
+      setBubble({ agent, text }); log(agent, text);
+      await wait(Math.min(6000, Math.max(ms, 2600, 1800 + text.length * 45)));
+      setBubble(null);
+      await wait(500);
+      return run === runId.current;
+    };
+    // A walk never resolves once its run is cancelled, so race it to keep the night moving.
+    const abortable = <T,>(p: Promise<T>) => new Promise<Awaited<T> | "bail">(resolve => {
+      const poll = setInterval(() => { if (run !== runId.current) { clearInterval(poll); resolve("bail"); } }, 200);
+      void p.then(v => { clearInterval(poll); resolve(v as Awaited<T>); });
+    });
+    for (const a of all) { const line = BEDTIME_LINES[a]; if (line && !await say(a, line)) return; }
+    // Everyone heads for their own door along the trails they already know.
+    await abortable(Promise.all(all.map(a => walk(a, [...routeNodes(coords.current.sanctuary[a], BED[a].door), BED[a].door], "central", run))));
+    if (run !== runId.current) return;
+    setHatchOpen(true);
+    await wait(900);
+    if (run !== runId.current) return;
+    setHatchOpen(false);
+    setInBed({ Oz: true, Brix: true, Lowkey: true, Moxi: false });
+    setCurled(all.includes("Moxi"));
+    setFire("embers");
+    setSleepStage("asleep");
+    log("Oz", "The camp settles in for the night.");
+    await new Promise<void>(resolve => {
+      const t = setTimeout(() => { napSkip.current = null; resolve(); }, NAP_MS);
+      napSkip.current = () => { clearTimeout(t); napSkip.current = null; resolve(); };
+    });
+    if (run !== runId.current) return;
+    // Morning: the doors open and everyone stretches back into the day.
+    setSleepStage("waking");
+    for (const a of all) { const line = WAKE_LINES[a]; if (line && !await say(a, line, 1300)) return; }
+    setInBed({ Oz: false, Brix: false, Lowkey: false, Moxi: false });
+    setCurled(false);
+    setFire("lit");
+    await abortable(Promise.all(all.map(a => walk(a, [BED[a].out], "central", run))));
+    if (run !== runId.current) return;
+    for (const a of all) { coords.current.sanctuary[a] = { ...BED[a].out }; spots.current.sanctuary[a] = "home"; paint(a); }
+    setPositions({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
+    setRest(() => { saveRest(100); return 100; });
+    setSleepStage("off");
+    sleepRef.current = false;
+    log("Oz", "Morning. Everyone up and moving.");
+  }
   function routeNodes(from: Point, to: Point): Point[] {
     const s = nearestNode(from), t = nearestNode(to), prev = new Map<number, number>([[s, -1]]), queue = [s];
     while (queue.length) { const c = queue.shift()!; if (c === t) break; for (const n of walkGraph.edges[c]!) if (!prev.has(n)) { prev.set(n, c); queue.push(n); } }
     const out: Point[] = []; for (let c = t; c >= 0 && prev.has(c); c = prev.get(c)!) out.unshift(walkGraph.nodes[c]!);
     return out;
   }
-  const canClick = () => phaseRef.current === "idle" && prologue === "off" && zoneRef.current === "sanctuary";
+  const canClick = () => phaseRef.current === "idle" && prologue === "off" && zoneRef.current === "sanctuary" && !sleepRef.current;
   async function ozTo(p: Point, exact: boolean, arrive?: (run: number) => Promise<void> | void) {
     if (!canClick()) return;
     if (visiting.current || choring.current || outing.current.length) cancelVisit();
@@ -1039,6 +1139,10 @@ function CommandCentre() {
     if (!canClick()) return;
     const r = stageRef.current.getBoundingClientRect();
     const p = { x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100 };
+    // Clicking the shack offers bedtime; anywhere else clears the offer.
+    const atShack = distance(p, { x: 13, y: 53 }) < 8;
+    setSleepPrompt(atShack);
+    if (atShack) return;
     if (distance(p, FIRE_PIT) < 4) { void dispatchDirective("cook me some food"); return; }
     // Clicking the water tank sends Oz over for a drink that tops his water back up.
     if (distance(p, { x: WATER_TANK.x, y: WATER_TANK.y - 3 }) < 5) {
@@ -1231,7 +1335,7 @@ function CommandCentre() {
     <main className="command-layout">
       <div className="world-column">
         <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> {prologue === "off" ? "LIVE WORLD FEED" : "FIRST GENESIS"} <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {prologue === "on" ? <>{scene.chapter}</> : prologue === "walk" ? <>THE LONG WALK</> : zoneId === "sanctuary" ? <>{sancChapter[0]}</> : <>{zone.indexA} <span> / </span> {zone.indexB}</>}</div></div>
-        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : zoneId === "sanctuary" ? sancChapter[0] : canon.stage}</span><span className={`hunger-meter ${hunger <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew hunger" aria-valuenow={hunger} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">FOOD</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${hunger}%` }}/></span><span className="hunger-num">{hunger}%</span></span><span className={`hunger-meter water-meter ${water <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew water" aria-valuenow={water} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">WATER</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${water}%` }}/></span><span className="hunger-num">{water}%</span></span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
+        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : zoneId === "sanctuary" ? sancChapter[0] : canon.stage}</span><span className={`hunger-meter ${hunger <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew hunger" aria-valuenow={hunger} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">FOOD</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${hunger}%` }}/></span><span className="hunger-num">{hunger}%</span></span><span className={`hunger-meter water-meter ${water <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew water" aria-valuenow={water} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">WATER</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${water}%` }}/></span><span className="hunger-num">{water}%</span></span><span className={`hunger-meter rest-meter ${rest <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew rest" aria-valuenow={rest} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">REST</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${rest}%` }}/></span><span className="hunger-num">{rest}%</span></span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
           {prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="The Long Walk"><span className="prologue-card-eyebrow">THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river ›</button></div></div> : <div onClick={onWorldClick} className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""} ${zone.id === "sanctuary" ? "is-clickable" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />{zone.id === "sanctuary" && <DayNight/>}
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
@@ -1251,11 +1355,16 @@ function CommandCentre() {
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
             {zone.id === "sanctuary" && !carrying && <div className={`water-tank-spot is-${tank}`} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}><img className="water-tank" src={waterTankImg} alt="Brix's water tank" width={816} height={816}/><span className={`tank-meter ${tankLevel < TANK_LOW ? "is-low" : ""}`} role="meter" aria-label="Water tank level" aria-valuenow={tankLevel} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${tankLevel}%` }}/></span></div>}
-            {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%` }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><img className="pit-art" src={firePitImg} alt="" width={816} height={816} loading="lazy"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
+            {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%`, zIndex: 10 + Math.round(FIRE_PIT.y * 10) }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><img className="pit-art" src={firePitImg} alt="" width={816} height={816} loading="lazy"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
+            {zone.id === "sanctuary" && <div className={`rock-hatch ${hatchOpen ? "is-open" : ""}`} style={{ left: `${BED.Lowkey.door.x}%`, top: `${BED.Lowkey.door.y}%` }} aria-hidden="true"><img src={rockHatch} alt="" width={816} height={816} loading="lazy"/></div>}
+            {zone.id === "sanctuary" && sleepStage !== "off" && <>{(["Oz", "Brix", "Lowkey"] as Agent[]).filter(a => inBed[a]).map(a => <span key={a} className="zeds" style={{ left: `${BED[a].zzz.x}%`, top: `${BED[a].zzz.y}%` }} aria-hidden="true"><i>Z</i><i>Z</i><i>Z</i></span>)}{curled && <span className="zeds" style={{ left: `${BED.Moxi.zzz.x}%`, top: `${BED.Moxi.zzz.y}%` }} aria-hidden="true"><i>Z</i><i>Z</i><i>Z</i></span>}</>}
+            {zone.id === "sanctuary" && sleepStage === "waking" && <div className="sunrise-sweep" aria-hidden="true"/>}
+            {zone.id === "sanctuary" && sleepPrompt && sleepStage === "off" && <button type="button" className="sleep-prompt" style={{ left: `${BED.Oz.door.x}%`, top: `${BED.Oz.door.y - 9}%` }} onClick={() => { setPhase("working"); const run = runId.current; void bedtime(run).finally(() => { if (run === runId.current) setPhase("idle"); }); }}>GO TO SLEEP</button>}
+            {zone.id === "sanctuary" && sleepStage !== "off" && <button type="button" className="nap-skip" onClick={() => napSkip.current?.()}>SKIP TO MORNING ›</button>}
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
             {mp3Task && zoneId === "sanctuary" && (() => { const p = objectPoint(WORLD_OBJECTS.find(o => o.id === "sanc-workbench")!); return <div className={`world-object wo-brix mp3-task ${mp3Task === "fixed" ? "is-max" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }}><span className="wo-ring"/><span className="wo-label">MP3 PLAYER · {mp3Task === "fixed" ? "FIXED" : "BROKE"}</span></div>; })()}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
-             {crew.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => onAgentClick(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${agent.name === "Brix" ? `brix-facing-${brixDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
+             {crew.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => onAgentClick(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${agent.name === "Brix" ? `brix-facing-${brixDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${inBed[agent.name] ? "is-hidden" : ""} ${agent.name === "Moxi" && curled ? "is-curling" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
               <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/>{agent.name === "Brix" && carrying && <img className="carried-tank" src={waterTankImg} alt="" aria-hidden="true"/>}</span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : agent.name === "Moxi" ? <span className="moxi-nametag">MOXI</span> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
             </Button>)}
             </div>
