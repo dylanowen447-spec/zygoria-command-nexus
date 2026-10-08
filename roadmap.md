@@ -52,3 +52,4 @@
 - [x] Moxi joins the crew roster after the trust beat: zone paths, work spots, world objects, task routing, AI voice, crew panel, cookout seat, idle visits
 - [x] Moxi agent memory canon note (2026-10-07): child memories only, fragments not lore dumps, parents' fate never established
 - [ ] User to test: give Moxi a job ("Moxi, fetch a fish") after she joins
+- [x] Water tank at the workshop yard: Brix carries it to the river to fill on arrival and whenever it runs low; tank level meter
