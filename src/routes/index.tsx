@@ -28,6 +28,7 @@ import { PrologueScene } from "@/components/PrologueScene";
 import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
+import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
 
 /** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
 type Agent = CrewAgent;
@@ -552,6 +553,7 @@ function CommandCentre() {
     if (!await say("Lowkey", "Not bad.", 1600)) return;
     if (moxiIn && !await say("Moxi", "Mm. Fish.", 1400)) return;
     setFire("embers");
+    setHunger(h => { const n = clampHunger(h + FISH_RESTORE[size], SANCTUARY_FLOOR); saveHunger(n); return n; });
     // Short post-meal chat before everyone drifts home.
     const afters: [Agent, string][][] = [
       [["Oz", "Stomach's finally stopped rumbling."], ["Brix", "Because I told you when to flip it."], ["Lowkey", "The river gave us enough today."]],
@@ -783,6 +785,28 @@ function CommandCentre() {
   const visiting = useRef<Agent | null>(null);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
+  /** Crew hunger: drifts down slowly; cosmetic before the Sanctuary, restored by the cookout. */
+  const [hunger, setHunger] = useState(HUNGER_START);
+  const hungerSaid = useRef<number[]>([]);
+  useEffect(() => { setHunger(loadHunger()); }, []);
+  useEffect(() => {
+    const inSanc = prologue === "off";
+    const floor = inSanc ? SANCTUARY_FLOOR : PROLOGUE_FLOOR;
+    const id = setInterval(() => setHunger(h => { const n = h > floor ? clampHunger(h - 1, floor) : h; if (n !== h) saveHunger(n); return n; }), inSanc ? SANCTUARY_DRAIN_MS : PROLOGUE_DRAIN_MS);
+    return () => clearInterval(id);
+  }, [prologue]);
+  useEffect(() => {
+    if (prologue !== "off") return;
+    hungerSaid.current = hungerSaid.current.filter(t => hunger <= t);
+    const t = ([10, 20, 40] as const).find(x => hunger <= x && !hungerSaid.current.includes(x));
+    if (!t || bubble || phase !== "idle") return;
+    hungerSaid.current.push(t);
+    const opts = HUNGER_LINES[t];
+    const [who, text] = opts[Math.floor(Math.random() * opts.length)]!;
+    setBubble({ agent: who as Agent, text }); log(who as Agent, text);
+    const tm = setTimeout(() => setBubble(b => b?.text === text ? null : b), 3600);
+    return () => clearTimeout(tm);
+  }, [hunger, prologue, bubble, phase]);
   function cancelVisit() {
     const v = visiting.current;
     visiting.current = null;
