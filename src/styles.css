@@ -541,3 +541,5 @@
 .tank-meter.is-low > span { background: var(--destructive); }
 .carried-tank { position: absolute; left: 50%; bottom: 22%; width: 58%; transform: translateX(-50%); pointer-events: none; z-index: 6 !important; display: block !important; opacity: 1 !important; }
 .water-tank-spot.is-filling .water-tank, .water-tank-spot.is-full .water-tank { filter: drop-shadow(0 0 6px hsl(200 90% 60% / .8)) drop-shadow(0 3px 2px hsl(var(--background) / .6)); }
+
+.day-night{position:absolute;inset:0;pointer-events:none;z-index:1;transition:opacity 2s linear;background:linear-gradient(180deg,oklch(0.7 0.15 50/calc(var(--warm)*.28)),oklch(0.65 0.14 30/calc(var(--warm)*.18))),oklch(0.18 0.06 265/calc(var(--night)*.55));mix-blend-mode:multiply}
