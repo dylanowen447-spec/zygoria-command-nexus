@@ -569,10 +569,10 @@
 .agent-marker.is-curling .marker-status{opacity:.45}
 .sunrise-sweep{position:absolute;inset:0;z-index:900;pointer-events:none;background:linear-gradient(0deg,oklch(0.82 0.12 70/.5) 0%,oklch(0.86 0.09 90/.22) 38%,transparent 72%);animation:sunrise 6s ease-out forwards}
 @keyframes sunrise{0%{opacity:0}35%{opacity:1}100%{opacity:0}}
-.sleep-prompt{position:absolute;z-index:960;transform:translate(-50%,-100%);padding:6px 10px;border:1px solid oklch(0.75 0.12 250/.5);background:oklch(0.2 0.04 250/.92);color:oklch(0.92 0.03 250);font-family:inherit;font-size:10px;letter-spacing:.08em;border-radius:3px;cursor:pointer;white-space:nowrap;animation:sleep-in .25s ease-out}
+.sleep-prompt{position:absolute;pointer-events:auto;z-index:960;transform:translate(-50%,-100%);padding:6px 10px;border:1px solid oklch(0.75 0.12 250/.5);background:oklch(0.2 0.04 250/.92);color:oklch(0.92 0.03 250);font-family:inherit;font-size:10px;letter-spacing:.08em;border-radius:3px;cursor:pointer;white-space:nowrap;animation:sleep-in .25s ease-out}
 .sleep-prompt:hover{background:oklch(0.28 0.06 250/.95);border-color:oklch(0.85 0.09 250/.8)}
 @keyframes sleep-in{from{opacity:0;transform:translate(-50%,-92%)}to{opacity:1;transform:translate(-50%,-100%)}}
-.nap-skip{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);z-index:970;padding:7px 14px;border:1px solid oklch(0.7 0.08 250/.45);background:oklch(0.16 0.03 250/.85);color:oklch(0.88 0.03 250);font-family:inherit;font-size:10px;letter-spacing:.1em;border-radius:3px;cursor:pointer}
+.nap-skip{position:absolute;pointer-events:auto;left:50%;bottom:6%;transform:translateX(-50%);z-index:970;padding:7px 14px;border:1px solid oklch(0.7 0.08 250/.45);background:oklch(0.16 0.03 250/.85);color:oklch(0.88 0.03 250);font-family:inherit;font-size:10px;letter-spacing:.1em;border-radius:3px;cursor:pointer}
 .nap-skip:hover{background:oklch(0.24 0.05 250/.9)}
 .rest-meter .hunger-fill{background:linear-gradient(90deg,oklch(0.55 0.14 300),oklch(0.72 0.12 260))}
 @media (prefers-reduced-motion: reduce){.zeds i{animation:none;opacity:.7}.sunrise-sweep{animation:none;opacity:.5}}

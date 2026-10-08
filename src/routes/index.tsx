@@ -1048,7 +1048,7 @@ function CommandCentre() {
     // A walk never resolves once its run is cancelled, so race it to keep the night moving.
     const abortable = <T,>(p: Promise<T>) => new Promise<Awaited<T> | "bail">(resolve => {
       const poll = setInterval(() => { if (run !== runId.current) { clearInterval(poll); resolve("bail"); } }, 200);
-      p.then(v => { clearInterval(poll); resolve(v); });
+      void p.then(v => { clearInterval(poll); resolve(v as Awaited<T>); });
     });
     for (const a of all) { const line = BEDTIME_LINES[a]; if (line && !await say(a, line)) return; }
     // Everyone heads for their own door along the trails they already know.
