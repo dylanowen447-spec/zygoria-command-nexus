@@ -427,7 +427,10 @@ function CommandCentre() {
     setTaskStage(3);
     setActing(target.id);
     log(agent, `${verb[0]!.toUpperCase()}${verb.slice(1)} the ${target.name.toLowerCase()}.`);
-    await wait(800);
+    // Role-play the job: a muttered line or two while working, different every time.
+    const mutters = B.shuffle(B.WORKING[agent]).slice(0, B.chance(0.5) ? 2 : 1);
+    for (const m of mutters) { setBubble({ agent, text: m }); log(agent, m); await wait(1700); if (run !== runId.current) return null; }
+    setBubble(b => b?.agent === agent ? null : b);
     setActing(null);
     if (run !== runId.current) return null;
     const { next, change } = applyAction(worldRef.current, zoneRef.current, agent, directive);
@@ -912,12 +915,11 @@ function CommandCentre() {
     if (tankRef.current < TANK_LOW) { if (!await refillTank(run)) return; }
     else { await walk("Brix", paths.Brix, "central", run); if (run !== runId.current) return; }
     if (distance(coords.current.sanctuary.Brix, spot.Brix) > 1) { await walk("Brix", [spot.Brix], "central", run); if (run !== runId.current) return; }
-    if (!await say("Brix", "Getting some more fresh water to drink. Come grab some, lads.")) return;
+    if (!await say("Brix", B.pick(B.DRINK_CALL))) return;
     await Promise.all(all.filter(a => a !== "Brix").map(a => walk(a, paths[a], "central", run)));
     if (run !== runId.current) return;
     setFacing(p => ({ ...p, Oz: "right", Lowkey: "right", Brix: "left" }));
-    for (const [who, text] of DRINK_LINES) if (!await say(who as Agent, `💧 ${text}`, 2000)) return;
-    if (all.includes("Moxi") && !await say("Moxi", "💧 Cold!", 1600)) return;
+    for (const [who, text] of B.riff(B.SIP, all, { skip: 0.2 })) if (!await say(who, `💧 ${text}`, 2000)) return;
     bottlesRef.current = BOTTLE_MAX;
     setWater(() => { saveWater(100, BOTTLE_MAX); return 100; });
     setTankLevelSaved(Math.max(0, tankRef.current - 25 * all.length));
@@ -1044,7 +1046,7 @@ function CommandCentre() {
       const poll = setInterval(() => { if (run !== runId.current) { clearInterval(poll); resolve("bail"); } }, 200);
       void p.then(v => { clearInterval(poll); resolve(v as Awaited<T>); });
     });
-    for (const a of all) { const line = BEDTIME_LINES[a]; if (line && !await say(a, line)) return; }
+    for (const [a, line] of B.riff(B.BED, all, { skip: 0.2 })) if (!await say(a, line)) return;
     // Everyone heads for their own door along the trails they already know.
     await abortable(Promise.all(all.map(a => walk(a, [...routeNodes(coords.current.sanctuary[a], BED[a].door), BED[a].door], "central", run))));
     if (run !== runId.current) return;
@@ -1064,7 +1066,7 @@ function CommandCentre() {
     if (run !== runId.current) return;
     // Morning: the doors open and everyone stretches back into the day.
     setSleepStage("waking");
-    for (const a of all) { const line = WAKE_LINES[a]; if (line && !await say(a, line, 1300)) return; }
+    for (const [a, line] of B.riff(B.WAKE, all, { skip: 0.3 })) if (!await say(a, line, 1300)) return;
     setInBed({ Oz: false, Brix: false, Lowkey: false, Moxi: false });
     setCurled(false);
     setFire("lit");
