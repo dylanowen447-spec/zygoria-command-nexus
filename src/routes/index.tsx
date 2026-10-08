@@ -852,11 +852,12 @@ function CommandCentre() {
     const z = ZONES.sanctuary;
     const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
     const spot: Record<Agent, Point> = { Brix: { x: WATER_TANK.x + 3, y: WATER_TANK.y + 0.5 }, Oz: { x: WATER_TANK.x - 4, y: WATER_TANK.y + 1 }, Lowkey: { x: WATER_TANK.x - 7, y: WATER_TANK.y - 1 }, Moxi: { x: WATER_TANK.x - 1, y: WATER_TANK.y + 3.5 } };
-    const paths = Object.fromEntries(all.map(a => [a, a === "Brix" ? [spot.Brix] : [...toMeet(z, a), spot[a]]])) as Record<Agent, Point[]>;
+    const paths = Object.fromEntries(all.map(a => [a, a === "Brix" ? [...BRIX_TO_TANK, spot.Brix] : [...toMeet(z, a), spot[a]]])) as Record<Agent, Point[]>;
     const say = async (agent: Agent, text: string, ms = 2400) => { setBubble({ agent, text }); log(agent, text); await wait(Math.max(ms, 1800 + text.length * 45)); setBubble(null); await wait(600); return run === runId.current; };
     outing.current = all;
     if (tankRef.current < TANK_LOW) { if (!await refillTank(run)) return; }
     else { await walk("Brix", paths.Brix, "central", run); if (run !== runId.current) return; }
+    if (distance(coords.current.sanctuary.Brix, spot.Brix) > 1) { await walk("Brix", [spot.Brix], "central", run); if (run !== runId.current) return; }
     if (!await say("Brix", "Getting some more fresh water to drink. Come grab some, lads.")) return;
     await Promise.all(all.filter(a => a !== "Brix").map(a => walk(a, paths[a], "central", run)));
     if (run !== runId.current) return;
@@ -867,7 +868,7 @@ function CommandCentre() {
     setWater(() => { saveWater(100, BOTTLE_MAX); return 100; });
     setTankLevelSaved(Math.max(0, tankRef.current - 25 * all.length));
     setTank("idle");
-    await Promise.all(all.map(a => walk(a, a === "Brix" ? [HOME(z, a)] : [...paths[a].slice(0, -1).reverse(), HOME(z, a)], "home", run)));
+    await Promise.all(all.map(a => walk(a, [...paths[a].slice(0, -1).reverse(), HOME(z, a)], "home", run)));
     if (run !== runId.current) return;
     outing.current = [];
   }
@@ -883,8 +884,9 @@ function CommandCentre() {
   async function refillTank(run: number) {
     refilling.current = true;
     try {
-      const brixSpot = { x: WATER_TANK.x - 2, y: WATER_TANK.y + 0.8 };
-      await walk("Brix", [brixSpot], "central", run); if (run !== runId.current) return false;
+      const brixSpot = BRIX_TO_TANK.at(-1)!;
+      if (distance(coords.current.sanctuary.Brix, brixSpot) > 4) { await walk("Brix", BRIX_TO_TANK, "central", run); if (run !== runId.current) return false; }
+      else { await walk("Brix", [brixSpot], "central", run); if (run !== runId.current) return false; }
       setCarrying(true); log("Brix", "Tank's low. Off to the river.");
       await walk("Brix", RIVER_FILL, "central", run); if (run !== runId.current) return false;
       setTank("filling");
@@ -907,7 +909,7 @@ function CommandCentre() {
       if (ok && run === runId.current) {
         setBubble({ agent: "Brix", text: "Fresh water's in. Help yourselves." }); log("Brix", "Fresh water's in. Help yourselves.");
         await wait(2600); setBubble(null); setTank("idle");
-        await walk("Brix", [HOME(ZONES.sanctuary, "Brix")], "home", run);
+        await walk("Brix", [...BRIX_TO_TANK.slice(0, -1).reverse(), HOME(ZONES.sanctuary, "Brix")], "home", run);
         outing.current = [];
       }
       if (run === runId.current) setPhase("idle");
