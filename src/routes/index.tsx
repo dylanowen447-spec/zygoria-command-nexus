@@ -55,7 +55,11 @@ const startLogs: Log[] = [
 /** Crossroads fire pit, just below where the trails meet (artwork %). */
 const FIRE_PIT = { x: 50, y: 63.5 };
 /** Brix's water tank on the grass outside his workshop. */
-const WATER_TANK = { x: 74, y: 77 };
+const WATER_TANK = { x: 84, y: 60 };
+/** Riverbank below the workshop where Brix refills the tank, reached via open grass. */
+const RIVER_FILL: Point[] = [{ x: 78, y: 70 }, { x: 72, y: 77 }, { x: 64, y: 81 }];
+const TANK_KEY = "zygoria-tank-v1";
+const TANK_LOW = 25;
 const WALK_SPEED = 5.5; // percent of world width per second
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZONES.sanctuary.aspect);
@@ -849,12 +853,8 @@ function CommandCentre() {
     const paths = Object.fromEntries(all.map(a => [a, a === "Brix" ? [spot.Brix] : [...toMeet(z, a), spot[a]]])) as Record<Agent, Point[]>;
     const say = async (agent: Agent, text: string, ms = 2400) => { setBubble({ agent, text }); log(agent, text); await wait(Math.max(ms, 1800 + text.length * 45)); setBubble(null); await wait(600); return run === runId.current; };
     outing.current = all;
-    await walk("Brix", paths.Brix, "central", run);
-    if (run !== runId.current) return;
-    setTank("filling");
-    await wait(1600);
-    if (run !== runId.current) return;
-    setTank("full");
+    if (tankRef.current < TANK_LOW) { if (!await refillTank(run)) return; }
+    else { await walk("Brix", paths.Brix, "central", run); if (run !== runId.current) return; }
     if (!await say("Brix", "Getting some more fresh water to drink. Come grab some, lads.")) return;
     await Promise.all(all.filter(a => a !== "Brix").map(a => walk(a, paths[a], "central", run)));
     if (run !== runId.current) return;
@@ -863,12 +863,56 @@ function CommandCentre() {
     if (all.includes("Moxi") && !await say("Moxi", "💧 Cold!", 1600)) return;
     bottlesRef.current = BOTTLE_MAX;
     setWater(() => { saveWater(100, BOTTLE_MAX); return 100; });
+    setTankLevelSaved(Math.max(0, tankRef.current - 25 * all.length));
     setTank("idle");
     await Promise.all(all.map(a => walk(a, a === "Brix" ? [HOME(z, a)] : [...paths[a].slice(0, -1).reverse(), HOME(z, a)], "home", run)));
     if (run !== runId.current) return;
     outing.current = [];
   }
   const [tank, setTank] = useState<"idle" | "filling" | "full">("idle");
+  /** How full the tank is (0–100); starts empty so Brix fills it on arrival, and refills it whenever it runs low. */
+  const [tankLevel, setTankLevel] = useState(100);
+  const tankRef = useRef(100);
+  const [carrying, setCarrying] = useState(false);
+  const refilling = useRef(false);
+  function setTankLevelSaved(n: number) { tankRef.current = n; setTankLevel(n); try { localStorage.setItem(TANK_KEY, String(n)); } catch { /* ignore */ } }
+  useEffect(() => { const v = Number(localStorage.getItem(TANK_KEY) ?? 0); const n = Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 0; tankRef.current = n; setTankLevel(n); }, []);
+  /** Brix picks the tank up, carries it to the river, fills it and sets it back down. */
+  async function refillTank(run: number) {
+    refilling.current = true;
+    try {
+      const brixSpot = { x: WATER_TANK.x - 2, y: WATER_TANK.y + 0.8 };
+      await walk("Brix", [brixSpot], "central", run); if (run !== runId.current) return false;
+      setCarrying(true); log("Brix", "Tank's low. Off to the river.");
+      await walk("Brix", RIVER_FILL, "central", run); if (run !== runId.current) return false;
+      setTank("filling");
+      for (let l = tankRef.current; l < 100; l = Math.min(100, l + 20)) { setTankLevel(l); await wait(350); if (run !== runId.current) return false; }
+      setTankLevelSaved(100); setTank("full");
+      await walk("Brix", [...RIVER_FILL.slice(0, -1).reverse(), brixSpot], "central", run); if (run !== runId.current) return false;
+      setCarrying(false);
+      return true;
+    } finally { refilling.current = false; }
+  }
+  useEffect(() => {
+    if (prologue !== "off" || zoneId !== "sanctuary" || phase !== "idle" || tankLevel >= TANK_LOW || refilling.current || bubble) return;
+    const tm = setTimeout(async () => {
+      if (refilling.current || tankRef.current >= TANK_LOW) return;
+      cancelVisit();
+      setPhase("working");
+      const run = runId.current;
+      outing.current = ["Brix"];
+      const ok = await refillTank(run);
+      if (ok && run === runId.current) {
+        setBubble({ agent: "Brix", text: "Fresh water's in. Help yourselves." }); log("Brix", "Fresh water's in. Help yourselves.");
+        await wait(2600); setBubble(null); setTank("idle");
+        await walk("Brix", [HOME(ZONES.sanctuary, "Brix")], "home", run);
+        outing.current = [];
+      }
+      if (run === runId.current) setPhase("idle");
+      setCarrying(false);
+    }, 2500);
+    return () => clearTimeout(tm);
+  }, [tankLevel, prologue, zoneId, phase, bubble]);
   function cancelVisit() {
     const v = visiting.current;
     visiting.current = null;
@@ -1170,13 +1214,13 @@ function CommandCentre() {
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/>{moxiJoined && <polyline points={trailPoints(zone, "Moxi")}/>}</svg>
-            {zone.id === "sanctuary" && <img className={`water-tank is-${tank}`} src={waterTankImg} alt="Brix's water tank" width={816} height={816} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}/>}
+            {zone.id === "sanctuary" && !carrying && <div className={`water-tank-spot is-${tank}`} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}><img className="water-tank" src={waterTankImg} alt="Brix's water tank" width={816} height={816}/><span className={`tank-meter ${tankLevel < TANK_LOW ? "is-low" : ""}`} role="meter" aria-label="Water tank level" aria-valuenow={tankLevel} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${tankLevel}%` }}/></span></div>}
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%` }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
             {mp3Task && zoneId === "sanctuary" && (() => { const p = objectPoint(WORLD_OBJECTS.find(o => o.id === "sanc-workbench")!); return <div className={`world-object wo-brix mp3-task ${mp3Task === "fixed" ? "is-max" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }}><span className="wo-ring"/><span className="wo-label">MP3 PLAYER · {mp3Task === "fixed" ? "FIXED" : "BROKE"}</span></div>; })()}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
              {crew.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => onAgentClick(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${agent.name === "Brix" ? `brix-facing-${brixDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
-              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/></span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : agent.name === "Moxi" ? <span className="moxi-nametag">MOXI</span> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
+              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/>{agent.name === "Brix" && carrying && <img className="carried-tank" src={waterTankImg} alt="" aria-hidden="true"/>}</span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : agent.name === "Moxi" ? <span className="moxi-nametag">MOXI</span> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
             </Button>)}
             </div>
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
