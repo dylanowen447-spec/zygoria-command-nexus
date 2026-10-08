@@ -542,4 +542,9 @@
 .carried-tank { position: absolute; left: 50%; bottom: 22%; width: 58%; transform: translateX(-50%); pointer-events: none; z-index: 6 !important; display: block !important; opacity: 1 !important; }
 .water-tank-spot.is-filling .water-tank, .water-tank-spot.is-full .water-tank { filter: drop-shadow(0 0 6px hsl(200 90% 60% / .8)) drop-shadow(0 3px 2px hsl(var(--background) / .6)); }
 
-.day-night{position:absolute;inset:0;pointer-events:none;z-index:1;transition:opacity 2s linear;background:linear-gradient(180deg,oklch(0.7 0.15 50/calc(var(--warm)*.28)),oklch(0.65 0.14 30/calc(var(--warm)*.18))),oklch(0.18 0.06 265/calc(var(--night)*.55));mix-blend-mode:multiply}
+.day-night{position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(180deg,oklch(0.7 0.15 50/calc(var(--warm)*.2)),oklch(0.65 0.14 30/calc(var(--warm)*.12))),oklch(0.14 0.05 265/calc(var(--night)*.5))}
+/* Night lights sit above the darkness so Brix's workshop and the electrics glow out of it. */
+.day-night::before,.day-night::after{content:'';position:absolute;inset:0;opacity:var(--night)}
+.day-night::before{background:radial-gradient(ellipse 14% 12% at 82% 47%,oklch(0.85 0.16 75/.55),transparent 70%),radial-gradient(ellipse 22% 14% at 80% 58%,oklch(0.8 0.15 70/.28),transparent 70%),radial-gradient(ellipse 9% 9% at 20% 52%,oklch(0.85 0.15 75/.35),transparent 70%)}
+.day-night::after{background:radial-gradient(ellipse 7% 8% at 74% 44%,oklch(0.82 0.17 210/.6),transparent 70%),radial-gradient(ellipse 6% 7% at 88% 50%,oklch(0.82 0.17 210/.5),transparent 70%),radial-gradient(ellipse 6% 6% at 27% 56%,oklch(0.8 0.17 300/.4),transparent 70%);animation:nightBuzz 2.4s ease-in-out infinite}
+@keyframes nightBuzz{0%,100%{filter:brightness(1)}45%{filter:brightness(1.35)}50%{filter:brightness(.85)}55%{filter:brightness(1.3)}}
