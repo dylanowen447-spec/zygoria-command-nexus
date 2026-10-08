@@ -699,7 +699,7 @@ function CommandCentre() {
     if (prologue !== "off" || zoneId !== "sanctuary" || b.includes("spotted")) return;
     const id = setInterval(() => {
       const beats = storyRef.current.beats;
-      if (document.hidden || beats.includes("spotted")) return;
+      if (document.hidden || beats.includes("spotted") || sleepRef.current) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
       if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current) {
@@ -744,6 +744,14 @@ function CommandCentre() {
       setPhase("working");
       const run = runId.current;
       await drink(run);
+      if (run === runId.current) setPhase("idle");
+      return;
+    }
+    if (zoneRef.current === "sanctuary" && prologue === "off" && REST_WORDS.test(text) && !cookWords.test(text)) {
+      setDraft("");
+      setPhase("working");
+      const run = runId.current;
+      await bedtime(run);
       if (run === runId.current) setPhase("idle");
       return;
     }
@@ -841,7 +849,7 @@ function CommandCentre() {
   useEffect(() => {
     const inSanc = prologue === "off";
     const floor = inSanc ? SANCTUARY_FLOOR : PROLOGUE_FLOOR;
-    const id = setInterval(() => setHunger(h => { const n = h > floor ? clampHunger(h - 1, floor) : h; if (n !== h) saveHunger(n); return n; }), inSanc ? SANCTUARY_DRAIN_MS : PROLOGUE_DRAIN_MS);
+    const id = setInterval(() => { if (sleepRef.current) return; setHunger(h => { const n = h > floor ? clampHunger(h - 1, floor) : h; if (n !== h) saveHunger(n); return n; }); }, inSanc ? SANCTUARY_DRAIN_MS : PROLOGUE_DRAIN_MS);
     return () => clearInterval(id);
   }, [prologue]);
   useEffect(() => {
@@ -1002,13 +1010,60 @@ function CommandCentre() {
     return { nodes, edges };
   }, []);
   const nearestNode = (p: Point) => walkGraph.nodes.reduce((best, n, i) => distance(n, p) < distance(walkGraph.nodes[best]!, p) ? i : best, 0);
+  /** Bedtime: each crew member walks to their own door, slips inside, and Zzz rise from home. */
+  async function bedtime(run: number) {
+    if (sleepRef.current) return;
+    sleepRef.current = true;
+    setSleepPrompt(false);
+    setSleepStage("settling");
+    const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
+    const say = async (agent: Agent, text: string, ms = 1500) => {
+      setBubble({ agent, text }); log(agent, text);
+      await wait(Math.min(6000, Math.max(ms, 2600, 1800 + text.length * 45)));
+      setBubble(null);
+      await wait(500);
+      return run === runId.current;
+    };
+    for (const a of all) { const line = BEDTIME_LINES[a]; if (line && !await say(a, line)) return; }
+    // Everyone heads for their own door along the trails they already know.
+    await Promise.all(all.map(a => walk(a, [...routeNodes(coords.current.sanctuary[a], BED[a].door), BED[a].door], "central", run)));
+    if (run !== runId.current) return;
+    setHatchOpen(true);
+    await wait(900);
+    if (run !== runId.current) return;
+    setHatchOpen(false);
+    setInBed({ Oz: true, Brix: true, Lowkey: true, Moxi: false });
+    setCurled(all.includes("Moxi"));
+    setFire("embers");
+    setSleepStage("asleep");
+    log("Oz", "The camp settles in for the night.");
+    await new Promise<void>(resolve => {
+      const t = setTimeout(() => { napSkip.current = null; resolve(); }, NAP_MS);
+      napSkip.current = () => { clearTimeout(t); napSkip.current = null; resolve(); };
+    });
+    if (run !== runId.current) return;
+    // Morning: the doors open and everyone stretches back into the day.
+    setSleepStage("waking");
+    for (const a of all) { const line = WAKE_LINES[a]; if (line && !await say(a, line, 1300)) return; }
+    setInBed({ Oz: false, Brix: false, Lowkey: false, Moxi: false });
+    setCurled(false);
+    setFire("lit");
+    await Promise.all(all.map(a => walk(a, [BED[a].out], "central", run)));
+    if (run !== runId.current) return;
+    for (const a of all) { coords.current.sanctuary[a] = { ...BED[a].out }; spots.current.sanctuary[a] = "home"; paint(a); }
+    setPositions({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
+    setRest(() => { saveRest(100); return 100; });
+    setSleepStage("off");
+    sleepRef.current = false;
+    log("Oz", "Morning. Everyone up and moving.");
+  }
   function routeNodes(from: Point, to: Point): Point[] {
     const s = nearestNode(from), t = nearestNode(to), prev = new Map<number, number>([[s, -1]]), queue = [s];
     while (queue.length) { const c = queue.shift()!; if (c === t) break; for (const n of walkGraph.edges[c]!) if (!prev.has(n)) { prev.set(n, c); queue.push(n); } }
     const out: Point[] = []; for (let c = t; c >= 0 && prev.has(c); c = prev.get(c)!) out.unshift(walkGraph.nodes[c]!);
     return out;
   }
-  const canClick = () => phaseRef.current === "idle" && prologue === "off" && zoneRef.current === "sanctuary";
+  const canClick = () => phaseRef.current === "idle" && prologue === "off" && zoneRef.current === "sanctuary" && !sleepRef.current;
   async function ozTo(p: Point, exact: boolean, arrive?: (run: number) => Promise<void> | void) {
     if (!canClick()) return;
     if (visiting.current || choring.current || outing.current.length) cancelVisit();
@@ -1058,6 +1113,10 @@ function CommandCentre() {
     if (!canClick()) return;
     const r = stageRef.current.getBoundingClientRect();
     const p = { x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100 };
+    // Clicking the shack offers bedtime; anywhere else clears the offer.
+    const atShack = distance(p, { x: 13, y: 53 }) < 8;
+    setSleepPrompt(atShack);
+    if (atShack) return;
     if (distance(p, FIRE_PIT) < 4) { void dispatchDirective("cook me some food"); return; }
     // Clicking the water tank sends Oz over for a drink that tops his water back up.
     if (distance(p, { x: WATER_TANK.x, y: WATER_TANK.y - 3 }) < 5) {
