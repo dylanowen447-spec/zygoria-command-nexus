@@ -53,7 +53,7 @@ const startLogs: Log[] = [
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
 /** Crossroads fire pit, just below where the trails meet (artwork %). */
-const FIRE_PIT = { x: 50, y: 63.5 };
+const FIRE_PIT = { x: 48, y: 57 };
 /** Brix's water tank on the grass outside his workshop. */
 const WATER_TANK = { x: 84, y: 60 };
 /** Brix's home → workshop frontage trail → beside the tank; never across the salvage yard. */
