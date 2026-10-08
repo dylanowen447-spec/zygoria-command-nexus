@@ -29,6 +29,7 @@ import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
+import { WATER_FLOOR, WATER_DRAIN_MS, DRINK_RESTORE, BOTTLE_MAX, DRINK_WORDS, DRINK_LINES, DRY_LINES, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
 
 /** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
 type Agent = CrewAgent;
@@ -698,6 +699,14 @@ function CommandCentre() {
       if (run === runId.current) setPhase("idle");
       return;
     }
+    if (zoneRef.current === "sanctuary" && prologue === "off" && DRINK_WORDS.test(text) && !cookWords.test(text)) {
+      setDraft("");
+      setPhase("working");
+      const run = runId.current;
+      await drink(run);
+      if (run === runId.current) setPhase("idle");
+      return;
+    }
     if (zoneRef.current === "sanctuary" && cookWords.test(text)) {
       setDraft("");
       setPhase("working");
@@ -807,6 +816,46 @@ function CommandCentre() {
     const tm = setTimeout(() => setBubble(b => b?.text === text ? null : b), 3600);
     return () => clearTimeout(tm);
   }, [hunger, prologue, bubble, phase]);
+  /** Crew water: stays full in the opening; drains in the Sanctuary; drinking uses a bottle charge. */
+  const [water, setWater] = useState(100);
+  const bottlesRef = useRef(BOTTLE_MAX);
+  const waterSaid = useRef<number[]>([]);
+  useEffect(() => { const s = loadWater(); setWater(s.water); bottlesRef.current = s.bottles; }, []);
+  useEffect(() => {
+    if (prologue !== "off") return;
+    const id = setInterval(() => setWater(w => { const n = w > WATER_FLOOR ? clampWater(w - 1) : w; if (n !== w) saveWater(n, bottlesRef.current); return n; }), WATER_DRAIN_MS);
+    return () => clearInterval(id);
+  }, [prologue]);
+  useEffect(() => {
+    if (prologue !== "off") return;
+    waterSaid.current = waterSaid.current.filter(t => water <= t);
+    const t = ([10, 20, 40] as const).find(x => water <= x && !waterSaid.current.includes(x));
+    if (!t || bubble || phase !== "idle") return;
+    waterSaid.current.push(t);
+    const opts = WATER_LINES[t];
+    const [who, text] = opts[Math.floor(Math.random() * opts.length)]!;
+    setBubble({ agent: who as Agent, text }); log(who as Agent, text);
+    const tm = setTimeout(() => setBubble(b => b?.text === text ? null : b), 3600);
+    return () => clearTimeout(tm);
+  }, [water, prologue, bubble, phase]);
+  async function drink(run: number) {
+    if (bottlesRef.current <= 0) {
+      const [who, text] = DRY_LINES[Math.floor(Math.random() * DRY_LINES.length)]!;
+      setBubble({ agent: who as Agent, text }); log(who as Agent, text);
+      await wait(3200); if (run === runId.current) setBubble(null);
+      return;
+    }
+    bottlesRef.current -= 1;
+    for (const [who, text] of DRINK_LINES) {
+      if (run !== runId.current) return;
+      const line = `💧 ${text}`;
+      setBubble({ agent: who as Agent, text: line }); log(who as Agent, text);
+      await wait(2200);
+    }
+    if (run !== runId.current) return;
+    setBubble(null);
+    setWater(w => { const n = clampWater(w + DRINK_RESTORE); saveWater(n, bottlesRef.current); return n; });
+  }
   function cancelVisit() {
     const v = visiting.current;
     visiting.current = null;
