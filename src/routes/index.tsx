@@ -67,10 +67,10 @@ const TANK_KEY = "zygoria-tank-v1";
 const TANK_LOW = 25;
 /** Bedtime: each crew member's own door, the pace they wake on, and where their Zzz rise from (artwork %). */
 const BED: Record<Agent, { door: Point; out: Point; zzz: Point }> = {
-  Oz: { door: { x: 18, y: 56.5 }, out: { x: 19.5, y: 58.5 }, zzz: { x: 13, y: 45 } },
-  Brix: { door: { x: 74.5, y: 47 }, out: { x: 73, y: 49.5 }, zzz: { x: 76.5, y: 38.5 } },
-  Lowkey: { door: { x: 48.5, y: 36.5 }, out: { x: 49, y: 38.4 }, zzz: { x: 48.5, y: 33 } },
-  Moxi: { door: { x: 46, y: 49 }, out: { x: 46, y: 49.5 }, zzz: { x: 46, y: 46 } },
+  Oz: { door: { x: 18, y: 56.5 }, out: { x: 19.5, y: 58.5 }, zzz: { x: 13, y: 41 } },
+  Brix: { door: { x: 74.5, y: 47 }, out: { x: 73, y: 49.5 }, zzz: { x: 76.5, y: 34.5 } },
+  Lowkey: { door: { x: 48.5, y: 36.5 }, out: { x: 49, y: 38.4 }, zzz: { x: 48.5, y: 29.5 } },
+  Moxi: { door: { x: 46, y: 49 }, out: { x: 46, y: 49.5 }, zzz: { x: 46, y: 42.5 } },
 };
 /** How long the night lasts before morning arrives (skippable). */
 const NAP_MS = 16000;
