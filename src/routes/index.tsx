@@ -31,8 +31,9 @@ import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
 import waterTankImg from "@/assets/water-tank.png";
-import { WATER_FLOOR, WATER_DRAIN_MS, BOTTLE_MAX, DRINK_WORDS, DRINK_LINES, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
-import { REST_START, REST_FLOOR, REST_DRAIN_MS, REST_WORDS, clampRest, loadRest, saveRest, REST_LINES, BEDTIME_LINES, WAKE_LINES } from "@/lib/sleep";
+import { WATER_FLOOR, WATER_DRAIN_MS, BOTTLE_MAX, DRINK_WORDS, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
+import { REST_START, REST_FLOOR, REST_DRAIN_MS, REST_WORDS, clampRest, loadRest, saveRest, REST_LINES } from "@/lib/sleep";
+import * as B from "@/lib/banter";
 import rockHatch from "@/assets/rock-hatch.png";
 
 /** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
@@ -426,7 +427,10 @@ function CommandCentre() {
     setTaskStage(3);
     setActing(target.id);
     log(agent, `${verb[0]!.toUpperCase()}${verb.slice(1)} the ${target.name.toLowerCase()}.`);
-    await wait(800);
+    // Role-play the job: a muttered line or two while working, different every time.
+    const mutters = B.shuffle(B.WORKING[agent]).slice(0, B.chance(0.5) ? 2 : 1);
+    for (const m of mutters) { setBubble({ agent, text: m }); log(agent, m); await wait(1700); if (run !== runId.current) return null; }
+    setBubble(b => b?.agent === agent ? null : b);
     setActing(null);
     if (run !== runId.current) return null;
     const { next, change } = applyAction(worldRef.current, zoneRef.current, agent, directive);
@@ -567,13 +571,14 @@ function CommandCentre() {
     const r = Math.random();
     const size: "small" | "medium" | "large" = r < 0.5 ? "small" : r < 0.85 ? "medium" : "large";
     setFishSize(size);
-    log("Oz", "Food? Sorted. I'll grab a fish off the pier.");
+    log("Oz", B.pick(B.COOK_OPEN));
     // Oz detours to the end of the pier for the catch, then joins the others at the pit.
     const home = HOME(z, "Oz"), pier: Point[] = [{ x: 29.5, y: 67.5 }, { x: 33, y: 73.5 }];
     const ozRun = (async () => {
       await walk("Oz", pier, "central", run);
       if (run !== runId.current) return;
-      setBubble({ agent: "Oz", text: "Got one!" }); log("Oz", "Got one!");
+      if (B.chance(0.35)) { setBubble({ agent: "Oz", text: "Nothing… nothing… wait." }); await wait(1400); if (run !== runId.current) return; }
+      const c = B.pick(B.CATCH_CALL); setBubble({ agent: "Oz", text: c }); log("Oz", c);
       await wait(1100);
       if (run !== runId.current) return;
       await walk("Oz", [pier[0]!, home, ...paths.Oz], "central", run);
@@ -581,27 +586,19 @@ function CommandCentre() {
     await Promise.all([ozRun, walk("Brix", paths.Brix, "central", run), walk("Lowkey", paths.Lowkey, "central", run)]);
     if (run !== runId.current) return;
     setFacing(p => ({ ...p, Oz: "right", Brix: "left" }));
-    if (!await say("Brix", "Kindling's laid. Lowkey, give us the heat.")) return;
+    if (!await say("Brix", B.pick(B.KINDLING))) return;
     setFire("spark");
-    if (!await say("Lowkey", "Stand back.", 700)) return;
+    if (!await say("Lowkey", B.pick(B.SPARK), 700)) return;
     setFire("lit");
-    if (!await say("Lowkey", "Embers will hold.", 1400)) return;
+    if (B.chance(0.6) && !await say("Lowkey", B.pick(B.LIT), 1400)) return;
     setFire("grilling");
-    const catchLine = { small: "Fish on! Tiny ones, but they're ours.", medium: "Fish on! Decent size, this lot.", large: "Fish on! Look at the size of this one!" }[size];
-    if (!await say("Oz", catchLine, 2600)) return;
-    if (!await say("Brix", "Turn them, Oz. That one's going black.", 2000)) return;
-    if (!await say("Oz", "Crispy is a flavour.", 1800)) return;
-    if (!await say("Lowkey", "Not bad.", 1600)) return;
-    if (moxiIn && !await say("Moxi", "Mm. Fish.", 1400)) return;
+    if (!await say("Oz", B.pick(B.CATCH_LINE[size]), 2600)) return;
+    for (const [who, text] of B.riff(B.GRILL, all, { max: 3 })) if (!await say(who, text, 1800)) return;
     setFire("embers");
-    setHunger(h => { const n = clampHunger(100, SANCTUARY_FLOOR); void FISH_RESTORE[size]; saveHunger(n); return n; });
+    setHunger(h => { const n = clampHunger(100, SANCTUARY_FLOOR); void FISH_RESTORE[size]; void h; saveHunger(n); return n; });
     // Short post-meal chat before everyone drifts home.
-    const afters: [Agent, string][][] = [
-      [["Oz", "Stomach's finally stopped rumbling."], ["Brix", "Because I told you when to flip it."], ["Lowkey", "The river gave us enough today."]],
-      [["Brix", "Good heat, Lowkey. Even cook."], ["Lowkey", "It held."], ["Oz", "And who got his boots wet? Me."]],
-      [["Oz", "Could eat three more."], ["Brix", "You'd be asleep after two."], ["Lowkey", "Full is enough."]],
-      [["Lowkey", "Quiet, after a meal."], ["Oz", "Best fish I've ever caught."], ["Brix", "Only fish you've ever caught."]],
-    ];
+    const afters: [Agent, string][][] = [...B.AFTERS];
+    if (moxiIn) afters.push(...B.MOXI_AFTERS);
     if (size === "large") afters.push([["Brix", "Big one, Oz. Well landed."], ["Oz", "Told you. Fishing legend."], ["Lowkey", "I'm full."]]);
     for (const [who, text] of pick(afters)) if (!await say(who, text, 2200)) return;
     setBubble(null);
@@ -918,12 +915,11 @@ function CommandCentre() {
     if (tankRef.current < TANK_LOW) { if (!await refillTank(run)) return; }
     else { await walk("Brix", paths.Brix, "central", run); if (run !== runId.current) return; }
     if (distance(coords.current.sanctuary.Brix, spot.Brix) > 1) { await walk("Brix", [spot.Brix], "central", run); if (run !== runId.current) return; }
-    if (!await say("Brix", "Getting some more fresh water to drink. Come grab some, lads.")) return;
+    if (!await say("Brix", B.pick(B.DRINK_CALL))) return;
     await Promise.all(all.filter(a => a !== "Brix").map(a => walk(a, paths[a], "central", run)));
     if (run !== runId.current) return;
     setFacing(p => ({ ...p, Oz: "right", Lowkey: "right", Brix: "left" }));
-    for (const [who, text] of DRINK_LINES) if (!await say(who as Agent, `💧 ${text}`, 2000)) return;
-    if (all.includes("Moxi") && !await say("Moxi", "💧 Cold!", 1600)) return;
+    for (const [who, text] of B.riff(B.SIP, all, { skip: 0.2 })) if (!await say(who, `💧 ${text}`, 2000)) return;
     bottlesRef.current = BOTTLE_MAX;
     setWater(() => { saveWater(100, BOTTLE_MAX); return 100; });
     setTankLevelSaved(Math.max(0, tankRef.current - 25 * all.length));
@@ -1050,7 +1046,7 @@ function CommandCentre() {
       const poll = setInterval(() => { if (run !== runId.current) { clearInterval(poll); resolve("bail"); } }, 200);
       void p.then(v => { clearInterval(poll); resolve(v as Awaited<T>); });
     });
-    for (const a of all) { const line = BEDTIME_LINES[a]; if (line && !await say(a, line)) return; }
+    for (const [a, line] of B.riff(B.BED, all, { skip: 0.2 })) if (!await say(a, line)) return;
     // Everyone heads for their own door along the trails they already know.
     await abortable(Promise.all(all.map(a => walk(a, [...routeNodes(coords.current.sanctuary[a], BED[a].door), BED[a].door], "central", run))));
     if (run !== runId.current) return;
@@ -1070,7 +1066,7 @@ function CommandCentre() {
     if (run !== runId.current) return;
     // Morning: the doors open and everyone stretches back into the day.
     setSleepStage("waking");
-    for (const a of all) { const line = WAKE_LINES[a]; if (line && !await say(a, line, 1300)) return; }
+    for (const [a, line] of B.riff(B.WAKE, all, { skip: 0.3 })) if (!await say(a, line, 1300)) return;
     setInBed({ Oz: false, Brix: false, Lowkey: false, Moxi: false });
     setCurled(false);
     setFire("lit");
@@ -1261,12 +1257,12 @@ function CommandCentre() {
     const z = ZONES.sanctuary;
     const CHORES: Record<Agent, { path: Point[]; obj?: string; lines: string[] }[]> = {
       Oz: [
-        { path: [{ x: 29.5, y: 67.5 }, { x: 33, y: 73.5 }], lines: ["Water's calm. Fish are hiding.", "One day I'll catch a big one.", "Pier's still wobbly. Lovely."] },
-        { path: z.paths.Oz.slice(1, 3), obj: "sanc-speakers", lines: ["Bit more bass…", "Testing, testing… perfect.", "That hum? Character."] },
+        { path: [{ x: 29.5, y: 67.5 }, { x: 33, y: 73.5 }], lines: ["Water's calm. Fish are hiding.", "One day I'll catch a big one.", "Pier's still wobbly. Lovely.", "Plank's loose. I'll tell Brix. Eventually.", "Skimming stones. Four bounces! Five!", "Toes in. Freezing. Worth it."] },
+        { path: z.paths.Oz.slice(1, 3), obj: "sanc-speakers", lines: ["Bit more bass…", "Testing, testing… perfect.", "That hum? Character.", "New playlist: Songs For Fish.", "Wire's frayed. Tape fixes everything.", "Oi, speaker. Behave."] },
       ],
-      Brix: [{ path: z.work.Brix ?? [], obj: "sanc-workbench", lines: ["Loose bolt. Always a loose bolt.", "Hold still, you.", "That'll hold. Probably."] }],
-      Lowkey: [{ path: z.paths.Lowkey.slice(1, 4), lines: ["Wind's turning.", "Clouds over the ruins.", "…Something moved. Gone now."] }],
-      Moxi: [{ path: z.work.Moxi ?? [], lines: ["Shiny.", "Bug. Mine.", "Warm spot."] }],
+      Brix: [{ path: z.work.Brix ?? [], obj: "sanc-workbench", lines: ["Loose bolt. Always a loose bolt.", "Hold still, you.", "That'll hold. Probably.", "Sharpening. Don't distract me.", "Sorting scrap. Good pile, bad pile, Oz pile.", "Oiling the hinge. Squeak's gone.", "Sweeping the bench. Again."] }],
+      Lowkey: [{ path: z.paths.Lowkey.slice(1, 4), lines: ["Wind's turning.", "Clouds over the ruins.", "…Something moved. Gone now.", "Birds heading south.", "Counting the trail markers. All there.", "Ridge path's eroding. Noted."] }],
+      Moxi: [{ path: z.work.Moxi ?? [], lines: ["Shiny.", "Bug. Mine.", "Warm spot.", "Digging. Treasure maybe.", "Chasing leaf. Leaf winning.", "*rolls in grass*"] }],
     };
     const THOUGHTS: Record<Agent, string[]> = {
       Oz: ["Could murder a hot pasty right now.", "Anyone else hear that? No? Just me.", "I'm basically the heart of this place."],
