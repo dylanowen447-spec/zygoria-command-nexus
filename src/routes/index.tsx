@@ -1038,6 +1038,23 @@ function CommandCentre() {
     const r = stageRef.current.getBoundingClientRect();
     const p = { x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100 };
     if (distance(p, FIRE_PIT) < 4) { void dispatchDirective("cook me some food"); return; }
+    // Clicking the water tank sends Oz over for a drink that tops his water back up.
+    if (distance(p, { x: WATER_TANK.x, y: WATER_TANK.y - 3 }) < 5) {
+      setClickMark({ id: Date.now(), ...p });
+      void ozTo({ x: WATER_TANK.x - 4, y: WATER_TANK.y + 1 }, true, async run => {
+        if (run !== runId.current) return;
+        const fromTank = tankRef.current > 0;
+        const text = fromTank ? "💧 Ahh, fresh. Bottle's full again." : "💧 Tank's dry… scraped a bit off the bottom. Bottle's full though.";
+        setFacing(f => ({ ...f, Oz: "right" }));
+        setBubble({ agent: "Oz", text }); log("Oz", text);
+        bottlesRef.current = BOTTLE_MAX;
+        setWater(() => { saveWater(100, BOTTLE_MAX); return 100; });
+        if (fromTank) setTankLevelSaved(Math.max(0, tankRef.current - 10));
+        await wait(3400);
+        if (run === runId.current) setBubble(null);
+      });
+      return;
+    }
     const obj = WORLD_OBJECTS.find(o => o.zone === "sanctuary" && distance(objectPoint(o), p) < 4);
     setClickMark({ id: Date.now(), ...p });
     if (obj) { const lvl = worldRef.current.levels[obj.id] ?? 0; void ozTo(objectPoint(obj), false, run => chatAt(run, [["Oz", `${obj.name}. ${obj.states[lvl]}. Noted.`]])); return; }
