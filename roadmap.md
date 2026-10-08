@@ -56,3 +56,5 @@
 - Hide on-screen path lines (keep routes) — done
 - Brix walks only on trails, never over the salvage yard — done
 - [x] Food fills to 100% on eating; 9-minute Sanctuary day/night cycle
+- [x] Moon glow softened at peak night; night sky wash must never fully cover the back mountain or buildings
+- [x] Lowkey must render behind the fire pit (depth layering), never in front of the flames
