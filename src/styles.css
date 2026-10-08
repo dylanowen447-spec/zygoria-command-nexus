@@ -214,6 +214,9 @@
   .world-stage .marker-oz .idle-bubble{bottom:calc(100% + 20px)}
   .world-stage .marker-lowkey .idle-bubble{bottom:calc(100% + 38px)}
   .world-stage .marker-brix .idle-bubble{bottom:calc(100% + 58px)}
+  /* Chat bubbles are 30% larger on desktop so the words stay readable; phone sizing is untouched. */
+  .idle-bubble{font-size:13px;max-width:221px;padding:7px 11px;border-radius:10px}
+  .world-stage .agent-marker:has(.idle-bubble).near-top .idle-bubble{left:calc(100% + 6px)}
   .world-stage .task-energy{width:10px;height:10px;margin:-5px 0 0 -5px}
 }
 /* The summit sits near the artwork's upper edge: keep Lowkey fully visible on narrower desktop frames. */
