@@ -55,3 +55,4 @@
 - [x] Water tank at the workshop yard: Brix carries it to the river to fill on arrival and whenever it runs low; tank level meter
 - Hide on-screen path lines (keep routes) — done
 - Brix walks only on trails, never over the salvage yard — done
+- [x] Food fills to 100% on eating; 9-minute Sanctuary day/night cycle

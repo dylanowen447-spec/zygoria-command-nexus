@@ -86,6 +86,15 @@ const IDLE_CHATS: Record<string, [string, string][]> = {
   "Moxi>Lowkey": [["You see me. You always see me.", "Hard to miss a dragon."], ["The stars moved. That one should be there.", "…I'll keep an eye on it."]],
 };
 
+function DayNight() {
+  const [t, setT] = useState(0);
+  useEffect(() => { const tick = () => setT((Date.now() % 540000) / 540000); tick(); const id = setInterval(tick, 2000); return () => clearInterval(id); }, []);
+  // 0 dawn, .1-.5 day, .6 dusk, .7-.95 night
+  const night = Math.max(0, Math.min(1, t < .1 ? 1 - t / .1 : t < .5 ? 0 : t < .7 ? (t - .5) / .2 : t < .9 ? 1 : 1 - (t - .9) / .1));
+  const warm = Math.max(0, 1 - Math.abs(t - .58) / .08) + Math.max(0, 1 - Math.abs(t - .05) / .06);
+  return <div className="day-night" aria-hidden="true" style={{ "--night": night.toFixed(3), "--warm": Math.min(1, warm).toFixed(3) } as CSSProperties}/>;
+}
+
 export const Route = createFileRoute("/")({
   loader: () => getCanonState(),
   head: () => ({ meta: [
@@ -563,7 +572,7 @@ function CommandCentre() {
     if (!await say("Lowkey", "Not bad.", 1600)) return;
     if (moxiIn && !await say("Moxi", "Mm. Fish.", 1400)) return;
     setFire("embers");
-    setHunger(h => { const n = clampHunger(h + FISH_RESTORE[size], SANCTUARY_FLOOR); saveHunger(n); return n; });
+    setHunger(h => { const n = clampHunger(100, SANCTUARY_FLOOR); void FISH_RESTORE[size]; saveHunger(n); return n; });
     // Short post-meal chat before everyone drifts home.
     const afters: [Agent, string][][] = [
       [["Oz", "Stomach's finally stopped rumbling."], ["Brix", "Because I told you when to flip it."], ["Lowkey", "The river gave us enough today."]],
@@ -1200,7 +1209,7 @@ function CommandCentre() {
         <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> {prologue === "off" ? "LIVE WORLD FEED" : "FIRST GENESIS"} <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {prologue === "on" ? <>{scene.chapter}</> : prologue === "walk" ? <>THE LONG WALK</> : zoneId === "sanctuary" ? <>{sancChapter[0]}</> : <>{zone.indexA} <span> / </span> {zone.indexB}</>}</div></div>
         <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : zoneId === "sanctuary" ? sancChapter[0] : canon.stage}</span><span className={`hunger-meter ${hunger <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew hunger" aria-valuenow={hunger} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">FOOD</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${hunger}%` }}/></span><span className="hunger-num">{hunger}%</span></span><span className={`hunger-meter water-meter ${water <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew water" aria-valuenow={water} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">WATER</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${water}%` }}/></span><span className="hunger-num">{water}%</span></span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
-          {prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="The Long Walk"><span className="prologue-card-eyebrow">THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river ›</button></div></div> : <div onClick={onWorldClick} className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""} ${zone.id === "sanctuary" ? "is-clickable" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
+          {prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="The Long Walk"><span className="prologue-card-eyebrow">THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river ›</button></div></div> : <div onClick={onWorldClick} className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""} ${zone.id === "sanctuary" ? "is-clickable" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />{zone.id === "sanctuary" && <DayNight/>}
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
             <div className="world-vignette"/>
             <div className="map-coordinate top-left">◉ &nbsp; {zone.label}</div>
