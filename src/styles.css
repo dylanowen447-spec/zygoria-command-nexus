@@ -543,8 +543,7 @@
 .carried-tank { position: absolute; left: 50%; bottom: 22%; width: 58%; transform: translateX(-50%); pointer-events: none; z-index: 6 !important; display: block !important; opacity: 1 !important; }
 .water-tank-spot.is-filling .water-tank, .water-tank-spot.is-full .water-tank { filter: drop-shadow(0 0 6px hsl(200 90% 60% / .8)) drop-shadow(0 3px 2px hsl(var(--background) / .6)); }
 
-.day-night{position:absolute;inset:0;pointer-events:none;z-index:1;background:oklch(0.14 0.05 265/calc(var(--night)*.42))}
-.night-grass{position:absolute;left:0;right:0;top:22%;bottom:0;pointer-events:none;background:oklch(0.32 0.09 150);mix-blend-mode:multiply;opacity:calc(var(--night)*.45);transition:opacity 1s linear}
+.day-night{position:absolute;inset:0;pointer-events:none;z-index:1}
 /* Night lights sit above the darkness so Brix's workshop and the electrics glow out of it. */
 @keyframes nightBuzz{0%,100%{filter:brightness(1)}45%{filter:brightness(1.35)}50%{filter:brightness(.85)}55%{filter:brightness(1.3)}}
 
