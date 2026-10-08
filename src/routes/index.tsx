@@ -28,6 +28,7 @@ import { PrologueScene } from "@/components/PrologueScene";
 import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
+import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
 
 /** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
 type Agent = CrewAgent;
@@ -552,6 +553,7 @@ function CommandCentre() {
     if (!await say("Lowkey", "Not bad.", 1600)) return;
     if (moxiIn && !await say("Moxi", "Mm. Fish.", 1400)) return;
     setFire("embers");
+    setHunger(h => { const n = clampHunger(h + FISH_RESTORE[size], SANCTUARY_FLOOR); saveHunger(n); return n; });
     // Short post-meal chat before everyone drifts home.
     const afters: [Agent, string][][] = [
       [["Oz", "Stomach's finally stopped rumbling."], ["Brix", "Because I told you when to flip it."], ["Lowkey", "The river gave us enough today."]],
@@ -783,6 +785,28 @@ function CommandCentre() {
   const visiting = useRef<Agent | null>(null);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
+  /** Crew hunger: drifts down slowly; cosmetic before the Sanctuary, restored by the cookout. */
+  const [hunger, setHunger] = useState(HUNGER_START);
+  const hungerSaid = useRef<number[]>([]);
+  useEffect(() => { setHunger(loadHunger()); }, []);
+  useEffect(() => {
+    const inSanc = prologue === "off";
+    const floor = inSanc ? SANCTUARY_FLOOR : PROLOGUE_FLOOR;
+    const id = setInterval(() => setHunger(h => { const n = h > floor ? clampHunger(h - 1, floor) : h; if (n !== h) saveHunger(n); return n; }), inSanc ? SANCTUARY_DRAIN_MS : PROLOGUE_DRAIN_MS);
+    return () => clearInterval(id);
+  }, [prologue]);
+  useEffect(() => {
+    if (prologue !== "off") return;
+    hungerSaid.current = hungerSaid.current.filter(t => hunger <= t);
+    const t = ([10, 20, 40] as const).find(x => hunger <= x && !hungerSaid.current.includes(x));
+    if (!t || bubble || phase !== "idle") return;
+    hungerSaid.current.push(t);
+    const opts = HUNGER_LINES[t];
+    const [who, text] = opts[Math.floor(Math.random() * opts.length)]!;
+    setBubble({ agent: who as Agent, text }); log(who as Agent, text);
+    const tm = setTimeout(() => setBubble(b => b?.text === text ? null : b), 3600);
+    return () => clearTimeout(tm);
+  }, [hunger, prologue, bubble, phase]);
   function cancelVisit() {
     const v = visiting.current;
     visiting.current = null;
@@ -1064,7 +1088,7 @@ function CommandCentre() {
     <main className="command-layout">
       <div className="world-column">
         <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> {prologue === "off" ? "LIVE WORLD FEED" : "FIRST GENESIS"} <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {prologue === "on" ? <>{scene.chapter}</> : prologue === "walk" ? <>THE LONG WALK</> : zoneId === "sanctuary" ? <>{sancChapter[0]}</> : <>{zone.indexA} <span> / </span> {zone.indexB}</>}</div></div>
-        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : zoneId === "sanctuary" ? sancChapter[0] : canon.stage}</span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
+        <div className="zone-selector" role="group" aria-label="Zygoria zones">{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : zoneId === "sanctuary" ? sancChapter[0] : canon.stage}</span><span className={`hunger-meter ${hunger <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew hunger" aria-valuenow={hunger} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">FOOD</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${hunger}%` }}/></span><span className="hunger-num">{hunger}%</span></span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
           {prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="The Long Walk"><span className="prologue-card-eyebrow">THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river ›</button></div></div> : <div onClick={onWorldClick} className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""} ${zone.id === "sanctuary" ? "is-clickable" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
