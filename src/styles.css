@@ -536,7 +536,7 @@
 /* Brix's water tank outside the workshop */
 .water-tank-spot { position: absolute; width: 6.2%; transform: translate(-50%, -92%); pointer-events: none; z-index: 2; }
 .water-tank { display: block; width: 100%; height: auto; filter: drop-shadow(0 3px 2px hsl(var(--background) / .6)); transition: filter .4s; }
-.tank-meter { position: absolute; left: 15%; right: 15%; top: -7px; height: 4px; border-radius: 2px; background: hsl(var(--background) / .75); border: 1px solid hsl(var(--foreground) / .25); overflow: hidden; }
+.tank-meter { position: absolute; left: 15%; right: 15%; top: -7px; height: 4px; border-radius: 2px; background: var(--background); border: 1px solid var(--border); overflow: hidden; }
 .tank-meter > span { display: block; height: 100%; background: var(--water); transition: width .35s; }
 .tank-meter.is-low > span { background: var(--destructive); }
 .carried-tank { position: absolute; left: 50%; bottom: 38%; width: 70%; transform: translateX(-50%); pointer-events: none; z-index: 2; }
