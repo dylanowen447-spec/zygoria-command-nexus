@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { ShackRadio } from "@/components/ShackRadio";
 import { chooseJobRoute, getCanonState, runCrewStep } from "@/lib/job-planning.functions";
-import { ZONES, ZONE_LIST, HOME, toMeet, toHome, trailPoints, type CrewAgent, type Point, type ZoneId } from "@/lib/zones";
+import { ZONES, ZONE_LIST, HOME, toMeet, toHome, type CrewAgent, type Point, type ZoneId } from "@/lib/zones";
 import { findGroupPlan, findUserCommand, GROUP_OFFSETS } from "@/lib/group-plans";
 import ozPortrait from "@/assets/oz-portrait.webp.asset.json";
 import ozCrewIcon from "@/assets/oz-crew-icon.webp.asset.json";
@@ -56,8 +56,10 @@ const startLogs: Log[] = [
 const FIRE_PIT = { x: 50, y: 63.5 };
 /** Brix's water tank on the grass outside his workshop. */
 const WATER_TANK = { x: 84, y: 60 };
-/** Riverbank below the workshop where Brix refills the tank, reached via open grass. */
-const RIVER_FILL: Point[] = [{ x: 78, y: 70 }, { x: 72, y: 77 }, { x: 64, y: 81 }];
+/** Brix's home → workshop frontage trail → beside the tank; never across the salvage yard. */
+const BRIX_TO_TANK: Point[] = [{ x: 67.5, y: 54.6 }, { x: 71, y: 52.8 }, { x: 73.5, y: 53.5 }, { x: 80, y: 57 }, { x: 82, y: 60.8 }];
+/** Tank → back up the frontage → west river trail around the scrap pile → riverbank by the falls. */
+const RIVER_FILL: Point[] = [{ x: 80, y: 57 }, { x: 73.5, y: 53.5 }, { x: 71, y: 52.8 }, { x: 68, y: 57 }, { x: 63, y: 64 }, { x: 58, y: 73.5 }];
 const TANK_KEY = "zygoria-tank-v1";
 const TANK_LOW = 25;
 const WALK_SPEED = 5.5; // percent of world width per second
@@ -1213,7 +1215,6 @@ function CommandCentre() {
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
-            <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/>{moxiJoined && <polyline points={trailPoints(zone, "Moxi")}/>}</svg>
             {zone.id === "sanctuary" && !carrying && <div className={`water-tank-spot is-${tank}`} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}><img className="water-tank" src={waterTankImg} alt="Brix's water tank" width={816} height={816}/><span className={`tank-meter ${tankLevel < TANK_LOW ? "is-low" : ""}`} role="meter" aria-label="Water tank level" aria-valuenow={tankLevel} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${tankLevel}%` }}/></span></div>}
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%` }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
