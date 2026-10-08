@@ -8,7 +8,7 @@ A small hunger meter in the top game bar. It slowly drops on the opening journey
 - Never drops below 30%. It never blocks talking, walking or moving on. The story always comes first.
 
 ## In the Sanctuary (real, but gentle)
-- Drops very slowly, about 1% every 90 seconds, so you can explore and chat for a long time.
+- Drops about 1% every 30 seconds. A full meal lasts around 25–40 minutes of play, so you'll cook now and then without it becoming a chore.
 - Never drops below 10%. At 10% it stops there and the crew make hungry comments. Nobody dies.
 - Cooking at the fire restores it based on the fish Oz catches: small +20%, medium +30%, large +40% (up to 100%).
 - The cookout itself stays exactly as it is: who cooks, who refuses and the after-meal fish chat.
