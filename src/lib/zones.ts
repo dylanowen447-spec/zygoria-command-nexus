@@ -1,4 +1,5 @@
-import worldImg from "@/assets/sanctuary-mountain-overlook.png";
+import worldAsset from "@/assets/sanctuary-crisp.webp.asset.json";
+const worldImg = worldAsset.url;
 import ruinsImg from "@/assets/zone-ruins.jpg";
 import cavesImg from "@/assets/zone-caves.jpg";
 import swampImg from "@/assets/zone-swamp.jpg";
