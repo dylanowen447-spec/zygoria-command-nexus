@@ -557,6 +557,13 @@ function CommandCentre() {
   /** Cookout: the crew meet at the crossroads fire pit; Brix lays kindling, Lowkey lights it, Oz grills tiny fish, everyone eats. */
   const [fire, setFire] = useState<"out" | "spark" | "lit" | "grilling" | "embers">("out");
   const [fishSize, setFishSize] = useState<"small" | "medium" | "large">("small");
+  useEffect(() => { Atmos.armAtmosphere(); }, []);
+  useEffect(() => {
+    const zoneEnv: Record<ZoneId, Atmos.AtmosEnv> = { sanctuary: "sanctuary", ruins: "city", caves: "caves", cronk: "walk", shelton: "walk" };
+    const sceneEnv: Record<string, Atmos.AtmosEnv> = { landing: "landing", city: "city", library: "library", "long-walk": "walk" };
+    Atmos.setAtmosEnv(prologue === "on" ? (building ? "walk" : sceneEnv[scene.id] ?? "walk") : prologue === "walk" ? "walk" : zoneEnv[zoneId]);
+  }, [prologue, building, scene.id, zoneId]);
+  useEffect(() => { Atmos.setAtmosFire(fire === "lit" || fire === "grilling" || fire === "embers"); }, [fire]);
   async function cookout(run: number) {
     const z = ZONES.sanctuary;
     const moxiIn = storyRef.current.beats.includes("trust");
