@@ -534,5 +534,5 @@
 .water-meter.is-low .hunger-fill{background:var(--destructive)}
 
 /* Brix's water tank outside the workshop */
-.water-tank { position: absolute; width: 3.2%; height: auto; transform: translate(-50%, -92%); pointer-events: none; z-index: 2; filter: drop-shadow(0 3px 2px hsl(var(--background) / .6)); transition: filter .4s; }
+.water-tank { position: absolute; width: 6.2%; height: auto; transform: translate(-50%, -92%); pointer-events: none; z-index: 2; filter: drop-shadow(0 3px 2px hsl(var(--background) / .6)); transition: filter .4s; }
 .water-tank.is-filling, .water-tank.is-full { filter: drop-shadow(0 0 6px hsl(200 90% 60% / .8)) drop-shadow(0 3px 2px hsl(var(--background) / .6)); }
