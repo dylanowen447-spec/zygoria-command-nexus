@@ -269,9 +269,21 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     // Oz's zap: crew reactions are drawn from varied pools by who is closest, with cooldown and random silence.
     let zapQuietUntil = 0; let lastLine = "";
     const ZAP: Record<string, [Agent, string][][]> = {
-      Brix: [[["Brix", "Oi! Careful, Oz!"]], [["Brix", "Watch where you point that!"]], [["Brix", "You nearly welded my elbow."], ["Oz", "Nearly."]], [["Brix", "Ground yourself, mate."]], [["Brix", "Keep that away from me."], ["Oz", "Can't help it. I'm electric."]], [["Brix", "That's my good arm, Oz."]]],
-      Lowkey: [[["Lowkey", "Oz. Watch it."]], [["Lowkey", "Don't set the grass alight."]], [["Lowkey", "…Static hazard."]], [["Lowkey", "Do that again and I'm walking ahead."]], [["Lowkey", "Felt that in my teeth."], ["Oz", "Sorry. Mostly."]], [["Lowkey", "You're a walking short circuit."]]],
-      none: [[["Oz", "Whoa! Still got charge in me."]], [["Oz", "Zap!"]], [["Oz", "Did you see that arc?"], ["Brix", "Be careful, Oz."]], [["Oz", "Tickles."]], [["Oz", "Antenna surge!"], ["Lowkey", "Point it at the sky next time."]], [["Brix", "Careful, Oz. Things round here are old."]], [["Lowkey", "Something's making him spark."]], [["Oz", "Where's that coming from?"]]],
+      Brix: [[["Brix", "Oi! Careful, Oz!"]], [["Brix", "Watch where you point that!"]], [["Brix", "You nearly welded my elbow."], ["Oz", "Nearly."]], [["Brix", "Ground yourself, mate."]], [["Brix", "Keep that away from me."], ["Oz", "Can't help it. I'm electric."]], [["Brix", "That's my good arm, Oz."]],
+        [["Brix", "Oi! Watch where you're firing that!"], ["Lowkey", "He's going to get us killed before we even find somewhere to sleep."], ["Oz", "Relax, lads. Just testing something. ⚡"]],
+        [["Brix", "Oz, I'm mostly metal. Keep that away."], ["Lowkey", "Don't give him ideas."], ["Oz", "Just checking your grounding, mate."]],
+        [["Brix", "My hands are still buzzing."], ["Oz", "Free warm-up. You're welcome."]],
+        [["Brix", "Do that again and you're carrying the heavy stuff."], ["Oz", "...Noted."]]],
+      Lowkey: [[["Lowkey", "Oz. Watch it."], ["Oz", "Just clearing the air."]], [["Lowkey", "Don't set the grass alight."]], [["Lowkey", "…Static hazard."]], [["Lowkey", "Do that again and I'm walking ahead."]], [["Lowkey", "Felt that in my teeth."], ["Oz", "Sorry. Mostly."]], [["Lowkey", "You're a walking short circuit."], ["Oz", "It's called energy, Lowkey."]],
+        [["Lowkey", "That was close."], ["Brix", "Too close. Point it somewhere empty, Oz."], ["Oz", "I was aiming. Sort of."]],
+        [["Lowkey", "My hair's standing up."], ["Oz", "Suits you."]],
+        [["Lowkey", "If you blow us up, I'm haunting you."], ["Oz", "Fair."]]],
+      none: [[["Oz", "Whoa! Still got charge in me."], ["Brix", "Keep it to yourself."]], [["Oz", "Zap!"]], [["Oz", "Did you see that arc?"], ["Lowkey", "Hard not to."]], [["Oz", "Tickles."]], [["Oz", "Antenna surge!"], ["Lowkey", "Point it at the sky next time."]], [["Brix", "Careful, Oz. Things round here are old."]], [["Lowkey", "Something in this air is sparking."], ["Oz", "No, that was definitely me."]], [["Oz", "Where's that coming from?"]],
+        [["Brix", "Oi! Watch where you're firing that!"], ["Lowkey", "He's going to get us killed before we even find somewhere to sleep."], ["Oz", "Relax, lads. Just testing something. ⚡"]],
+        [["Lowkey", "Did the sky just jolt him, or is he doing that?"], ["Brix", "Either way, stay five paces back."], ["Oz", "My antenna picked something up!"]],
+        [["Brix", "Watch the arc, Oz!"], ["Oz", "Had to let the charge out!"], ["Lowkey", "Next time, let it out at a rock."]],
+        [["Oz", "Feel that? I'm buzzing."], ["Brix", "We all felt it."]],
+        [["Lowkey", "He's going to start a fire."], ["Brix", "Or find one. Could be handy."], ["Oz", "See? Useful."]]],
     };
     zap.current = (p: Point) => {
       const now = performance.now();
@@ -281,8 +293,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const set = pool[Math.floor(Math.random() * pool.length)]!;
       lastLine = set[0]![1]; zapQuietUntil = now + 30000;
       set.forEach(([who, line], i) => {
-        timers.push(setTimeout(() => alive && say(who, line), 300 + i * 2300));
-        timers.push(setTimeout(() => alive && setBubbles(b => b[who] === line ? { ...b, [who]: undefined } : b), 300 + i * 2300 + 2100));
+        const start = 300 + set.slice(0, i).reduce((t, [, l]) => t + hold(l) + 300, 0);
+        timers.push(setTimeout(() => alive && say(who, line), start));
+        timers.push(setTimeout(() => alive && setBubbles(b => b[who] === line ? { ...b, [who]: undefined } : b), start + hold(line)));
       });
     };
     handler.current = (text: string) => {
