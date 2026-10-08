@@ -556,10 +556,10 @@
 .moon{position:absolute;left:78%;top:4%;width:3.2%;aspect-ratio:1;border-radius:50%;opacity:var(--night);background:radial-gradient(circle at 38% 38%,oklch(0.98 0.03 95),oklch(0.86 0.04 90));box-shadow:0 0 11px 2px oklch(0.95 0.05 95/.3)}
 @keyframes starTwinkle{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
 /* ── Bedtime: Zzz, the rock hatch, the morning sweep ───────────────── */
-.zeds{position:absolute;z-index:940;transform:translate(-50%,-100%);pointer-events:none;display:flex;gap:3px;font-family:inherit;color:oklch(0.92 0.05 250/.85)}
-.zeds i{font-style:normal;font-size:11px;opacity:0;animation:zed 3.4s ease-in-out infinite;text-shadow:0 0 6px oklch(0.7 0.12 250/.5)}
-.zeds i:nth-child(2){animation-delay:1.1s;font-size:14px}
-.zeds i:nth-child(3){animation-delay:2.2s;font-size:9px}
+.zeds{position:absolute;z-index:940;transform:translate(-50%,-100%);pointer-events:none;display:flex;align-items:flex-end;gap:2px}
+.zeds i{font-style:normal;font-size:15px;opacity:0;animation:zed 3.4s ease-in-out infinite;color:oklch(0.97 0.03 250);text-shadow:0 0 9px oklch(0.78 0.16 250/.95),0 1px 3px oklch(0.12 0.03 250/.9)}
+.zeds i:nth-child(2){animation-delay:1.1s;font-size:19px;margin-bottom:7px}
+.zeds i:nth-child(3){animation-delay:2.2s;font-size:12px;margin-bottom:14px}
 @keyframes zed{0%{opacity:0;transform:translateY(6px) scale(.7)}30%{opacity:.9}70%{opacity:.5}100%{opacity:0;transform:translateY(-16px) scale(1.15)}}
 .rock-hatch{position:absolute;width:5.4%;transform:translate(-50%,-70%);z-index:3;pointer-events:none;opacity:.92;transition:filter .5s ease}
 .rock-hatch img{width:100%;height:auto;display:block;filter:brightness(.86) saturate(.9)}
