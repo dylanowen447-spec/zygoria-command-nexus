@@ -530,3 +530,5 @@
 .hunger-fill{display:block;height:100%;background:var(--primary);transition:width .6s ease}
 .hunger-meter.is-low .hunger-fill{background:var(--destructive)}
 .hunger-meter.is-low{color:var(--destructive)}
+.water-meter .hunger-fill{background:var(--accent)}
+.water-meter.is-low .hunger-fill{background:var(--destructive)}
