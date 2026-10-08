@@ -29,6 +29,7 @@ import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
+import waterTankImg from "@/assets/water-tank.png";
 import { WATER_FLOOR, WATER_DRAIN_MS, DRINK_RESTORE, BOTTLE_MAX, DRINK_WORDS, DRINK_LINES, DRY_LINES, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
 
 /** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
@@ -1169,6 +1170,7 @@ function CommandCentre() {
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
             <svg className="world-trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={trailPoints(zone, "Oz")}/><polyline points={trailPoints(zone, "Brix")}/><polyline points={trailPoints(zone, "Lowkey")}/>{moxiJoined && <polyline points={trailPoints(zone, "Moxi")}/>}</svg>
+            {zone.id === "sanctuary" && <img className={`water-tank is-${tank}`} src={waterTankImg} alt="Brix's water tank" width={816} height={816} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}/>}
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%` }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {WORLD_OBJECTS.filter(o => o.zone === zoneId).map(o => { const p = objectPoint(o), lvl = world.levels[o.id] ?? 0; return <div key={o.id} className={`world-object wo-${o.agent.toLowerCase()} level-${lvl} ${lvl === o.states.length - 1 ? "is-max" : ""} ${acting === o.id ? "is-acting" : ""} ${changed === o.id ? "just-changed" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-label={`${o.name}: ${o.states[lvl]}`}><span className="wo-ring"/><span className="wo-label">{o.name} · {o.states[lvl]}</span></div>; })}
             {mp3Task && zoneId === "sanctuary" && (() => { const p = objectPoint(WORLD_OBJECTS.find(o => o.id === "sanc-workbench")!); return <div className={`world-object wo-brix mp3-task ${mp3Task === "fixed" ? "is-max" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }}><span className="wo-ring"/><span className="wo-label">MP3 PLAYER · {mp3Task === "fixed" ? "FIXED" : "BROKE"}</span></div>; })()}
