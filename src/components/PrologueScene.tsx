@@ -279,7 +279,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const near = (["Brix", "Lowkey"] as Agent[]).filter(z => dist(coords.current[z], p) < 9).sort((x, y) => dist(coords.current[x], p) - dist(coords.current[y], p))[0];
       const pool = ZAP[near ?? "none"]!.filter(set => set[0]![1] !== lastLine);
       const set = pool[Math.floor(Math.random() * pool.length)]!;
-      lastLine = set[0]![1]; zapQuietUntil = now + 4000 + set.length * 2500;
+      lastLine = set[0]![1]; zapQuietUntil = now + 30000;
       set.forEach(([who, line], i) => {
         timers.push(setTimeout(() => alive && say(who, line), 300 + i * 2300));
         timers.push(setTimeout(() => alive && setBubbles(b => b[who] === line ? { ...b, [who]: undefined } : b), 300 + i * 2300 + 2100));
@@ -368,7 +368,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       pts.push(`${x},${y}`);
       const id = performance.now();
       setBolts(b => [...b.slice(-3), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
-      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 420);
+      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 240);
       zap.current({ x, y });
     }}>
       <svg className="zap-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
