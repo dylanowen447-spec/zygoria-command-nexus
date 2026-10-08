@@ -538,8 +538,10 @@ function CommandCentre() {
     const z = ZONES.sanctuary;
     const moxiIn = storyRef.current.beats.includes("trust");
     const all: Agent[] = moxiIn ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
-    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x - 3, y: FIRE_PIT.y - 4 }, Moxi: { x: FIRE_PIT.x + 4, y: FIRE_PIT.y + 4 } };
-    const paths = Object.fromEntries(all.map(a => [a, [...toMeet(z, a), seat[a]]])) as Record<Agent, Point[]>;
+    const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x, y: FIRE_PIT.y - 4.5 }, Moxi: { x: FIRE_PIT.x + 4, y: FIRE_PIT.y + 4 } };
+    // Lowkey swings round the right side of the pit to his spot behind it, never through the flames (reversed on the way home).
+    const around: Partial<Record<Agent, Point[]>> = { Lowkey: [{ x: FIRE_PIT.x + 8, y: FIRE_PIT.y - 2 }] };
+    const paths = Object.fromEntries(all.map(a => [a, [...toMeet(z, a), ...(around[a] ?? []), seat[a]]])) as Record<Agent, Point[]>;
     outing.current = all;
     const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(Math.min(6000, Math.max(ms, 3200, 1800 + text.length * 45))); setBubble(null); await wait(1000); return run === runId.current; };
     const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
