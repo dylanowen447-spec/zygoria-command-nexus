@@ -555,3 +555,24 @@
 /* The moon sits above the sky wash so its disc stays solid, with a low halo that never hides the peaks behind it. */
 .moon{position:absolute;left:78%;top:4%;width:3.2%;aspect-ratio:1;border-radius:50%;opacity:var(--night);background:radial-gradient(circle at 38% 38%,oklch(0.98 0.03 95),oklch(0.86 0.04 90));box-shadow:0 0 11px 2px oklch(0.95 0.05 95/.3)}
 @keyframes starTwinkle{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+/* ── Bedtime: Zzz, the rock hatch, the morning sweep ───────────────── */
+.zeds{position:absolute;z-index:940;transform:translate(-50%,-100%);pointer-events:none;display:flex;gap:3px;font-family:inherit;color:oklch(0.92 0.05 250/.85)}
+.zeds i{font-style:normal;font-size:11px;opacity:0;animation:zed 3.4s ease-in-out infinite;text-shadow:0 0 6px oklch(0.7 0.12 250/.5)}
+.zeds i:nth-child(2){animation-delay:1.1s;font-size:14px}
+.zeds i:nth-child(3){animation-delay:2.2s;font-size:9px}
+@keyframes zed{0%{opacity:0;transform:translateY(6px) scale(.7)}30%{opacity:.9}70%{opacity:.5}100%{opacity:0;transform:translateY(-16px) scale(1.15)}}
+.rock-hatch{position:absolute;width:5.4%;transform:translate(-50%,-70%);z-index:3;pointer-events:none;opacity:.92;transition:filter .5s ease}
+.rock-hatch img{width:100%;height:auto;display:block;filter:brightness(.86) saturate(.9)}
+.rock-hatch.is-open img{filter:brightness(1.4) saturate(1.15)}
+.agent-marker.is-hidden{opacity:0;pointer-events:none;transition:opacity .5s ease}
+.agent-marker.is-curling .sprite-stage{transform-origin:50% 100%;transform:scaleY(.62) scaleX(1.1)}
+.agent-marker.is-curling .marker-status{opacity:.45}
+.sunrise-sweep{position:absolute;inset:0;z-index:900;pointer-events:none;background:linear-gradient(0deg,oklch(0.82 0.12 70/.5) 0%,oklch(0.86 0.09 90/.22) 38%,transparent 72%);animation:sunrise 6s ease-out forwards}
+@keyframes sunrise{0%{opacity:0}35%{opacity:1}100%{opacity:0}}
+.sleep-prompt{position:absolute;z-index:960;transform:translate(-50%,-100%);padding:6px 10px;border:1px solid oklch(0.75 0.12 250/.5);background:oklch(0.2 0.04 250/.92);color:oklch(0.92 0.03 250);font-family:inherit;font-size:10px;letter-spacing:.08em;border-radius:3px;cursor:pointer;white-space:nowrap;animation:sleep-in .25s ease-out}
+.sleep-prompt:hover{background:oklch(0.28 0.06 250/.95);border-color:oklch(0.85 0.09 250/.8)}
+@keyframes sleep-in{from{opacity:0;transform:translate(-50%,-92%)}to{opacity:1;transform:translate(-50%,-100%)}}
+.nap-skip{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);z-index:970;padding:7px 14px;border:1px solid oklch(0.7 0.08 250/.45);background:oklch(0.16 0.03 250/.85);color:oklch(0.88 0.03 250);font-family:inherit;font-size:10px;letter-spacing:.1em;border-radius:3px;cursor:pointer}
+.nap-skip:hover{background:oklch(0.24 0.05 250/.9)}
+.rest-meter .hunger-fill{background:linear-gradient(90deg,oklch(0.55 0.14 300),oklch(0.72 0.12 260))}
+@media (prefers-reduced-motion: reduce){.zeds i{animation:none;opacity:.7}.sunrise-sweep{animation:none;opacity:.5}}
