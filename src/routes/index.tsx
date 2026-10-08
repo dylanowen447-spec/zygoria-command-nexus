@@ -1257,12 +1257,12 @@ function CommandCentre() {
     const z = ZONES.sanctuary;
     const CHORES: Record<Agent, { path: Point[]; obj?: string; lines: string[] }[]> = {
       Oz: [
-        { path: [{ x: 29.5, y: 67.5 }, { x: 33, y: 73.5 }], lines: ["Water's calm. Fish are hiding.", "One day I'll catch a big one.", "Pier's still wobbly. Lovely."] },
-        { path: z.paths.Oz.slice(1, 3), obj: "sanc-speakers", lines: ["Bit more bass…", "Testing, testing… perfect.", "That hum? Character."] },
+        { path: [{ x: 29.5, y: 67.5 }, { x: 33, y: 73.5 }], lines: ["Water's calm. Fish are hiding.", "One day I'll catch a big one.", "Pier's still wobbly. Lovely.", "Plank's loose. I'll tell Brix. Eventually.", "Skimming stones. Four bounces! Five!", "Toes in. Freezing. Worth it."] },
+        { path: z.paths.Oz.slice(1, 3), obj: "sanc-speakers", lines: ["Bit more bass…", "Testing, testing… perfect.", "That hum? Character.", "New playlist: Songs For Fish.", "Wire's frayed. Tape fixes everything.", "Oi, speaker. Behave."] },
       ],
-      Brix: [{ path: z.work.Brix ?? [], obj: "sanc-workbench", lines: ["Loose bolt. Always a loose bolt.", "Hold still, you.", "That'll hold. Probably."] }],
-      Lowkey: [{ path: z.paths.Lowkey.slice(1, 4), lines: ["Wind's turning.", "Clouds over the ruins.", "…Something moved. Gone now."] }],
-      Moxi: [{ path: z.work.Moxi ?? [], lines: ["Shiny.", "Bug. Mine.", "Warm spot."] }],
+      Brix: [{ path: z.work.Brix ?? [], obj: "sanc-workbench", lines: ["Loose bolt. Always a loose bolt.", "Hold still, you.", "That'll hold. Probably.", "Sharpening. Don't distract me.", "Sorting scrap. Good pile, bad pile, Oz pile.", "Oiling the hinge. Squeak's gone.", "Sweeping the bench. Again."] }],
+      Lowkey: [{ path: z.paths.Lowkey.slice(1, 4), lines: ["Wind's turning.", "Clouds over the ruins.", "…Something moved. Gone now.", "Birds heading south.", "Counting the trail markers. All there.", "Ridge path's eroding. Noted."] }],
+      Moxi: [{ path: z.work.Moxi ?? [], lines: ["Shiny.", "Bug. Mine.", "Warm spot.", "Digging. Treasure maybe.", "Chasing leaf. Leaf winning.", "*rolls in grass*"] }],
     };
     const THOUGHTS: Record<Agent, string[]> = {
       Oz: ["Could murder a hot pasty right now.", "Anyone else hear that? No? Just me.", "I'm basically the heart of this place."],
