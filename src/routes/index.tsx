@@ -93,7 +93,7 @@ function DayNight() {
   // 10 min loop: 0-4 day, 4-5 dusk, 5-9 night, 9-10 dawn (continuous at wrap)
   const night = t < .4 ? 0 : t < .5 ? (t - .4) / .1 : t < .9 ? 1 : 1 - (t - .9) / .1;
   const warm = Math.max(0, 1 - Math.abs(t - .45) / .05) + Math.max(0, 1 - Math.abs(t - .95) / .05);
-  return <div className="day-night" aria-hidden="true" style={{ "--night": night.toFixed(3), "--warm": Math.min(1, warm).toFixed(3) } as CSSProperties}><div className="night-sky"><span className="moon"/></div></div>;
+  return <div className="day-night" aria-hidden="true" style={{ "--night": night.toFixed(3), "--warm": Math.min(1, warm).toFixed(3) } as CSSProperties}><div className="night-sky"/><span className="moon"/></div>;
 }
 
 export const Route = createFileRoute("/")({
