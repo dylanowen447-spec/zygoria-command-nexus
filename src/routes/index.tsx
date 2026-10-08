@@ -53,6 +53,8 @@ const startLogs: Log[] = [
 ];
 /** Crossroads fire pit, just below where the trails meet (artwork %). */
 const FIRE_PIT = { x: 50, y: 63.5 };
+/** Brix's water tank on the grass outside his workshop. */
+const WATER_TANK = { x: 61, y: 61 };
 const WALK_SPEED = 5.5; // percent of world width per second
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZONES.sanctuary.aspect);
@@ -839,23 +841,33 @@ function CommandCentre() {
     return () => clearTimeout(tm);
   }, [water, prologue, bubble, phase]);
   async function drink(run: number) {
-    if (bottlesRef.current <= 0) {
-      const [who, text] = DRY_LINES[Math.floor(Math.random() * DRY_LINES.length)]!;
-      setBubble({ agent: who as Agent, text }); log(who as Agent, text);
-      await wait(3200); if (run === runId.current) setBubble(null);
-      return;
-    }
-    bottlesRef.current -= 1;
-    for (const [who, text] of DRINK_LINES) {
-      if (run !== runId.current) return;
-      const line = `💧 ${text}`;
-      setBubble({ agent: who as Agent, text: line }); log(who as Agent, text);
-      await wait(2200);
-    }
+    // Brix fills the tank outside his workshop, calls everyone over, and they all drink back to full.
+    const z = ZONES.sanctuary;
+    const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
+    const spot: Record<Agent, Point> = { Brix: { x: WATER_TANK.x + 3, y: WATER_TANK.y + 0.5 }, Oz: { x: WATER_TANK.x - 4, y: WATER_TANK.y + 1 }, Lowkey: { x: WATER_TANK.x - 7, y: WATER_TANK.y - 1 }, Moxi: { x: WATER_TANK.x - 1, y: WATER_TANK.y + 3.5 } };
+    const paths = Object.fromEntries(all.map(a => [a, a === "Brix" ? [spot.Brix] : [...toMeet(z, a), spot[a]]])) as Record<Agent, Point[]>;
+    const say = async (agent: Agent, text: string, ms = 2400) => { setBubble({ agent, text }); log(agent, text); await wait(Math.max(ms, 1800 + text.length * 45)); setBubble(null); await wait(600); return run === runId.current; };
+    outing.current = all;
+    await walk("Brix", paths.Brix, "central", run);
     if (run !== runId.current) return;
-    setBubble(null);
-    setWater(w => { const n = clampWater(w + DRINK_RESTORE); saveWater(n, bottlesRef.current); return n; });
+    setTank("filling");
+    await wait(1600);
+    if (run !== runId.current) return;
+    setTank("full");
+    if (!await say("Brix", "Getting some more fresh water to drink. Come grab some, lads.")) return;
+    await Promise.all(all.filter(a => a !== "Brix").map(a => walk(a, paths[a], "central", run)));
+    if (run !== runId.current) return;
+    setFacing(p => ({ ...p, Oz: "right", Lowkey: "right", Brix: "left" }));
+    for (const [who, text] of DRINK_LINES) if (!await say(who as Agent, `💧 ${text}`, 2000)) return;
+    if (all.includes("Moxi") && !await say("Moxi", "💧 Cold!", 1600)) return;
+    bottlesRef.current = BOTTLE_MAX;
+    setWater(() => { saveWater(100, BOTTLE_MAX); return 100; });
+    setTank("idle");
+    await Promise.all(all.map(a => walk(a, a === "Brix" ? [HOME(z, a)] : [...paths[a].slice(0, -1).reverse(), HOME(z, a)], "home", run)));
+    if (run !== runId.current) return;
+    outing.current = [];
   }
+  const [tank, setTank] = useState<"idle" | "filling" | "full">("idle");
   function cancelVisit() {
     const v = visiting.current;
     visiting.current = null;
