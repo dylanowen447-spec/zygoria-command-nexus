@@ -54,7 +54,7 @@ const startLogs: Log[] = [
   { id: 3, agent: "Lowkey", text: "Perimeter is clear.", time: "SYSTEM" },
 ];
 /** Crossroads fire pit, just below where the trails meet (artwork %). */
-const FIRE_PIT = { x: 48, y: 57 };
+const FIRE_PIT = { x: 42, y: 45 };
 /** Brix's water tank on the grass outside his workshop. */
 const WATER_TANK = { x: 84, y: 60 };
 /** Brix's home → workshop frontage trail → beside the tank; never across the salvage yard. */
@@ -968,6 +968,10 @@ function CommandCentre() {
       [{ x: 58, y: 62 }, { x: 58, y: 68 }, { x: 58, y: 73.5 }],
       [{ x: 57, y: 72.5 }, { x: 58, y: 73.5 }, { x: 63, y: 64 }, { x: 68, y: 57 }],
       [{ x: 73.5, y: 53.5 }, { x: 80, y: 57 }, { x: 86, y: 60.5 }, { x: 91.5, y: 64 }],
+      // Invisible ring around the fire pit (42,45): the crew can circle it 360° but never cross it.
+      [{ x: 42, y: 40.2 }, { x: 45.4, y: 41.6 }, { x: 46.8, y: 45 }, { x: 45.4, y: 48.4 }, { x: 42, y: 49.8 }, { x: 38.6, y: 48.4 }, { x: 37.2, y: 45 }, { x: 38.6, y: 41.6 }, { x: 42, y: 40.2 }],
+      // Spur joining the ring to Lowkey's switchback trail
+      [{ x: 46.8, y: 45 }, { x: 48, y: 43.8 }],
     ];
     for (const seg of extra) {
       chain(seg);
