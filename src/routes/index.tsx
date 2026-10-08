@@ -1,3 +1,4 @@
+import * as Atmos from "@/lib/atmosphere";
 import { StartCover } from "@/components/StartCover";
 import { BuildInterlude } from "@/components/BuildInterlude";
 import { createFileRoute } from "@tanstack/react-router";
