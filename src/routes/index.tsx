@@ -89,11 +89,11 @@ const IDLE_CHATS: Record<string, [string, string][]> = {
 
 function DayNight() {
   const [t, setT] = useState(0);
-  useEffect(() => { const tick = () => setT((Date.now() % 540000) / 540000); tick(); const id = setInterval(tick, 2000); return () => clearInterval(id); }, []);
-  // 0 dawn, .1-.5 day, .6 dusk, .7-.95 night
-  const night = Math.max(0, Math.min(1, t < .1 ? 1 - t / .1 : t < .5 ? 0 : t < .7 ? (t - .5) / .2 : t < .9 ? 1 : 1 - (t - .9) / .1));
-  const warm = Math.max(0, 1 - Math.abs(t - .58) / .08) + Math.max(0, 1 - Math.abs(t - .05) / .06);
-  return <div className="day-night" aria-hidden="true" style={{ "--night": night.toFixed(3), "--warm": Math.min(1, warm).toFixed(3) } as CSSProperties}><div className="night-sky"><span className="moon"/></div></div>;
+  useEffect(() => { const tick = () => setT((Date.now() % 600000) / 600000); tick(); const id = setInterval(tick, 1000); return () => clearInterval(id); }, []);
+  // 10 min loop: 0-4 day, 4-5 dusk, 5-9 night, 9-10 dawn (continuous at wrap)
+  const night = t < .4 ? 0 : t < .5 ? (t - .4) / .1 : t < .9 ? 1 : 1 - (t - .9) / .1;
+  const warm = Math.max(0, 1 - Math.abs(t - .45) / .05) + Math.max(0, 1 - Math.abs(t - .95) / .05);
+  return <div className="day-night" aria-hidden="true" style={{ "--night": night.toFixed(3), "--warm": Math.min(1, warm).toFixed(3) } as CSSProperties}><div className="night-grass"/><div className="night-sky"><span className="moon"/></div></div>;
 }
 
 export const Route = createFileRoute("/")({
