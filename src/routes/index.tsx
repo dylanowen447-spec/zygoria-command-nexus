@@ -32,6 +32,8 @@ import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectF
 import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
 import waterTankImg from "@/assets/water-tank.png";
 import { WATER_FLOOR, WATER_DRAIN_MS, BOTTLE_MAX, DRINK_WORDS, DRINK_LINES, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
+import { REST_START, REST_FLOOR, REST_DRAIN_MS, REST_WORDS, clampRest, loadRest, saveRest, REST_LINES, BEDTIME_LINES, WAKE_LINES } from "@/lib/sleep";
+import rockHatch from "@/assets/rock-hatch.png";
 
 /** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
 type Agent = CrewAgent;
@@ -63,6 +65,15 @@ const BRIX_TO_TANK: Point[] = [{ x: 67.5, y: 54.6 }, { x: 71, y: 52.8 }, { x: 73
 const RIVER_FILL: Point[] = [{ x: 80, y: 57 }, { x: 73.5, y: 53.5 }, { x: 71, y: 52.8 }, { x: 68, y: 57 }, { x: 63, y: 64 }, { x: 58, y: 73.5 }];
 const TANK_KEY = "zygoria-tank-v1";
 const TANK_LOW = 25;
+/** Bedtime: each crew member's own door, the pace they wake on, and where their Zzz rise from (artwork %). */
+const BED: Record<Agent, { door: Point; out: Point; zzz: Point }> = {
+  Oz: { door: { x: 18, y: 56.5 }, out: { x: 19.5, y: 58.5 }, zzz: { x: 13, y: 45 } },
+  Brix: { door: { x: 74.5, y: 47 }, out: { x: 73, y: 49.5 }, zzz: { x: 76.5, y: 38.5 } },
+  Lowkey: { door: { x: 48.5, y: 36.5 }, out: { x: 49, y: 38.4 }, zzz: { x: 48.5, y: 33 } },
+  Moxi: { door: { x: 46, y: 49 }, out: { x: 46, y: 49.5 }, zzz: { x: 46, y: 46 } },
+};
+/** How long the night lasts before morning arrives (skippable). */
+const NAP_MS = 16000;
 const WALK_SPEED = 5.5; // percent of world width per second
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZONES.sanctuary.aspect);
@@ -119,6 +130,14 @@ function CommandCentre() {
   const [planningError, setPlanningError] = useState("");
   const [positions, setPositions] = useState<Record<Agent, Stop>>({ Oz: "home", Brix: "home", Lowkey: "home", Moxi: "home" });
   const [walking, setWalking] = useState<Agent[]>([]);
+  /** Bedtime: off → everyone walks to their own door → asleep at home → waking at sunrise. */
+  const [sleepStage, setSleepStage] = useState<"off" | "settling" | "asleep" | "waking">("off");
+  const [inBed, setInBed] = useState<Record<Agent, boolean>>({ Oz: false, Brix: false, Lowkey: false, Moxi: false });
+  const [curled, setCurled] = useState(false);
+  const [hatchOpen, setHatchOpen] = useState(false);
+  const [sleepPrompt, setSleepPrompt] = useState(false);
+  const sleepRef = useRef(false);
+  const napSkip = useRef<(() => void) | null>(null);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left", Moxi: "left" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const frames = useRef<number[]>([]);
