@@ -55,7 +55,7 @@ const startLogs: Log[] = [
 /** Crossroads fire pit, just below where the trails meet (artwork %). */
 const FIRE_PIT = { x: 50, y: 63.5 };
 /** Brix's water tank on the grass outside his workshop. */
-const WATER_TANK = { x: 61, y: 61 };
+const WATER_TANK = { x: 74, y: 77 };
 const WALK_SPEED = 5.5; // percent of world width per second
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZONES.sanctuary.aspect);
