@@ -34,6 +34,7 @@ import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
 import waterTankImg from "@/assets/water-tank.png";
+import { BoulderPot } from "@/components/BoulderPot";
 import { WATER_FLOOR, WATER_DRAIN_MS, BOTTLE_MAX, DRINK_WORDS, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
 import { REST_START, REST_FLOOR, REST_DRAIN_MS, REST_WORDS, clampRest, loadRest, saveRest, REST_LINES } from "@/lib/sleep";
 import * as B from "@/lib/banter";
@@ -1381,6 +1382,7 @@ function CommandCentre() {
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
+            {zone.id === "sanctuary" && prologue === "off" && <BoulderPot happy={petHappy} asleep={sleepStage === "asleep"}/>}
             {zone.id === "sanctuary" && !carrying && <div className={`water-tank-spot is-${tank}`} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}><img className="water-tank" src={waterTankImg} alt="Brix's water tank" width={816} height={816}/><span className={`tank-meter ${tankLevel < TANK_LOW ? "is-low" : ""}`} role="meter" aria-label="Water tank level" aria-valuenow={tankLevel} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${tankLevel}%` }}/></span></div>}
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%`, zIndex: 10 + Math.round(FIRE_PIT.y * 10) }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><img className="pit-art" src={firePitImg} alt="" width={816} height={816} loading="lazy"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {zone.id === "sanctuary" && <div className={`rock-hatch ${hatchOpen ? "is-open" : ""}`} style={{ left: `${BED.Lowkey.door.x}%`, top: `${BED.Lowkey.door.y}%` }} aria-hidden="true"><img src={rockHatch} alt="" width={816} height={816} loading="lazy"/></div>}
