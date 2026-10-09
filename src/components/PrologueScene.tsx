@@ -378,7 +378,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     <div className="map-coordinate top-left">◉ &nbsp; {scene.label}</div>
     <div className="map-coordinate top-right">{scene.chapter}</div>
     <div className="world-stage" ref={stageRef} onPointerDown={e => {
-      if ((e.target as HTMLElement).closest("button")) return;
+      const btn = (e.target as HTMLElement).closest("button"); if (btn && !btn.classList.contains("agent-marker")) return;
       const r = stageRef.current!.getBoundingClientRect();
       const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
       const o = coords.current.Oz, sx = o.x, sy = o.y - 5;
