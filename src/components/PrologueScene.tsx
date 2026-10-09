@@ -378,24 +378,26 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   }, [scene]);
 
   return <>
-  <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties}>
+  <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties} onPointerDown={e => {
+      const btn = (e.target as HTMLElement).closest("button"); if (btn && !btn.classList.contains("agent-marker")) return;
+      if (e.pointerType !== "mouse") e.preventDefault();
+      const r = stageRef.current!.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
+      const o = coords.current.Oz, sx = o.x, sy = o.y - 5;
+      // Straight, swift beam: only tiny crackle along the line.
+      const pts: string[] = [`${sx},${sy}`];
+      for (let i = 1; i < 4; i++) { const t = i / 4; pts.push(`${sx + (x - sx) * t + (Math.random() - 0.5) * 0.8},${sy + (y - sy) * t + (Math.random() - 0.5) * 0.8}`); }
+      pts.push(`${x},${y}`);
+      const id = performance.now() + Math.random();
+      setBolts(b => [...b.slice(-5), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
+      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 300);
+      if (!ambushHit.current({ x, y })) zap.current({ x, y });
+    }}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
     <div className="world-vignette"/>
     <div className="map-coordinate top-left">◉ &nbsp; {scene.label}</div>
     <div className="map-coordinate top-right">{scene.chapter}</div>
-    <div className="world-stage" ref={stageRef} onPointerDown={e => {
-      const btn = (e.target as HTMLElement).closest("button"); if (btn && !btn.classList.contains("agent-marker")) return;
-      const r = stageRef.current!.getBoundingClientRect();
-      const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
-      const o = coords.current.Oz, sx = o.x, sy = o.y - 5;
-      const pts: string[] = [`${sx},${sy}`];
-      for (let i = 1; i < 7; i++) { const t = i / 7; pts.push(`${sx + (x - sx) * t + (Math.random() - 0.5) * 3},${sy + (y - sy) * t + (Math.random() - 0.5) * 3}`); }
-      pts.push(`${x},${y}`);
-      const id = performance.now();
-      setBolts(b => [...b.slice(-3), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
-      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 240);
-      if (!ambushHit.current({ x, y })) zap.current({ x, y });
-    }}>
+    <div className="world-stage" ref={stageRef}>
       <svg className="zap-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         {bolts.map(b => <g key={b.id}><path className="zap-glow" d={b.d}/><path className="zap-core" d={b.d}/><circle className="zap-hit" cx={b.x} cy={b.y} r="1.2"/></g>)}
       </svg>
