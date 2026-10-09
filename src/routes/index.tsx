@@ -211,6 +211,7 @@ function CommandCentre() {
     if (agent === "Lowkey" && zoneRef.current === "sanctuary") el.classList.toggle("on-ridge", p.y < 34);
   }
   const wait = (ms: number) => new Promise<void>(resolve => { timers.current.push(setTimeout(resolve, ms)); });
+  const walkTokens = useRef<Partial<Record<Agent, number>>>({});
   const routeTime = (agent: Agent, targets: Point[]) => {
     let from = coords.current[zoneRef.current][agent], total = 0;
     for (const to of targets) { total += distance(from, to); from = to; }
@@ -232,17 +233,22 @@ function CommandCentre() {
         const dir = dx < 0 ? "left" as const : "right" as const;
         setFacing(prev => prev[agent] === dir ? prev : { ...prev, [agent]: dir });
       };
+      // Each new walk for this agent supersedes any older one, so two loops never fight over the same sprite.
+      const token = (walkTokens.current[agent] = (walkTokens.current[agent] ?? 0) + 1);
+      const mine = () => walkTokens.current[agent] === token;
       const finish = () => {
-        setWalking(prev => prev.filter(a => a !== agent));
+        if (mine()) setWalking(prev => prev.filter(a => a !== agent));
         setPositions(prev => ({ ...prev, [agent]: end }));
         resolve();
       };
+      if (!targets.length) { finish(); return; }
       face(targets[0]!);
       setWalking(prev => prev.includes(agent) ? prev : [...prev, agent]);
       let segment = 0;
       let last = performance.now();
       const step = (time: number) => {
-        if (run !== runId.current) return;
+        // Cancelled or superseded: stop the leg cycle so nobody is left walking on the spot.
+        if (run !== runId.current || !mine()) { if (mine()) setWalking(prev => prev.filter(a => a !== agent)); resolve(); return; }
         let budget = Math.min(time - last, 64) / 1000 * WALK_SPEED;
         last = time;
         while (budget > 0 && segment < targets.length) {
