@@ -67,7 +67,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
         const sp = 19 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
       }
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
-      if (rats.current.length === 0) {
+      if (spawned && rats.current.length === 0) {
         try { localStorage.setItem(KEY, "done"); } catch { /* fine */ }
         return; // all dead: stop the loop, the city simply goes quiet
       }
