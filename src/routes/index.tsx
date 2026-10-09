@@ -23,6 +23,8 @@ import firePitImg from "@/assets/fire-pit.png";
 import { FieldCodex } from "@/components/FieldCodex";
 import { EMPTY_STORY, MOXI_SCENE, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 const MP3_AFTER = 120;
+const PET_AFTER = 60;
+const PET_KEY = "zygoria-boulder-pot-v1";
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
@@ -32,6 +34,7 @@ import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
 import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
 import waterTankImg from "@/assets/water-tank.png";
+import { BoulderPot } from "@/components/BoulderPot";
 import { WATER_FLOOR, WATER_DRAIN_MS, BOTTLE_MAX, DRINK_WORDS, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
 import { REST_START, REST_FLOOR, REST_DRAIN_MS, REST_WORDS, clampRest, loadRest, saveRest, REST_LINES } from "@/lib/sleep";
 import * as B from "@/lib/banter";
@@ -139,6 +142,10 @@ function CommandCentre() {
   const [hatchOpen, setHatchOpen] = useState(false);
   const [sleepPrompt, setSleepPrompt] = useState(false);
   const sleepRef = useRef(false);
+  const petBusy = useRef(false);
+  const [petMet, setPetMet] = useState(false);
+  const [petHappy, setPetHappy] = useState(false);
+  useEffect(() => { try { if (localStorage.getItem(PET_KEY)) setPetMet(true); } catch { /* optional */ } }, []);
   const napSkip = useRef<(() => void) | null>(null);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left", Moxi: "left" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -704,6 +711,16 @@ function CommandCentre() {
     if (run === runId.current && !storyRef.current.beats.includes("spotted")) await playBeat(SANCTUARY_SIGNAL.beats[0]!, run);
     if (run === runId.current) setPhase("idle");
   }
+  // Brix introduces his pet, Boulder Pot, one minute into the Sanctuary (once per device).
+  async function petIntro() {
+    petBusy.current = true;
+    if (visiting.current || choring.current || outing.current.length) cancelVisit();
+    const lines: [Agent, string][] = [["Oz", "What's that, Brix?"], ["Brix", "It's my pet."], ["Oz", "What's it called?"], ["Brix", "I call him Boulder Pot."]];
+    for (const [a, text] of lines) { setBubble({ agent: a, text }); log(a, text); await wait(Math.max(2800, 1800 + text.length * 45)); setBubble(null); await wait(700); }
+    setPetHappy(true); setTimeout(() => setPetHappy(false), 2400);
+    try { localStorage.setItem(PET_KEY, "1"); } catch { /* optional */ }
+    setPetMet(true); petBusy.current = false;
+  }
   // Real time in the Sanctuary (after the opening) counts toward the Chapter 5 MP3 scene; saved so reloads don't reset it.
   useEffect(() => {
     const b = storyRef.current.beats;
@@ -713,7 +730,8 @@ function CommandCentre() {
       if (document.hidden || beats.includes("spotted") || sleepRef.current) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current) {
+      if (t >= PET_AFTER && t < MP3_AFTER && !petMet && !petBusy.current && phaseRef.current === "idle" && !ozAway.current) { void petIntro(); return; }
+      if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current && !petBusy.current) {
         // Story time wins over idle strolls and chores: call everyone back first.
         if (visiting.current || choring.current || outing.current.length) cancelVisit();
         clearInterval(id);
@@ -1364,6 +1382,7 @@ function CommandCentre() {
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
+            {zone.id === "sanctuary" && prologue === "off" && <BoulderPot happy={petHappy} asleep={sleepStage === "asleep"}/>}
             {zone.id === "sanctuary" && !carrying && <div className={`water-tank-spot is-${tank}`} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}><img className="water-tank" src={waterTankImg} alt="Brix's water tank" width={816} height={816}/><span className={`tank-meter ${tankLevel < TANK_LOW ? "is-low" : ""}`} role="meter" aria-label="Water tank level" aria-valuenow={tankLevel} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${tankLevel}%` }}/></span></div>}
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%`, zIndex: 10 + Math.round(FIRE_PIT.y * 10) }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><img className="pit-art" src={firePitImg} alt="" width={816} height={816} loading="lazy"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {zone.id === "sanctuary" && <div className={`rock-hatch ${hatchOpen ? "is-open" : ""}`} style={{ left: `${BED.Lowkey.door.x}%`, top: `${BED.Lowkey.door.y}%` }} aria-hidden="true"><img src={rockHatch} alt="" width={816} height={816} loading="lazy"/></div>}
