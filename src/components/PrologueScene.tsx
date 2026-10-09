@@ -39,6 +39,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const zap = useRef<(p: Point) => void>(() => undefined);
   const stageRef = useRef<HTMLDivElement>(null);
   const ambushHit = useRef<(p: Point) => boolean>(() => false);
+  /** Danger moment: the crew improvise their reaction live through the AI, never a fixed script. */
+  const alarm = useRef<(situation: string) => void>(() => undefined);
+  const onAlarm = useCallback((s: string) => alarm.current(s), []);
   const ambushSay = useCallback((a: Agent, text: string) => {
     setBubbles(b => ({ ...b, [a]: text }));
     setTimeout(() => setBubbles(b => (b[a] === text ? { ...b, [a]: undefined } : b)), 2600);
@@ -278,6 +281,12 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       ALL.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000;
       awaitingName = true;
     }
+    alarm.current = (situation: string) => {
+      if (voiceBusy) return;
+      const others = (["Brix", "Lowkey"] as Agent[]).sort(() => Math.random() - 0.5);
+      const speakers: Agent[] = Math.random() < 0.5 ? [others[0]!, "Oz"] : [others[0]!, others[1]!, "Oz"];
+      void chat(`(Nobody asked anything. React out loud, shocked, in one short line. Oz has lightning.) ${situation}`.slice(0, 180), speakers);
+    };
     // Oz's zap: crew reactions are drawn from varied pools by who is closest, with cooldown and random silence.
     let zapQuietUntil = 0; let lastLine = "";
     const ZAP: Record<string, [Agent, string][][]> = {
