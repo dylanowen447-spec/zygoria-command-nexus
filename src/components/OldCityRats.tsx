@@ -3,9 +3,9 @@ import ratSheet from "@/assets/mutant-rat.png.asset.json";
 import type { Agent, Point } from "@/lib/zones";
 
 /** Old City ambush: three mutant rats rush the Zigs. One zap from Oz kills each; they never respawn. Self-contained so the scene's own exploration is untouched. */
-const KEY = "zygoria-oldcity-rats-v1";
+const KEY = "zygoria-oldcity-rats-v2";
 const RAT_FRAMES = 13;
-const SPAWNS: Point[] = [{ x: 6, y: 78 }, { x: 92, y: 70 }, { x: 12, y: 40 }];
+const SPAWNS: Point[] = [{ x: 18, y: 72 }, { x: 82, y: 68 }, { x: 22, y: 44 }];
 type Rat = { id: number; x: number; y: number; dead: number; bite: number; flip: boolean };
 
 export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
@@ -33,13 +33,14 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
 
   useEffect(() => {
     try { if (localStorage.getItem(KEY) === "done") return; } catch { /* play anyway */ }
-    let alive = true, raf = 0, last = performance.now();
+    let alive = true, raf = 0, last = performance.now(), spawned = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const nearestCrew = (p: Point) => (Object.entries(crew.current) as [Agent, Point][]).reduce((b, c) => (Math.hypot(c[1].x - p.x, c[1].y - p.y) < Math.hypot(b[1].x - p.x, b[1].y - p.y) ? c : b));
     const hurt = (n: number) => { crewHpRef.current = Math.max(15, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
 
     later(2500, () => {
+      spawned = true;
       rats.current = SPAWNS.map((p, i) => ({ id: i + 1, x: p.x, y: p.y, dead: 0, bite: 0, flip: false }));
       later(300, () => onAlarm("Three huge mutant rats just burst out of the Old City rubble and are charging straight at you!"));
     });
@@ -66,7 +67,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
         const sp = 19 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
       }
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
-      if (rats.current.length === 0) {
+      if (spawned && rats.current.length === 0) {
         try { localStorage.setItem(KEY, "done"); } catch { /* fine */ }
         return; // all dead: stop the loop, the city simply goes quiet
       }
