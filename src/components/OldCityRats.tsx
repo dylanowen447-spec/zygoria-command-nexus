@@ -17,6 +17,8 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
   const [ozH, setOzH] = useState(40);
+  const [crewHp, setCrewHp] = useState(100);
+  const crewHpRef = useRef(100);
 
   // Rats stand 5% shorter than Oz, matching his on-screen height on any device.
   useEffect(() => {
