@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
-import ratSheet from "@/assets/mutant-rat.png.asset.json";
+import { RatSprite } from "@/components/RatSprite";
+import { farSpawns, makeRat, stepRat, zapRats, type Rat } from "@/lib/rat-ai";
 import sheltonSheet from "@/assets/shelton.webp.asset.json";
 import type { Agent, Point } from "@/lib/zones";
 
 /** Long Walk ambush: three waves of three rats, then Shelton (shell blocks, open after his lunge, retreats alive). Self-contained so the scene's own exploration is untouched. */
 const KEY = "zygoria-longwalk-ambush-v1";
-const RAT_FRAMES = 13, SHEL_FRAMES = 18;
-const WAVES: Point[][] = [
-  [{ x: 4, y: 70 }, { x: 8, y: 92 }, { x: 30, y: 98 }],
-  [{ x: 40, y: 40 }, { x: 3, y: 55 }, { x: 55, y: 96 }],
-  [{ x: 70, y: 96 }, { x: 60, y: 44 }, { x: 2, y: 82 }],
-];
-type Rat = { id: number; x: number; y: number; dead: number; bite: number; flip: boolean };
+const SHEL_FRAMES = 18;
+// Far edges of the road; each wave uses the spots farthest from the crew.
+const EDGES: Point[] = [{ x: 3, y: 70 }, { x: 6, y: 94 }, { x: 30, y: 98 }, { x: 40, y: 42 }, { x: 3, y: 52 }, { x: 60, y: 97 }, { x: 62, y: 44 }, { x: 96, y: 66 }];
 type ShelState = "enter" | "taunt" | "windup" | "lunge" | "open" | "hit" | "shell" | "retreat" | "beaten" | "flee" | "gone";
 const STAGES = [
   { windup: 0.8, lunge: 34, open: 2.3, taunt: 2.6, rats: 0, name: "SHELL GUARD" },
@@ -68,16 +65,15 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const shelLine = (t: string, ms = 2400) => { setShelSay(t); later(ms, () => setShelSay(s => (s === t ? null : s))); };
-    const nearestCrew = (p: Point) => (Object.entries(crew.current) as [Agent, Point][]).reduce((b, c) => (Math.hypot(c[1].x - p.x, c[1].y - p.y) < Math.hypot(b[1].x - p.x, b[1].y - p.y) ? c : b));
 
     const startWave = (n: number) => {
       wave.current = n;
       setBanner(`RATS · WAVE ${n + 1} OF 3`); later(1800, () => setBanner(null));
-      rats.current = WAVES[n]!.map(p => ({ id: nextId++, x: p.x, y: p.y, dead: 0, bite: 0, flip: false }));
+      rats.current = farSpawns(EDGES, crew.current, 3).map(p => makeRat(nextId++, p));
       if (n === 0) later(300, () => onAlarm?.("A pack of snarling mutant rats just burst from the grass on the long walk and is charging you!"));
     };
     const hurt = (n: number) => { crewHpRef.current = Math.max(CREW_FLOOR, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
-    const spawnRats = (n: number) => { for (let i = 0; i < n; i++) { const p = WAVES[i % 3]![(i + 1) % 3]!; rats.current.push({ id: nextId++, x: p.x, y: p.y, dead: 0, bite: 0, flip: false }); } };
+    const spawnRats = (n: number) => { for (const p of farSpawns(EDGES, crew.current, n)) rats.current.push(makeRat(nextId++, p)); };
     const startShelton = () => {
       wave.current = 3;
       fight.current = { start: performance.now(), end: 0 };
@@ -100,11 +96,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
       return Math.abs(s.x - p.x) < 7 && Math.abs(s.y - 6 - p.y) < 11;
     };
     hitRef.current = (p: Point) => {
-      let hit = false;
-      for (const r of rats.current) {
-        if (r.dead || Math.abs(r.x - p.x) > 4.5 || Math.abs(r.y - 2.5 - p.y) > 6) continue;
-        r.dead = performance.now(); hit = true; break;
-      }
+      let hit = zapRats(rats.current, p, crew.current);
       const s = shel.current;
       if (!hit && s && !["beaten", "flee", "gone", "retreat", "enter"].includes(s.state) && inShel(s, p)) {
         hit = true;
@@ -130,14 +122,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
       if (!alive) return;
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       // Rats scurry at the nearest Zig, nip, then hop back and try again.
-      for (const r of rats.current) {
-        if (r.dead) continue;
-        const [, c] = nearestCrew(r);
-        const dx = c.x - r.x, dy = c.y - r.y, d = Math.hypot(dx, dy);
-        if (r.bite > 0) { r.bite -= dt; if (r.bite <= 0) { r.x -= dx / d * 6; r.y -= dy / d * 4; } continue; }
-        if (d < 2.6) { r.bite = 0.7; hurt(3); continue; }
-        const sp = 19 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
-      }
+      for (const r of rats.current) stepRat(r, dt, crew.current, hurt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (wave.current >= 0 && wave.current < 3 && rats.current.length === 0) {
         const n = wave.current; wave.current = 10 + n;
@@ -153,7 +138,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
         if (s.state === "enter" && moveTo(s.target, s.stage ? 16 : 9)) { s.state = "taunt"; s.t = 0; if (s.stage) return void (raf = requestAnimationFrame(tick)); shelLine(SHEL_LINES.enter, 3000); later(1200, () => onSay("Oz", "Who's the tortoise with the bling?")); }
         else if (s.state === "taunt" && s.t > st.taunt) { s.state = "windup"; s.t = 0; s.flip = oz.x < s.x; }
         else if (s.state === "windup" && s.t > st.windup) { s.state = "lunge"; s.t = 0; s.target = { x: oz.x + (oz.x < s.x ? 5 : -5), y: oz.y }; }
-        else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) { s.state = "open"; s.t = 0; if (Math.hypot(oz.x - s.x, oz.y - s.y) < 7) hurt(5); if (s.hits === 0) later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!")); }
+        else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) { s.state = "open"; s.t = 0; if (Math.hypot(oz.x - s.x, oz.y - s.y) < 7) hurt(3); if (s.hits === 0) later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!")); }
         else if (s.state === "open" && s.t > st.open) { s.state = "shell"; s.t = 0; }
         else if (s.state === "hit" && s.t > 0.6) { s.state = "shell"; s.t = 0; }
         else if (s.state === "shell" && s.t > 1.4) { s.state = "taunt"; s.t = 0; }
@@ -188,11 +173,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
   const bg = (url: string, frames: number, i: number): CSSProperties => ({ backgroundImage: `url(${url})`, backgroundSize: `${frames * 100}% 100%`, backgroundPosition: `${(i / (frames - 1)) * 100}% 0` });
 
   return <>
-    {rats.current.map(r => {
-      const f = r.dead ? 12 : r.bite > 0 ? 9 + (r.bite > 0.35 ? 0 : 1) : 4 + Math.floor(now / 90) % 4;
-      return <span key={r.id} className={`ambush-rat ${r.dead ? "is-dead" : ""}`} aria-hidden="true"
-        style={{ left: `${r.x}%`, top: `${r.y}%`, width: ratW, height: ratH, zIndex: 10 + Math.round(r.y * 10), transform: `translate(-50%,-100%) scaleX(${r.flip ? -1 : 1})`, ...bg(ratSheet.url, RAT_FRAMES, f) }}/>;
-    })}
+    {rats.current.map(r => <RatSprite key={r.id} r={r} w={ratW} h={ratH} now={now}/>)}
     {s && <span className="ambush-shelton" aria-label="Shelton" style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: 10 + Math.round(s.y * 10) }}>
       {shelSay && <span className="idle-bubble ambush-bubble">{shelSay}</span>}
       {s.state !== "gone" && <span className="shel-overhead" aria-label={`Shelton health ${Math.max(0, MAX_HP - s.hits) * 10}%`}><span className="shel-overhead-name">SHELTON</span><span className="shel-overhead-bar"><span style={{ width: `${Math.max(0, 1 - s.hits / MAX_HP) * 100}%` }}/></span></span>}

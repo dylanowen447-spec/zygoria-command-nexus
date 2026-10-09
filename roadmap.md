@@ -73,3 +73,4 @@
 - [x] Rat bites cost 3% crew health (Old City + Long Walk); crew HP bar in Old City
 - [x] Shelton's hits on the crew cost 5%
 - [x] Each Oz zap on Shelton takes 10% off his health (10 hits total)
+- [x] Crew loses health more slowly; smaller crew bar

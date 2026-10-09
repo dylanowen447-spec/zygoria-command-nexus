@@ -625,3 +625,14 @@
 .ambush-impact{position:absolute;left:50%;top:140%;width:34px;height:34px;transform:translate(-50%,-50%);border-radius:50%;border:2px solid var(--electric);box-shadow:0 0 14px var(--electric),inset 0 0 10px var(--electric);animation:shelImpact .5s ease-out forwards}
 @keyframes shelImpact{from{transform:translate(-50%,-50%) scale(.3);opacity:1}to{transform:translate(-50%,-50%) scale(1.8);opacity:0}}
 .ambush-spark.is-hit{font-size:12px;color:var(--electric)}
+.ambush-rat-wrap{position:absolute;transform:translate(-50%,-100%);pointer-events:none;display:block}
+.ambush-rat-wrap .ambush-rat{position:relative;display:block}
+.rat-hp{position:absolute;left:50%;top:-2px;transform:translateX(-50%);width:26px;height:4px;background:var(--background);border:1px solid var(--destructive);overflow:hidden;display:block}
+.rat-hp>span{display:block;height:100%;background:var(--destructive);transition:width .2s ease-out}
+.ambush-rat.is-hurt{animation:shelHurt .3s ease-out}
+.ambush-rat.is-windup{filter:drop-shadow(0 0 4px var(--destructive))}
+.rat-impact{top:55%;width:24px;height:24px}
+/* Compact combat HUD: thin strip hugging the top edge, never over the action. */
+.boss-hud{top:4px;width:min(44%,230px);padding:3px 6px;gap:2px;background:oklch(0.1 0.02 260 / 70%)}
+.boss-hud-row{font-size:8px}.boss-bar{height:4px}.crew-bar{height:3px}
+@media(max-width:600px){.boss-hud{width:52%;top:2px;padding:2px 4px}.boss-hud-row{font-size:7px;letter-spacing:.5px}}
