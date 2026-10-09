@@ -3,9 +3,9 @@ import ratSheet from "@/assets/mutant-rat.png.asset.json";
 import type { Agent, Point } from "@/lib/zones";
 
 /** Old City ambush: three mutant rats rush the Zigs. One zap from Oz kills each; they never respawn. Self-contained so the scene's own exploration is untouched. */
-const KEY = "zygoria-oldcity-rats-v1";
+const KEY = "zygoria-oldcity-rats-v2";
 const RAT_FRAMES = 13;
-const SPAWNS: Point[] = [{ x: 6, y: 78 }, { x: 92, y: 70 }, { x: 12, y: 40 }];
+const SPAWNS: Point[] = [{ x: 18, y: 72 }, { x: 82, y: 68 }, { x: 22, y: 44 }];
 type Rat = { id: number; x: number; y: number; dead: number; bite: number; flip: boolean };
 
 export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
