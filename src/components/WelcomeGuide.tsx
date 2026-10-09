@@ -33,8 +33,16 @@ export function WelcomeGuide({ onAsk }: { onAsk?: (text: string) => void }) {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") { setOpen(false); tabRef.current?.focus(); }
     };
+    // Tapping the scene outside the card tucks the guide away so the tap still counts (e.g. Oz's zap).
+    const onTap = (event: PointerEvent) => {
+      const t = event.target as Element | null;
+      if (!t || t.closest(".welcome-card") || !t.closest(".world-image-wrap")) return;
+      setOpen(false);
+      try { localStorage.setItem(KEY, "seen"); } catch { /* optional */ }
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onTap, true);
+    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("pointerdown", onTap, true); };
   }, [open]);
 
   const dismiss = () => {

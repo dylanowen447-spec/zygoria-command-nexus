@@ -171,11 +171,20 @@ function CommandCentre() {
   const scene = PROLOGUE_SCENES[prologueStep]!;
   useEffect(() => {
     // Only brand-new visitors start at the landing; returning crews go straight home.
-    try { if (!localStorage.getItem(PROLOGUE_KEY)) setPrologue("on"); } catch { /* optional */ }
+    try {
+      if (!localStorage.getItem(PROLOGUE_KEY)) {
+        const s = Number(localStorage.getItem("zygoria-prologue-step") ?? 0);
+        if (Number.isInteger(s) && s > 0 && s < PROLOGUE_SCENES.length) setPrologueStep(s);
+        setPrologue("on");
+      }
+    } catch { /* optional */ }
   }, []);
   /** Strict order: Landing → Old City → Library → Long Walk (Chapter 03) → Sanctuary. */
   function nextPrologue() {
-    if (prologueStep + 1 < PROLOGUE_SCENES.length) setPrologueStep(prologueStep + 1);
+    if (prologueStep + 1 < PROLOGUE_SCENES.length) {
+      setPrologueStep(prologueStep + 1);
+      try { localStorage.setItem("zygoria-prologue-step", String(prologueStep + 1)); } catch { /* optional */ }
+    }
     else setBuilding(true);
   }
   const [building, setBuilding] = useState(false);
@@ -730,7 +739,9 @@ function CommandCentre() {
       if (document.hidden || beats.includes("spotted") || sleepRef.current) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= PET_AFTER && t < MP3_AFTER && !petMet && !petBusy.current && phaseRef.current === "idle" && !ozAway.current) { void petIntro(); return; }
+      let met = false; try { met = !!localStorage.getItem(PET_KEY); } catch { /* optional */ }
+      if (petBusy.current) return;
+      if (t >= PET_AFTER && !met && !beats.includes("mp3") && phaseRef.current === "idle") { void petIntro(); return; }
       if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current && !petBusy.current) {
         // Story time wins over idle strolls and chores: call everyone back first.
         if (visiting.current || choring.current || outing.current.length) cancelVisit();
