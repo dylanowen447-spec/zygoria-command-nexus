@@ -19,7 +19,7 @@ const STAGES = [
   { windup: 0.45, lunge: 50, open: 1.4, taunt: 1.4, rats: 3, name: "ENRAGED" },
 ];
 const HITS_PER_STAGE = 3, MAX_HP = 10, CREW_FLOOR = 15; // each zap = 10% of Shelton's health; retreats after hits 3 and 6
-type Shel = { x: number; y: number; state: ShelState; t: number; hits: number; flip: boolean; target: Point; blocked: number; stage: number };
+type Shel = { x: number; y: number; state: ShelState; t: number; hits: number; flip: boolean; target: Point; blocked: number; stage: number; hurt: number };
 
 const SHEL_LINES = {
   enter: "Well, well. Fresh eggs, wandering my road.",
@@ -27,7 +27,7 @@ const SHEL_LINES = {
   hit: ["OI!", "Lucky shot!", "Argh — my chain!", "Stop THAT!", "My spines!", "Cheap shot!"],
   retreat: ["Ugh — you'll pay for that!", "Right. No more playing nice!"],
   stage: ["Round two, eggs!", "NOW I'm angry!"],
-  beaten: "Fine. FINE. Kronk will hear about this!",
+  beaten: "I'll be telling Kronk about this! Those three are definitely up to no good!",
 };
 
 export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
@@ -47,6 +47,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
   const [crewHp, setCrewHp] = useState(100);
   const crewHpRef = useRef(100);
   const fight = useRef<{ start: number; end: number } | null>(null);
+  const artRef = useRef<HTMLSpanElement | null>(null);
   const sparks = useRef<{ id: number; x: number; y: number; kind: "block" | "hit" }[]>([]);
 
   // Shelton matches Lowkey's on-screen height; rats stand 5% shorter than Oz.
@@ -80,11 +81,24 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
     const startShelton = () => {
       wave.current = 3;
       fight.current = { start: performance.now(), end: 0 };
-      shel.current = { x: 104, y: 64, state: "enter", t: 0, hits: 0, flip: true, target: { x: 74, y: 64 }, blocked: 0, stage: 0 };
+      shel.current = { x: 104, y: 64, state: "enter", t: 0, hits: 0, flip: true, target: { x: 74, y: 64 }, blocked: 0, stage: 0, hurt: 0 };
       later(400, () => onSay("Brix", "Something bigger's coming."));
     };
     later(2500, () => startWave(0));
 
+    // Hit test against Shelton's real on-screen artwork (plus a little leeway), so tall/scaled sprites register.
+    const inShel = (s: Shel, p: Point) => {
+      const st = stageRef.current, el = artRef.current;
+      if (st && el) {
+        const r = st.getBoundingClientRect(), a = el.getBoundingClientRect();
+        if (r.width && a.width) {
+          const l = (a.left - r.left) / r.width * 100, t = (a.top - r.top) / r.height * 100;
+          const w = a.width / r.width * 100, h = a.height / r.height * 100, pad = 2.5;
+          return p.x > l - pad && p.x < l + w + pad && p.y > t - pad && p.y < t + h + pad;
+        }
+      }
+      return Math.abs(s.x - p.x) < 7 && Math.abs(s.y - 6 - p.y) < 11;
+    };
     hitRef.current = (p: Point) => {
       let hit = false;
       for (const r of rats.current) {
@@ -92,11 +106,12 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
         r.dead = performance.now(); hit = true; break;
       }
       const s = shel.current;
-      if (!hit && s && !["beaten", "flee", "gone", "retreat", "enter"].includes(s.state) && Math.abs(s.x - p.x) < 6 && Math.abs(s.y - 5 - p.y) < 9) {
+      if (!hit && s && !["beaten", "flee", "gone", "retreat", "enter"].includes(s.state) && inShel(s, p)) {
         hit = true;
         const sid = performance.now(); const spot = { id: sid, x: p.x, y: p.y };
         if (s.state === "open") {
-          s.hits += 1; s.state = "hit"; s.t = 0;
+          s.hits += 1; s.state = "hit"; s.t = 0; s.hurt = performance.now();
+          { const oz = crew.current.Oz; s.x = Math.min(92, Math.max(8, s.x + (s.x >= oz.x ? 3 : -3))); }
           sparks.current.push({ ...spot, kind: "hit" });
           if (s.hits >= MAX_HP) { s.state = "beaten"; if (fight.current) fight.current.end = performance.now(); shelLine(SHEL_LINES.beaten, 3200); }
           else if (s.hits % HITS_PER_STAGE === 0) { s.state = "retreat"; s.t = 0; shelLine(SHEL_LINES.retreat[s.stage]!, 1800); setBanner(`SHELTON RETREATS`); later(1600, () => setBanner(null)); }
@@ -106,7 +121,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
           if (s.state === "taunt") { s.state = "shell"; s.t = 0; }
           if (performance.now() - s.blocked > 4000) { s.blocked = performance.now(); shelLine(SHEL_LINES.block[Math.floor(Math.random() * 3)]!, 1400); }
         }
-        setTimeout(() => { sparks.current = sparks.current.filter(v => v.id !== sid); }, 380);
+        setTimeout(() => { sparks.current = sparks.current.filter(v => v.id !== sid); }, 520);
       }
       return hit;
     };
@@ -180,9 +195,10 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
     })}
     {s && <span className="ambush-shelton" aria-label="Shelton" style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: 10 + Math.round(s.y * 10) }}>
       {shelSay && <span className="idle-bubble ambush-bubble">{shelSay}</span>}
-      <span className={`ambush-shelton-art ${s.state === "open" ? "is-open" : ""}`} style={{ width: shelH, height: shelH, transform: `scaleX(${s.flip ? -1 : 1})`, ...bg(sheltonSheet.url, SHEL_FRAMES, shelFrame) }}/>
+      {s.state !== "gone" && <span className="shel-overhead" aria-label={`Shelton health ${Math.max(0, MAX_HP - s.hits) * 10}%`}><span className="shel-overhead-name">SHELTON</span><span className="shel-overhead-bar"><span style={{ width: `${Math.max(0, 1 - s.hits / MAX_HP) * 100}%` }}/></span></span>}
+      <span ref={artRef} className={`ambush-shelton-art ${s.state === "open" ? "is-open" : ""} ${now - s.hurt < 380 ? "is-hurt" : ""}`} style={{ width: shelH, height: shelH, transform: `scaleX(${s.flip ? -1 : 1})`, ...bg(sheltonSheet.url, SHEL_FRAMES, shelFrame) }}/>
     </span>}
-    {sparks.current.map(k => <span key={k.id} className={`ambush-spark is-${k.kind}`} style={{ left: `${k.x}%`, top: `${k.y}%` }} aria-hidden="true">{k.kind === "block" ? "BLOCKED" : "HIT!"}</span>)}
+    {sparks.current.map(k => <span key={k.id} className={`ambush-spark is-${k.kind}`} style={{ left: `${k.x}%`, top: `${k.y}%` }} aria-hidden="true">{k.kind === "hit" && <span className="ambush-impact"/>}<span className="ambush-spark-text">{k.kind === "block" ? "BLOCKED" : "HIT! −10%"}</span></span>)}
     {s && fight.current && <div className="boss-hud" role="status" aria-label="Boss fight">
       <div className="boss-hud-row"><span className="boss-name">SHELTON <small>{STAGES[s.stage]?.name}</small></span><span className="boss-timer">{(() => { const t = Math.floor(((fight.current.end || now) - fight.current.start) / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; })()}</span></div>
       <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(1 - s.hits / MAX_HP) * 100}%` }}/>{STAGES.slice(1).map((_, i) => <span key={i} className="boss-bar-notch" style={{ left: `${((i + 1) / STAGES.length) * 100}%` }}/>)}</div>

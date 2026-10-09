@@ -617,3 +617,11 @@
 @media(min-width:901px){.boulder-pot-art{width:40px;height:40px}}
 /* All in-game character sprites are 10% smaller, anchored at their feet. */
 .world-image-wrap .agent-marker .sprite-stage{transform:translateY(4px) scale(calc(var(--depth,1) * var(--desktop-sprite-scale,1) * .9))!important;transform-origin:center bottom}
+.shel-overhead{position:absolute;left:50%;bottom:100%;transform:translate(-50%,-4px);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;font:700 9px/1 var(--font-mono,monospace);letter-spacing:.12em;color:var(--foreground);text-shadow:0 0 4px var(--background)}
+.shel-overhead-bar{display:block;width:64px;height:6px;background:var(--background);border:1px solid var(--electric);overflow:hidden}
+.shel-overhead-bar>span{display:block;height:100%;background:var(--destructive);transition:width .25s ease-out}
+.ambush-shelton-art.is-hurt{animation:shelHurt .38s ease-out}
+@keyframes shelHurt{0%,40%{filter:brightness(2.6) drop-shadow(0 0 8px var(--electric))}20%,60%{filter:brightness(1)}100%{filter:none}}
+.ambush-impact{position:absolute;left:50%;top:140%;width:34px;height:34px;transform:translate(-50%,-50%);border-radius:50%;border:2px solid var(--electric);box-shadow:0 0 14px var(--electric),inset 0 0 10px var(--electric);animation:shelImpact .5s ease-out forwards}
+@keyframes shelImpact{from{transform:translate(-50%,-50%) scale(.3);opacity:1}to{transform:translate(-50%,-50%) scale(1.8);opacity:0}}
+.ambush-spark.is-hit{font-size:12px;color:var(--electric)}
