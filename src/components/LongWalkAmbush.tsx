@@ -15,7 +15,7 @@ const STAGES = [
   { windup: 0.6, lunge: 42, open: 1.8, taunt: 2.0, rats: 2, name: "SPIKE RUSH" },
   { windup: 0.45, lunge: 50, open: 1.4, taunt: 1.4, rats: 3, name: "ENRAGED" },
 ];
-const HITS_PER_STAGE = 3, MAX_HP = 10, CREW_FLOOR = 15; // each zap = 10% of Shelton's health; retreats after hits 3 and 6
+const RETREAT_AT = [7, 14], MAX_HP = 20, CREW_FLOOR = 15; // each zap = 10% of Shelton's health; retreats after hits 3 and 6
 type Shel = { x: number; y: number; state: ShelState; t: number; hits: number; flip: boolean; target: Point; blocked: number; stage: number; hurt: number };
 
 const SHEL_LINES = {
@@ -101,16 +101,16 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
       if (!hit && s && !["beaten", "flee", "gone", "retreat", "enter"].includes(s.state) && inShel(s, p)) {
         hit = true;
         const sid = performance.now(); const spot = { id: sid, x: p.x, y: p.y };
-        if (s.state === "open") {
+        if (s.state !== "shell" && performance.now() - s.hurt > 350) {
           s.hits += 1; s.state = "hit"; s.t = 0; s.hurt = performance.now();
           { const oz = crew.current.Oz; s.x = Math.min(92, Math.max(8, s.x + (s.x >= oz.x ? 3 : -3))); }
           sparks.current.push({ ...spot, kind: "hit" });
           if (s.hits >= MAX_HP) { s.state = "beaten"; if (fight.current) fight.current.end = performance.now(); shelLine(SHEL_LINES.beaten, 3200); }
-          else if (s.hits % HITS_PER_STAGE === 0) { s.state = "retreat"; s.t = 0; shelLine(SHEL_LINES.retreat[s.stage]!, 1800); setBanner(`SHELTON RETREATS`); later(1600, () => setBanner(null)); }
+          else if (RETREAT_AT.includes(s.hits)) { s.state = "retreat"; s.t = 0; shelLine(SHEL_LINES.retreat[s.stage]!, 1800); setBanner(`SHELTON RETREATS`); later(1600, () => setBanner(null)); }
           else shelLine(SHEL_LINES.hit[(s.hits - 1) % SHEL_LINES.hit.length]!, 1500);
         } else {
           sparks.current.push({ ...spot, kind: "block" });
-          if (s.state === "taunt") { s.state = "shell"; s.t = 0; }
+          
           if (performance.now() - s.blocked > 4000) { s.blocked = performance.now(); shelLine(SHEL_LINES.block[Math.floor(Math.random() * 3)]!, 1400); }
         }
         setTimeout(() => { sparks.current = sparks.current.filter(v => v.id !== sid); }, 520);
@@ -140,8 +140,8 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
         else if (s.state === "windup" && s.t > st.windup) { s.state = "lunge"; s.t = 0; s.target = { x: oz.x + (oz.x < s.x ? 5 : -5), y: oz.y }; }
         else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) { s.state = "open"; s.t = 0; if (Math.hypot(oz.x - s.x, oz.y - s.y) < 7) hurt(3); if (s.hits === 0) later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!")); }
         else if (s.state === "open" && s.t > st.open) { s.state = "shell"; s.t = 0; }
-        else if (s.state === "hit" && s.t > 0.6) { s.state = "shell"; s.t = 0; }
-        else if (s.state === "shell" && s.t > 1.4) { s.state = "taunt"; s.t = 0; }
+        else if (s.state === "hit" && s.t > 0.6) { s.state = "taunt"; s.t = 0; }
+        else if (s.state === "shell" && s.t > 0.9) { s.state = "taunt"; s.t = 0; }
         else if (s.state === "taunt") moveTo({ x: Math.min(80, Math.max(30, oz.x + (oz.x < 55 ? 18 : -18))), y: Math.min(80, Math.max(50, oz.y)) }, 4);
         else if (s.state === "retreat" && moveTo({ x: 108, y: 58 }, 26)) {
           s.stage += 1; s.state = "enter"; s.t = 0; s.target = { x: 72, y: 62 };
@@ -176,10 +176,10 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
     {rats.current.map(r => <RatSprite key={r.id} r={r} w={ratW} h={ratH} now={now}/>)}
     {s && <span className="ambush-shelton" aria-label="Shelton" style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: 10 + Math.round(s.y * 10) }}>
       {shelSay && <span className="idle-bubble ambush-bubble">{shelSay}</span>}
-      {s.state !== "gone" && <span className="shel-overhead" aria-label={`Shelton health ${Math.max(0, MAX_HP - s.hits) * 10}%`}><span className="shel-overhead-name">SHELTON</span><span className="shel-overhead-bar"><span style={{ width: `${Math.max(0, 1 - s.hits / MAX_HP) * 100}%` }}/></span></span>}
+      {s.state !== "gone" && <span className="shel-overhead" aria-label={`Shelton health ${Math.round(Math.max(0, MAX_HP - s.hits) / MAX_HP * 100)}%`}><span className="shel-overhead-name">SHELTON</span><span className="shel-overhead-bar"><span style={{ width: `${Math.max(0, 1 - s.hits / MAX_HP) * 100}%` }}/></span></span>}
       <span ref={artRef} className={`ambush-shelton-art ${s.state === "open" ? "is-open" : ""} ${now - s.hurt < 380 ? "is-hurt" : ""}`} style={{ width: shelH, height: shelH, transform: `scaleX(${s.flip ? -1 : 1})`, ...bg(sheltonSheet.url, SHEL_FRAMES, shelFrame) }}/>
     </span>}
-    {sparks.current.map(k => <span key={k.id} className={`ambush-spark is-${k.kind}`} style={{ left: `${k.x}%`, top: `${k.y}%` }} aria-hidden="true">{k.kind === "hit" && <span className="ambush-impact"/>}<span className="ambush-spark-text">{k.kind === "block" ? "BLOCKED" : "HIT! −10%"}</span></span>)}
+    {sparks.current.map(k => <span key={k.id} className={`ambush-spark is-${k.kind}`} style={{ left: `${k.x}%`, top: `${k.y}%` }} aria-hidden="true">{k.kind === "hit" && <span className="ambush-impact"/>}<span className="ambush-spark-text">{k.kind === "block" ? "BLOCKED" : "HIT! −5%"}</span></span>)}
     {s && fight.current && <div className="boss-hud" role="status" aria-label="Boss fight">
       <div className="boss-hud-row"><span className="boss-name">SHELTON <small>{STAGES[s.stage]?.name}</small></span><span className="boss-timer">{(() => { const t = Math.floor(((fight.current.end || now) - fight.current.start) / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; })()}</span></div>
       <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(1 - s.hits / MAX_HP) * 100}%` }}/>{STAGES.slice(1).map((_, i) => <span key={i} className="boss-bar-notch" style={{ left: `${((i + 1) / STAGES.length) * 100}%` }}/>)}</div>
