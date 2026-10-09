@@ -33,7 +33,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
 
   useEffect(() => {
     try { if (localStorage.getItem(KEY) === "done") return; } catch { /* play anyway */ }
-    let alive = true, raf = 0, last = performance.now();
+    let alive = true, raf = 0, last = performance.now(), spawned = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const nearestCrew = (p: Point) => (Object.entries(crew.current) as [Agent, Point][]).reduce((b, c) => (Math.hypot(c[1].x - p.x, c[1].y - p.y) < Math.hypot(b[1].x - p.x, b[1].y - p.y) ? c : b));
