@@ -141,6 +141,10 @@ function CommandCentre() {
   const [hatchOpen, setHatchOpen] = useState(false);
   const [sleepPrompt, setSleepPrompt] = useState(false);
   const sleepRef = useRef(false);
+  const petBusy = useRef(false);
+  const [petMet, setPetMet] = useState(false);
+  const [petHappy, setPetHappy] = useState(false);
+  useEffect(() => { try { if (localStorage.getItem(PET_KEY)) setPetMet(true); } catch { /* optional */ } }, []);
   const napSkip = useRef<(() => void) | null>(null);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "left", Lowkey: "left", Moxi: "left" });
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
