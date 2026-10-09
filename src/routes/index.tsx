@@ -23,6 +23,8 @@ import firePitImg from "@/assets/fire-pit.png";
 import { FieldCodex } from "@/components/FieldCodex";
 import { EMPTY_STORY, MOXI_SCENE, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 const MP3_AFTER = 120;
+const PET_AFTER = 60;
+const PET_KEY = "zygoria-boulder-pot-v1";
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
@@ -704,6 +706,16 @@ function CommandCentre() {
     if (run === runId.current && !storyRef.current.beats.includes("spotted")) await playBeat(SANCTUARY_SIGNAL.beats[0]!, run);
     if (run === runId.current) setPhase("idle");
   }
+  // Brix introduces his pet, Boulder Pot, one minute into the Sanctuary (once per device).
+  async function petIntro() {
+    petBusy.current = true;
+    if (visiting.current || choring.current || outing.current.length) cancelVisit();
+    const lines: [Agent, string][] = [["Oz", "What's that, Brix?"], ["Brix", "It's my pet."], ["Oz", "What's it called?"], ["Brix", "I call him Boulder Pot."]];
+    for (const [a, text] of lines) { setBubble({ agent: a, text }); log(a, text); await wait(Math.max(2800, 1800 + text.length * 45)); setBubble(null); await wait(700); }
+    setPetHappy(true); setTimeout(() => setPetHappy(false), 2400);
+    try { localStorage.setItem(PET_KEY, "1"); } catch { /* optional */ }
+    setPetMet(true); petBusy.current = false;
+  }
   // Real time in the Sanctuary (after the opening) counts toward the Chapter 5 MP3 scene; saved so reloads don't reset it.
   useEffect(() => {
     const b = storyRef.current.beats;
@@ -713,7 +725,8 @@ function CommandCentre() {
       if (document.hidden || beats.includes("spotted") || sleepRef.current) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current) {
+      if (t >= PET_AFTER && t < MP3_AFTER && !petMet && !petBusy.current && phaseRef.current === "idle" && !ozAway.current) { void petIntro(); return; }
+      if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current && !petBusy.current) {
         // Story time wins over idle strolls and chores: call everyone back first.
         if (visiting.current || choring.current || outing.current.length) cancelVisit();
         clearInterval(id);
