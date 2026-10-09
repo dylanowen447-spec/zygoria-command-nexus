@@ -3,6 +3,7 @@ import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { LongWalkAmbush } from "@/components/LongWalkAmbush";
+import { OldCityRats } from "@/components/OldCityRats";
 import { ACKS, ASPECT, REACTIONS, SHRUGS, routeBetween, type Scene } from "@/lib/prologue";
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
