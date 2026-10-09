@@ -120,7 +120,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
         const [, c] = nearestCrew(r);
         const dx = c.x - r.x, dy = c.y - r.y, d = Math.hypot(dx, dy);
         if (r.bite > 0) { r.bite -= dt; if (r.bite <= 0) { r.x -= dx / d * 6; r.y -= dy / d * 4; } continue; }
-        if (d < 2.6) { r.bite = 0.7; hurt(2); continue; }
+        if (d < 2.6) { r.bite = 0.7; hurt(3); continue; }
         const sp = 19 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
       }
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
