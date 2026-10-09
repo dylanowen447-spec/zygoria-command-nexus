@@ -39,6 +39,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const zap = useRef<(p: Point) => void>(() => undefined);
   const stageRef = useRef<HTMLDivElement>(null);
   const ambushHit = useRef<(p: Point) => boolean>(() => false);
+  /** Danger moment: the crew improvise their reaction live through the AI, never a fixed script. */
+  const alarm = useRef<(situation: string) => void>(() => undefined);
+  const onAlarm = useCallback((s: string) => alarm.current(s), []);
   const ambushSay = useCallback((a: Agent, text: string) => {
     setBubbles(b => ({ ...b, [a]: text }));
     setTimeout(() => setBubbles(b => (b[a] === text ? { ...b, [a]: undefined } : b)), 2600);
@@ -278,6 +281,12 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       ALL.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000;
       awaitingName = true;
     }
+    alarm.current = (situation: string) => {
+      if (voiceBusy) return;
+      const others = (["Brix", "Lowkey"] as Agent[]).sort(() => Math.random() - 0.5);
+      const speakers: Agent[] = Math.random() < 0.5 ? [others[0]!, "Oz"] : [others[0]!, others[1]!, "Oz"];
+      void chat(`(Nobody asked anything. React out loud, shocked, in one short line. Oz has lightning.) ${situation}`.slice(0, 180), speakers);
+    };
     // Oz's zap: crew reactions are drawn from varied pools by who is closest, with cooldown and random silence.
     let zapQuietUntil = 0; let lastLine = "";
     const ZAP: Record<string, [Agent, string][][]> = {
@@ -402,8 +411,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         {bolts.map(b => <g key={b.id}><path className="zap-glow" d={b.d}/><path className="zap-core" d={b.d}/><circle className="zap-hit" cx={b.x} cy={b.y} r="1.2"/></g>)}
       </svg>
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
-      {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} crew={coords} onSay={ambushSay}/>}
-      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} crew={coords} onSay={ambushSay}/>}
+      {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} crew={coords} onSay={ambushSay} onAlarm={onAlarm}/>}
+      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} crew={coords} onAlarm={onAlarm}/>}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""}`}>
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>

@@ -8,11 +8,11 @@ const RAT_FRAMES = 13;
 const SPAWNS: Point[] = [{ x: 6, y: 78 }, { x: 92, y: 70 }, { x: 12, y: 40 }];
 type Rat = { id: number; x: number; y: number; dead: number; bite: number; flip: boolean };
 
-export function OldCityRats({ stageRef, hitRef, crew, onSay }: {
+export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
   stageRef: RefObject<HTMLDivElement | null>;
   hitRef: MutableRefObject<(p: Point) => boolean>;
   crew: MutableRefObject<Record<Agent, Point>>;
-  onSay: (who: Agent, text: string) => void;
+  onAlarm: (situation: string) => void;
 }) {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
@@ -36,10 +36,9 @@ export function OldCityRats({ stageRef, hitRef, crew, onSay }: {
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const nearestCrew = (p: Point) => (Object.entries(crew.current) as [Agent, Point][]).reduce((b, c) => (Math.hypot(c[1].x - p.x, c[1].y - p.y) < Math.hypot(b[1].x - p.x, b[1].y - p.y) ? c : b));
 
-    later(9000, () => {
+    later(2500, () => {
       rats.current = SPAWNS.map((p, i) => ({ id: i + 1, x: p.x, y: p.y, dead: 0, bite: 0, flip: false }));
-      later(700, () => onSay("Lowkey", "Movement. Something's in the rubble."));
-      later(2600, () => onSay("Brix", "Rats. Big ones. Oz — light them up!"));
+      later(300, () => onAlarm("Three huge mutant rats just burst out of the Old City rubble and are charging straight at you!"));
     });
 
     hitRef.current = (p: Point) => {
@@ -59,9 +58,9 @@ export function OldCityRats({ stageRef, hitRef, crew, onSay }: {
         if (r.dead) continue;
         const [, c] = nearestCrew(r);
         const dx = c.x - r.x, dy = c.y - r.y, d = Math.hypot(dx, dy);
-        if (r.bite > 0) { r.bite -= dt; if (r.bite <= 0) { r.x -= dx / d * 6; r.y -= dy / d * 4; } continue; }
-        if (d < 2.6) { r.bite = 0.7; continue; }
-        const sp = 7 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
+        if (r.bite > 0) { r.bite -= dt; if (r.bite <= 0) { r.x -= dx / d * 3; r.y -= dy / d * 2; } continue; }
+        if (d < 2.6) { r.bite = 0.35; continue; }
+        const sp = 19 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
       }
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (rats.current.length === 0) {
@@ -73,7 +72,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onSay }: {
     };
     raf = requestAnimationFrame(tick);
     return () => { alive = false; cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
-  }, [crew, hitRef, onSay]);
+  }, [crew, hitRef, onAlarm]);
 
   const now = performance.now();
   const ratH = ozH * 0.95 / 0.78, ratW = ratH * 340 / 250;
