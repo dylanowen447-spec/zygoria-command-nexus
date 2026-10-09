@@ -17,6 +17,8 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
   const [ozH, setOzH] = useState(40);
+  const [crewHp, setCrewHp] = useState(100);
+  const crewHpRef = useRef(100);
 
   // Rats stand 5% shorter than Oz, matching his on-screen height on any device.
   useEffect(() => {
@@ -35,6 +37,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const nearestCrew = (p: Point) => (Object.entries(crew.current) as [Agent, Point][]).reduce((b, c) => (Math.hypot(c[1].x - p.x, c[1].y - p.y) < Math.hypot(b[1].x - p.x, b[1].y - p.y) ? c : b));
+    const hurt = (n: number) => { crewHpRef.current = Math.max(15, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
 
     later(2500, () => {
       rats.current = SPAWNS.map((p, i) => ({ id: i + 1, x: p.x, y: p.y, dead: 0, bite: 0, flip: false }));
@@ -59,7 +62,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
         const [, c] = nearestCrew(r);
         const dx = c.x - r.x, dy = c.y - r.y, d = Math.hypot(dx, dy);
         if (r.bite > 0) { r.bite -= dt; if (r.bite <= 0) { r.x -= dx / d * 3; r.y -= dy / d * 2; } continue; }
-        if (d < 2.6) { r.bite = 0.35; continue; }
+        if (d < 2.6) { r.bite = 0.35; hurt(3); continue; }
         const sp = 19 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
       }
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
@@ -79,6 +82,9 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
   const bg = (url: string, frames: number, i: number): CSSProperties => ({ backgroundImage: `url(${url})`, backgroundSize: `${frames * 100}% 100%`, backgroundPosition: `${(i / (frames - 1)) * 100}% 0` });
 
   return <>
+    {crewHp < 100 && <div className="boss-hud" role="status" aria-label="Crew health">
+      <div className="boss-hud-row crew"><span className="boss-name">CREW</span><span className="boss-bar crew-bar"><span className="boss-bar-fill" style={{ width: `${crewHp}%` }}/></span></div>
+    </div>}
     {rats.current.map(r => {
       const f = r.dead ? 12 : r.bite > 0 ? 9 + (r.bite > 0.35 ? 0 : 1) : 4 + Math.floor(now / 90) % 4;
       return <span key={r.id} className={`ambush-rat ${r.dead ? "is-dead" : ""}`} aria-hidden="true"
