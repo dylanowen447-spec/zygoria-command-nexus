@@ -599,3 +599,13 @@
 .ambush-spark.is-block{color:var(--muted-foreground)}
 @keyframes ambushPop{from{opacity:1;translate:0 0}to{opacity:0;translate:0 -10px}}
 .ambush-banner{position:absolute;left:50%;top:12%;transform:translateX(-50%);padding:6px 14px;border:1px solid var(--primary);background:var(--card);color:var(--primary);font:700 12px/1 var(--font-mono,monospace);letter-spacing:.18em;z-index:2000;pointer-events:none}
+/* Shelton boss HUD */
+.boss-hud{position:absolute;top:6%;left:50%;transform:translateX(-50%);width:min(70%,420px);z-index:2100;pointer-events:none;font-family:var(--font-mono);color:var(--foreground);background:oklch(0.1 0.02 260 / 85%);border:1px solid var(--electric);padding:6px 9px;display:flex;flex-direction:column;gap:4px}
+.boss-hud-row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;letter-spacing:1px}
+.boss-name small{color:var(--violet);margin-left:6px;font-size:8px}
+.boss-timer{color:var(--electric)}
+.boss-bar{position:relative;display:block;height:7px;background:oklch(0.2 0.02 260);overflow:hidden;flex:1}
+.boss-bar-fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--violet),oklch(0.65 0.2 20));transition:width .25s}
+.crew-bar{height:5px}.crew-bar .boss-bar-fill{background:var(--green)}
+.boss-bar-notch{position:absolute;top:0;bottom:0;width:2px;background:var(--background)}
+@media(max-width:600px){.boss-hud{width:86%;top:4%;padding:4px 6px}.boss-hud-row{font-size:8px}}

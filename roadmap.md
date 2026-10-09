@@ -36,6 +36,7 @@
 - [x] L2 Moxi resident (uses supplied sprite)
 - [ ] L3 One small problem per chapter (Old City locked Library door done)
 - [ ] L4 Longer Long Walk
+- [x] Shelton boss battle: health bars, fight timer, three stages with retreats
 - [ ] L5 Sanctuary return events
 - [x] Moxi route: keep on open grass, off trees and river
 
