@@ -68,3 +68,8 @@
 - [ ] Night routine: sprites vanish only at entrances, Zzz at all three spots, fire fades to embers, hunger + thirst drain paused
 - [ ] Morning: short skippable sequence, sunrise, Zzz gone, Oz/Brix/Lowkey emerge, Moxi stretches and stands, routines resume
 - [ ] Rest restored by sleep; food and water NOT auto-refilled. No duplicate agents, no stuck/invisible agents after waking.
+
+## Shelton boss fight tuning
+- [x] Rat bites cost 3% crew health (Old City + Long Walk); crew HP bar in Old City
+- [x] Shelton's hits on the crew cost 5%
+- [x] Each Oz zap on Shelton takes 10% off his health (10 hits total)
