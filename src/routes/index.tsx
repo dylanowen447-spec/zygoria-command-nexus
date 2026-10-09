@@ -171,11 +171,20 @@ function CommandCentre() {
   const scene = PROLOGUE_SCENES[prologueStep]!;
   useEffect(() => {
     // Only brand-new visitors start at the landing; returning crews go straight home.
-    try { if (!localStorage.getItem(PROLOGUE_KEY)) setPrologue("on"); } catch { /* optional */ }
+    try {
+      if (!localStorage.getItem(PROLOGUE_KEY)) {
+        const s = Number(localStorage.getItem("zygoria-prologue-step") ?? 0);
+        if (Number.isInteger(s) && s > 0 && s < PROLOGUE_SCENES.length) setPrologueStep(s);
+        setPrologue("on");
+      }
+    } catch { /* optional */ }
   }, []);
   /** Strict order: Landing → Old City → Library → Long Walk (Chapter 03) → Sanctuary. */
   function nextPrologue() {
-    if (prologueStep + 1 < PROLOGUE_SCENES.length) setPrologueStep(prologueStep + 1);
+    if (prologueStep + 1 < PROLOGUE_SCENES.length) {
+      setPrologueStep(prologueStep + 1);
+      try { localStorage.setItem("zygoria-prologue-step", String(prologueStep + 1)); } catch { /* optional */ }
+    }
     else setBuilding(true);
   }
   const [building, setBuilding] = useState(false);
