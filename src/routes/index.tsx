@@ -105,7 +105,14 @@ const IDLE_CHATS: Record<string, [string, string][]> = {
 
 function DayNight() {
   const [t, setT] = useState(0);
-  useEffect(() => { const tick = () => setT((Date.now() % 600000) / 600000); tick(); const id = setInterval(tick, 1000); return () => clearInterval(id); }, []);
+  useEffect(() => {
+    // This sky mounts on Sanctuary arrival, not when the opening begins.
+    const arrivedAt = Date.now();
+    const tick = () => setT(((Date.now() - arrivedAt) % 600000) / 600000);
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
   // 10 min loop: 0-4 day, 4-5 dusk, 5-9 night, 9-10 dawn (continuous at wrap)
   const night = t < .4 ? 0 : t < .5 ? (t - .4) / .1 : t < .9 ? 1 : 1 - (t - .9) / .1;
   const warm = Math.max(0, 1 - Math.abs(t - .45) / .05) + Math.max(0, 1 - Math.abs(t - .95) / .05);
