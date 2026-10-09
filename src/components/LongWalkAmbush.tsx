@@ -138,7 +138,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
         if (s.state === "enter" && moveTo(s.target, s.stage ? 16 : 9)) { s.state = "taunt"; s.t = 0; if (s.stage) return void (raf = requestAnimationFrame(tick)); shelLine(SHEL_LINES.enter, 3000); later(1200, () => onSay("Oz", "Who's the tortoise with the bling?")); }
         else if (s.state === "taunt" && s.t > st.taunt) { s.state = "windup"; s.t = 0; s.flip = oz.x < s.x; }
         else if (s.state === "windup" && s.t > st.windup) { s.state = "lunge"; s.t = 0; s.target = { x: oz.x + (oz.x < s.x ? 5 : -5), y: oz.y }; }
-        else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) { s.state = "open"; s.t = 0; if (Math.hypot(oz.x - s.x, oz.y - s.y) < 7) hurt(5); if (s.hits === 0) later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!")); }
+        else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) { s.state = "open"; s.t = 0; if (Math.hypot(oz.x - s.x, oz.y - s.y) < 7) hurt(3); if (s.hits === 0) later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!")); }
         else if (s.state === "open" && s.t > st.open) { s.state = "shell"; s.t = 0; }
         else if (s.state === "hit" && s.t > 0.6) { s.state = "shell"; s.t = 0; }
         else if (s.state === "shell" && s.t > 1.4) { s.state = "taunt"; s.t = 0; }

@@ -632,3 +632,7 @@
 .ambush-rat.is-hurt{animation:shelHurt .3s ease-out}
 .ambush-rat.is-windup{filter:drop-shadow(0 0 4px var(--destructive))}
 .rat-impact{top:55%;width:24px;height:24px}
+/* Compact combat HUD: thin strip hugging the top edge, never over the action. */
+.boss-hud{top:4px;width:min(44%,230px);padding:3px 6px;gap:2px;background:oklch(0.1 0.02 260 / 70%)}
+.boss-hud-row{font-size:8px}.boss-bar{height:4px}.crew-bar{height:3px}
+@media(max-width:600px){.boss-hud{width:52%;top:2px;padding:2px 4px}.boss-hud-row{font-size:7px;letter-spacing:.5px}}
