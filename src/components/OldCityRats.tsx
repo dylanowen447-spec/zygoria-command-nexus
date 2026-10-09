@@ -40,6 +40,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
     const hurt = (n: number) => { crewHpRef.current = Math.max(15, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
 
     later(2500, () => {
+      spawned = true;
       rats.current = SPAWNS.map((p, i) => ({ id: i + 1, x: p.x, y: p.y, dead: 0, bite: 0, flip: false }));
       later(300, () => onAlarm("Three huge mutant rats just burst out of the Old City rubble and are charging straight at you!"));
     });
