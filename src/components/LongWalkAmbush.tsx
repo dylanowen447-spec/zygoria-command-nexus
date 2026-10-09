@@ -30,11 +30,12 @@ const SHEL_LINES = {
   beaten: "Fine. FINE. Kronk will hear about this!",
 };
 
-export function LongWalkAmbush({ stageRef, hitRef, crew, onSay }: {
+export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
   stageRef: RefObject<HTMLDivElement | null>;
   hitRef: MutableRefObject<(p: Point) => boolean>;
   crew: MutableRefObject<Record<Agent, Point>>;
   onSay: (who: Agent, text: string) => void;
+  onAlarm?: (situation: string) => void;
 }) {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
@@ -72,7 +73,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay }: {
       wave.current = n;
       setBanner(`RATS · WAVE ${n + 1} OF 3`); later(1800, () => setBanner(null));
       rats.current = WAVES[n]!.map(p => ({ id: nextId++, x: p.x, y: p.y, dead: 0, bite: 0, flip: false }));
-      if (n === 0) later(600, () => onSay("Lowkey", "Rats. Lots of them. Zap them, Oz!"));
+      if (n === 0) later(300, () => onAlarm?.("A pack of snarling mutant rats just burst from the grass on the long walk and is charging you!"));
     };
     const hurt = (n: number) => { crewHpRef.current = Math.max(CREW_FLOOR, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
     const spawnRats = (n: number) => { for (let i = 0; i < n; i++) { const p = WAVES[i % 3]![(i + 1) % 3]!; rats.current.push({ id: nextId++, x: p.x, y: p.y, dead: 0, bite: 0, flip: false }); } };
@@ -82,7 +83,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay }: {
       shel.current = { x: 104, y: 64, state: "enter", t: 0, hits: 0, flip: true, target: { x: 74, y: 64 }, blocked: 0, stage: 0 };
       later(400, () => onSay("Brix", "Something bigger's coming."));
     };
-    later(7000, () => startWave(0));
+    later(2500, () => startWave(0));
 
     hitRef.current = (p: Point) => {
       let hit = false;
@@ -120,7 +121,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay }: {
         const dx = c.x - r.x, dy = c.y - r.y, d = Math.hypot(dx, dy);
         if (r.bite > 0) { r.bite -= dt; if (r.bite <= 0) { r.x -= dx / d * 6; r.y -= dy / d * 4; } continue; }
         if (d < 2.6) { r.bite = 0.7; hurt(2); continue; }
-        const sp = 7 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
+        const sp = 19 * dt; r.x += dx / d * sp; r.y += dy / d * sp; r.flip = dx < 0;
       }
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (wave.current >= 0 && wave.current < 3 && rats.current.length === 0) {
