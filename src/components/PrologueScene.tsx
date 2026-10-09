@@ -63,6 +63,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     const talking = new Set<Agent>();
     const orders: Partial<Record<Agent, string>> = {};
     const cancel: Partial<Record<Agent, boolean>> = {};
+    const tokens: Partial<Record<Agent, number>> = {};
     // While a Zig is answering the visitor, their own exploring chatter stays quiet.
     let voiceBusy = false;
     const say = (a: Agent, text: string | null, force = false) => { if ((voiceBusy || talking.has(a)) && !force && text) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) logRef.current(a, text); };
@@ -83,10 +84,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         if (Math.abs(dx) >= 0.3) setFacing(f => ({ ...f, [a]: dx < 0 ? "left" : "right" }));
       };
       let seg = 0, last = performance.now();
+      // A newer walk for this Zig supersedes an older one; a stale cancel flag never freezes the next walk.
+      const token = (tokens[a] = (tokens[a] ?? 0) + 1);
+      cancel[a] = false;
       face(pts[0]!);
       setWalking(w => w.includes(a) ? w : [...w, a]);
       const step = (time: number) => {
         if (!alive) return;
+        if (tokens[a] !== token) { resolve(); return; }
         if (cancel[a]) { cancel[a] = false; setWalking(w => w.filter(x => x !== a)); resolve(); return; }
         let budget = Math.min(time - last, 64) / 1000 * SPEED;
         last = time;
