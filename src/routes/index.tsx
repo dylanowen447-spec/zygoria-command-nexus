@@ -730,7 +730,9 @@ function CommandCentre() {
       if (document.hidden || beats.includes("spotted") || sleepRef.current) return;
       let t = 0;
       try { t = Number(localStorage.getItem(SANCTUARY_TIME_KEY) ?? 0) + 5; localStorage.setItem(SANCTUARY_TIME_KEY, String(t)); } catch { /* optional */ }
-      if (t >= PET_AFTER && t < MP3_AFTER && !petMet && !petBusy.current && phaseRef.current === "idle" && !ozAway.current) { void petIntro(); return; }
+      let met = false; try { met = !!localStorage.getItem(PET_KEY); } catch { /* optional */ }
+      if (petBusy.current) return;
+      if (t >= PET_AFTER && !met && !beats.includes("mp3") && phaseRef.current === "idle") { void petIntro(); return; }
       if (t >= MP3_AFTER && phaseRef.current === "idle" && !ozAway.current && !petBusy.current) {
         // Story time wins over idle strolls and chores: call everyone back first.
         if (visiting.current || choring.current || outing.current.length) cancelVisit();
