@@ -27,12 +27,13 @@ const SHEL_LINES = {
   beaten: "I'll be telling Kronk about this! Those three are definitely up to no good!",
 };
 
-export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm }: {
+export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefeat }: {
   stageRef: RefObject<HTMLDivElement | null>;
   hitRef: MutableRefObject<(p: Point) => boolean>;
   crew: MutableRefObject<Record<Agent, Point>>;
   onSay: (who: Agent, text: string) => void;
   onAlarm?: (situation: string) => void;
+  onDefeat?: () => void;
 }) {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
