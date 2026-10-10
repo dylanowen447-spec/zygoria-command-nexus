@@ -154,6 +154,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefea
         else if (s.state === "flee" && moveTo({ x: 110, y: 52 }, 22)) {
           s.state = "gone"; shel.current = null; fight.current = null;
           try { localStorage.setItem(KEY, "done"); } catch { /* fine */ }
+          onDefeat?.();
           later(500, () => onSay("Lowkey", "Kronk. Remember that name."));
         }
       }
@@ -166,7 +167,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefea
 
   const now = performance.now();
   const ratH = size.oz * 0.95 / 0.78, ratW = ratH * 340 / 250;
-  const shelH = size.lowkey / 0.92;
+  const shelH = size.lowkey / 0.92 * 1.5; // 50% bigger than Lowkey-matched
   const s = shel.current;
   const shelFrame = !s ? 0 : s.state === "enter" || s.state === "flee" || s.state === "retreat" ? (s.state !== "enter" ? 17 : 1 + Math.floor(now / 110) % 6)
     : s.state === "taunt" ? (Math.floor(now / 600) % 2 ? 11 : 0) : s.state === "windup" ? 7 : s.state === "lunge" ? 8 : s.state === "open" ? 9
