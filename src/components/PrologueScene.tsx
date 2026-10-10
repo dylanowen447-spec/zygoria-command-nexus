@@ -39,6 +39,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const zap = useRef<(p: Point) => void>(() => undefined);
   const stageRef = useRef<HTMLDivElement>(null);
   const ambushHit = useRef<(p: Point) => boolean>(() => false);
+  const sheltonBeaten = useRef(false);
+  useEffect(() => { try { sheltonBeaten.current = localStorage.getItem("zygoria-longwalk-ambush-v1") === "done"; } catch { /* fight required */ } }, []);
+  const onSheltonDefeat = useCallback(() => { sheltonBeaten.current = true; }, []);
   /** Danger moment: the crew improvise their reaction live through the AI, never a fixed script. */
   const alarm = useRef<(situation: string) => void>(() => undefined);
   const onAlarm = useCallback((s: string) => alarm.current(s), []);
@@ -176,6 +179,12 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
           say(a, `Not mine. ${objective.owner}, this one's yours.`); claimed.delete(objective.spot);
           orders[objective.owner] = objective.spot; if (heading[objective.owner]) cancel[objective.owner] = true;
           await nap(a, 2400); say(a, null); continue;
+        }
+        if (objective && scene.id === "long-walk" && !sheltonBeaten.current) {
+          // The valley stays out of reach until Shelton has been beaten off the road.
+          claimed.delete(objective.spot);
+          const warn = { Oz: "Not with that spiky tortoise still on the road!", Brix: "Can't head down yet. Shelton first.", Lowkey: "Road's not safe. Not yet." }[a];
+          takeFloor(warn); say(a, warn); await wait(hold(warn)); say(a, null); await wait(2500); continue;
         }
         if (objective && objective.needs && !objective.needs.every(n => found.has(n))) {
           // Still shut: they react, then go back to poking around for the missing pieces.
@@ -411,7 +420,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         {bolts.map(b => <g key={b.id}><path className="zap-glow" d={b.d}/><path className="zap-core" d={b.d}/><circle className="zap-hit" cx={b.x} cy={b.y} r="1.2"/></g>)}
       </svg>
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
-      {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} crew={coords} onSay={ambushSay} onAlarm={onAlarm}/>}
+      {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} crew={coords} onAlarm={onAlarm}/>}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""}`}>
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
