@@ -667,3 +667,4 @@
 .moxi-wordmark{display:block;width:44px;max-width:none!important;height:auto;flex:none;position:relative;filter:drop-shadow(0 1px 2px var(--background))}
 @media(max-width:600px){.moxi-wordmark{width:40px}}
 @media(min-width:901px){.world-stage .moxi-wordmark{width:80px}}
+@media(min-width:900px){.cover-dialog:has(.pot-story) .cover-art{height:calc(100vh - 220px)}}
