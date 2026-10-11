@@ -317,12 +317,38 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         [["Oz", "Feel that? I'm buzzing."], ["Brix", "We all felt it."]],
         [["Lowkey", "He's going to start a fire."], ["Brix", "Or find one. Could be handy."], ["Oz", "See? Useful."]]],
     };
-    zap.current = (p: Point) => {
+    // First-lightning discovery: the crew react with shock, then curiosity, then banter, as Oz learns his power.
+    const FIRST: [Agent, string][][] = [
+      [["Brix", "WOAH! What the hell was that?!"], ["Lowkey", "Oz?! Did that just come out of you?!"], ["Oz", "I… think so?!"], ["Brix", "How are you doing that?!"], ["Oz", "I DON'T KNOW, MATE!"]],
+      [["Lowkey", "Did the air just jolt you?"], ["Brix", "There's a scorch mark. Right there."], ["Oz", "...My fingers are fizzing."], ["Brix", "How are you doing that?!"], ["Oz", "I DON'T KNOW, MATE!"]],
+    ];
+    const LEARN: [Agent, string][][] = [
+      [["Lowkey", "You're actually shooting lightning."], ["Oz", "Yeah, starting to get the hang of it!"], ["Brix", "Can you control where it arcs?"], ["Oz", "Watch this!"]],
+      [["Brix", "Is it coming from your antenna or your hands?"], ["Oz", "Both! My teeth are vibrating!"], ["Lowkey", "Just don't aim it at us."]],
+      [["Oz", "Again! It did it again!"], ["Lowkey", "We noticed."]],
+    ];
+    const SHOW: [Agent, string][][] = [
+      [["Brix", "Nice shot, Oz!"], ["Lowkey", "Careful where you're pointing that."], ["Oz", "Relax, lads. Professional electrician."], ["Brix", "You've been doing it for five minutes."]],
+      [["Oz", "Lightning rod, mate!"], ["Lowkey", "Keep walking before you attract the whole city."]],
+    ];
+    const HIT: [Agent, string][][] = [[["Brix", "Got it!"]], [["Lowkey", "Clean hit."]], [["Oz", "Fried!"]], [["Brix", "Nice one, Oz."]]];
+    const STAGE_KEY = "zygoria-oz-zap-stage";
+    let zaps = Number(localStorage.getItem(STAGE_KEY) || 0) || 0;
+    zap.current = (p: Point, hit = false) => {
       const now = performance.now();
-      if (voiceBusy || talking.size || now < zapQuietUntil || Math.random() < 0.3) return;
-      const near = (["Brix", "Lowkey"] as Agent[]).filter(z => dist(coords.current[z], p) < 9).sort((x, y) => dist(coords.current[x], p) - dist(coords.current[y], p))[0];
-      const pool = ZAP[near ?? "none"]!.filter(set => set[0]![1] !== lastLine);
-      const set = pool[Math.floor(Math.random() * pool.length)]!;
+      zaps++; try { localStorage.setItem(STAGE_KEY, String(zaps)); } catch { /* ignore */ }
+      if (voiceBusy || talking.size) { if (zaps <= 1) zaps = 0; return; }
+      let set: [Agent, string][];
+      const rnd = (l: [Agent, string][][]) => { const f = l.filter(s => s[0]![1] !== lastLine); return f[Math.floor(Math.random() * f.length)]!; };
+      if (zaps === 1) set = FIRST[hit ? 0 : Math.floor(Math.random() * 2)]!;
+      else if (zaps <= 3 && now >= zapQuietUntil - 22000) set = rnd(LEARN);
+      else if (zaps <= 6 && now >= zapQuietUntil) set = rnd(SHOW);
+      else if (now < zapQuietUntil || Math.random() < 0.3) return;
+      else if (hit) set = rnd(HIT);
+      else {
+        const near = (["Brix", "Lowkey"] as Agent[]).filter(z => dist(coords.current[z], p) < 9).sort((x, y) => dist(coords.current[x], p) - dist(coords.current[y], p))[0];
+        set = rnd(ZAP[near ?? "none"]!);
+      }
       lastLine = set[0]![1]; zapQuietUntil = now + 30000;
       set.forEach(([who, line], i) => {
         const start = 300 + set.slice(0, i).reduce((t, [, l]) => t + hold(l) + 300, 0);
