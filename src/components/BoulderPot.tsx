@@ -48,6 +48,8 @@ export function BoulderPot({ happy, asleep }: { happy: boolean; asleep: boolean 
         <button type="button" className="cover-close" onClick={close} aria-label="Close">✕</button>
         <img className="cover-art" src={art.url} alt="Brix cradling his pet Boulder Pot" />
         <p className="cover-caption">BRIX &amp; BOULDER POT</p>
+        <p className="pot-story">A curious little creature from Old Earth, Boulderpot has found an unlikely friend in Brix. Brix took the little fellow home to Riverside Sanctuary, and the two have been inseparable ever since.</p>
+        <p className="pot-story">Nobody’s quite sure who adopted who, but they seem pretty happy together. ❤️</p>
       </div>
     </div>, document.body)}
   </>);
