@@ -106,3 +106,61 @@ export function armAtmosphere() {
 export function setAtmosEnv(next: AtmosEnv) { env = next; }
 export function setAtmosFire(lit: boolean) { fire = lit; }
 export function stopAtmosphere() { if (timer) clearInterval(timer); timer = 0; void ctx?.close(); ctx = null; armed = false; }
+
+// ---------- Battle music: Game Boy wild-battle style chiptune (pulse lead, pulse harmony, triangle bass, noise drums) ----------
+let battle: { timer: number; step: number; next: number; boss: boolean; bus: GainNode } | null = null;
+const hz = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
+// 16th-note patterns, 0 = rest. A minor, two bars per phrase.
+const INTRO = [81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 0, 69, 0];
+const LEAD = [
+  69, 0, 72, 69, 76, 0, 74, 72, 71, 0, 72, 74, 76, 0, 79, 0,
+  77, 0, 76, 74, 72, 0, 74, 76, 71, 0, 68, 0, 69, 0, 0, 0,
+  69, 0, 72, 69, 76, 0, 74, 72, 77, 0, 76, 77, 79, 0, 81, 0,
+  80, 0, 79, 77, 76, 0, 74, 72, 71, 72, 74, 71, 69, 0, 0, 0,
+];
+const HARM = [0, 64, 0, 64, 0, 64, 0, 64, 0, 62, 0, 62, 0, 64, 0, 64];
+const BASS_ROOTS = [45, 45, 41, 40, 45, 45, 41, 40];
+function chip(bus: GainNode, t: number, f: number, dur: number, vol: number, type: OscillatorType) {
+  const o = ctx!.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t);
+  const g = ctx!.createGain(); g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + dur * 0.8); g.gain.linearRampToValueAtTime(0, t + dur);
+  o.connect(g).connect(bus); o.start(t); o.stop(t + dur + 0.02);
+}
+function hit(bus: GainNode, t: number, freq: number, dur: number, vol: number) {
+  const n = ctx!.createBufferSource(); n.buffer = noise;
+  const f = ctx!.createBiquadFilter(); f.type = "highpass"; f.frequency.value = freq;
+  const g = ctx!.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  n.connect(f).connect(g).connect(bus); n.start(t, Math.random()); n.stop(t + dur + 0.02);
+}
+function battleTick() {
+  if (!ctx || !battle) return;
+  const b = battle; const sixteenth = 60 / (b.boss ? 178 : 165) / 4;
+  while (b.next < ctx.currentTime + 0.25) {
+    const t = b.next, s = b.step;
+    if (s < 16) { const m = INTRO[s]!; if (m) chip(b.bus, t, hz(m), sixteenth * 0.9, 0.09, "square"); }
+    else {
+      const i = s - 16, bar = Math.floor(i / 16) % BASS_ROOTS.length, sub = i % 16;
+      const m = LEAD[i % LEAD.length]!; if (m) chip(b.bus, t, hz(m + (b.boss ? 0 : 0)), sixteenth * 0.85, 0.08, "square");
+      const h = HARM[sub]!; if (h) chip(b.bus, t, hz(h + (bar % 4 === 2 ? 1 : 0) + (b.boss ? 12 : 0)), sixteenth * 0.5, 0.035, "square");
+      const root = BASS_ROOTS[bar]!; chip(b.bus, t, hz(sub % 2 ? root + 12 : root), sixteenth * 0.9, 0.16, "triangle");
+      if (sub % 4 === 0) chip(b.bus, t, 110, 0.05, 0.12, "triangle");
+      if (sub % 8 === 4) hit(b.bus, t, 1500, 0.09, 0.12);
+      if (sub % 2 === 1 || b.boss) hit(b.bus, t, 7000, 0.025, 0.05);
+    }
+    b.step++; b.next += sixteenth;
+  }
+}
+/** Start (or intensify to boss mode) the battle theme. Needs a prior user gesture; silently no-ops otherwise. */
+export function startBattleMusic(boss = false) {
+  if (!ctx) boot();
+  if (!ctx) return;
+  if (battle) { battle.boss = battle.boss || boss; battle.bus.gain.setTargetAtTime(0.9, ctx.currentTime, 0.05); return; }
+  const bus = ctx.createGain(); bus.gain.value = 0.9; bus.connect(master);
+  battle = { timer: window.setInterval(battleTick, 50), step: 0, next: ctx.currentTime + 0.05, boss, bus };
+  battleTick();
+}
+export function stopBattleMusic() {
+  if (!battle || !ctx) { battle = null; return; }
+  const b = battle; battle = null; clearInterval(b.timer);
+  b.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.4);
+  setTimeout(() => b.bus.disconnect(), 2500);
+}
