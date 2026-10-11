@@ -139,6 +139,8 @@
 @media(min-width:901px){.sheet-lowkey{transform:translateX(-50%) scale(.774)}}
 
 .sheet-brix{width:51px;height:73px;bottom:-4px;transform:translateX(-50%) scale(.94);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
+/* Brix's atlas is 7 columns × 4 rows, so any Brix sprite anywhere (map marker, build scene, menus) shows one frame, never the whole sheet. */
+.sheet-brix .sheet-frames{background-size:700% 400%;background-position:0 0}
 /* On phones Brix is 30% smaller; desktop size and his feet anchor stay put. */
 @media(max-width:600px){.sheet-brix{width:61px;height:88px;bottom:-3px;transform:translateX(-50%) scale(.784)}}
 /* Brix's supplied directional sheet: seven columns (rest + six strides) and four rows (front, left, right, back), same layout as Oz. */
