@@ -610,7 +610,7 @@
 .boss-bar-notch{position:absolute;top:0;bottom:0;width:2px;background:var(--background)}
 @media(max-width:600px){.boss-hud{width:86%;top:4%;padding:4px 6px}.boss-hud-row{font-size:8px}}
 /* Boulder Pot — Brix's pet near the workshop; grounded at its feet, a touch smaller than Oz. */
-.boulder-pot{position:absolute;z-index:520;pointer-events:none;transform:translate(-50%,-100%)}
+.boulder-pot{position:absolute;z-index:520;pointer-events:auto;cursor:pointer;padding:8px;margin-top:8px;transform:translate(-50%,-100%)}
 .boulder-pot-art{display:block;width:22px;height:22px;background-size:1100% 100%;background-repeat:no-repeat;image-rendering:pixelated}
 .boulder-pot.is-happy .boulder-pot-art{animation:potHop .4s ease-in-out 4 alternate}
 @keyframes potHop{to{translate:0 -4px}}
