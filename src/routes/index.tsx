@@ -128,7 +128,7 @@ const MOXI_ASK_HUNGRY: [string, string][] = [
   ["You alright?", "Belly rumbles. Like Brix's hammer."],
   ["Want a snack?", "Yes. Please. Now."],
 ];
-const MOXI_TALKS: Record<string, [Agent, string][]> = {
+const MOXI_TALKS: Record<string, [CrewAgent, string][]> = {
   "Oz>Moxi": [
     ["Oz", "Race you to the pier!"], ["Moxi", "…You will lose."], ["Oz", "Big talk for little legs!"],
   ],
@@ -1435,7 +1435,7 @@ function CommandCentre() {
       await say("Oz", o); await say("Moxi", m);
     } else {
       setMoxiMood("excited");
-      for (const line of fresh(MOXI_TALKS["Oz>Moxi"]!, x => x[0]![1])) await say(line[0]!, line[1]!, 2600);
+      for (const line of fresh(MOXI_TALKS["Oz>Moxi"]!, x => x[1]!)) await say(line[0]!, line[1]!, 2600);
     }
     if (run === runId.current) setBubble(null);
     setMoxiMood(null);
