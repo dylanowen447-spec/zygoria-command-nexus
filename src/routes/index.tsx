@@ -816,11 +816,11 @@ function CommandCentre() {
     await walk("Lowkey", [...routeNodes(coords.current.sanctuary.Lowkey, spot), spot], "central", run);
     if (run !== runId.current) return;
     const scene2: [Agent, string][] = [
-      ["Lowkey", "Lads, I think there are people living beneath the mountains."],
+      ["Lowkey", "I think there are people living beneath the mountains."],
       ["Oz", "People? Actual people?"],
       ["Brix", "How do you know?"],
       ["Lowkey", "The bird told me."],
-      ["Oz", "THE BLOODY PIGEON AGAIN?!"],
+      ["Oz", "A bird told you?! What bloody bird?!"],
       ["Brix", "Well, there's only one way to find out."],
       ["Lowkey", "We should go and look."],
       ["Oz", "Right then. Off to find the underground people. Brilliant."],

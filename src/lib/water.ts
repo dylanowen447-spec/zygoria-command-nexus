@@ -21,10 +21,10 @@ export function saveWater(water: number, bottles: number) {
 export const DRINK_WORDS = /\b(drink\w*|thirst\w*|water|sip|swig|hydrat\w*|bottle\w*)\b/i;
 
 export const DRINK_LINES: [string, string][] = [["Oz", "Ahh. Better."], ["Brix", "Needed that."], ["Lowkey", "Cold. Good."]];
-export const DRY_LINES: [string, string][] = [["Brix", "Bottles are dry, lads."], ["Oz", "Empty. We'll need the river."]];
+export const DRY_LINES: [string, string][] = [["Brix", "Bottles are dry."], ["Oz", "Empty. We'll need the river."]];
 
 export const WATER_LINES: Record<40 | 20 | 10, [string, string][]> = {
   40: [["Oz", "Bit thirsty, me."], ["Lowkey", "Throat's dry."]],
   20: [["Brix", "Could murder a drink."], ["Oz", "My mouth's like sand."]],
-  10: [["Lowkey", "Need water. Now."], ["Brix", "Running dry here, lads."]],
+  10: [["Lowkey", "Need water. Now."], ["Brix", "Running dry here."]],
 };

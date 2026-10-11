@@ -17,7 +17,7 @@ export function saveHunger(v: number) {
 }
 
 export const HUNGER_LINES: Record<40 | 20 | 10, [string, string][]> = {
-  40: [["Oz", "Getting a bit hungry."], ["Brix", "Getting a bit hungry, lads."]],
+  40: [["Oz", "Getting a bit hungry."], ["Brix", "Getting a bit hungry."]],
   20: [["Oz", "My stomach's rumbling louder than the radio."], ["Brix", "Could do with some fish soon."]],
   10: [["Oz", "Seriously. Food. Someone. Please."], ["Brix", "Running on empty here."]],
 };

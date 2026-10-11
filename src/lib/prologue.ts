@@ -222,7 +222,7 @@ const LONG_WALK: Scene = {
     slope: { at: { x: 61, y: 57 }, words: "slope|up|climb", lines: { Oz: ["Up we go."], Brix: ["Steady climb. Watch the loose rock."], Lowkey: ["Higher. The air changes."] } },
     ridge: { at: { x: 70, y: 44 }, words: "ridge|edge|cliff|valley|overlook|view|top", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
-  objectives: [{ spot: "ridge", tag: { label: "THE GREEN VALLEY", x: 80, y: 30 }, found: { Oz: ["Whoa. Look down there!", "Why is it so GREEN over there?!"], Brix: ["A valley. River, trees, flat ground.", "Lads, come see this."], Lowkey: ["Down there. Everything's alive.", "Come. Look."] } }],
+  objectives: [{ spot: "ridge", tag: { label: "THE GREEN VALLEY", x: 80, y: 30 }, found: { Oz: ["Whoa. Look down there!", "Why is it so GREEN over there?!"], Brix: ["A valley. River, trees, flat ground.", "Come see this."], Lowkey: ["Down there. Everything's alive.", "Come. Look."] } }],
   unlock: { seen: 3, ms: 35000, maxMs: 95000 },
   hints: { Oz: "That rock ledge — bet you can see for miles.", Brix: "Ground rises to an edge over there. Worth a look.", Lowkey: "The air past that ridge smells green." },
   opening: [["Oz", "Out of the city. Finally."], ["Brix", "Need water. Soon."], ["Lowkey", "Keep walking. Something's out there."]],
