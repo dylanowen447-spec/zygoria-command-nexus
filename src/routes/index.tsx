@@ -1291,7 +1291,7 @@ function CommandCentre() {
     if (a === "Oz" || !canClick()) return;
     const at = coords.current.sanctuary[a];
     setClickMark({ id: Date.now(), ...at });
-    void ozTo(beside(a), true, run => chatAt(run, visitLines(a)));
+    void ozTo(beside(a), true, run => a === "Moxi" ? moxiTap(run) : chatAt(run, visitLines(a)));
   }
   // Ambient crew moments in the outer zones — short scripted exchanges while idle, never during jobs or story scenes.
   useEffect(() => {
@@ -1339,7 +1339,7 @@ function CommandCentre() {
     const loop = async () => {
       while (alive) {
         await wait(9000 + Math.random() * 6000);
-        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || choring.current || outing.current.length || ozAway.current) continue;
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || choring.current || outing.current.length || ozAway.current || petBusy.current || bubbleRef.current || Date.now() - quietUntil.current < 0) continue;
         const z = ZONES.sanctuary, all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
         const v = all[Math.floor(Math.random() * all.length)]!;
         const others = all.filter(a => a !== v);
@@ -1362,7 +1362,7 @@ function CommandCentre() {
         setBubble(null);
         await walk(v, [...there.slice(0, -1).reverse(), HOME(z, v)], "home", run);
         if (run !== runId.current) { visiting.current = null; continue; }
-        visiting.current = null;
+        visiting.current = null; quietUntil.current = Date.now() + 15000 + Math.random() * 10000;
       }
     };
     void loop();
@@ -1370,8 +1370,40 @@ function CommandCentre() {
   }, [phase, zoneId, prologue]);
   // Living camp: between visits, idle Zigs potter off on little chores or mutter to themselves — never during jobs or scenes.
   const choring = useRef<Agent | null>(null);
+  const quietUntil = useRef(0);
   const bubbleRef = useRef(bubble);
   bubbleRef.current = bubble;
+  // Moxi 2.0: body-language mood on her marker, and no-repeat line picking.
+  const [moxiMood, setMoxiMood] = useState<MoxiMood | null>(null);
+  const hungerNow = useRef(hunger); hungerNow.current = hunger;
+  const moxiSaid = useRef<string[]>([]);
+  const fresh = <T,>(list: T[], key: (x: T) => string): T => {
+    const ok = list.filter(x => !moxiSaid.current.includes(key(x)));
+    const p = (ok.length ? ok : list)[Math.floor(Math.random() * (ok.length || list.length))]!;
+    moxiSaid.current = [key(p), ...moxiSaid.current].slice(0, 8);
+    return p;
+  };
+  const isNightNow = () => Number((document.querySelector(".day-night") as HTMLElement | null)?.style.getPropertyValue("--night") || 0) > 0.5;
+  const moxiPetCount = useRef(0);
+  async function moxiTap(run: number) {
+    const night = isNightNow(), fed = hungerNow.current >= 70;
+    const kind = moxiPetCount.current++ % 3;
+    const say = async (a: Agent, t: string, ms = 3200) => { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(ms); };
+    if (kind === 0) {
+      setMoxiMood("happy");
+      const [o, m] = fresh(MOXI_PET, x => x[1]);
+      await say("Oz", o); await say("Moxi", m);
+    } else if (kind === 1) {
+      setMoxiMood(night ? "sleepy" : "curious");
+      const [o, m] = fresh(night ? MOXI_ASK_NIGHT : fed ? MOXI_ASK_FED : MOXI_ASK_HUNGRY, x => x[1]);
+      await say("Oz", o); await say("Moxi", m);
+    } else {
+      setMoxiMood("excited");
+      for (const [a, t] of fresh(MOXI_TALKS["Oz>Moxi"]!, x => x[0]![1])) await say(a, t, 2600);
+    }
+    if (run === runId.current) setBubble(null);
+    setMoxiMood(null);
+  }
   useEffect(() => {
     if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     const z = ZONES.sanctuary;
@@ -1395,7 +1427,7 @@ function CommandCentre() {
       await wait(4000);
       while (alive) {
         await wait(6000 + Math.random() * 4000);
-        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || outing.current.length || choring.current) continue;
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || outing.current.length || choring.current || visiting.current || petBusy.current || bubbleRef.current || ozAway.current || Date.now() < quietUntil.current) continue;
         const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
         const free = all.filter(a => a !== visiting.current && !(a === "Oz" && ozAway.current));
         const a = free[Math.floor(Math.random() * free.length)];
@@ -1406,6 +1438,7 @@ function CommandCentre() {
           if (bubbleRef.current) continue;
           const t = pick(THOUGHTS[a]); setBubble({ agent: a, text: t }); log(a, t);
           await wait(3200); if (run === runId.current && (bubbleRef.current as { text: string } | null)?.text === t) setBubble(null);
+          quietUntil.current = Date.now() + 12000 + Math.random() * 8000;
           continue;
         }
         const chore = pick(CHORES[a]);
@@ -1420,7 +1453,7 @@ function CommandCentre() {
         setBubble(b => b?.agent === a ? null : b);
         if (run !== runId.current) { choring.current = null; continue; }
         await walk(a, [...chore.path.slice(0, -1).reverse(), HOME(z, a)], "home", run);
-        choring.current = null;
+        choring.current = null; quietUntil.current = Date.now() + 15000 + Math.random() * 10000;
       }
     })();
     return () => { alive = false; };

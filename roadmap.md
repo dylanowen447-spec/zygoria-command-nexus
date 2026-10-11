@@ -76,3 +76,9 @@
 - [x] Shelton's hits on the crew cost 5%
 - [x] Each Oz zap on Shelton takes 10% off his health (10 hits total)
 - [x] Crew loses health more slowly; smaller crew bar
+
+## Moxi Agent 2.0
+- [ ] Richer Moxi relationship chats (multi-line, no repeats), context-aware thoughts (day/night, fed)
+- [ ] Moxi idle activities (river, workshop, lookout, Boulder Pot, tail chase, wings) with expression poses
+- [ ] Tap Moxi: pet / feed fish (if any) / ask what she is doing
+- [ ] Moxi AI voice: baby dragon personality, relationships, backstory rarely
