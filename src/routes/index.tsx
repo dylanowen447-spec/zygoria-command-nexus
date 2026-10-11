@@ -104,6 +104,42 @@ const IDLE_CHATS: Record<string, [string, string][]> = {
   "Moxi>Lowkey": [["You see me. You always see me.", "Hard to miss a dragon."], ["The stars moved. That one should be there.", "…I'll keep an eye on it."]],
 };
 
+// ── Moxi 2.0: tap interactions ──────────────────────────
+type MoxiMood = "happy" | "sleepy" | "curious" | "excited";
+const MOXI_PET: [string, string][] = [
+  ["Hey, little one.", "*leans in* Warm hands."],
+  ["Who's a good dragon?", "…Me. Obviously."],
+  ["Scritches behind the horn?", "*happy rumble*"],
+  ["There she is.", "Again. Do it again."],
+  ["Easy, Moxi.", "*purrs like a tiny engine*"],
+];
+const MOXI_ASK_NIGHT: [string, string][] = [
+  ["Can't sleep?", "Stars are loud tonight."],
+  ["You okay out here?", "Mm. Watching. Like Lowkey."],
+  ["Cold?", "Fire went small. You are warm though."],
+];
+const MOXI_ASK_FED: [string, string][] = [
+  ["Full belly, huh?", "Fish was good. More tomorrow?"],
+  ["Happy?", "Mm. This place is… good."],
+  ["What you thinking about?", "Flying. One day. Maybe."],
+];
+const MOXI_ASK_HUNGRY: [string, string][] = [
+  ["Hungry, Moxi?", "…Little bit. Fish?"],
+  ["You alright?", "Belly rumbles. Like Brix's hammer."],
+  ["Want a snack?", "Yes. Please. Now."],
+];
+const MOXI_TALKS: Record<string, [Agent, string][]> = {
+  "Oz>Moxi": [
+    ["Oz", "Race you to the pier!"], ["Moxi", "…You will lose."], ["Oz", "Big talk for little legs!"],
+  ],
+  "Brix>Moxi": [
+    ["Brix", "Off the bench, Moxi."], ["Moxi", "But it's warm."], ["Brix", "…Five more minutes."],
+  ],
+  "Lowkey>Moxi": [
+    ["Moxi", "The stars moved. That one should be there."], ["Lowkey", "…I'll keep an eye on it."],
+  ],
+};
+
 function DayNight() {
   const [t, setT] = useState(0);
   useEffect(() => {
