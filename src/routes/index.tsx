@@ -1407,6 +1407,7 @@ function CommandCentre() {
           if (bubbleRef.current) continue;
           const t = pick(THOUGHTS[a]); setBubble({ agent: a, text: t }); log(a, t);
           await wait(3200); if (run === runId.current && (bubbleRef.current as { text: string } | null)?.text === t) setBubble(null);
+          quietUntil.current = Date.now() + 12000 + Math.random() * 8000;
           continue;
         }
         const chore = pick(CHORES[a]);
@@ -1421,7 +1422,7 @@ function CommandCentre() {
         setBubble(b => b?.agent === a ? null : b);
         if (run !== runId.current) { choring.current = null; continue; }
         await walk(a, [...chore.path.slice(0, -1).reverse(), HOME(z, a)], "home", run);
-        choring.current = null;
+        choring.current = null; quietUntil.current = Date.now() + 15000 + Math.random() * 10000;
       }
     })();
     return () => { alive = false; };
