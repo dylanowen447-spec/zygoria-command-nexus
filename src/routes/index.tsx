@@ -309,8 +309,11 @@ function CommandCentre() {
       const step = (time: number) => {
         // Cancelled or superseded: stop the leg cycle so nobody is left walking on the spot.
         if (run !== runId.current || !mine()) { if (mine()) setWalking(prev => prev.filter(a => a !== agent)); resolve(); return; }
-        let budget = Math.min(time - last, 64) / 1000 * WALK_SPEED;
-        last = time;
+        void time;
+        // Older iPads can hand rAF a timestamp on a different clock; always use performance.now().
+        const nowT = performance.now();
+        let budget = Math.max(0, Math.min(nowT - last, 64)) / 1000 * WALK_SPEED;
+        last = nowT;
         while (budget > 0 && segment < targets.length) {
           const p = coords.current[zoneRef.current][agent], t = targets[segment]!, d = distance(p, t);
           if (d <= budget) {
@@ -1286,7 +1289,8 @@ function CommandCentre() {
   const beside = (a: Agent) => { const p = coords.current.sanctuary[a]; return { x: p.x + (p.x > 50 ? -6 : 6), y: p.y + 1 }; };
   const visitLines = (a: Agent) => GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!;
   function onWorldClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (zoneId !== "sanctuary" || !stageRef.current || (e.target as HTMLElement).closest("button,a,.welcome-card")) return;
+    const tg = e.target as Element | null;
+    if (zoneId !== "sanctuary" || !stageRef.current || (tg && typeof tg.closest === "function" && tg.closest("button,a,.welcome-card"))) return;
     if (!canClick()) return;
     const r = stageRef.current.getBoundingClientRect();
     const p = { x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100 };

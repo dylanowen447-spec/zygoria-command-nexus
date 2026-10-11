@@ -100,8 +100,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         if (!alive) return;
         if (tokens[a] !== token) { resolve(); return; }
         if (cancel[a]) { cancel[a] = false; setWalking(w => w.filter(x => x !== a)); resolve(); return; }
-        let budget = Math.min(time - last, 64) / 1000 * SPEED;
-        last = time;
+        // Older iPads can hand rAF a timestamp on a different clock; always use performance.now().
+        const nowT = performance.now();
+        let budget = Math.max(0, Math.min(nowT - last, 64)) / 1000 * SPEED;
+        last = nowT;
         while (budget > 0 && seg < pts.length) {
           const p = coords.current[a], t = pts[seg]!, d = dist(p, t);
           if (d <= budget) { coords.current[a] = { ...t }; budget -= d; seg++; if (seg < pts.length) face(pts[seg]!); }
@@ -397,8 +399,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
 
   return <>
   <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties} onPointerDown={e => {
-      const btn = (e.target as HTMLElement).closest("button"); if (btn && !btn.classList.contains("agent-marker")) return;
-      if (e.pointerType !== "mouse") e.preventDefault();
+      const tg = e.target as Element | null;
+      const btn = tg && typeof tg.closest === "function" ? tg.closest("button") : null; if (btn && !btn.classList.contains("agent-marker")) return;
+      if (!stageRef.current) return;
       const r = stageRef.current!.getBoundingClientRect();
       const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
       const o = coords.current.Oz, sx = o.x, sy = o.y - 5;

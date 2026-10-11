@@ -36,7 +36,7 @@ export function WelcomeGuide({ onAsk }: { onAsk?: (text: string) => void }) {
     // Tapping the scene outside the card tucks the guide away so the tap still counts (e.g. Oz's zap).
     const onTap = (event: PointerEvent) => {
       const t = event.target as Element | null;
-      if (!t || t.closest(".welcome-card") || !t.closest(".world-image-wrap")) return;
+      if (!t || typeof t.closest !== "function" || t.closest(".welcome-card") || !t.closest(".world-image-wrap")) return;
       setOpen(false);
       try { localStorage.setItem(KEY, "seen"); } catch { /* optional */ }
     };

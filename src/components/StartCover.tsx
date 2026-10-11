@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import keyArt from "@/assets/zygoria-key-art.jpg.asset.json";
 
 /** Full-screen key art shown on every visit until the visitor taps to start. */
 export function StartCover() {
   const [state, setState] = useState<"open" | "leaving" | "gone">("open");
+  // Fallback: some older iPads never fire the fade-out end event, which would leave an invisible tap-blocker.
+  useEffect(() => {
+    if (state !== "leaving") return;
+    const t = setTimeout(() => setState("gone"), 900);
+    return () => clearTimeout(t);
+  }, [state]);
   if (state === "gone") return null;
   return (
     <div className={`start-cover ${state === "leaving" ? "is-leaving" : ""}`} onTransitionEnd={() => state === "leaving" && setState("gone")}>
