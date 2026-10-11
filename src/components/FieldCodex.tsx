@@ -13,7 +13,7 @@ type Category = "Characters" | "Creatures" | "Locations" | "Objects" | "Old Eart
 type Page = { id: string; category: Category; name: string; description: string; location: string | null; recordedBy: string | null; level: "known" | "partial" | "hidden" };
 type Log = { text: string; zone: ZoneId; done: boolean; results: string };
 const CATEGORIES: Category[] = ["Characters", "Creatures", "Locations", "Objects", "Old Earth discoveries", "Network-related discoveries", "Unsolved mysteries"];
-const PORTRAITS: Record<string, string> = { oz: ozPortrait.url, brix: brixPortrait.url, lowkey: lowkeyPortrait.url, cronk: kronkCard.url };
+const PORTRAITS: Record<string, string> = { oz: ozPortrait.url, brix: brixPortrait.url, lowkey: lowkeyPortrait.url, cronk: kronkCard.url, thoth: thothCard.url };
 const ZONE_IMAGES: Record<string, ZoneId> = { sanctuary: "sanctuary", ruins: "ruins", caves: "caves", swamp: "cronk", camp: "shelton" };
 const KEY = "zygoria-codex-v1";
 
@@ -27,7 +27,10 @@ export function FieldCodex({ pages: allPages, logs, visited, currentZone, record
       return ok ? { ...page, description: OPENING_NOTE[page.id] ?? page.description, location: stage === 0 ? "Landing site" : "On the road", level: page.id === "ruins" ? "partial" as const : page.level } : { ...page, level: "hidden" as const };
     }
     const zone = GATED[page.id];
-    return zone && !visited.includes(zone as ZoneId) ? { ...page, level: "hidden" as const } : page;
+    if (zone && !visited.includes(zone as ZoneId)) return { ...page, level: "hidden" as const };
+    // Thoth's page stays blank until Lowkey's lookout encounter has played.
+    if (page.id === "thoth" && !recorded.includes("thoth")) return { ...page, level: "hidden" as const };
+    return page;
   });
   const maxChapter = Math.min(stage, CHRONICLES.length - 1);
   const [open, setOpen] = useState(false);
@@ -115,7 +118,7 @@ export function FieldCodex({ pages: allPages, logs, visited, currentZone, record
             </Button>;
           })}</div>
           {selected && <div className="codex-detail" aria-live="polite"><div className="codex-detail-label">{selected.level === "hidden" ? "BLANK PAGE" : selected.level === "partial" ? "INCOMPLETE RECORD" : "FIELD RECORD"}</div>
-            {selected.level !== "hidden" && selected.id === "cronk" && <img className="codex-card" src={kronkCard.url} alt="Kronk, Shiny 010: The Boss trading card"/>}<h3>{selected.level === "hidden" ? "Unrecorded" : selected.name}</h3><p>{selected.description}</p>
+            {selected.level !== "hidden" && selected.id === "cronk" && <img className="codex-card" src={kronkCard.url} alt="Kronk, Shiny 010: The Boss trading card"/>}{selected.level !== "hidden" && selected.id === "thoth" && <img className="codex-card" src={thothCard.url} alt="Thoth, Shiny 006 trading card"/>}<h3>{selected.level === "hidden" ? "Unrecorded" : selected.name}</h3><p>{selected.description}</p>
             {selected.level !== "hidden" && <div className="codex-detail-meta"><span><MapPin size={13}/> {selected.location ? `Known location · ${selected.location}` : "Location not yet recorded"}</span><span><BookOpen size={13}/> {selected.recordedBy ? `Recorded by ${selected.recordedBy}` : "Crew journal"}</span><span>{selected.level === "partial" ? "DISCOVERY STATUS · INCOMPLETE" : "DISCOVERY STATUS · KNOWN"}</span></div>}
           </div>}
           {!selected && <div className="codex-quiet">Choose a page to read the crew's notes.</div>}
