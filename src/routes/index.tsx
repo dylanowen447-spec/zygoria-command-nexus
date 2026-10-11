@@ -1189,7 +1189,8 @@ function CommandCentre() {
     const atShack = distance(p, { x: 13, y: 53 }) < 8;
     setSleepPrompt(atShack);
     if (atShack) return;
-    if (distance(p, FIRE_PIT) < 4) { void dispatchDirective("cook me some food"); return; }
+    // The pit artwork sits above its ground point, so the tap area covers the whole visible pit.
+    if (Math.abs(p.x - FIRE_PIT.x) < 5 && p.y > FIRE_PIT.y - 9 && p.y < FIRE_PIT.y + 3) { void dispatchDirective("cook me some food"); return; }
     // Clicking the water tank sends Oz over for a drink that tops his water back up.
     if (distance(p, { x: WATER_TANK.x, y: WATER_TANK.y - 3 }) < 5) {
       setClickMark({ id: Date.now(), ...p });
