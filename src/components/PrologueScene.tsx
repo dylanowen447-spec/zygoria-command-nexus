@@ -36,7 +36,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const [bubbles, setBubbles] = useState<Partial<Record<Agent, string>>>({});
   const [found, setFound] = useState<string[]>([]);
   const [done, setDone] = useState(false);
-  const zap = useRef<(p: Point) => void>(() => undefined);
+  const zap = useRef<(p: Point, hit?: boolean) => void>(() => undefined);
   const stageRef = useRef<HTMLDivElement>(null);
   const ambushHit = useRef<(p: Point) => boolean>(() => false);
   const sheltonBeaten = useRef(false);
@@ -336,8 +336,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     let zaps = Number(localStorage.getItem(STAGE_KEY) || 0) || 0;
     zap.current = (p: Point, hit = false) => {
       const now = performance.now();
+      if ((voiceBusy || talking.size) && zaps === 0) return; // save the first-ever reaction until the crew can see it
       zaps++; try { localStorage.setItem(STAGE_KEY, String(zaps)); } catch { /* ignore */ }
-      if (voiceBusy || talking.size) { if (zaps <= 1) zaps = 0; return; }
+      if (voiceBusy || talking.size) return;
       let set: [Agent, string][];
       const rnd = (l: [Agent, string][][]) => { const f = l.filter(s => s[0]![1] !== lastLine); return f[Math.floor(Math.random() * f.length)]!; };
       if (zaps === 1) set = FIRST[hit ? 0 : Math.floor(Math.random() * 2)]!;
@@ -438,7 +439,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const id = performance.now() + Math.random();
       setBolts(b => [...b.slice(-5), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
       setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 500);
-      if (!ambushHit.current({ x, y })) zap.current({ x, y });
+      zap.current({ x, y }, !!ambushHit.current({ x, y }));
     }}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
     <div className="world-vignette"/>
