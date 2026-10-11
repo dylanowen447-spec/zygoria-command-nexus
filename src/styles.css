@@ -649,3 +649,12 @@
 @media(min-width:901px){.thoth img{height:84px}.thoth-bubble{font-size:13px;max-width:221px;padding:7px 11px;border-radius:10px}}
 /* Idle signs removed from the map so they never block speech bubbles. */
 .world-stage .marker-status{display:none!important}
+
+/* Moxi body language on her existing sprite (no new frames) */
+.marker-moxi.moxi-happy .sprite-stage { animation: moxi-hop .5s ease-in-out 4; transform-origin: 50% 100%; }
+.marker-moxi.moxi-excited .sprite-stage { animation: moxi-flap .35s ease-in-out 6; transform-origin: 50% 100%; }
+.marker-moxi.moxi-curious .sprite-stage { animation: moxi-tilt 1.6s ease-in-out 2; transform-origin: 50% 100%; }
+.marker-moxi.moxi-sleepy .sprite-stage { transform: scaleY(.82) scaleX(1.06); transform-origin: 50% 100%; transition: transform .8s ease; opacity: .92; }
+@keyframes moxi-hop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14%); } }
+@keyframes moxi-flap { 0%,100% { transform: scale(1); } 50% { transform: scaleX(1.08) scaleY(.96); } }
+@keyframes moxi-tilt { 0%,100% { transform: rotate(0); } 30% { transform: rotate(-8deg); } 70% { transform: rotate(6deg); } }
