@@ -1504,7 +1504,11 @@ function CommandCentre() {
     const page = done ? { ...c, category: "Creatures" as const, level: "known" as const } : { id: c.id, category: "Creatures" as const, name: "Unrecorded", description: story.beats.includes("spotted") ? "Something small moving near the trees. Lowkey's sure he saw it." : "Nothing recorded yet.", location: null, recordedBy: null, level: "hidden" as const };
     return [...canon.codexPages.filter(p => p.id !== c.id), page];
   }, [canon.codexPages, story]);
-  const codexRecorded = useMemo(() => chapterDone(SANCTUARY_SIGNAL, story) ? [...world.discoveries, SANCTUARY_SIGNAL.codex.id] : world.discoveries, [world.discoveries, story]);
+  const codexRecorded = useMemo(() => {
+    const ids = chapterDone(SANCTUARY_SIGNAL, story) ? [...world.discoveries, SANCTUARY_SIGNAL.codex.id] : [...world.discoveries];
+    if (story.beats.includes("thoth")) ids.push("thoth"); // Lowkey's lookout encounter records Thoth's page
+    return ids;
+  }, [world.discoveries, story]);
   const codexLogs = useMemo(() => missions.map(m => ({ text: m.text, zone: m.zone, done: m.state === "Complete", results: m.steps.map(st => st.result).join(" ") })), [missions]);
   function selectZone(z: ZoneId) {
     if (phase !== "idle" || z === zoneId) return;
