@@ -37,17 +37,18 @@ export function BoulderPot({ happy, asleep }: { happy: boolean; asleep: boolean 
     return () => cancelAnimationFrame(raf);
   }, [asleep, happy]);
 
-  return (
+  const close = (e: React.SyntheticEvent) => { e.stopPropagation(); e.preventDefault(); setCard(false); };
+  return (<>
     <div ref={el} className={`boulder-pot ${happy ? "is-happy" : ""}`} style={{ left: `${HOME.x}%`, top: `${HOME.y}%` }} aria-label="Boulder Pot, Brix's pet — tap to view artwork" role="button" tabIndex={0}
       onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); setCard(true); }} onKeyDown={e => { if (e.key === "Enter") setCard(true); }}>
       <span className="boulder-pot-art" style={{ backgroundImage: `url(${sheet})`, backgroundPosition: `${(frame / 10) * 100}% 0`, transform: left && frame >= 4 && frame <= 8 ? "scaleX(-1)" : undefined }} />
-      {card && createPortal(<div className="cover-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setCard(false); }}>
-        <div className="cover-dialog" role="dialog" aria-modal="true" aria-label="Brix and Boulder Pot">
-          <button type="button" className="cover-close" onClick={() => setCard(false)} aria-label="Close">✕</button>
-          <img className="cover-art" src={art.url} alt="Brix cradling his pet Boulder Pot" />
-          <p className="cover-caption">BRIX &amp; BOULDER POT <span>Created by Dylan Owen · 2026</span></p>
-        </div>
-      </div>, document.body)}
     </div>
-  );
+    {card && createPortal(<div className="cover-backdrop" onPointerDown={e => e.stopPropagation()} onClick={e => { if (e.target === e.currentTarget) close(e); else e.stopPropagation(); }}>
+      <div className="cover-dialog" role="dialog" aria-modal="true" aria-label="Brix and Boulder Pot">
+        <button type="button" className="cover-close" onClick={close} aria-label="Close">✕</button>
+        <img className="cover-art" src={art.url} alt="Brix cradling his pet Boulder Pot" />
+        <p className="cover-caption">BRIX &amp; BOULDER POT</p>
+      </div>
+    </div>, document.body)}
+  </>);
 }
