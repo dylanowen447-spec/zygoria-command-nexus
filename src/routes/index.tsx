@@ -1435,7 +1435,7 @@ function CommandCentre() {
       await say("Oz", o); await say("Moxi", m);
     } else {
       setMoxiMood("excited");
-      for (const [a, t] of fresh(MOXI_TALKS["Oz>Moxi"]!, x => x[0]![1])) await say(a, t, 2600);
+      for (const line of fresh(MOXI_TALKS["Oz>Moxi"]!, x => x[0]![1])) await say(line[0]!, line[1]!, 2600);
     }
     if (run === runId.current) setBubble(null);
     setMoxiMood(null);
