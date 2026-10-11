@@ -411,7 +411,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       pts.push(`${x},${y}`);
       const id = performance.now() + Math.random();
       setBolts(b => [...b.slice(-5), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
-      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 300);
+      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 500);
       if (!ambushHit.current({ x, y })) zap.current({ x, y });
     }}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
@@ -422,6 +422,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       <svg className="zap-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         {bolts.map(b => <g key={b.id}><path className="zap-glow" d={b.d}/><path className="zap-core" d={b.d}/><circle className="zap-hit" cx={b.x} cy={b.y} r="1.2"/></g>)}
       </svg>
+      {bolts.map(b => <div key={`f${b.id}`} className="zap-flash" style={{ left: `${b.x}%`, top: `${b.y}%` }} />)}
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} crew={coords} onAlarm={onAlarm}/>}
