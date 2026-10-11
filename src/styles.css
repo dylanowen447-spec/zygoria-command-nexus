@@ -658,3 +658,10 @@
 @keyframes moxi-hop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14%); } }
 @keyframes moxi-flap { 0%,100% { transform: scale(1); } 50% { transform: scaleX(1.08) scaleY(.96); } }
 @keyframes moxi-tilt { 0%,100% { transform: rotate(0); } 30% { transform: rotate(-8deg); } 70% { transform: rotate(6deg); } }
+/* Moxi's tap area hugs her small body so it never covers Brix nearby; Brix's marker sits above hers. */
+.world-stage .agent-marker.marker-moxi{pointer-events:none}
+.world-stage .marker-moxi .sprite-stage,.world-stage .marker-moxi .marker-name{pointer-events:auto}
+.marker-moxi .marker-name{top:calc(100% + 1px);line-height:0;z-index:5}
+.moxi-wordmark{display:block;width:44px;max-width:none!important;height:auto;flex:none;position:relative;filter:drop-shadow(0 1px 2px var(--background))}
+@media(max-width:600px){.moxi-wordmark{width:40px}}
+@media(min-width:901px){.world-stage .moxi-wordmark{width:80px}}
