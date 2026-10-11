@@ -797,7 +797,7 @@ function CommandCentre() {
     const id = setInterval(() => {
       if (document.hidden || sleepRef.current || petBusy.current || phaseRef.current !== "idle" || ozAway.current) { idle = 0; return; }
       idle += 5;
-      if (idle >= 90) { clearInterval(id); void thothScene(); }
+      if (idle >= 45) { clearInterval(id); void thothScene(); }
     }, 5000);
     return () => clearInterval(id);
   }, [prologue, zoneId, story]);
@@ -1466,6 +1466,7 @@ function CommandCentre() {
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
             {zone.id === "sanctuary" && prologue === "off" && <BoulderPot happy={petHappy} asleep={sleepStage === "asleep"}/>}
+            {zone.id === "sanctuary" && !thoth && story.beats.includes("trust") && !story.beats.includes("thoth") && <div className="thoth thoth-waiting" style={{ left: `${HOME(zone, "Lowkey").x + 4}%`, top: `${HOME(zone, "Lowkey").y}%` }} role="img" aria-label="A robed ibis-headed figure watching from the hill"><img src={thothImg.url} alt="" draggable={false}/></div>}
             {zone.id === "sanctuary" && thoth && <div className="thoth" style={{ left: `${HOME(zone, "Lowkey").x + 4}%`, top: `${HOME(zone, "Lowkey").y}%` }} role="img" aria-label="Thoth, a robed ibis-headed figure"><img src={thothImg.url} alt="" draggable={false}/>{thoth.line && <span className="thoth-bubble">{thoth.line}</span>}</div>}
             {zone.id === "sanctuary" && !carrying && <div className={`water-tank-spot is-${tank}`} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}><img className="water-tank" src={waterTankImg} alt="Brix's water tank" width={816} height={816}/><span className={`tank-meter ${tankLevel < TANK_LOW ? "is-low" : ""}`} role="meter" aria-label="Water tank level" aria-valuenow={tankLevel} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${tankLevel}%` }}/></span></div>}
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%`, zIndex: 10 + Math.round(FIRE_PIT.y * 10) }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><img className="pit-art" src={firePitImg} alt="" width={816} height={816} loading="lazy"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
