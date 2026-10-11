@@ -600,9 +600,14 @@ function CommandCentre() {
     const moxiIn = storyRef.current.beats.includes("trust");
     const all: Agent[] = moxiIn ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
     const seat: Record<Agent, Point> = { Oz: { x: FIRE_PIT.x - 9, y: FIRE_PIT.y + 1.5 }, Brix: { x: FIRE_PIT.x + 9, y: FIRE_PIT.y + 1 }, Lowkey: { x: FIRE_PIT.x, y: FIRE_PIT.y - 4.5 }, Moxi: { x: FIRE_PIT.x + 4, y: FIRE_PIT.y + 4 } };
-    // Lowkey swings round the right side of the pit to his spot behind it, never through the flames (reversed on the way home).
-    const around: Partial<Record<Agent, Point[]>> = { Lowkey: [{ x: FIRE_PIT.x + 8, y: FIRE_PIT.y - 2 }] };
-    const paths = Object.fromEntries(all.map(a => [a, [...toMeet(z, a), ...(around[a] ?? []), seat[a]]])) as Record<Agent, Point[]>;
+    // Direct routes: Lowkey comes down the brown hill trail and swings behind the pit; Brix crosses straight from his workshop.
+    // (No detour down to the crossroads and back; reversed on the way home.)
+    const lk = z.paths.Lowkey;
+    const direct: Partial<Record<Agent, Point[]>> = {
+      Lowkey: [...lk.slice(1, lk.findIndex(p => p.x === 53 && p.y === 46) + 1), { x: FIRE_PIT.x + 4, y: FIRE_PIT.y - 3.5 }, seat.Lowkey],
+      Brix: [{ x: 59, y: 53 }, { x: 55, y: 49 }, seat.Brix],
+    };
+    const paths = Object.fromEntries(all.map(a => [a, direct[a] ?? [...toMeet(z, a), seat[a]]])) as Record<Agent, Point[]>;
     outing.current = all;
     const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(Math.min(6000, Math.max(ms, 3200, 1800 + text.length * 45))); setBubble(null); await wait(1000); return run === runId.current; };
     const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
@@ -1131,7 +1136,7 @@ function CommandCentre() {
       // Invisible ring around the fire pit (42,45): the crew can circle it 360° but never cross it.
       [{ x: 42, y: 40.2 }, { x: 45.4, y: 41.6 }, { x: 46.8, y: 45 }, { x: 45.4, y: 48.4 }, { x: 42, y: 49.8 }, { x: 38.6, y: 48.4 }, { x: 37.2, y: 45 }, { x: 38.6, y: 41.6 }, { x: 42, y: 40.2 }],
       // Spur joining the ring to Lowkey's switchback trail
-      [{ x: 46.8, y: 45 }, { x: 48, y: 43.8 }],
+      [{ x: 46.8, y: 45 }, { x: 53, y: 46 }],
     ];
     for (const seg of extra) {
       chain(seg);
