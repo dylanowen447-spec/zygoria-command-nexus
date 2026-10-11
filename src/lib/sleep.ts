@@ -18,7 +18,7 @@ export const REST_WORDS = /\b(sleep\w*|bed ?time|go ?to ?bed|hit ?the ?sack|turn
 
 export const REST_LINES: Record<40 | 20 | 10, [string, string][]> = {
   40: [["Oz", "Getting heavy-eyed."], ["Lowkey", "Eyes are drooping."]],
-  20: [["Brix", "Need to sit down, lads."], ["Oz", "Yawning like a fish."]],
+  20: [["Brix", "Need to sit down."], ["Oz", "Yawning like a fish."]],
   10: [["Lowkey", "Can't stay up much longer."], ["Brix", "Bench's calling me."]],
 };
 
