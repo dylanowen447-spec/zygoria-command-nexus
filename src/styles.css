@@ -636,9 +636,9 @@
 .boss-hud{top:4px;width:min(44%,230px);padding:3px 6px;gap:2px;background:oklch(0.1 0.02 260 / 70%)}
 .boss-hud-row{font-size:8px}.boss-bar{height:4px}.crew-bar{height:3px}
 @media(max-width:600px){.boss-hud{width:52%;top:2px;padding:2px 4px}.boss-hud-row{font-size:7px;letter-spacing:.5px}}
-.thoth{position:absolute;z-index:540;pointer-events:none;transform:translate(-50%,-100%);animation:thothIn 1.6s ease-out}
+.thoth{position:absolute;z-index:540;pointer-events:none;transform:translate(-50%,-60%);animation:thothIn 1.6s ease-out}
 .thoth img{display:block;height:46px;width:auto;image-rendering:pixelated;filter:drop-shadow(0 2px 2px hsl(0 0% 0% / .45))}
-.thoth-bubble{position:absolute;bottom:100%;left:50%;transform:translate(-50%,-6px);width:max-content;max-width:180px;padding:5px 8px;border-radius:8px;background:hsl(var(--card, 220 30% 12%));color:hsl(var(--card-foreground, 45 60% 90%));border:1px solid hsl(42 80% 55%);font-size:11px;line-height:1.3;text-align:center;font-style:italic}
+.thoth-bubble{position:absolute;top:100%;left:50%;transform:translate(-50%,6px);width:max-content;max-width:180px;padding:5px 8px;border-radius:8px;background:hsl(var(--card, 220 30% 12%));color:hsl(var(--card-foreground, 45 60% 90%));border:1px solid hsl(42 80% 55%);font-size:11px;line-height:1.3;text-align:center;font-style:italic}
 @keyframes thothIn{from{opacity:0}to{opacity:1}}
 .thoth-waiting{animation:none;opacity:.92}
 @media(min-width:901px){.thoth img{height:84px}.thoth-bubble{font-size:13px;max-width:221px}}
