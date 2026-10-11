@@ -309,8 +309,11 @@ function CommandCentre() {
       const step = (time: number) => {
         // Cancelled or superseded: stop the leg cycle so nobody is left walking on the spot.
         if (run !== runId.current || !mine()) { if (mine()) setWalking(prev => prev.filter(a => a !== agent)); resolve(); return; }
-        let budget = Math.min(time - last, 64) / 1000 * WALK_SPEED;
-        last = time;
+        void time;
+        // Older iPads can hand rAF a timestamp on a different clock; always use performance.now().
+        const nowT = performance.now();
+        let budget = Math.max(0, Math.min(nowT - last, 64)) / 1000 * WALK_SPEED;
+        last = nowT;
         while (budget > 0 && segment < targets.length) {
           const p = coords.current[zoneRef.current][agent], t = targets[segment]!, d = distance(p, t);
           if (d <= budget) {
