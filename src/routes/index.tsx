@@ -216,14 +216,11 @@ function CommandCentre() {
   const [prologueCmd, setPrologueCmd] = useState<{ id: number; text: string } | null>(null);
   const scene = PROLOGUE_SCENES[prologueStep]!;
   useEffect(() => {
-    // Only brand-new visitors start at the landing; returning crews go straight home.
-    try {
-      if (!localStorage.getItem(PROLOGUE_KEY)) {
-        const s = Number(localStorage.getItem("zygoria-prologue-step") ?? 0);
-        if (Number.isInteger(s) && s > 0 && s < PROLOGUE_SCENES.length) setPrologueStep(s);
-        setPrologue("on");
-      }
-    } catch { /* optional */ }
+    
+    // Every visit opens at Three Eggs; the skip button still jumps to the Sanctuary.
+    try { localStorage.removeItem("zygoria-prologue-step"); } catch { /* optional */ }
+    setPrologueStep(0);
+    setPrologue("on");
   }, []);
   /** Strict order: Landing → Old City → Library → Long Walk (Chapter 03) → Sanctuary. */
   function nextPrologue() {

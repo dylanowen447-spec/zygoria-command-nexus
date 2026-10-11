@@ -82,3 +82,7 @@
 - [ ] Moxi idle activities (river, workshop, lookout, Boulder Pot, tail chase, wings) with expression poses
 - [ ] Tap Moxi: pet / feed fish (if any) / ask what she is doing
 - [ ] Moxi AI voice: baby dragon personality, relationships, backstory rarely
+
+## Current
+- [x] Old City rats always spawn when the scene is played
+- [x] Game always opens at Three Eggs

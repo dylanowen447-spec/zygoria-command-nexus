@@ -33,13 +33,13 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
   }, [stageRef]);
 
   useEffect(() => {
-    try { if (localStorage.getItem(KEY) === "done") return; } catch { /* play anyway */ }
+    try { localStorage.removeItem(KEY); } catch { /* fine */ }
     let alive = true, raf = 0, last = performance.now(), spawned = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const hurt = (n: number) => { crewHpRef.current = Math.max(15, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
 
-    later(2500, () => {
+    later(1200, () => {
       spawned = true; startBattleMusic();
       rats.current = farSpawns(SPAWNS, crew.current, 3).map((p, i) => makeRat(i + 1, p));
       later(300, () => onAlarm("Three huge mutant rats just burst out of the Old City rubble and are charging straight at you!"));
@@ -54,7 +54,6 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
       for (const r of rats.current) stepRat(r, dt, crew.current, hurt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (spawned && rats.current.length === 0) {
-        try { localStorage.setItem(KEY, "done"); } catch { /* fine */ }
         stopBattleMusic();
         return; // all dead: stop the loop, the city simply goes quiet
       }
