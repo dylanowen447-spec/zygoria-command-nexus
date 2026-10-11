@@ -62,7 +62,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => { alive = false; cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
+    return () => { alive = false; stopBattleMusic(); cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
   }, [crew, hitRef, onAlarm]);
 
   const now = performance.now();
