@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject,
 import { RatSprite } from "@/components/RatSprite";
 import { farSpawns, makeRat, stepRat, zapRats, type Rat } from "@/lib/rat-ai";
 import sheltonSheet from "@/assets/shelton.webp.asset.json";
+import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
 
 /** Long Walk ambush: three waves of three rats, then Shelton (shell blocks, open after his lunge, retreats alive). Self-contained so the scene's own exploration is untouched. */
@@ -68,7 +69,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefea
     const shelLine = (t: string, ms = 2400) => { setShelSay(t); later(ms, () => setShelSay(s => (s === t ? null : s))); };
 
     const startWave = (n: number) => {
-      wave.current = n;
+      wave.current = n; startBattleMusic();
       setBanner(`RATS · WAVE ${n + 1} OF 3`); later(1800, () => setBanner(null));
       rats.current = farSpawns(EDGES, crew.current, 3).map(p => makeRat(nextId++, p));
       if (n === 0) later(300, () => onAlarm?.("A pack of snarling mutant rats just burst from the grass on the long walk and is charging you!"));
@@ -76,7 +77,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefea
     const hurt = (n: number) => { crewHpRef.current = Math.max(CREW_FLOOR, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
     const spawnRats = (n: number) => { for (const p of farSpawns(EDGES, crew.current, n)) rats.current.push(makeRat(nextId++, p)); };
     const startShelton = () => {
-      wave.current = 3;
+      wave.current = 3; startBattleMusic(true);
       fight.current = { start: performance.now(), end: 0 };
       shel.current = { x: 104, y: 64, state: "enter", t: 0, hits: 0, flip: true, target: { x: 74, y: 64 }, blocked: 0, stage: 0, hurt: 0 };
       later(400, () => onSay("Brix", "Something bigger's coming."));
@@ -150,7 +151,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefea
           spawnRats(STAGES[s.stage]!.rats);
           later(300, () => shelLine(SHEL_LINES.stage[s.stage - 1]!, 2000));
         }
-        else if (s.state === "beaten" && s.t > 3.2) { s.state = "flee"; s.t = 0; }
+        else if (s.state === "beaten" && s.t > 3.2) { stopBattleMusic(); s.state = "flee"; s.t = 0; }
         else if (s.state === "flee" && moveTo({ x: 110, y: 52 }, 22)) {
           s.state = "gone"; shel.current = null; fight.current = null;
           try { localStorage.setItem(KEY, "done"); } catch { /* fine */ }
@@ -162,7 +163,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefea
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => { alive = false; cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
+    return () => { alive = false; stopBattleMusic(); cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
   }, [crew, hitRef, onSay]);
 
   const now = performance.now();

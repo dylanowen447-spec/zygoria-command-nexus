@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
 import { farSpawns, makeRat, stepRat, zapRats, type Rat } from "@/lib/rat-ai";
+import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
 
 /** Old City ambush: three mutant rats rush the Zigs. One zap from Oz kills each; they never respawn. Self-contained so the scene's own exploration is untouched. */
@@ -39,7 +40,7 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
     const hurt = (n: number) => { crewHpRef.current = Math.max(15, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
 
     later(2500, () => {
-      spawned = true;
+      spawned = true; startBattleMusic();
       rats.current = farSpawns(SPAWNS, crew.current, 3).map((p, i) => makeRat(i + 1, p));
       later(300, () => onAlarm("Three huge mutant rats just burst out of the Old City rubble and are charging straight at you!"));
     });
@@ -54,13 +55,14 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (spawned && rats.current.length === 0) {
         try { localStorage.setItem(KEY, "done"); } catch { /* fine */ }
+        stopBattleMusic();
         return; // all dead: stop the loop, the city simply goes quiet
       }
       force(f => (f + 1) % 1e6);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => { alive = false; cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
+    return () => { alive = false; stopBattleMusic(); cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
   }, [crew, hitRef, onAlarm]);
 
   const now = performance.now();
