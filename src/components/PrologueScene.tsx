@@ -411,7 +411,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       pts.push(`${x},${y}`);
       const id = performance.now() + Math.random();
       setBolts(b => [...b.slice(-5), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
-      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 300);
+      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 500);
       if (!ambushHit.current({ x, y })) zap.current({ x, y });
     }}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
