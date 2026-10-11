@@ -35,6 +35,7 @@ import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectF
 import { HUNGER_START, HUNGER_LINES, FISH_RESTORE, PROLOGUE_FLOOR, SANCTUARY_FLOOR, PROLOGUE_DRAIN_MS, SANCTUARY_DRAIN_MS, clampHunger, loadHunger, saveHunger } from "@/lib/hunger";
 import waterTankImg from "@/assets/water-tank.png";
 import { BoulderPot } from "@/components/BoulderPot";
+import thothImg from "@/assets/thoth.png.asset.json";
 import { WATER_FLOOR, WATER_DRAIN_MS, BOTTLE_MAX, DRINK_WORDS, WATER_LINES, clampWater, loadWater, saveWater } from "@/lib/water";
 import { REST_START, REST_FLOOR, REST_DRAIN_MS, REST_WORDS, clampRest, loadRest, saveRest, REST_LINES } from "@/lib/sleep";
 import * as B from "@/lib/banter";
@@ -737,6 +738,69 @@ function CommandCentre() {
     try { localStorage.setItem(PET_KEY, "1"); } catch { /* optional */ }
     setPetMet(true); petBusy.current = false;
   }
+  /** Thoth: The Forgotten Humans — once, after Moxi joins. Thoth only appears and speaks on Lowkey's hill. */
+  const [thoth, setThoth] = useState<{ line: string | null } | null>(null);
+  async function thothScene() {
+    const run = ++runId.current;
+    setPhase("working");
+    if (visiting.current || choring.current || outing.current.length) cancelVisit();
+    const z = ZONES.sanctuary;
+    const hill = HOME(z, "Lowkey");
+    outing.current = ["Lowkey"];
+    await walk("Lowkey", [...routeNodes(coords.current.sanctuary.Lowkey, hill), hill], "home", run);
+    if (run !== runId.current) return;
+    setFacing(p => ({ ...p, Lowkey: "right" }));
+    await wait(1500);
+    setThoth({ line: null }); log("Lowkey", "Someone is standing beside him on the hill.");
+    await wait(1800);
+    const scene1: ["Thoth" | Agent, string][] = [
+      ["Thoth", "Beneath these mountains, there are those who have forgotten the warmth of the sun."],
+      ["Lowkey", "People?"],
+      ["Thoth", "The last children of a world that once belonged to them."],
+      ["Lowkey", "Why don't they come out?"],
+      ["Thoth", "Fear has kept them beneath the earth for generations."],
+      ["Lowkey", "Can we help them?"],
+      ["Thoth", "That is not for me to decide."],
+      ["Thoth", "But know this, little one. They must not be forgotten. They need help."],
+    ];
+    for (const [who, text] of scene1) {
+      const ms = Math.min(6500, Math.max(3200, 1800 + text.length * 50));
+      if (who === "Thoth") { setThoth({ line: text }); log("Lowkey", `Thoth: ${text}`); await wait(ms); setThoth({ line: null }); }
+      else { setBubble({ agent: who, text }); log(who, text); await wait(ms); setBubble(null); }
+      await wait(800); if (run !== runId.current) { setThoth(null); return; }
+    }
+    setThoth(null);
+    await wait(2200); if (run !== runId.current) return;
+    const spot = beside("Oz");
+    await walk("Lowkey", [...routeNodes(coords.current.sanctuary.Lowkey, spot), spot], "central", run);
+    if (run !== runId.current) return;
+    const scene2: [Agent, string][] = [
+      ["Lowkey", "Lads, I think there are people living beneath the mountains."],
+      ["Oz", "People? Actual people?"],
+      ["Brix", "How do you know?"],
+      ["Lowkey", "The bird told me."],
+      ["Oz", "THE BLOODY PIGEON AGAIN?!"],
+      ["Brix", "Well, there's only one way to find out."],
+      ["Lowkey", "We should go and look."],
+      ["Oz", "Right then. Off to find the underground people. Brilliant."],
+    ];
+    for (const [a, text] of scene2) { setBubble({ agent: a, text }); log(a, text); await wait(Math.min(6000, Math.max(3000, 1800 + text.length * 45))); setBubble(null); await wait(700); if (run !== runId.current) return; }
+    commitStory({ beats: [...storyRef.current.beats, "thoth"] });
+    await walk("Lowkey", [...routeNodes(coords.current.sanctuary.Lowkey, hill), hill], "home", run);
+    spots.current.sanctuary.Lowkey = "home";
+    outing.current = [];
+    if (run === runId.current) setPhase("idle");
+  }
+  useEffect(() => {
+    if (prologue !== "off" || zoneId !== "sanctuary" || !story.beats.includes("trust") || story.beats.includes("thoth")) return;
+    let idle = 0;
+    const id = setInterval(() => {
+      if (document.hidden || sleepRef.current || petBusy.current || phaseRef.current !== "idle" || ozAway.current) { idle = 0; return; }
+      idle += 5;
+      if (idle >= 90) { clearInterval(id); void thothScene(); }
+    }, 5000);
+    return () => clearInterval(id);
+  }, [prologue, zoneId, story]);
   // Real time in the Sanctuary (after the opening) counts toward the Chapter 5 MP3 scene; saved so reloads don't reset it.
   useEffect(() => {
     const b = storyRef.current.beats;
@@ -1402,6 +1466,7 @@ function CommandCentre() {
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
             {zone.id === "sanctuary" && prologue === "off" && <BoulderPot happy={petHappy} asleep={sleepStage === "asleep"}/>}
+            {zone.id === "sanctuary" && thoth && <div className="thoth" style={{ left: `${HOME(zone, "Lowkey").x + 4}%`, top: `${HOME(zone, "Lowkey").y}%` }} role="img" aria-label="Thoth, a robed ibis-headed figure"><img src={thothImg.url} alt="" draggable={false}/>{thoth.line && <span className="thoth-bubble">{thoth.line}</span>}</div>}
             {zone.id === "sanctuary" && !carrying && <div className={`water-tank-spot is-${tank}`} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}><img className="water-tank" src={waterTankImg} alt="Brix's water tank" width={816} height={816}/><span className={`tank-meter ${tankLevel < TANK_LOW ? "is-low" : ""}`} role="meter" aria-label="Water tank level" aria-valuenow={tankLevel} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${tankLevel}%` }}/></span></div>}
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%`, zIndex: 10 + Math.round(FIRE_PIT.y * 10) }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><img className="pit-art" src={firePitImg} alt="" width={816} height={816} loading="lazy"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}
             {zone.id === "sanctuary" && <div className={`rock-hatch ${hatchOpen ? "is-open" : ""}`} style={{ left: `${BED.Lowkey.door.x}%`, top: `${BED.Lowkey.door.y}%` }} aria-hidden="true"><img src={rockHatch} alt="" width={816} height={816} loading="lazy"/></div>}
