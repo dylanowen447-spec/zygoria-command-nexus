@@ -1339,7 +1339,7 @@ function CommandCentre() {
     const loop = async () => {
       while (alive) {
         await wait(9000 + Math.random() * 6000);
-        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || choring.current || outing.current.length || ozAway.current) continue;
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || visiting.current || choring.current || outing.current.length || ozAway.current || petBusy.current || bubbleRef.current || Date.now() - quietUntil.current < 0) continue;
         const z = ZONES.sanctuary, all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
         const v = all[Math.floor(Math.random() * all.length)]!;
         const others = all.filter(a => a !== v);
@@ -1362,7 +1362,7 @@ function CommandCentre() {
         setBubble(null);
         await walk(v, [...there.slice(0, -1).reverse(), HOME(z, v)], "home", run);
         if (run !== runId.current) { visiting.current = null; continue; }
-        visiting.current = null;
+        visiting.current = null; quietUntil.current = Date.now() + 15000 + Math.random() * 10000;
       }
     };
     void loop();
@@ -1370,6 +1370,7 @@ function CommandCentre() {
   }, [phase, zoneId, prologue]);
   // Living camp: between visits, idle Zigs potter off on little chores or mutter to themselves — never during jobs or scenes.
   const choring = useRef<Agent | null>(null);
+  const quietUntil = useRef(0);
   const bubbleRef = useRef(bubble);
   bubbleRef.current = bubble;
   useEffect(() => {
@@ -1395,7 +1396,7 @@ function CommandCentre() {
       await wait(4000);
       while (alive) {
         await wait(6000 + Math.random() * 4000);
-        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || outing.current.length || choring.current) continue;
+        if (!alive || phaseRef.current !== "idle" || zoneRef.current !== "sanctuary" || outing.current.length || choring.current || visiting.current || petBusy.current || bubbleRef.current || ozAway.current || Date.now() < quietUntil.current) continue;
         const all: Agent[] = storyRef.current.beats.includes("trust") ? ["Oz", "Brix", "Lowkey", "Moxi"] : ["Oz", "Brix", "Lowkey"];
         const free = all.filter(a => a !== visiting.current && !(a === "Oz" && ozAway.current));
         const a = free[Math.floor(Math.random() * free.length)];
