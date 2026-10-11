@@ -503,6 +503,8 @@
 .build-interlude .build-zig .idle-bubble { bottom: calc(100% - 38px) !important; }
 /* Oz's directional sheet (7 cols × 4 rows): show his forward rest frame, never the whole atlas. */
 .build-interlude .build-oz .sheet-frames { background-size: 700% 400%; background-position: 0 0; }
+/* Same for Brix: his mini sprite in the build scene shows his front rest frame, not the whole atlas. */
+.build-interlude .build-brix .sheet-frames { background-size: 700% 400%; background-position: 0 0; }
 .build-interlude .build-zig.is-working { animation: build-bob .5s ease-in-out infinite; }
 .build-interlude .build-zig .idle-bubble { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: max-content; max-width: 220px; white-space: normal; }
 @keyframes build-bob { 50% { transform: translate(-50%, -104%); } }
