@@ -6,6 +6,7 @@ import ozPortrait from "@/assets/oz.webp.asset.json";
 import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
 import kronkCard from "@/assets/kronk-card.png.asset.json";
+import thothCard from "@/assets/thoth-card.png.asset.json";
 import { CHRONICLES } from "@/lib/chronicles";
 
 type Category = "Characters" | "Creatures" | "Locations" | "Objects" | "Old Earth discoveries" | "Network-related discoveries" | "Unsolved mysteries";
