@@ -708,11 +708,23 @@ function CommandCentre() {
     if (beat.id === "trust") {
       // Moxi steps out first so she can take part in the conversation.
       commitStory({ beats: [...storyRef.current.beats, beat.id] });
+      // She walks right up to Oz before saying a word — the sneeze lands in his face, not from across the camp.
+      const spot = beside("Oz");
+      outing.current = ["Moxi"];
+      await walk("Moxi", [...routeNodes(coords.current.sanctuary.Moxi, spot), spot], "central", run);
+      if (run !== runId.current) return;
+      const ox = coords.current.sanctuary.Oz.x, mx = coords.current.sanctuary.Moxi.x;
+      setFacing(p => ({ ...p, Moxi: ox < mx ? "left" : "right", Oz: ox < mx ? "right" : "left" }));
       for (const [who, text] of MOXI_SCENE) {
         setBubble({ agent: who, text }); log(who, text);
         await wait(Math.min(5000, Math.max(3000, 1600 + text.length * 40))); if (run !== runId.current) return;
       }
       setBubble(null);
+      // …then she potters back to her evergreen.
+      const home = HOME(ZONES.sanctuary, "Moxi");
+      await walk("Moxi", [...routeNodes(coords.current.sanctuary.Moxi, home), home], "home", run);
+      spots.current.sanctuary.Moxi = "home";
+      outing.current = [];
       return;
     }
     for (const [who, text] of beat.lines) {
