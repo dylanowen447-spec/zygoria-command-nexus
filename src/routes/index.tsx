@@ -1496,9 +1496,11 @@ function CommandCentre() {
         await walk(a, chore.path, "central", run);
         if (!alive || run !== runId.current) { choring.current = null; continue; }
         if (chore.obj) setActing(chore.obj);
+        if (chore.mood) setMoxiMood(chore.mood);
         if (!bubbleRef.current) { const t = pick(chore.lines); setBubble({ agent: a, text: t }); log(a, t); }
-        await wait(3200);
+        await wait(chore.mood ? 4500 + Math.random() * 3000 : 3200);
         if (chore.obj) setActing(o => o === chore.obj ? null : o);
+        if (chore.mood) setMoxiMood(m => m === chore.mood ? null : m);
         setBubble(b => b?.agent === a ? null : b);
         if (run !== runId.current) { choring.current = null; continue; }
         await walk(a, [...chore.path.slice(0, -1).reverse(), HOME(z, a)], "home", run);
