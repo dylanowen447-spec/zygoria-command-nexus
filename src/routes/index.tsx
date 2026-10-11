@@ -1424,7 +1424,7 @@ function CommandCentre() {
   async function moxiTap(run: number) {
     const night = isNightNow(), fed = hungerNow.current >= 70;
     const kind = moxiPetCount.current++ % 3;
-    const say = async (a: Agent, t: string, ms = 3200) => { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(ms); };
+    const say = async (a: CrewAgent, t: string, ms = 3200) => { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(ms); };
     if (kind === 0) {
       setMoxiMood("happy");
       const [o, m] = fresh(MOXI_PET, x => x[1]);
