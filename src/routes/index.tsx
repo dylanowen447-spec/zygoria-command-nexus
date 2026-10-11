@@ -104,6 +104,42 @@ const IDLE_CHATS: Record<string, [string, string][]> = {
   "Moxi>Lowkey": [["You see me. You always see me.", "Hard to miss a dragon."], ["The stars moved. That one should be there.", "…I'll keep an eye on it."]],
 };
 
+// ── Moxi 2.0: tap interactions ──────────────────────────
+type MoxiMood = "happy" | "sleepy" | "curious" | "excited";
+const MOXI_PET: [string, string][] = [
+  ["Hey, little one.", "*leans in* Warm hands."],
+  ["Who's a good dragon?", "…Me. Obviously."],
+  ["Scritches behind the horn?", "*happy rumble*"],
+  ["There she is.", "Again. Do it again."],
+  ["Easy, Moxi.", "*purrs like a tiny engine*"],
+];
+const MOXI_ASK_NIGHT: [string, string][] = [
+  ["Can't sleep?", "Stars are loud tonight."],
+  ["You okay out here?", "Mm. Watching. Like Lowkey."],
+  ["Cold?", "Fire went small. You are warm though."],
+];
+const MOXI_ASK_FED: [string, string][] = [
+  ["Full belly, huh?", "Fish was good. More tomorrow?"],
+  ["Happy?", "Mm. This place is… good."],
+  ["What you thinking about?", "Flying. One day. Maybe."],
+];
+const MOXI_ASK_HUNGRY: [string, string][] = [
+  ["Hungry, Moxi?", "…Little bit. Fish?"],
+  ["You alright?", "Belly rumbles. Like Brix's hammer."],
+  ["Want a snack?", "Yes. Please. Now."],
+];
+const MOXI_TALKS: Record<string, [CrewAgent, string][]> = {
+  "Oz>Moxi": [
+    ["Oz", "Race you to the pier!"], ["Moxi", "…You will lose."], ["Oz", "Big talk for little legs!"],
+  ],
+  "Brix>Moxi": [
+    ["Brix", "Off the bench, Moxi."], ["Moxi", "But it's warm."], ["Brix", "…Five more minutes."],
+  ],
+  "Lowkey>Moxi": [
+    ["Moxi", "The stars moved. That one should be there."], ["Lowkey", "…I'll keep an eye on it."],
+  ],
+};
+
 function DayNight() {
   const [t, setT] = useState(0);
   useEffect(() => {
@@ -1388,7 +1424,7 @@ function CommandCentre() {
   async function moxiTap(run: number) {
     const night = isNightNow(), fed = hungerNow.current >= 70;
     const kind = moxiPetCount.current++ % 3;
-    const say = async (a: Agent, t: string, ms = 3200) => { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(ms); };
+    const say = async (a: CrewAgent, t: string, ms = 3200) => { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(ms); };
     if (kind === 0) {
       setMoxiMood("happy");
       const [o, m] = fresh(MOXI_PET, x => x[1]);
@@ -1399,7 +1435,7 @@ function CommandCentre() {
       await say("Oz", o); await say("Moxi", m);
     } else {
       setMoxiMood("excited");
-      for (const [a, t] of fresh(MOXI_TALKS["Oz>Moxi"]!, x => x[0]![1])) await say(a, t, 2600);
+      for (const line of MOXI_TALKS["Oz>Moxi"]!) await say(line[0]!, line[1]!, 2600);
     }
     if (run === runId.current) setBubble(null);
     setMoxiMood(null);
