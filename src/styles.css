@@ -638,7 +638,11 @@
 @media(max-width:600px){.boss-hud{width:52%;top:2px;padding:2px 4px}.boss-hud-row{font-size:7px;letter-spacing:.5px}}
 .thoth{position:absolute;z-index:540;pointer-events:none;transform:translate(-50%,-60%);animation:thothIn 1.6s ease-out}
 .thoth img{display:block;height:46px;width:auto;image-rendering:pixelated;filter:drop-shadow(0 2px 2px hsl(0 0% 0% / .45))}
-.thoth-bubble{position:absolute;top:100%;left:50%;transform:translate(-50%,6px);width:max-content;max-width:180px;padding:5px 8px;border-radius:8px;background:hsl(var(--card, 220 30% 12%));color:hsl(var(--card-foreground, 45 60% 90%));border:1px solid hsl(42 80% 55%);font-size:11px;line-height:1.3;text-align:center;font-style:italic}
+.thoth{z-index:2500}
+.thoth-bubble{position:absolute;top:100%;left:50%;transform:translate(-50%,6px);width:max-content;max-width:150px;padding:5px 8px;font-family:var(--font-mono);font-size:10px;line-height:1.3;text-align:center;white-space:normal;color:var(--foreground);background:oklch(0.16 0.04 270 / 0.96);border:1px solid oklch(0.82 0.15 85);border-radius:8px;box-shadow:0 0 10px oklch(0.8 0.14 85 / 0.35);z-index:2500}
 @keyframes thothIn{from{opacity:0}to{opacity:1}}
 .thoth-waiting{animation:none;opacity:.92}
-@media(min-width:901px){.thoth img{height:84px}.thoth-bubble{font-size:13px;max-width:221px}}
+@media(max-width:600px){.thoth-bubble{font-size:9px;max-width:130px}}
+@media(min-width:901px){.thoth img{height:84px}.thoth-bubble{font-size:13px;max-width:221px;padding:7px 11px;border-radius:10px}}
+/* Idle signs removed from the map so they never block speech bubbles. */
+.world-stage .marker-status{display:none!important}
