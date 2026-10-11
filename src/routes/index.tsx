@@ -1291,7 +1291,7 @@ function CommandCentre() {
     if (a === "Oz" || !canClick()) return;
     const at = coords.current.sanctuary[a];
     setClickMark({ id: Date.now(), ...at });
-    void ozTo(beside(a), true, run => chatAt(run, visitLines(a)));
+    void ozTo(beside(a), true, run => a === "Moxi" ? moxiTap(run) : chatAt(run, visitLines(a)));
   }
   // Ambient crew moments in the outer zones — short scripted exchanges while idle, never during jobs or story scenes.
   useEffect(() => {
@@ -1373,6 +1373,37 @@ function CommandCentre() {
   const quietUntil = useRef(0);
   const bubbleRef = useRef(bubble);
   bubbleRef.current = bubble;
+  // Moxi 2.0: body-language mood on her marker, and no-repeat line picking.
+  const [moxiMood, setMoxiMood] = useState<MoxiMood | null>(null);
+  const hungerNow = useRef(hunger); hungerNow.current = hunger;
+  const moxiSaid = useRef<string[]>([]);
+  const fresh = <T,>(list: T[], key: (x: T) => string): T => {
+    const ok = list.filter(x => !moxiSaid.current.includes(key(x)));
+    const p = (ok.length ? ok : list)[Math.floor(Math.random() * (ok.length || list.length))]!;
+    moxiSaid.current = [key(p), ...moxiSaid.current].slice(0, 8);
+    return p;
+  };
+  const isNightNow = () => Number((document.querySelector(".day-night") as HTMLElement | null)?.style.getPropertyValue("--night") || 0) > 0.5;
+  const moxiPetCount = useRef(0);
+  async function moxiTap(run: number) {
+    const night = isNightNow(), fed = hungerNow.current >= 70;
+    const kind = moxiPetCount.current++ % 3;
+    const say = async (a: Agent, t: string, ms = 3200) => { if (run !== runId.current) return; setBubble({ agent: a, text: t }); log(a, t); await wait(ms); };
+    if (kind === 0) {
+      setMoxiMood("happy");
+      const [o, m] = fresh(MOXI_PET, x => x[1]);
+      await say("Oz", o); await say("Moxi", m);
+    } else if (kind === 1) {
+      setMoxiMood(night ? "sleepy" : "curious");
+      const [o, m] = fresh(night ? MOXI_ASK_NIGHT : fed ? MOXI_ASK_FED : MOXI_ASK_HUNGRY, x => x[1]);
+      await say("Oz", o); await say("Moxi", m);
+    } else {
+      setMoxiMood("excited");
+      for (const [a, t] of fresh(MOXI_TALKS["Oz>Moxi"]!, x => x[0]![1])) await say(a, t, 2600);
+    }
+    if (run === runId.current) setBubble(null);
+    setMoxiMood(null);
+  }
   useEffect(() => {
     if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     const z = ZONES.sanctuary;
