@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import sheet from "@/assets/boulder-pot.png";
+import art from "@/assets/brix-boulder-pot-art.png.asset.json";
 
 /** Brix's pet: a decorative overlay pottering around the workshop yard, outside the agent simulation.
  * Strip frames: 0-3 front idle, 4-8 walk (facing right), 9 sleep, 10 happy. */
@@ -10,6 +12,7 @@ export function BoulderPot({ happy, asleep }: { happy: boolean; asleep: boolean 
   const el = useRef<HTMLDivElement>(null);
   const [frame, setFrame] = useState(0);
   const [left, setLeft] = useState(false);
+  const [card, setCard] = useState(false);
   const st = useRef({ x: HOME.x, target: HOME.x, t: 0, rest: 2 });
 
   useEffect(() => {
@@ -35,8 +38,16 @@ export function BoulderPot({ happy, asleep }: { happy: boolean; asleep: boolean 
   }, [asleep, happy]);
 
   return (
-    <div ref={el} className={`boulder-pot ${happy ? "is-happy" : ""}`} style={{ left: `${HOME.x}%`, top: `${HOME.y}%` }} aria-label="Boulder Pot, Brix's pet" role="img">
+    <div ref={el} className={`boulder-pot ${happy ? "is-happy" : ""}`} style={{ left: `${HOME.x}%`, top: `${HOME.y}%` }} aria-label="Boulder Pot, Brix's pet — tap to view artwork" role="button" tabIndex={0}
+      onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); setCard(true); }} onKeyDown={e => { if (e.key === "Enter") setCard(true); }}>
       <span className="boulder-pot-art" style={{ backgroundImage: `url(${sheet})`, backgroundPosition: `${(frame / 10) * 100}% 0`, transform: left && frame >= 4 && frame <= 8 ? "scaleX(-1)" : undefined }} />
+      {card && createPortal(<div className="cover-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setCard(false); }}>
+        <div className="cover-dialog" role="dialog" aria-modal="true" aria-label="Brix and Boulder Pot">
+          <button type="button" className="cover-close" onClick={() => setCard(false)} aria-label="Close">✕</button>
+          <img className="cover-art" src={art.url} alt="Brix cradling his pet Boulder Pot" />
+          <p className="cover-caption">BRIX &amp; BOULDER POT <span>Created by Dylan Owen · 2026</span></p>
+        </div>
+      </div>, document.body)}
     </div>
   );
 }
