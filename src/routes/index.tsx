@@ -16,6 +16,7 @@ import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
 import moxiUnderTree from "@/assets/moxi-under-tree.webp.asset.json";
 import moxiPortrait from "@/assets/moxi-sanctuary.webp.asset.json";
+import moxiCard from "@/assets/moxi-card.png.asset.json";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
@@ -56,7 +57,7 @@ const agents: { name: Agent; role: string; place: string; image: string; icon: t
   { name: "Lowkey", role: "Lore / research", place: "The wilds", image: lowkeyPortrait.url, icon: Crosshair },
 ];
 /** Moxi joins the roster only after the crew earn her trust. */
-const MOXI_AGENT = { name: "Moxi" as Agent, role: "Helper / fetcher", place: "The evergreen", image: moxiPortrait.url, icon: Activity };
+const MOXI_AGENT = { name: "Moxi" as Agent, role: "Helper / fetcher", place: "The evergreen", image: moxiCard.url, icon: Activity };
 const startLogs: Log[] = [
   { id: 1, agent: "Oz", text: "Command link established.", time: "SYSTEM" },
   { id: 2, agent: "Brix", text: "Systems rebooting.", time: "SYSTEM" },
