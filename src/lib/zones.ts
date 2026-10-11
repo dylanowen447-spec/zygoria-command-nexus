@@ -68,14 +68,14 @@ export const ZONES: Record<ZoneId, Zone> = {
       // Workshop yard (left of the building, clear of scrap piles) → lower glowing trail → crossroads
       Brix: [{ x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 58.7 }],
       // Summit of the mountain overlook (Lowkey's resting spot) → down the painted switchback → open grass east of the pines → crossroads.
-      Lowkey: [{ x: 55, y: 19 }, { x: 52, y: 21.5 }, { x: 49.5, y: 23.5 }, { x: 51, y: 26 }, { x: 55, y: 30 }, { x: 58, y: 34 }, { x: 59, y: 38 }, { x: 57, y: 42 }, { x: 53, y: 46 }, { x: 50.5, y: 49.5 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
+      Lowkey: [{ x: 55, y: 16 }, { x: 53.5, y: 18.5 }, { x: 52, y: 21.5 }, { x: 49.5, y: 23.5 }, { x: 51, y: 26 }, { x: 55, y: 30 }, { x: 58, y: 34 }, { x: 59, y: 38 }, { x: 57, y: 42 }, { x: 53, y: 46 }, { x: 50.5, y: 49.5 }, { x: 50.5, y: 54 }, { x: 53, y: 58.7 }],
       // Moxi's grass spot below the workshop → crossroads V → the crossroads
       Moxi: [{ x: 60, y: 68 }, { x: 57, y: 72.5 }, { x: 52, y: 67 }, { x: 48, y: 63 }, { x: 47, y: 60.5 }],
     },
     // Work spots reached from home along open ground: Brix at his workshop, Lowkey winding uphill on the painted mountain path.
     work: {
       Brix: [{ x: 67.5, y: 54.6 }, { x: 71, y: 52.8 }],
-      Lowkey: [{ x: 57, y: 42 }, { x: 59, y: 38 }, { x: 58, y: 34 }, { x: 55, y: 30 }, { x: 51, y: 26 }, { x: 49.5, y: 23.5 }, { x: 52, y: 21.5 }, { x: 55, y: 19 }],
+      Lowkey: [{ x: 57, y: 42 }, { x: 59, y: 38 }, { x: 58, y: 34 }, { x: 55, y: 30 }, { x: 51, y: 26 }, { x: 49.5, y: 23.5 }, { x: 52, y: 21.5 }, { x: 53.5, y: 18.5 }, { x: 55, y: 16 }],
       // Moxi putters around the evergreen by the workshop where she was found
       Moxi: [{ x: 63, y: 64 }, { x: 66, y: 60 }],
     },
