@@ -1447,14 +1447,23 @@ function CommandCentre() {
   useEffect(() => {
     if (prologue !== "off" || phase !== "idle" || zoneId !== "sanctuary") return;
     const z = ZONES.sanctuary;
-    const CHORES: Record<Agent, { path: Point[]; obj?: string; lines: string[] }[]> = {
+    const CHORES: Record<Agent, { path: Point[]; obj?: string; mood?: MoxiMood; lines: string[] }[]> = {
       Oz: [
         { path: [{ x: 29.5, y: 67.5 }, { x: 33, y: 73.5 }], lines: ["Water's calm. Fish are hiding.", "One day I'll catch a big one.", "Pier's still wobbly. Lovely.", "Plank's loose. I'll tell Brix. Eventually.", "Skimming stones. Four bounces! Five!", "Toes in. Freezing. Worth it."] },
         { path: z.paths.Oz.slice(1, 3), obj: "sanc-speakers", lines: ["Bit more bass…", "Testing, testing… perfect.", "That hum? Character.", "New playlist: Songs For Fish.", "Wire's frayed. Tape fixes everything.", "Oi, speaker. Behave."] },
       ],
       Brix: [{ path: z.work.Brix ?? [], obj: "sanc-workbench", lines: ["Loose bolt. Always a loose bolt.", "Hold still, you.", "That'll hold. Probably.", "Sharpening. Don't distract me.", "Sorting scrap. Good pile, bad pile, Oz pile.", "Oiling the hinge. Squeak's gone.", "Sweeping the bench. Again."] }],
       Lowkey: [{ path: z.paths.Lowkey.slice(1, 4), lines: ["Wind's turning.", "Clouds over the ruins.", "…Something moved. Gone now.", "Birds heading south.", "Counting the trail markers. All there.", "Ridge path's eroding. Noted."] }],
-      Moxi: [{ path: z.work.Moxi ?? [], lines: ["Shiny.", "Bug. Mine.", "Warm spot.", "Digging. Treasure maybe.", "Chasing leaf. Leaf winning.", "*rolls in grass*"] }],
+      // Moxi's solo routines: slow, one at a time, each with a body-language mood on her marker.
+      Moxi: [
+        { path: z.work.Moxi ?? [], mood: "curious", lines: ["Shiny.", "Bug. Mine.", "Digging. Treasure maybe.", "*sniffs the flowers* …Achoo."] },
+        { path: [{ x: 57, y: 72.5 }], mood: "curious", lines: ["*watches the river*", "Fish. Swimming. Rude.", "Water talks. Shh.", "*paw in water* COLD."] },
+        { path: [{ x: 63, y: 64 }, { x: 66, y: 60 }, { x: 67.5, y: 56 }], mood: "excited", lines: ["*peeks at Brix's bench*", "Clanky thing! …Not touching.", "Brix makes stuff. Good stuff."] },
+        { path: [{ x: 57, y: 72.5 }, { x: 52, y: 67 }, { x: 48, y: 63 }, { x: 50.5, y: 54 }], mood: "happy", lines: ["*sits, looks up at the lookout*", "Lowkey up there. Good.", "Quiet spot. Safe spot."] },
+        { path: [{ x: 66, y: 66 }, { x: 70, y: 65 }], mood: "curious", lines: ["*watches Boulder Pot… from here*", "Rock. Walking. Hm.", "Not closer. Nope."] },
+        { path: [{ x: 61.5, y: 67 }], mood: "excited", lines: ["*chases her tail*", "*stretches wings* Big!", "Tail! Almost! …Again."] },
+        { path: [{ x: 61, y: 69.5 }], mood: "sleepy", lines: ["*curls up* Mm.", "*slow blink*", "Warm spot."] },
+      ],
     };
     const THOUGHTS: Record<Agent, string[]> = {
       Oz: ["Could murder a hot pasty right now.", "Anyone else hear that? No? Just me.", "I'm basically the heart of this place."],
