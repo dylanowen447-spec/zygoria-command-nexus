@@ -1373,12 +1373,17 @@ function CommandCentre() {
       steerRef.current = next; setSteer(next);
       return;
     }
-    lastAgentTap.current = { a, t: now };
+    const tap = { a, t: now };
+    lastAgentTap.current = tap;
     if (steerRef.current) return;
-    if (a === "Oz" || !canClick()) return;
-    const at = coords.current.sanctuary[a];
-    setClickMark({ id: Date.now(), ...at });
-    void ozTo(beside(a), true, run => a === "Moxi" ? moxiTap(run) : chatAt(run, visitLines(a)));
+    if (a === "Oz") return;
+    // Wait out a possible second click so a double-click never also sends Oz on a visit.
+    setTimeout(() => {
+      if (lastAgentTap.current !== tap || steerRef.current || !canClick()) return;
+      const at = coords.current.sanctuary[a];
+      setClickMark({ id: Date.now(), ...at });
+      void ozTo(beside(a), true, run => a === "Moxi" ? moxiTap(run) : chatAt(run, visitLines(a)));
+    }, 380);
   }
   // Ambient crew moments in the outer zones — short scripted exchanges while idle, never during jobs or story scenes.
   useEffect(() => {
