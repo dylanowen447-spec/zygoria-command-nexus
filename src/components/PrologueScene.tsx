@@ -563,8 +563,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     if (!combat && !steered) return;
     let down = 0, timer: ReturnType<typeof setTimeout> | undefined;
     const typing = (e: KeyboardEvent) => { const t = e.target as HTMLElement | null; return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable); };
-    const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); };
-    const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); setCharging(false); const held = performance.now() - down; down = 0; attack.current(held >= HOLD_MS); };
+    const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); attack.current(false); };
+    const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); setCharging(false); const held = performance.now() - down; down = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } };
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
     return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); setCharging(false); };
   }, [combat, steered]);
