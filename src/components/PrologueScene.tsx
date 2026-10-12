@@ -76,6 +76,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const [swing, setSwing] = useState<Partial<Record<Agent, string>>>({});
   const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
   const [charging, setCharging] = useState(false);
+  // Brix shows his wind-up + building gold glow while the attack is held (after a short delay so quick taps never flash it).
+  const [holding, setHolding] = useState(false);
+  const windTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const holdStart = useRef(0);
   const aimRef = useRef<Point | null>(null);
   const drawBolt = (from: Point, x: number, y: number, heavy = false) => {
@@ -563,10 +566,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     if (!combat && !steered) return;
     let down = 0, timer: ReturnType<typeof setTimeout> | undefined;
     const typing = (e: KeyboardEvent) => { const t = e.target as HTMLElement | null; return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable); };
-    const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); };
-    const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); setCharging(false); const held = performance.now() - down; down = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); };
+    const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); clearTimeout(windTimer.current); windTimer.current = setTimeout(() => setHolding(true), 160); };
+    const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); const held = performance.now() - down; down = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); };
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
-    return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); setCharging(false); };
+    return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); };
   }, [combat, steered]);
   const chargeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -611,7 +614,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm}/>}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${swing[a] ?? ""}`}>
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
@@ -619,9 +622,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       </Button>; })}
     </div>
     <button type="button" className={`combat-attack ${combat ? "in-fight" : "is-idle"} ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${combat ? ctrl : steered ?? ctrl} — tap for quick, hold for heavy`}
-      onPointerDown={e => { e.preventDefault(); e.stopPropagation(); holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); }}
-      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); setCharging(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); }}
-      onPointerCancel={() => { holdStart.current = 0; clearTimeout(chargeTimer.current); setCharging(false); }}
+      onPointerDown={e => { e.preventDefault(); e.stopPropagation(); holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); clearTimeout(windTimer.current); windTimer.current = setTimeout(() => setHolding(true), 160); }}
+      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); clearTimeout(windTimer.current); setCharging(false); setHolding(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); }}
+      onPointerCancel={() => { holdStart.current = 0; clearTimeout(chargeTimer.current); clearTimeout(windTimer.current); setCharging(false); setHolding(false); }}
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{combat ? ctrl : steered ?? ctrl}</small>
     </button>
