@@ -619,7 +619,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     </div>
     {combat && <button type="button" className={`combat-attack ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${ctrl} — tap for quick, hold for heavy`}
       onPointerDown={e => { e.preventDefault(); e.stopPropagation(); holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); attack.current(false); }}
-      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); setCharging(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { lastAtk[ctrlRef.current] = 0; attack.current(true); } }}
+      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); setCharging(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } }}
       onPointerCancel={() => { holdStart.current = 0; clearTimeout(chargeTimer.current); setCharging(false); }}
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{ctrl}</small>
