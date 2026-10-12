@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
-import { farSpawns, makeRat, stepRat, zapRats, type Rat } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, farSpawns, makeRat, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
 
@@ -9,7 +9,8 @@ const KEY = "zygoria-oldcity-rats-v2";
 // Far edges of the walkable street; the three farthest from the crew are used.
 const SPAWNS: Point[] = [{ x: 4, y: 74 }, { x: 96, y: 70 }, { x: 8, y: 50 }, { x: 92, y: 52 }, { x: 50, y: 97 }];
 
-export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
+export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
+  combatRef?: MutableRefObject<CombatApi>;
   stageRef: RefObject<HTMLDivElement | null>;
   hitRef: MutableRefObject<(p: Point) => boolean>;
   crew: MutableRefObject<Record<Agent, Point>>;
@@ -31,6 +32,12 @@ export function OldCityRats({ stageRef, hitRef, crew, onAlarm }: {
     measure(); const id = setInterval(measure, 1000);
     return () => clearInterval(id);
   }, [stageRef]);
+
+  useEffect(() => {
+    if (!combatRef) return;
+    combatRef.current = { targets: () => rats.current.filter(r => !r.dead).map(r => ({ x: r.x, y: r.y })), bounds: () => DEFAULT_BOUNDS };
+    return () => { combatRef.current = { targets: () => [], bounds: () => DEFAULT_BOUNDS }; };
+  }, [combatRef]);
 
   useEffect(() => {
     try { localStorage.removeItem(KEY); } catch { /* fine */ }
