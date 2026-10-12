@@ -74,6 +74,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
   const [charging, setCharging] = useState(false);
   const holdStart = useRef(0);
+  const aimRef = useRef<Point | null>(null);
   const drawBolt = (from: Point, x: number, y: number, heavy = false) => {
     const sx = from.x, sy = from.y - 5, n = heavy ? 6 : 4, j = heavy ? 2.2 : 0.8;
     const pts: string[] = [`${sx},${sy}`];
@@ -173,7 +174,21 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     const strike = async (a: Agent, heavy: boolean, auto = false) => {
       const now = performance.now();
       if (now - lastAtk[a] < (heavy ? 650 : 260)) return;
-      const me = coords.current[a], t = nearestTo(me);
+      const me = coords.current[a];
+      // Player attacks aim at the mouse: lock onto an enemy near the cursor, otherwise strike toward it.
+      const aimP = auto ? null : aimRef.current;
+      let t = nearestTo(aimP ?? me);
+      if (aimP && (!t || cdist(t, aimP) > 10)) {
+        lastAtk[a] = now; faceTo(a, aimP);
+        flashSwing(a, heavy ? "atk-heavy" : "atk-quick", heavy ? 420 : 240);
+        if (a === "Oz") {
+          const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Oz / d);
+          const end = { x: me.x + (aimP.x - me.x) * k, y: me.y + (aimP.y - me.y) * k };
+          boltRef.current(coords.current.Oz, end.x, end.y, heavy);
+          const landed = !!ambushHit.current(end); impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
+        }
+        return;
+      }
       if (!t) return;
       lastAtk[a] = now; faceTo(a, t);
       const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
@@ -190,7 +205,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     };
     moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
     steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [{ x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) }]); };
-    attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); };
+    attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); else if (steerRef.current) void strike(steerRef.current, heavy); };
     // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
     const companionTick = () => {
       const on = inCombat(); setCombat(c => (c === on ? c : on));
