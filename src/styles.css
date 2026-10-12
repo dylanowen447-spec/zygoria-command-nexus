@@ -725,9 +725,9 @@
 @media (max-width:600px){.combat-attack{width:68px;height:68px;font-size:11px}.combat-hint{display:none}}
 
 /* Brix's punch sheet: 6 frames × 4 rows (front, left, right, back); cells are wider than his walk cells so the fist fits. */
-.sheet-punch{position:absolute;left:50%;bottom:0;width:178.2%;height:100%;transform:translateX(-50%);background-size:600% 400%;background-repeat:no-repeat;background-position:0 0;display:none;pointer-events:none}
+.sheet-punch{position:absolute;left:50%;bottom:0;width:178.2%;height:100%;transform:translateX(-50%);background-size:600% 400%;background-repeat:no-repeat;background-position:0 0;visibility:hidden;pointer-events:none}
 .marker-brix.atk-punch .sheet-frames{visibility:hidden}
-.marker-brix.atk-punch .sheet-punch{display:block;animation:brixPunch .42s steps(1,end) forwards}
+.marker-brix.atk-punch .sheet-punch{visibility:visible;animation:brixPunch .42s steps(1,end) forwards}
 .marker-brix.atk-punch.is-heavy .sheet-punch{animation-duration:.6s}
 .marker-brix.atk-punch.brix-facing-left .sheet-punch{background-position-y:33.3333%}
 .marker-brix.atk-punch.brix-facing-right .sheet-punch{background-position-y:66.6667%}
