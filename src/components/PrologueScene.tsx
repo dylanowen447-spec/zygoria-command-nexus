@@ -175,14 +175,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     /** One attack in the Zig's own style. Enemy damage goes through the ambush's existing hit logic, unchanged. */
     const strike = async (a: Agent, heavy: boolean, auto = false) => {
       const now = performance.now();
-      if (now - lastAtk[a] < (heavy ? 650 : 260)) return;
+      if (now - lastAtk[a] < (heavy ? 650 : a === "Brix" ? 200 : 260)) return;
       const me = coords.current[a];
       // Player attacks aim at the mouse: lock onto an enemy near the cursor, otherwise strike toward it.
       const aimP = auto ? null : aimRef.current;
       let t = nearestTo(aimP ?? me);
       if (aimP && (!t || cdist(t, aimP) > 10)) {
         lastAtk[a] = now; faceTo(a, aimP);
-        flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 440) : heavy ? 420 : 240);
+        flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 230) : heavy ? 420 : 240);
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
         if (a === "Oz") {
           const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Oz / d);
@@ -195,10 +195,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       if (!t) return;
       lastAtk[a] = now; faceTo(a, t);
       const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
-      if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 440 : 260); return; }
+      if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 230 : 260); return; }
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
-      flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 440) : heavy ? 420 : 240);
+      flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 230) : heavy ? 420 : 240);
       if (a === "Oz") boltRef.current(coords.current.Oz, t.x, t.y - 4, heavy);
       const landed = !!ambushHit.current(aim(t));
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
@@ -608,7 +608,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm}/>}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${swing[a] ?? ""}`}>
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${swing[a] ?? ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
