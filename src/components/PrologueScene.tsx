@@ -19,6 +19,10 @@ const dist = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ASPECT)
 /** On phones the map is short, so bubbles drop below the Zig much sooner. */
 const topLine = () => (typeof window !== "undefined" && window.innerWidth <= 600 ? 55 : 34);
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
+const cdist = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
+/** Attack reach in artwork %: Oz zaps from range, Brix and Lowkey must get close (Lowkey's heavy dash closes a gap). */
+const REACH: Record<Agent, number> = { Oz: 42, Brix: 9, Lowkey: 9 };
+const HOLD_MS = 600;
 
 type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void };
 
