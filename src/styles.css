@@ -723,3 +723,16 @@
 .combat-attack.is-charged{border-color:oklch(0.85 0.17 80);box-shadow:0 0 16px oklch(0.85 0.17 80 / .8)}
 .combat-hint{position:absolute;left:50%;bottom:1.5%;transform:translateX(-50%);z-index:2999;font-size:11px;padding:3px 10px;border-radius:999px;background:oklch(0.18 0.03 250);color:oklch(0.9 0.02 220);white-space:nowrap;pointer-events:none}
 @media (max-width:600px){.combat-attack{width:68px;height:68px;font-size:11px}.combat-hint{display:none}}
+
+/* Brix's punch sheet: 6 frames × 4 rows (front, left, right, back); cells are wider than his walk cells so the fist fits. */
+.sheet-punch{position:absolute;left:50%;bottom:0;width:178.2%;height:100%;transform:translateX(-50%);background-size:600% 400%;background-repeat:no-repeat;background-position:0 0;display:none;pointer-events:none}
+.marker-brix.atk-punch .sheet-frames{visibility:hidden}
+.marker-brix.atk-punch .sheet-punch{display:block;animation:brixPunch .42s steps(1,end) forwards}
+.marker-brix.atk-punch.is-heavy .sheet-punch{animation-duration:.6s}
+.marker-brix.atk-punch.brix-facing-left .sheet-punch{background-position-y:33.3333%}
+.marker-brix.atk-punch.brix-facing-right .sheet-punch{background-position-y:66.6667%}
+.marker-brix.atk-punch.brix-facing-up .sheet-punch{background-position-y:100%}
+.world-image-wrap .marker-brix.atk-punch .sprite-stage{scale:1 1}
+.marker-brix.atk-punch.is-heavy .sprite-stage{filter:drop-shadow(0 0 6px oklch(0.85 0.17 80))}
+@keyframes brixPunch{0%{background-position-x:0%}16.6%{background-position-x:20%}33.3%{background-position-x:40%}50%{background-position-x:60%}66.6%{background-position-x:80%}83.3%,100%{background-position-x:100%}}
+.combat-hit.is-brix,.combat-hit.is-brix-heavy{background:radial-gradient(circle,oklch(0.98 0.06 80 / .95),oklch(0.72 0.19 45 / .65) 40%,transparent 70%)}
