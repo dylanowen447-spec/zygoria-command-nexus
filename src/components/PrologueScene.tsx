@@ -49,10 +49,33 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     setBubbles(b => ({ ...b, [a]: text }));
     setTimeout(() => setBubbles(b => (b[a] === text ? { ...b, [a]: undefined } : b)), 2600);
   }, []);
-  const [bolts, setBolts] = useState<{ id: number; d: string; x: number; y: number }[]>([]);
+  const [bolts, setBolts] = useState<{ id: number; d: string; x: number; y: number; heavy?: boolean }[]>([]);
   const [jolt, setJolt] = useState(0);
   const logRef = useRef(onLog);
   logRef.current = onLog;
+  // Direct combat: the ambush exposes live enemy feet points + safe ground; the player steers one Zig.
+  const enemies = useRef<CombatApi>({ targets: () => [], bounds: () => DEFAULT_BOUNDS });
+  const [combat, setCombat] = useState(false);
+  const [ctrl, setCtrl] = useState<Agent>("Oz");
+  const ctrlRef = useRef<Agent>("Oz");
+  const moveCtrl = useRef<(p: Point) => void>(() => undefined);
+  const attack = useRef<(heavy: boolean) => void>(() => undefined);
+  const lastMarkerTap = useRef<{ a: Agent; t: number } | null>(null);
+  const [swing, setSwing] = useState<Partial<Record<Agent, string>>>({});
+  const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
+  const [charging, setCharging] = useState(false);
+  const holdStart = useRef(0);
+  const drawBolt = (from: Point, x: number, y: number, heavy = false) => {
+    const sx = from.x, sy = from.y - 5, n = heavy ? 6 : 4, j = heavy ? 2.2 : 0.8;
+    const pts: string[] = [`${sx},${sy}`];
+    for (let i = 1; i < n; i++) { const t = i / n; pts.push(`${sx + (x - sx) * t + (Math.random() - 0.5) * j},${sy + (y - sy) * t + (Math.random() - 0.5) * j}`); }
+    pts.push(`${x},${y}`);
+    const id = performance.now() + Math.random();
+    setBolts(b => [...b.slice(-5), { id, d: "M" + pts.join(" L"), x, y, heavy }]); setJolt(id);
+    setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), heavy ? 650 : 500);
+  };
+  const boltRef = useRef(drawBolt);
+  boltRef.current = drawBolt;
 
   useEffect(() => {
     let alive = true;
