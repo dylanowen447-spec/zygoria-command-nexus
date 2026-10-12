@@ -38,6 +38,33 @@ export function HavenScene() {
   const [busy, setBusy] = useState(false);
   const history = useRef<string[]>([]);
   const introDone = step >= INTRO.length;
+  // Double-click a Zig to steer them; clicking the cave floor walks that Zig there.
+  type Zig = "Oz" | "Brix" | "Lowkey";
+  const [pos, setPos] = useState<Record<Zig, { x: number; b: number }>>({ Brix: { x: 18, b: 22 }, Oz: { x: 26, b: 22 }, Lowkey: { x: 33, b: 22 } });
+  const [steer, setSteer] = useState<Zig | null>(null);
+  const [moving, setMoving] = useState<{ a: Zig; dir: "left" | "right" | "up" | "down"; ms: number } | null>(null);
+  const lastTap = useRef<{ a: Zig; t: number } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const tapZig = (a: Zig) => {
+    const now = performance.now(), l = lastTap.current;
+    if (l && l.a === a && now - l.t < 380) { lastTap.current = null; setSteer(s => (s === a ? null : a)); }
+    else lastTap.current = { a, t: now };
+  };
+  const onGround = (e: React.PointerEvent<HTMLDivElement>) => {
+    const tg = e.target as Element | null;
+    if (!steer || !wrapRef.current || (tg && typeof tg.closest === "function" && tg.closest("button,form,.haven-zig"))) return;
+    const r = wrapRef.current.getBoundingClientRect();
+    const x = Math.min(92, Math.max(6, ((e.clientX - r.left) / r.width) * 100));
+    const b = Math.min(30, Math.max(8, ((r.bottom - e.clientY) / r.height) * 100));
+    const from = pos[steer], dx = x - from.x, db = b - from.b;
+    const ms = Math.max(300, Math.hypot(dx, db * 0.7) * 90);
+    const dir = Math.abs(db) > Math.abs(dx) * 0.7 ? (db > 0 ? "up" : "down") : dx < 0 ? "left" : "right";
+    const a = steer;
+    setMoving({ a, dir, ms });
+    setPos(p => ({ ...p, [a]: { x, b } }));
+    setTimeout(() => setMoving(m => (m && m.a === a && m.ms === ms ? null : m)), ms);
+  };
+  const xOf = (w: Speaker) => (w === "Oz" || w === "Brix" || w === "Lowkey" ? pos[w].x : X[w]);
 
   useEffect(() => {
     if (introDone) return;
@@ -61,16 +88,17 @@ export function HavenScene() {
     } finally { setBusy(false); }
   }
 
-  return <div className="world-image-wrap prologue-scene haven-scene">
+  return <div ref={wrapRef} className="world-image-wrap prologue-scene haven-scene" onPointerDown={onGround}>
     <img className="world-image" src={bg} alt="The Underground Haven: a lantern-lit human refuge deep in a cavern" />
     <div className="haven-layer">
-      {CREW.map(c => <span key={c.id} className="haven-zig" style={{ left: `${c.x}%` }}><span className="sprite-stage"><CharacterSprite character={c.id}/></span></span>)}
+      {CREW.map(c => { const m = moving?.a === c.id ? moving : null; return <span key={c.id} className={`haven-zig marker-${c.id.toLowerCase()} ${m ? `is-walking ${c.id.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === c.id ? "is-controlled" : ""}`} style={{ left: `${pos[c.id].x}%`, bottom: `${pos[c.id].b}%`, transitionDuration: m ? `${m.ms}ms` : "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(c.id); }} role="button" aria-label={`${c.id} — double-tap to steer`}>{steer === c.id && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={c.id}/></span></span>; })}
       {SURVIVORS.map(s => <button key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
         <img src={s.img} alt="" draggable={false}/><span className="haven-name">{s.name}</span>
       </button>)}
-      {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${X[bubble.who]}%` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
+      {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${xOf(bubble.who)}%` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
     <div className="map-coordinate top-right">UNDERGROUND HAVEN</div>
+    {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the floor to walk · double-tap {steer} to let go</div>}
     {introDone && <form className="haven-talk" onSubmit={send}>
       <span>Talking to {target === "Orin" ? "Elder Orin" : target} — tap someone to switch</span>
       <input value={text} maxLength={180} onChange={e => setText(e.target.value)} placeholder={`Say something to ${target === "Orin" ? "Elder Orin" : target}…`} disabled={busy}/>
