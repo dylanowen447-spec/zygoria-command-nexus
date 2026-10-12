@@ -183,7 +183,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       let t = nearestTo(aimP ?? me);
       if (aimP && (!t || cdist(t, aimP) > 10)) {
         lastAtk[a] = now; faceTo(a, aimP);
-        flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 230) : heavy ? 420 : 240);
+        flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 260) : heavy ? 420 : 240);
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
         if (a === "Oz") {
           const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Oz / d);
@@ -193,13 +193,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         }
         return;
       }
-      if (!t) return;
+      // Nothing to hit: still throw the move straight ahead so every tap shows a punch/swing.
+      if (!t) { lastAtk[a] = now; flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? (heavy ? 620 : 260) : 260); return; }
       lastAtk[a] = now; faceTo(a, t);
       const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
-      if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 230 : 260); return; }
+      if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 260 : 260); return; }
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
-      flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 230) : heavy ? 420 : 240);
+      flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 260) : heavy ? 420 : 240);
       if (a === "Oz") boltRef.current(coords.current.Oz, t.x, t.y - 4, heavy);
       const landed = !!ambushHit.current(aim(t));
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
@@ -209,8 +210,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     };
     moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
     steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [{ x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) }]); };
-    attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); else if (steerRef.current) void strike(steerRef.current, heavy); };
-    resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? "Oz"] = 0; };
+    attack.current = (heavy: boolean) => { void strike(inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current, heavy); };
+    resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current] = 0; };
     // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
     const companionTick = () => {
       const on = inCombat(); setCombat(c => (c === on ? c : on));
@@ -562,8 +563,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     if (!combat && !steered) return;
     let down = 0, timer: ReturnType<typeof setTimeout> | undefined;
     const typing = (e: KeyboardEvent) => { const t = e.target as HTMLElement | null; return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable); };
-    const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); };
-    const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); setCharging(false); const held = performance.now() - down; down = 0; attack.current(held >= HOLD_MS); };
+    const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); attack.current(false); };
+    const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); setCharging(false); const held = performance.now() - down; down = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } };
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
     return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); setCharging(false); };
   }, [combat, steered]);
@@ -617,13 +618,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>
       </Button>; })}
     </div>
-    {combat && <button type="button" className={`combat-attack ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${ctrl} — tap for quick, hold for heavy`}
+    <button type="button" className={`combat-attack ${combat ? "in-fight" : "is-idle"} ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${combat ? ctrl : steered ?? ctrl} — tap for quick, hold for heavy`}
       onPointerDown={e => { e.preventDefault(); e.stopPropagation(); holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); attack.current(false); }}
       onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); setCharging(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } }}
       onPointerCancel={() => { holdStart.current = 0; clearTimeout(chargeTimer.current); setCharging(false); }}
       onContextMenu={e => e.preventDefault()}>
-      <span>ATTACK</span><small>{ctrl}</small>
-    </button>}
+      <span>ATTACK</span><small>{combat ? ctrl : steered ?? ctrl}</small>
+    </button>
     {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
     {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · click ground to move · Space attacks where the mouse points (hold = heavy)</div>}
     <div className="map-coordinate bottom-left"><MapPin size={12}/> {scene.bottom}</div>
