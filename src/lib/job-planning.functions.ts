@@ -37,3 +37,18 @@ export const runCrewStep = createServerFn({ method: "POST" })
     }
     return runAgentStep(data.story ? `${data.directive}\n\n(Scene right now: ${data.story} Weave this in briefly and naturally, in your own voice.)` : data.directive, data.agent, data.previous, data.finalReview, data.group);
   });
+
+type Survivor = "Orin" | "Mara" | "Vale";
+export const talkToSurvivor = createServerFn({ method: "POST" })
+  .inputValidator((input: { survivor: Survivor; said: string; history?: string[] }) => {
+    if (!["Orin", "Mara", "Vale"].includes(input?.survivor)) throw new Error("Unknown survivor.");
+    const said = checkDirective(input.said);
+    const history = Array.isArray(input.history) ? input.history.slice(-6).map(h => String(h).slice(0, 400)) : [];
+    return { survivor: input.survivor, said, history };
+  })
+  .handler(async ({ data }) => {
+    const key = process.env["LOVABLE_API_KEY"];
+    if (!key) throw new Error("They can't hear you right now.");
+    const { createSurvivorCall } = await import("./ai/responses.ts");
+    return createSurvivorCall(key, data.survivor, data.said, data.history);
+  });
