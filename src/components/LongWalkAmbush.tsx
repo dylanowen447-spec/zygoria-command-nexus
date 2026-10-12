@@ -200,7 +200,7 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefea
   const ratH = size.oz * 0.95 / 0.78, ratW = ratH * 340 / 250;
   const shelH = size.lowkey / 0.92 * 1.5; // 50% bigger than Lowkey-matched
   const s = shel.current;
-  const shelFrame = !s ? 0 : s.state === "enter" || s.state === "flee" || s.state === "retreat" ? (s.state !== "enter" ? 17 : 1 + Math.floor(now / 110) % 6)
+  const shelFrame = !s ? 0 : s.state === "enter" || s.state === "flee" || s.state === "retreat" ? 1 + Math.floor(now / 110) % 6
     : s.state === "taunt" ? (Math.floor(now / 600) % 2 ? 11 : 0) : s.state === "windup" ? 7 : s.state === "lunge" ? 8 : s.state === "open" ? 9
     : s.state === "hit" ? 12 + Math.min(2, Math.floor(s.t / 0.2)) : s.state === "shell" ? 10 : s.state === "beaten" ? 15 : 0;
   const bg = (url: string, frames: number, i: number): CSSProperties => ({ backgroundImage: `url(${url})`, backgroundSize: `${frames * 100}% 100%`, backgroundPosition: `${(i / (frames - 1)) * 100}% 0` });
