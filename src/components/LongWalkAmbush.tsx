@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
-import { farSpawns, makeRat, stepRat, zapRats, type Rat } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, farSpawns, makeRat, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
 import sheltonSheet from "@/assets/shelton.webp.asset.json";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import battleArt from "@/assets/long-walk-battle.webp";
@@ -39,7 +39,8 @@ const SHEL_LINES = {
   beaten: "I'll be telling Kronk about this! Those three are definitely up to no good!",
 };
 
-export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefeat }: {
+export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAlarm, onDefeat }: {
+  combatRef?: MutableRefObject<CombatApi>;
   stageRef: RefObject<HTMLDivElement | null>;
   hitRef: MutableRefObject<(p: Point) => boolean>;
   crew: MutableRefObject<Record<Agent, Point>>;
@@ -73,6 +74,20 @@ export function LongWalkAmbush({ stageRef, hitRef, crew, onSay, onAlarm, onDefea
     measure(); const id = setInterval(measure, 1000);
     return () => clearInterval(id);
   }, [stageRef]);
+
+  // Direct combat reads live enemy positions; the plateau is the only safe ground once Shelton arrives.
+  useEffect(() => {
+    if (!combatRef) return;
+    combatRef.current = {
+      targets: () => {
+        const out = rats.current.filter(r => !r.dead).map(r => ({ x: r.x, y: r.y }));
+        const s = shel.current; if (s && !["gone", "flee", "beaten", "retreat", "enter"].includes(s.state)) out.push({ x: s.x, y: s.y });
+        return out;
+      },
+      bounds: () => (wave.current === 3 ? PLAT : DEFAULT_BOUNDS),
+    };
+    return () => { combatRef.current = { targets: () => [], bounds: () => DEFAULT_BOUNDS }; };
+  }, [combatRef]);
 
   // The splash holds the fight until the player taps through (or it steps aside on its own).
   useEffect(() => { if (!splash) return; const t = setTimeout(() => setSplash(false), 6000); return () => clearTimeout(t); }, [splash]);

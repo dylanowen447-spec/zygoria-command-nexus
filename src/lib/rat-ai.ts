@@ -65,3 +65,8 @@ export function ratFrame(r: Rat, now: number) {
   if (r.mode === "pause") return Math.floor(now / 300) % 2;
   return 4 + Math.floor(now / 90) % 4;
 }
+
+/** What an ambush shares with the scene for direct combat: live enemy feet points and the safe ground to fight on. */
+export type Bounds = { x0: number; x1: number; y0: number; y1: number };
+export type CombatApi = { targets: () => Point[]; bounds: () => Bounds };
+export const DEFAULT_BOUNDS: Bounds = { x0: 4, x1: 96, y0: 44, y1: 95 };

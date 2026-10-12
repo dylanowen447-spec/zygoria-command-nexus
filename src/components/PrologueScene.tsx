@@ -7,6 +7,7 @@ import { OldCityRats } from "@/components/OldCityRats";
 import { ACKS, ASPECT, REACTIONS, SHRUGS, routeBetween, type Scene } from "@/lib/prologue";
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
+import { DEFAULT_BOUNDS, type CombatApi } from "@/lib/rat-ai";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
@@ -19,6 +20,10 @@ const dist = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ASPECT)
 /** On phones the map is short, so bubbles drop below the Zig much sooner. */
 const topLine = () => (typeof window !== "undefined" && window.innerWidth <= 600 ? 55 : 34);
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
+const cdist = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
+/** Attack reach in artwork %: Oz zaps from range, Brix and Lowkey must get close (Lowkey's heavy dash closes a gap). */
+const REACH: Record<Agent, number> = { Oz: 42, Brix: 9, Lowkey: 9 };
+const HOLD_MS = 600;
 
 type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void };
 
@@ -49,10 +54,33 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     setBubbles(b => ({ ...b, [a]: text }));
     setTimeout(() => setBubbles(b => (b[a] === text ? { ...b, [a]: undefined } : b)), 2600);
   }, []);
-  const [bolts, setBolts] = useState<{ id: number; d: string; x: number; y: number }[]>([]);
+  const [bolts, setBolts] = useState<{ id: number; d: string; x: number; y: number; heavy?: boolean }[]>([]);
   const [jolt, setJolt] = useState(0);
   const logRef = useRef(onLog);
   logRef.current = onLog;
+  // Direct combat: the ambush exposes live enemy feet points + safe ground; the player steers one Zig.
+  const enemies = useRef<CombatApi>({ targets: () => [], bounds: () => DEFAULT_BOUNDS });
+  const [combat, setCombat] = useState(false);
+  const [ctrl, setCtrl] = useState<Agent>("Oz");
+  const ctrlRef = useRef<Agent>("Oz");
+  const moveCtrl = useRef<(p: Point) => void>(() => undefined);
+  const attack = useRef<(heavy: boolean) => void>(() => undefined);
+  const lastMarkerTap = useRef<{ a: Agent; t: number } | null>(null);
+  const [swing, setSwing] = useState<Partial<Record<Agent, string>>>({});
+  const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
+  const [charging, setCharging] = useState(false);
+  const holdStart = useRef(0);
+  const drawBolt = (from: Point, x: number, y: number, heavy = false) => {
+    const sx = from.x, sy = from.y - 5, n = heavy ? 6 : 4, j = heavy ? 2.2 : 0.8;
+    const pts: string[] = [`${sx},${sy}`];
+    for (let i = 1; i < n; i++) { const t = i / n; pts.push(`${sx + (x - sx) * t + (Math.random() - 0.5) * j},${sy + (y - sy) * t + (Math.random() - 0.5) * j}`); }
+    pts.push(`${x},${y}`);
+    const id = performance.now() + Math.random();
+    setBolts(b => [...b.slice(-5), { id, d: "M" + pts.join(" L"), x, y, heavy }]); setJolt(id);
+    setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), heavy ? 650 : 500);
+  };
+  const boltRef = useRef(drawBolt);
+  boltRef.current = drawBolt;
 
   useEffect(() => {
     let alive = true;
@@ -116,6 +144,72 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       frames.push(requestAnimationFrame(step));
     });
 
+    // ---- Direct combat ----
+    let lastEnemy = 0;
+    const inCombat = () => { if (enemies.current.targets().length) lastEnemy = performance.now(); return lastEnemy > 0 && performance.now() - lastEnemy < 3500; };
+    const clampB = (p: Point): Point => { const b = enemies.current.bounds(); return { x: Math.min(b.x1, Math.max(b.x0, p.x)), y: Math.min(b.y1, Math.max(b.y0, p.y)) }; };
+    const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
+    const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
+    const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];
+    const flashSwing = (a: Agent, kind: string, ms: number) => { setSwing(w => ({ ...w, [a]: kind })); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms)); };
+    const impact = (p: Point, kind: string) => { const id = performance.now() + Math.random(); setHits(h => [...h.slice(-6), { id, x: p.x, y: p.y, kind }]); timers.push(setTimeout(() => alive && setHits(h => h.filter(v => v.id !== id)), 450)); };
+    const faceTo = (a: Agent, t: Point) => {
+      const o = coords.current[a], dx = t.x - o.x, dy = t.y - o.y;
+      setFacing(f => ({ ...f, [a]: dx < 0 ? "left" : "right" }));
+      const d = Math.abs(dy) > Math.abs(dx) * 0.7 ? (dy < 0 ? "up" : "down") : (dx < 0 ? "left" : "right");
+      if (a === "Oz") setOzDir(d); else if (a === "Brix") setBrixDir(d);
+    };
+    const dash = (a: Agent, to: Point) => new Promise<void>(res => {
+      tokens[a] = (tokens[a] ?? 0) + 1; setWalking(w => w.filter(x => x !== a));
+      const from = { ...coords.current[a] }, t0 = performance.now();
+      const f = () => { if (!alive) return res(); const k = Math.min(1, (performance.now() - t0) / 170); coords.current[a] = { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k }; paint(a); if (k < 1) frames.push(requestAnimationFrame(f)); else res(); };
+      frames.push(requestAnimationFrame(f));
+    });
+    /** One attack in the Zig's own style. Enemy damage goes through the ambush's existing hit logic, unchanged. */
+    const strike = async (a: Agent, heavy: boolean, auto = false) => {
+      const now = performance.now();
+      if (now - lastAtk[a] < (heavy ? 650 : 260)) return;
+      const me = coords.current[a], t = nearestTo(me);
+      if (!t) return;
+      lastAtk[a] = now; faceTo(a, t);
+      const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
+      if (cdist(me, t) > reach) { flashSwing(a, "atk-whiff", 260); return; }
+      const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
+      if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
+      flashSwing(a, heavy ? "atk-heavy" : "atk-quick", heavy ? 420 : 240);
+      if (a === "Oz") boltRef.current(coords.current.Oz, t.x, t.y - 4, heavy);
+      const landed = !!ambushHit.current(aim(t));
+      impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
+      if (a === "Oz" && !auto) zap.current(aim(t), landed);
+      // Heavy blows land a second impact a beat later (Shelton's own hit timing still applies).
+      if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
+    };
+    moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
+    attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); };
+    // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
+    const companionTick = () => {
+      const on = inCombat(); setCombat(c => (c === on ? c : on));
+      if (!on) return;
+      const ts = enemies.current.targets(); if (!ts.length) return;
+      const taken: Point[] = [];
+      const ctl = ctrlRef.current; const ctlT = nearestTo(coords.current[ctl]); if (ctlT) taken.push(ctlT);
+      ALL.filter(z => z !== ctl).forEach((z, i) => {
+        const me = coords.current[z];
+        const sorted = ts.slice().sort((u, v) => cdist(u, me) - cdist(v, me));
+        const t = sorted.find(u => !taken.some(k => k === u)) ?? sorted[0]!;
+        taken.push(t);
+        const now = performance.now();
+        if (cdist(me, t) <= REACH[z] * 0.9) { if (now > aiNext[z]) { aiNext[z] = now + 1300 + Math.random() * 900; void strike(z, false, true); } return; }
+        // Move to a stand-off spot: Oz keeps distance, the brawlers flank from opposite sides.
+        const side = i === 0 ? -1 : 1;
+        let goal = z === "Oz" ? { x: t.x + (me.x < t.x ? -18 : 18), y: t.y + side * 3 } : { x: t.x + side * 5, y: t.y + 1 };
+        for (const o of ALL) if (o !== z && cdist(coords.current[o], goal) < 6) goal = { x: goal.x + (goal.x < coords.current[o].x ? -5 : 5), y: goal.y + 2 };
+        void walk(z, [clampB(goal)]);
+      });
+    };
+    const combatTimer = setInterval(() => alive && companionTick(), 450);
+    timers.push(combatTimer as unknown as ReturnType<typeof setTimeout>);
+
     const objectiveSpots = new Set(scene.objectives.map(o => o.spot));
     const at: Record<Agent, string> = { Oz: scene.spawn.Oz.out, Brix: scene.spawn.Brix.out, Lowkey: scene.spawn.Lowkey.out };
     const heading: Partial<Record<Agent, string>> = {};
@@ -143,6 +237,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       while (alive && !finished) {
         // Hold the wander while answering the Voice, then a quiet beat before carrying on.
         while (alive && (talking.has(a) || !floorFree())) await wait(200);
+        if (inCombat()) {
+          // Fighting takes over; afterwards they carry on from the nearest trail point.
+          while (alive && inCombat()) await wait(300);
+          if (!alive) return;
+          at[a] = Object.keys(scene.spots).sort((x, y) => dist(scene.spots[x]!.at, coords.current[a]) - dist(scene.spots[y]!.at, coords.current[a]))[0]!;
+          await walk(a, [scene.spots[at[a]]!.at]);
+          continue;
+        }
         const elapsed = performance.now() - start;
         if (!unlockedAt && (ALL.every(z => seen[z].size >= scene.unlock.seen) && elapsed > scene.unlock.ms || elapsed > scene.unlock.maxMs)) {
           unlockedAt = performance.now();
@@ -421,8 +523,20 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       for (const [who, text] of scene.opening) { say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP); }
       ALL.forEach(a => void explore(a));
     })();
-    return () => { alive = false; timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
+    return () => { alive = false; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, [scene]);
+
+  // Space: tap = quick attack, hold ~0.6s then release = heavy. Key auto-repeat is ignored.
+  useEffect(() => {
+    if (!combat) return;
+    let down = 0, timer: ReturnType<typeof setTimeout> | undefined;
+    const typing = (e: KeyboardEvent) => { const t = e.target as HTMLElement | null; return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable); };
+    const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); };
+    const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); setCharging(false); const held = performance.now() - down; down = 0; attack.current(held >= HOLD_MS); };
+    window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
+    return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); setCharging(false); };
+  }, [combat]);
+  const chargeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   return <>
   <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties} onPointerDown={e => {
@@ -431,14 +545,20 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       if (!stageRef.current) return;
       const r = stageRef.current!.getBoundingClientRect();
       const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
-      const o = coords.current.Oz, sx = o.x, sy = o.y - 5;
+      if (combat) {
+        // Double-tap a Zig to take control; a single tap on one never sends a move order.
+        if (btn) {
+          const a = ALL.find(z => markers.current[z] === btn);
+          const last = lastMarkerTap.current, now = performance.now();
+          if (a && last && last.a === a && now - last.t < 380) { ctrlRef.current = a; setCtrl(a); lastMarkerTap.current = null; }
+          else if (a) lastMarkerTap.current = { a, t: now };
+          return;
+        }
+        moveCtrl.current({ x, y });
+        return;
+      }
       // Straight, swift beam: only tiny crackle along the line.
-      const pts: string[] = [`${sx},${sy}`];
-      for (let i = 1; i < 4; i++) { const t = i / 4; pts.push(`${sx + (x - sx) * t + (Math.random() - 0.5) * 0.8},${sy + (y - sy) * t + (Math.random() - 0.5) * 0.8}`); }
-      pts.push(`${x},${y}`);
-      const id = performance.now() + Math.random();
-      setBolts(b => [...b.slice(-5), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
-      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 500);
+      boltRef.current(coords.current.Oz, x, y);
       zap.current({ x, y }, !!ambushHit.current({ x, y }));
     }}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
@@ -447,18 +567,28 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     <div className="map-coordinate top-right">{scene.chapter}</div>
     <div className="world-stage" ref={stageRef}>
       <svg className="zap-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        {bolts.map(b => <g key={b.id}><path className="zap-glow" d={b.d}/><path className="zap-core" d={b.d}/><circle className="zap-hit" cx={b.x} cy={b.y} r="1.2"/></g>)}
+        {bolts.map(b => <g key={b.id}><path className={`zap-glow ${b.heavy ? "is-heavy" : ""}`} d={b.d}/><path className="zap-core" d={b.d}/><circle className="zap-hit" cx={b.x} cy={b.y} r="1.2"/></g>)}
       </svg>
       {bolts.map(b => <div key={`f${b.id}`} className="zap-flash" style={{ left: `${b.x}%`, top: `${b.y}%` }} />)}
+      {hits.map(h => <div key={h.id} className={`combat-hit is-${h.kind}`} style={{ left: `${h.x}%`, top: `${h.y}%` }} aria-hidden="true"/>)}
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
-      {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
-      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} crew={coords} onAlarm={onAlarm}/>}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""}`}>
+      {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
+      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm}/>}
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${combat && ctrl === a ? "is-controlled" : ""} ${swing[a] ?? ""}`}>
+        {combat && ctrl === a && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>
       </Button>; })}
     </div>
+    {combat && <button type="button" className={`combat-attack ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${ctrl} — tap for quick, hold for heavy`}
+      onPointerDown={e => { e.preventDefault(); e.stopPropagation(); holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); }}
+      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); setCharging(false); const held = performance.now() - holdStart.current; holdStart.current = 0; attack.current(held >= HOLD_MS); }}
+      onPointerCancel={() => { holdStart.current = 0; clearTimeout(chargeTimer.current); setCharging(false); }}
+      onContextMenu={e => e.preventDefault()}>
+      <span>ATTACK</span><small>{ctrl}</small>
+    </button>}
+    {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · tap ground to move · Space / ATTACK (hold = heavy)</div>}
     <div className="map-coordinate bottom-left"><MapPin size={12}/> {scene.bottom}</div>
     {done && <div className="prologue-card" role="dialog" aria-label={scene.card.eyebrow}>
       <span className="prologue-card-eyebrow">{scene.card.eyebrow}</span>
