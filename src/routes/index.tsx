@@ -1179,6 +1179,10 @@ function CommandCentre() {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const ozAway = useRef(false);
   const [clickMark, setClickMark] = useState<{ id: number; x: number; y: number } | null>(null);
+  // Double-click a Zig to steer them by hand; ground clicks then walk that Zig instead of Oz.
+  const [steer, setSteer] = useState<Agent | null>(null);
+  const steerRef = useRef<Agent | null>(null);
+  const lastAgentTap = useRef<{ a: Agent; t: number } | null>(null);
   const walkGraph = useMemo(() => {
     const z = ZONES.sanctuary, nodes: Point[] = [], edges: number[][] = [];
     const add = (p: Point) => { let i = nodes.findIndex(n => distance(n, p) < 1.2); if (i < 0) { i = nodes.length; nodes.push({ ...p }); edges.push([]); } return i; };
@@ -1317,6 +1321,17 @@ function CommandCentre() {
     if (!canClick()) return;
     const r = stageRef.current.getBoundingClientRect();
     const p = { x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100 };
+    const steered = steerRef.current;
+    if (steered) {
+      // Steered Zig walks the trails to the clicked spot; nobody else is pulled along.
+      setClickMark({ id: Date.now(), ...p });
+      const run = ++runId.current;
+      const pts = routeNodes(coords.current.sanctuary[steered], p);
+      if (pts.length && distance(pts.at(-1)!, p) < 5) pts.push(p);
+      setWalking(w => w.filter(a => a !== steered));
+      void walk(steered, pts.length ? pts : [p], "central", run).then(() => { if (run === runId.current) setClickMark(null); });
+      return;
+    }
     // Clicking the shack offers bedtime; anywhere else clears the offer.
     const atShack = distance(p, { x: 13, y: 53 }) < 8;
     setSleepPrompt(atShack);
@@ -1351,6 +1366,15 @@ function CommandCentre() {
   }
   function onAgentClick(a: Agent) {
     setSelected(a);
+    const last = lastAgentTap.current, now = Date.now();
+    if (last && last.a === a && now - last.t < 380) {
+      lastAgentTap.current = null;
+      const next = steerRef.current === a ? null : a;
+      steerRef.current = next; setSteer(next);
+      return;
+    }
+    lastAgentTap.current = { a, t: now };
+    if (steerRef.current) return;
     if (a === "Oz" || !canClick()) return;
     const at = coords.current.sanctuary[a];
     setClickMark({ id: Date.now(), ...at });
