@@ -91,3 +91,7 @@
 - [x] Shelton walks in small from the far road with six escort rats (3 each side), growing with perspective, onto the rocky plateau
 - [x] Plateau walkable bounds for Shelton and rats during the fight
 - [x] Retreats/defeat exit back up the road instead of off the right edge
+
+## Controls everywhere + Brix punch
+- [x] Brix punches with his supplied 4-direction punch sheet (Space / ATTACK)
+- [x] Double-click a Zig to select + click ground to move: prologue scenes, Sanctuary, Underground Haven

@@ -1179,6 +1179,10 @@ function CommandCentre() {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const ozAway = useRef(false);
   const [clickMark, setClickMark] = useState<{ id: number; x: number; y: number } | null>(null);
+  // Double-click a Zig to steer them by hand; ground clicks then walk that Zig instead of Oz.
+  const [steer, setSteer] = useState<Agent | null>(null);
+  const steerRef = useRef<Agent | null>(null);
+  const lastAgentTap = useRef<{ a: Agent; t: number } | null>(null);
   const walkGraph = useMemo(() => {
     const z = ZONES.sanctuary, nodes: Point[] = [], edges: number[][] = [];
     const add = (p: Point) => { let i = nodes.findIndex(n => distance(n, p) < 1.2); if (i < 0) { i = nodes.length; nodes.push({ ...p }); edges.push([]); } return i; };
@@ -1317,6 +1321,17 @@ function CommandCentre() {
     if (!canClick()) return;
     const r = stageRef.current.getBoundingClientRect();
     const p = { x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100 };
+    const steered = steerRef.current;
+    if (steered) {
+      // Steered Zig walks the trails to the clicked spot; nobody else is pulled along.
+      setClickMark({ id: Date.now(), ...p });
+      const run = ++runId.current;
+      const pts = routeNodes(coords.current.sanctuary[steered], p);
+      if (pts.length && distance(pts.at(-1)!, p) < 5) pts.push(p);
+      setWalking(w => w.filter(a => a !== steered));
+      void walk(steered, pts.length ? pts : [p], "central", run).then(() => { if (run === runId.current) setClickMark(null); });
+      return;
+    }
     // Clicking the shack offers bedtime; anywhere else clears the offer.
     const atShack = distance(p, { x: 13, y: 53 }) < 8;
     setSleepPrompt(atShack);
@@ -1351,10 +1366,24 @@ function CommandCentre() {
   }
   function onAgentClick(a: Agent) {
     setSelected(a);
-    if (a === "Oz" || !canClick()) return;
-    const at = coords.current.sanctuary[a];
-    setClickMark({ id: Date.now(), ...at });
-    void ozTo(beside(a), true, run => a === "Moxi" ? moxiTap(run) : chatAt(run, visitLines(a)));
+    const last = lastAgentTap.current, now = Date.now();
+    if (last && last.a === a && now - last.t < 380) {
+      lastAgentTap.current = null;
+      const next = steerRef.current === a ? null : a;
+      steerRef.current = next; setSteer(next);
+      return;
+    }
+    const tap = { a, t: now };
+    lastAgentTap.current = tap;
+    if (steerRef.current) return;
+    if (a === "Oz") return;
+    // Wait out a possible second click so a double-click never also sends Oz on a visit.
+    setTimeout(() => {
+      if (lastAgentTap.current !== tap || steerRef.current || !canClick()) return;
+      const at = coords.current.sanctuary[a];
+      setClickMark({ id: Date.now(), ...at });
+      void ozTo(beside(a), true, run => a === "Moxi" ? moxiTap(run) : chatAt(run, visitLines(a)));
+    }, 380);
   }
   // Ambient crew moments in the outer zones — short scripted exchanges while idle, never during jobs or story scenes.
   useEffect(() => {
@@ -1594,9 +1623,10 @@ function CommandCentre() {
             {mp3Task && zoneId === "sanctuary" && (() => { const p = objectPoint(WORLD_OBJECTS.find(o => o.id === "sanc-workbench")!); return <div className={`world-object wo-brix mp3-task ${mp3Task === "fixed" ? "is-max" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }}><span className="wo-ring"/><span className="wo-label">MP3 PLAYER · {mp3Task === "fixed" ? "FIXED" : "BROKE"}</span></div>; })()}
             <div ref={taskIconRef} className="task-energy" aria-hidden="true"><span/></div>
              {crew.map(agent => <Button key={agent.name} ref={el => { markerRefs.current[agent.name] = el; }} style={markerStyle(agent.name)} type="button" variant="ghost" title={`View ${agent.name}`} aria-label={`View ${agent.name}, ${statuses[agent.name]}${walking.includes(agent.name) ? ", walking" : ""}`} onClick={() => onAgentClick(agent.name)} className={`agent-marker ${edgeCls(agent.name)} marker-${agent.name.toLowerCase()} at-${positions[agent.name]} facing-${facing[agent.name]} ${agent.name === "Oz" ? `oz-facing-${ozDirection}` : ""} ${agent.name === "Brix" ? `brix-facing-${brixDirection}` : ""} ${selected === agent.name ? "is-selected" : ""} ${inBed[agent.name] ? "is-hidden" : ""} ${agent.name === "Moxi" && curled ? "is-curling" : ""} ${agent.name === "Moxi" && moxiMood && !walking.includes("Moxi") ? `moxi-${moxiMood}` : ""} ${statuses[agent.name] !== "Idle" ? "is-active" : ""} ${walking.includes(agent.name) ? "is-walking" : ""} ${statuses[agent.name] === "Working" || statuses[agent.name] === "Thinking" && !walking.includes(agent.name) ? "is-thinking" : ""}`}>
-              <span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/>{agent.name === "Brix" && carrying && <img className="carried-tank" src={waterTankImg} alt="" aria-hidden="true"/>}</span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : agent.name === "Moxi" ? <img className="moxi-wordmark" src={moxiWordmark.url} alt="Moxi" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
+              {steer === agent.name && <span className="ctrl-ring" aria-hidden="true"/>}<span className="marker-status"><i className={`status-dot status-${statuses[agent.name].toLowerCase()}`}/>{statuses[agent.name]}</span>{bubble?.agent === agent.name && <span className="idle-bubble">{bubble.text}</span>}<span className="sprite-stage"><CharacterSprite character={agent.name}/>{agent.name === "Brix" && carrying && <img className="carried-tank" src={waterTankImg} alt="" aria-hidden="true"/>}</span><span className="marker-name">{agent.name === "Oz" ? <img className="oz-wordmark" src={ozWordmark.url} alt="Oz" draggable={false} /> : agent.name === "Brix" ? <img className="brix-wordmark" src={brixWordmark.url} alt="Brix" draggable={false} /> : agent.name === "Moxi" ? <img className="moxi-wordmark" src={moxiWordmark.url} alt="Moxi" draggable={false} /> : <img className="lowkey-wordmark" src={lowkeyWordmark.url} alt="Lowkey" draggable={false} />}</span>
             </Button>)}
             </div>
+            {steer && zone.id === "sanctuary" && <div className="combat-hint" aria-hidden="true">Steering {steer} · click ground to walk · double-click {steer} to let go</div>}
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>}
           <WelcomeGuide onAsk={text => { if (phase === "idle") { setDraft(text); void dispatchDirective(text); } }} />
