@@ -209,8 +209,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     };
     moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
     steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [{ x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) }]); };
-    attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); else if (steerRef.current) void strike(steerRef.current, heavy); };
-    resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? "Oz"] = 0; };
+    attack.current = (heavy: boolean) => { void strike(inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current, heavy); };
+    resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current] = 0; };
     // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
     const companionTick = () => {
       const on = inCombat(); setCombat(c => (c === on ? c : on));
@@ -617,13 +617,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>
       </Button>; })}
     </div>
-    {combat && <button type="button" className={`combat-attack ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${ctrl} — tap for quick, hold for heavy`}
+    <button type="button" className={`combat-attack ${combat ? "in-fight" : "is-idle"} ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${combat ? ctrl : steered ?? ctrl} — tap for quick, hold for heavy`}
       onPointerDown={e => { e.preventDefault(); e.stopPropagation(); holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); attack.current(false); }}
       onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); setCharging(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } }}
       onPointerCancel={() => { holdStart.current = 0; clearTimeout(chargeTimer.current); setCharging(false); }}
       onContextMenu={e => e.preventDefault()}>
-      <span>ATTACK</span><small>{ctrl}</small>
-    </button>}
+      <span>ATTACK</span><small>{combat ? ctrl : steered ?? ctrl}</small>
+    </button>
     {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
     {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · click ground to move · Space attacks where the mouse points (hold = heavy)</div>}
     <div className="map-coordinate bottom-left"><MapPin size={12}/> {scene.bottom}</div>
