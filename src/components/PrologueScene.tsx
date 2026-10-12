@@ -71,6 +71,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const steerMove = useRef<(a: Agent, p: Point) => void>(() => undefined);
   const moveCtrl = useRef<(p: Point) => void>(() => undefined);
   const attack = useRef<(heavy: boolean) => void>(() => undefined);
+  const resetAtk = useRef<() => void>(() => undefined);
   const lastMarkerTap = useRef<{ a: Agent; t: number } | null>(null);
   const [swing, setSwing] = useState<Partial<Record<Agent, string>>>({});
   const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
@@ -158,7 +159,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];
-    const flashSwing = (a: Agent, kind: string, ms: number) => { setSwing(w => ({ ...w, [a]: kind })); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms)); };
+    const flashSwing = (a: Agent, kind: string, ms: number) => { setSwing(w => ({ ...w, [a]: undefined })); requestAnimationFrame(() => alive && setSwing(w => ({ ...w, [a]: kind }))); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms + 30)); };
     const impact = (p: Point, kind: string) => { const id = performance.now() + Math.random(); setHits(h => [...h.slice(-6), { id, x: p.x, y: p.y, kind }]); timers.push(setTimeout(() => alive && setHits(h => h.filter(v => v.id !== id)), 450)); };
     const faceTo = (a: Agent, t: Point) => {
       const o = coords.current[a], dx = t.x - o.x, dy = t.y - o.y;
@@ -209,6 +210,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
     steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [{ x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) }]); };
     attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); else if (steerRef.current) void strike(steerRef.current, heavy); };
+    resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? "Oz"] = 0; };
     // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
     const companionTick = () => {
       const on = inCombat(); setCombat(c => (c === on ? c : on));
@@ -616,8 +618,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       </Button>; })}
     </div>
     {combat && <button type="button" className={`combat-attack ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${ctrl} — tap for quick, hold for heavy`}
-      onPointerDown={e => { e.preventDefault(); e.stopPropagation(); holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); }}
-      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); setCharging(false); const held = performance.now() - holdStart.current; holdStart.current = 0; attack.current(held >= HOLD_MS); }}
+      onPointerDown={e => { e.preventDefault(); e.stopPropagation(); holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); attack.current(false); }}
+      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); setCharging(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } }}
       onPointerCancel={() => { holdStart.current = 0; clearTimeout(chargeTimer.current); setCharging(false); }}
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{ctrl}</small>
