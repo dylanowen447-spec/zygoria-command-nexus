@@ -554,18 +554,22 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
 
   // Space: tap = quick attack, hold ~0.6s then release = heavy. Key auto-repeat is ignored.
   useEffect(() => {
-    if (!combat) return;
+    if (!combat && !steered) return;
     let down = 0, timer: ReturnType<typeof setTimeout> | undefined;
     const typing = (e: KeyboardEvent) => { const t = e.target as HTMLElement | null; return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable); };
     const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); };
     const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); setCharging(false); const held = performance.now() - down; down = 0; attack.current(held >= HOLD_MS); };
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
     return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); setCharging(false); };
-  }, [combat]);
+  }, [combat, steered]);
   const chargeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   return <>
-  <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties} onPointerDown={e => {
+  <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties} onPointerMove={e => {
+      if (e.pointerType !== "mouse" || !stageRef.current) return;
+      const r = stageRef.current.getBoundingClientRect();
+      aimRef.current = { x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 };
+    }} onPointerLeave={() => { aimRef.current = null; }} onPointerDown={e => {
       const tg = e.target as Element | null;
       const btn = tg && typeof tg.closest === "function" ? tg.closest("button") : null; if (btn && !btn.classList.contains("agent-marker")) return;
       if (!stageRef.current) return;
@@ -615,8 +619,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{ctrl}</small>
     </button>}
-    {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · tap ground to walk · double-tap {steered} to let go</div>}
-    {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · tap ground to move · Space / ATTACK (hold = heavy)</div>}
+    {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
+    {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · click ground to move · Space attacks where the mouse points (hold = heavy)</div>}
     <div className="map-coordinate bottom-left"><MapPin size={12}/> {scene.bottom}</div>
     {done && <div className="prologue-card" role="dialog" aria-label={scene.card.eyebrow}>
       <span className="prologue-card-eyebrow">{scene.card.eyebrow}</span>
