@@ -96,4 +96,4 @@
 - [x] Brix punches with his supplied 4-direction punch sheet (Space / ATTACK)
 - [x] Double-click a Zig to select + click ground to move: prologue scenes, Sanctuary, Underground Haven
 
-- [ ] Small ATTACK button always on screen on phones/touch (PC keeps Space bar)
+- [x] Small ATTACK button always on screen on phones/touch (PC keeps Space bar)
