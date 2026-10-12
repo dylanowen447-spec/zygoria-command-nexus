@@ -63,6 +63,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const [combat, setCombat] = useState(false);
   const [ctrl, setCtrl] = useState<Agent>("Oz");
   const ctrlRef = useRef<Agent>("Oz");
+  // Outside fights: a double-tapped Zig is steered by the player until double-tapped again.
+  const [steered, setSteered] = useState<Agent | null>(null);
+  const steerRef = useRef<Agent | null>(null);
+  const steerMove = useRef<(a: Agent, p: Point) => void>(() => undefined);
   const moveCtrl = useRef<(p: Point) => void>(() => undefined);
   const attack = useRef<(heavy: boolean) => void>(() => undefined);
   const lastMarkerTap = useRef<{ a: Agent; t: number } | null>(null);
@@ -185,6 +189,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
     };
     moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
+    steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [{ x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) }]); };
     attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); };
     // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
     const companionTick = () => {
@@ -237,6 +242,12 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       while (alive && !finished) {
         // Hold the wander while answering the Voice, then a quiet beat before carrying on.
         while (alive && (talking.has(a) || !floorFree())) await wait(200);
+        if (steerRef.current === a && !inCombat()) {
+          while (alive && steerRef.current === a && !inCombat()) await wait(300);
+          if (!alive) return;
+          at[a] = Object.keys(scene.spots).sort((x, y) => dist(scene.spots[x]!.at, coords.current[a]) - dist(scene.spots[y]!.at, coords.current[a]))[0]!;
+          continue;
+        }
         if (inCombat()) {
           // Fighting takes over; afterwards they carry on from the nearest trail point.
           while (alive && inCombat()) await wait(300);
@@ -545,18 +556,19 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       if (!stageRef.current) return;
       const r = stageRef.current!.getBoundingClientRect();
       const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
-      if (combat) {
-        // Double-tap a Zig to take control; a single tap on one never sends a move order.
-        if (btn) {
-          const a = ALL.find(z => markers.current[z] === btn);
-          const last = lastMarkerTap.current, now = performance.now();
-          if (a && last && last.a === a && now - last.t < 380) { ctrlRef.current = a; setCtrl(a); lastMarkerTap.current = null; }
-          else if (a) lastMarkerTap.current = { a, t: now };
-          return;
-        }
-        moveCtrl.current({ x, y });
+      // Double-tap a Zig: in fights it takes control; elsewhere it toggles steering. A single tap on one never moves anyone.
+      if (btn) {
+        const a = ALL.find(z => markers.current[z] === btn);
+        const last = lastMarkerTap.current, now = performance.now();
+        if (a && last && last.a === a && now - last.t < 380) {
+          lastMarkerTap.current = null;
+          ctrlRef.current = a; setCtrl(a);
+          if (!combat) { const next = steerRef.current === a ? null : a; steerRef.current = next; setSteered(next); }
+        } else if (a) lastMarkerTap.current = { a, t: now };
         return;
       }
+      if (combat) { moveCtrl.current({ x, y }); return; }
+      if (steerRef.current) { steerMove.current(steerRef.current, { x, y }); return; }
       // Straight, swift beam: only tiny crackle along the line.
       boltRef.current(coords.current.Oz, x, y);
       zap.current({ x, y }, !!ambushHit.current({ x, y }));
@@ -574,8 +586,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm}/>}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${combat && ctrl === a ? "is-controlled" : ""} ${swing[a] ?? ""}`}>
-        {combat && ctrl === a && <span className="ctrl-ring" aria-hidden="true"/>}
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${swing[a] ?? ""}`}>
+        {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>
@@ -588,6 +600,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{ctrl}</small>
     </button>}
+    {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · tap ground to walk · double-tap {steered} to let go</div>}
     {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · tap ground to move · Space / ATTACK (hold = heavy)</div>}
     <div className="map-coordinate bottom-left"><MapPin size={12}/> {scene.bottom}</div>
     {done && <div className="prologue-card" role="dialog" aria-label={scene.card.eyebrow}>
