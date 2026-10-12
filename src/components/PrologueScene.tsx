@@ -71,6 +71,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
   const steerMove = useRef<(a: Agent, p: Point) => void>(() => undefined);
   const moveCtrl = useRef<(p: Point) => void>(() => undefined);
   const attack = useRef<(heavy: boolean) => void>(() => undefined);
+  const resetAtk = useRef<() => void>(() => undefined);
   const lastMarkerTap = useRef<{ a: Agent; t: number } | null>(null);
   const [swing, setSwing] = useState<Partial<Record<Agent, string>>>({});
   const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
@@ -209,6 +210,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
     steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [{ x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) }]); };
     attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); else if (steerRef.current) void strike(steerRef.current, heavy); };
+    resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? "Oz"] = 0; };
     // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
     const companionTick = () => {
       const on = inCombat(); setCombat(c => (c === on ? c : on));
