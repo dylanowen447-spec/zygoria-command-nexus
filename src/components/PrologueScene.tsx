@@ -158,7 +158,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];
-    const flashSwing = (a: Agent, kind: string, ms: number) => { setSwing(w => ({ ...w, [a]: kind })); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms)); };
+    const flashSwing = (a: Agent, kind: string, ms: number) => { setSwing(w => ({ ...w, [a]: undefined })); requestAnimationFrame(() => alive && setSwing(w => ({ ...w, [a]: kind }))); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms + 30)); };
     const impact = (p: Point, kind: string) => { const id = performance.now() + Math.random(); setHits(h => [...h.slice(-6), { id, x: p.x, y: p.y, kind }]); timers.push(setTimeout(() => alive && setHits(h => h.filter(v => v.id !== id)), 450)); };
     const faceTo = (a: Agent, t: Point) => {
       const o = coords.current[a], dx = t.x - o.x, dy = t.y - o.y;
