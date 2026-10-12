@@ -86,3 +86,8 @@
 ## Current
 - [x] Old City rats always spawn when the scene is played
 - [x] Game always opens at Three Eggs
+
+## Shelton's Long Walk entrance
+- [x] Shelton walks in small from the far road with six escort rats (3 each side), growing with perspective, onto the rocky plateau
+- [x] Plateau walkable bounds for Shelton and rats during the fight
+- [x] Retreats/defeat exit back up the road instead of off the right edge
