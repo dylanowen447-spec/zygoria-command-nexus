@@ -746,6 +746,9 @@
 @keyframes brixPunch{0%{background-position-x:60%}90%{background-position-x:60%}100%{background-position-x:20%}}
 @keyframes brixPunchHeavy{0%{background-position-x:20%}20%{background-position-x:40%}30%{background-position-x:60%}80%{background-position-x:60%}100%{background-position-x:20%}}
 .combat-hit.is-brix,.combat-hit.is-brix-heavy{background:radial-gradient(circle,oklch(0.98 0.06 80 / .95),oklch(0.72 0.19 45 / .65) 40%,transparent 70%)}
+/* Front/back punch rows hide the fist behind his body, so punches and guard always use the side-on rows (arm fully visible). */
+.agent-marker.marker-brix.atk-punch.facing-left .sheet-punch,.agent-marker.marker-brix.in-guard.facing-left .sheet-punch{background-position-y:33.3333%}
+.agent-marker.marker-brix.atk-punch.facing-right .sheet-punch,.agent-marker.marker-brix.in-guard.facing-right .sheet-punch{background-position-y:66.6667%}
 /* Haven: steerable Zigs glide along the cave floor with their walk cycle running. */
 .haven-zig{pointer-events:auto;cursor:pointer;transition-property:left,bottom;transition-timing-function:linear;z-index:5}
 .haven-zig .ctrl-ring{bottom:-4px;width:40px;height:10px}
