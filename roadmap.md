@@ -97,3 +97,4 @@
 - [x] Double-click a Zig to select + click ground to move: prologue scenes, Sanctuary, Underground Haven
 
 - [x] Small ATTACK button always on screen on phones/touch (PC keeps Space bar)
+- [x] Brix quick punch holds full-extension fist ~0.4s

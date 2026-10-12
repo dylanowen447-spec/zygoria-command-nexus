@@ -729,7 +729,7 @@
 /* Brix's punch sheet: 6 frames × 4 rows (front, left, right, back); cells are wider than his walk cells so the fist fits. */
 .sheet-punch{position:absolute;left:50%;bottom:0;width:178.2%;height:100%;transform:translateX(-50%);background-size:600% 400%;background-repeat:no-repeat;background-position:0 0;visibility:hidden;pointer-events:none}
 .marker-brix.atk-punch .sheet-frames{visibility:hidden}
-.marker-brix.atk-punch .sheet-punch{visibility:visible;background-position-x:60%;animation:brixPunch .38s steps(1,end) forwards}
+.marker-brix.atk-punch .sheet-punch{visibility:visible;background-position-x:60%;animation:brixPunch .46s steps(1,end) forwards}
 /* Fists up while a fight is on and he's standing still. */
 .marker-brix.in-guard:not(.is-walking) .sheet-frames{visibility:hidden}
 .marker-brix.in-guard:not(.is-walking) .sheet-punch{visibility:visible}
@@ -743,7 +743,7 @@
 .marker-brix.atk-punch.brix-facing-up .sheet-punch{background-position-y:100%}
 .world-image-wrap .marker-brix.atk-punch .sprite-stage{scale:1 1}
 .marker-brix.atk-punch.is-heavy .sprite-stage{filter:drop-shadow(0 0 6px oklch(0.85 0.17 80))}
-@keyframes brixPunch{0%{background-position-x:60%}85%{background-position-x:60%}100%{background-position-x:20%}}
+@keyframes brixPunch{0%{background-position-x:60%}90%{background-position-x:60%}100%{background-position-x:20%}}
 @keyframes brixPunchHeavy{0%{background-position-x:20%}20%{background-position-x:40%}30%{background-position-x:60%}80%{background-position-x:60%}100%{background-position-x:20%}}
 .combat-hit.is-brix,.combat-hit.is-brix-heavy{background:radial-gradient(circle,oklch(0.98 0.06 80 / .95),oklch(0.72 0.19 45 / .65) 40%,transparent 70%)}
 /* Haven: steerable Zigs glide along the cave floor with their walk cycle running. */
