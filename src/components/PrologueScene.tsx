@@ -183,7 +183,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       let t = nearestTo(aimP ?? me);
       if (aimP && (!t || cdist(t, aimP) > 10)) {
         lastAtk[a] = now; faceTo(a, aimP);
-        flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 260) : heavy ? 420 : 240);
+        flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
         if (a === "Oz") {
           const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Oz / d);
@@ -194,13 +194,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         return;
       }
       // Nothing to hit: still throw the move straight ahead so every tap shows a punch/swing.
-      if (!t) { lastAtk[a] = now; flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? (heavy ? 620 : 260) : 260); return; }
+      if (!t) { lastAtk[a] = now; flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? (heavy ? 620 : 460) : 260); return; }
       lastAtk[a] = now; faceTo(a, t);
       const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
-      if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 260 : 260); return; }
+      if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 460 : 260); return; }
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
-      flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 260) : heavy ? 420 : 240);
+      flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
       if (a === "Oz") boltRef.current(coords.current.Oz, t.x, t.y - 4, heavy);
       const landed = !!ambushHit.current(aim(t));
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
