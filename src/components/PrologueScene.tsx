@@ -143,6 +143,72 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       frames.push(requestAnimationFrame(step));
     });
 
+    // ---- Direct combat ----
+    let lastEnemy = 0;
+    const inCombat = () => { if (enemies.current.targets().length) lastEnemy = performance.now(); return lastEnemy > 0 && performance.now() - lastEnemy < 3500; };
+    const clampB = (p: Point): Point => { const b = enemies.current.bounds(); return { x: Math.min(b.x1, Math.max(b.x0, p.x)), y: Math.min(b.y1, Math.max(b.y0, p.y)) }; };
+    const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
+    const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
+    const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];
+    const flashSwing = (a: Agent, kind: string, ms: number) => { setSwing(w => ({ ...w, [a]: kind })); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms)); };
+    const impact = (p: Point, kind: string) => { const id = performance.now() + Math.random(); setHits(h => [...h.slice(-6), { id, x: p.x, y: p.y, kind }]); timers.push(setTimeout(() => alive && setHits(h => h.filter(v => v.id !== id)), 450)); };
+    const faceTo = (a: Agent, t: Point) => {
+      const o = coords.current[a], dx = t.x - o.x, dy = t.y - o.y;
+      setFacing(f => ({ ...f, [a]: dx < 0 ? "left" : "right" }));
+      const d = Math.abs(dy) > Math.abs(dx) * 0.7 ? (dy < 0 ? "up" : "down") : (dx < 0 ? "left" : "right");
+      if (a === "Oz") setOzDir(d); else if (a === "Brix") setBrixDir(d);
+    };
+    const dash = (a: Agent, to: Point) => new Promise<void>(res => {
+      tokens[a] = (tokens[a] ?? 0) + 1; setWalking(w => w.filter(x => x !== a));
+      const from = { ...coords.current[a] }, t0 = performance.now();
+      const f = () => { if (!alive) return res(); const k = Math.min(1, (performance.now() - t0) / 170); coords.current[a] = { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k }; paint(a); if (k < 1) frames.push(requestAnimationFrame(f)); else res(); };
+      frames.push(requestAnimationFrame(f));
+    });
+    /** One attack in the Zig's own style. Enemy damage goes through the ambush's existing hit logic, unchanged. */
+    const strike = async (a: Agent, heavy: boolean, auto = false) => {
+      const now = performance.now();
+      if (now - lastAtk[a] < (heavy ? 650 : 260)) return;
+      const me = coords.current[a], t = nearestTo(me);
+      if (!t) return;
+      lastAtk[a] = now; faceTo(a, t);
+      const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
+      if (cdist(me, t) > reach) { flashSwing(a, "atk-whiff", 260); return; }
+      const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
+      if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
+      flashSwing(a, heavy ? "atk-heavy" : "atk-quick", heavy ? 420 : 240);
+      if (a === "Oz") boltRef.current(coords.current.Oz, t.x, t.y - 4, heavy);
+      const landed = !!ambushHit.current(aim(t));
+      impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
+      if (a === "Oz" && !auto) zap.current(aim(t), landed);
+      // Heavy blows land a second impact a beat later (Shelton's own hit timing still applies).
+      if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
+    };
+    moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
+    attack.current = (heavy: boolean) => { if (inCombat()) void strike(ctrlRef.current, heavy); };
+    // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
+    const companionTick = () => {
+      const on = inCombat(); setCombat(c => (c === on ? c : on));
+      if (!on) return;
+      const ts = enemies.current.targets(); if (!ts.length) return;
+      const taken: Point[] = [];
+      const ctl = ctrlRef.current; const ctlT = nearestTo(coords.current[ctl]); if (ctlT) taken.push(ctlT);
+      ALL.filter(z => z !== ctl).forEach((z, i) => {
+        const me = coords.current[z];
+        const sorted = ts.slice().sort((u, v) => cdist(u, me) - cdist(v, me));
+        const t = sorted.find(u => !taken.some(k => k === u)) ?? sorted[0]!;
+        taken.push(t);
+        const now = performance.now();
+        if (cdist(me, t) <= REACH[z] * 0.9) { if (now > aiNext[z]) { aiNext[z] = now + 1300 + Math.random() * 900; void strike(z, false, true); } return; }
+        // Move to a stand-off spot: Oz keeps distance, the brawlers flank from opposite sides.
+        const side = i === 0 ? -1 : 1;
+        let goal = z === "Oz" ? { x: t.x + (me.x < t.x ? -18 : 18), y: t.y + side * 3 } : { x: t.x + side * 5, y: t.y + 1 };
+        for (const o of ALL) if (o !== z && cdist(coords.current[o], goal) < 6) goal = { x: goal.x + (goal.x < coords.current[o].x ? -5 : 5), y: goal.y + 2 };
+        void walk(z, [clampB(goal)]);
+      });
+    };
+    const combatTimer = setInterval(() => alive && companionTick(), 450);
+    timers.push(combatTimer as unknown as ReturnType<typeof setTimeout>);
+
     const objectiveSpots = new Set(scene.objectives.map(o => o.spot));
     const at: Record<Agent, string> = { Oz: scene.spawn.Oz.out, Brix: scene.spawn.Brix.out, Lowkey: scene.spawn.Lowkey.out };
     const heading: Partial<Record<Agent, string>> = {};
@@ -170,6 +236,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       while (alive && !finished) {
         // Hold the wander while answering the Voice, then a quiet beat before carrying on.
         while (alive && (talking.has(a) || !floorFree())) await wait(200);
+        if (inCombat()) {
+          // Fighting takes over; afterwards they carry on from the nearest trail point.
+          while (alive && inCombat()) await wait(300);
+          if (!alive) return;
+          at[a] = Object.keys(scene.spots).sort((x, y) => dist(scene.spots[x]!.at, coords.current[a]) - dist(scene.spots[y]!.at, coords.current[a]))[0]!;
+          await walk(a, [scene.spots[at[a]]!.at]);
+          continue;
+        }
         const elapsed = performance.now() - start;
         if (!unlockedAt && (ALL.every(z => seen[z].size >= scene.unlock.seen) && elapsed > scene.unlock.ms || elapsed > scene.unlock.maxMs)) {
           unlockedAt = performance.now();
@@ -448,7 +522,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       for (const [who, text] of scene.opening) { say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP); }
       ALL.forEach(a => void explore(a));
     })();
-    return () => { alive = false; timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
+    return () => { alive = false; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, [scene]);
 
   return <>
@@ -458,14 +532,20 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       if (!stageRef.current) return;
       const r = stageRef.current!.getBoundingClientRect();
       const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
-      const o = coords.current.Oz, sx = o.x, sy = o.y - 5;
+      if (combat) {
+        // Double-tap a Zig to take control; a single tap on one never sends a move order.
+        if (btn) {
+          const a = ALL.find(z => markers.current[z] === btn);
+          const last = lastMarkerTap.current, now = performance.now();
+          if (a && last && last.a === a && now - last.t < 380) { ctrlRef.current = a; setCtrl(a); lastMarkerTap.current = null; }
+          else if (a) lastMarkerTap.current = { a, t: now };
+          return;
+        }
+        moveCtrl.current({ x, y });
+        return;
+      }
       // Straight, swift beam: only tiny crackle along the line.
-      const pts: string[] = [`${sx},${sy}`];
-      for (let i = 1; i < 4; i++) { const t = i / 4; pts.push(`${sx + (x - sx) * t + (Math.random() - 0.5) * 0.8},${sy + (y - sy) * t + (Math.random() - 0.5) * 0.8}`); }
-      pts.push(`${x},${y}`);
-      const id = performance.now() + Math.random();
-      setBolts(b => [...b.slice(-5), { id, d: "M" + pts.join(" L"), x, y }]); setJolt(id);
-      setTimeout(() => setBolts(b => b.filter(v => v.id !== id)), 500);
+      boltRef.current(coords.current.Oz, x, y);
       zap.current({ x, y }, !!ambushHit.current({ x, y }));
     }}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
