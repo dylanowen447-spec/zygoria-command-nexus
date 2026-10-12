@@ -22,7 +22,9 @@ const topLine = () => (typeof window !== "undefined" && window.innerWidth <= 600
 const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
 const cdist = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
 /** Attack reach in artwork %: Oz zaps from range, Brix and Lowkey must get close (Lowkey's heavy dash closes a gap). */
-const REACH: Record<Agent, number> = { Oz: 42, Brix: 9, Lowkey: 9 };
+const REACH: Record<Agent, number> = { Oz: 42, Brix: 14, Lowkey: 9 };
+/** Brix throws a real punch from his punch sheet; the others keep their swing nudge. */
+const swingKind = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? "atk-punch is-heavy" : "atk-punch") : heavy ? "atk-heavy" : "atk-quick";
 const HOLD_MS = 600;
 
 type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void };
@@ -180,7 +182,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       let t = nearestTo(aimP ?? me);
       if (aimP && (!t || cdist(t, aimP) > 10)) {
         lastAtk[a] = now; faceTo(a, aimP);
-        flashSwing(a, heavy ? "atk-heavy" : "atk-quick", heavy ? 420 : 240);
+        flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 440) : heavy ? 420 : 240);
+        if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
         if (a === "Oz") {
           const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Oz / d);
           const end = { x: me.x + (aimP.x - me.x) * k, y: me.y + (aimP.y - me.y) * k };
@@ -192,10 +195,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       if (!t) return;
       lastAtk[a] = now; faceTo(a, t);
       const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
-      if (cdist(me, t) > reach) { flashSwing(a, "atk-whiff", 260); return; }
+      if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 440 : 260); return; }
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
-      flashSwing(a, heavy ? "atk-heavy" : "atk-quick", heavy ? 420 : 240);
+      flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 440) : heavy ? 420 : 240);
       if (a === "Oz") boltRef.current(coords.current.Oz, t.x, t.y - 4, heavy);
       const landed = !!ambushHit.current(aim(t));
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
