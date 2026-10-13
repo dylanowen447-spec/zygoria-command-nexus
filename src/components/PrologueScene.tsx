@@ -28,10 +28,10 @@ const REACH: Record<Agent, number> = { Oz: 42, Brix: 14, Lowkey: 9 };
 const swingKind = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? "atk-punch is-heavy" : "atk-punch") : heavy ? "atk-heavy" : "atk-quick";
 const HOLD_MS = 600;
 
-type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void };
+type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void; canSkip?: boolean };
 
 /** One prologue area: the Zigs explore its walkable graph on their own and only notice objectives after looking around. */
-export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) {
+export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip = false }: Props) {
   const handler = useRef<(text: string) => void>(() => undefined);
   useEffect(() => { if (command) handler.current(command.text); }, [command]);
   const coords = useRef<Record<Agent, Point>>(Object.fromEntries(ALL.map(a => [a, { ...scene.spawn[a].from }])) as Record<Agent, Point>);
@@ -668,6 +668,6 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     </div>}
   </div>
   {/* Skip control lives outside the game screen so mobile can place it below the map. */}
-  <button type="button" className="prologue-skip" onClick={onSkip}>Skip to the Sanctuary ›</button>
+  {canSkip && <button type="button" className="prologue-skip" onClick={onSkip}>Skip to the Sanctuary ›</button>}
   </>;
 }
