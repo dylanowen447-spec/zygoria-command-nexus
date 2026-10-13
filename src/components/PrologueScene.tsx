@@ -184,19 +184,21 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       // Player attacks aim at the mouse: lock onto an enemy near the cursor, otherwise strike toward it.
       const aimP = auto ? null : aimRef.current;
       let t = nearestTo(aimP ?? me);
-      // Oz: if the aim misses but an enemy is within zap range, zap that enemy instead.
-      if (a === "Oz" && aimP && (!t || cdist(t, aimP) > 10)) { const n = nearestTo(me); if (n && cdist(n, me) <= REACH.Oz) t = n; }
-      // Oz: nothing in range — still throw a bolt to a random nearby spot so every tap zaps.
-      if (a === "Oz" && (!t || cdist(me, t) > REACH.Oz) && !(aimP && t && cdist(t, aimP) <= 10)) {
+      // Oz: wild randomized sparks — never lock on. Scatter a bolt around the aim point;
+      // it only damages an enemy if a random spark happens to land on one.
+      if (a === "Oz") {
         lastAtk[a] = now;
         const dir = me.x > 50 ? -1 : 1;
         const base = aimP ?? { x: me.x + dir * REACH.Oz * 0.6, y: me.y };
-        const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * 0.6 / d);
-        const end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * 4, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * 4 };
+        const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * (0.5 + Math.random() * 0.4) / d);
+        const spread = heavy ? 3 : 6;
+        const end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * spread * 2, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * spread * 2 };
         faceTo(a, end);
         flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
         boltRef.current(coords.current.Oz, end.x, end.y, heavy);
-        const landed = !!ambushHit.current(end); impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
+        const landed = !!ambushHit.current(end);
+        impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
+        if (!auto) zap.current(end, landed);
         return;
       }
       if (a !== "Oz" && aimP && (!t || cdist(t, aimP) > 10)) {
