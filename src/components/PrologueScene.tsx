@@ -174,9 +174,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const foes = enemies.current.targets();
       for (const a of ALL) for (const f of foes) { const s = sep(coords.current[a], f, R_FOE); if (s) add(a, s.x * 1.5, s.y * 1.5); }
       for (const a of ALL) { const v = push[a]; if (!v) continue; const p = coords.current[a]; coords.current[a] = { x: Math.min(97, Math.max(3, p.x + v.x)), y: Math.min(97, Math.max(8, p.y + v.y)) }; paint(a); }
-      frames.push(requestAnimationFrame(separate));
+      requestAnimationFrame(separate);
     };
-    frames.push(requestAnimationFrame(separate));
+    requestAnimationFrame(separate);
     const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];
