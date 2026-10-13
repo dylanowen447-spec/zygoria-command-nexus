@@ -787,3 +787,13 @@
 @keyframes ratBurst{0%{scale:.3;opacity:1}100%{scale:1.5;opacity:0}}
 .rat-zap-arcs{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);pointer-events:none;border-radius:50%;border:2px dashed var(--electric);box-shadow:0 0 12px var(--electric),inset 0 0 8px var(--electric);animation:ratArcs .5s linear forwards}
 @keyframes ratArcs{0%{rotate:0deg;opacity:1;scale:.8}50%{rotate:140deg;opacity:.9;scale:1.1}100%{rotate:300deg;opacity:0;scale:.9}}
+/* Haven: every Zig and human stands on one flat floor line; tidy small bubbles */
+.haven-layer .haven-zig{bottom:20%!important;width:28px;height:48px;margin:0!important;translate:none!important}
+.haven-layer .haven-zig .sprite-stage{position:absolute!important;left:50%!important;bottom:0!important;top:auto!important;transform:translateX(-50%)!important;width:28px!important;height:44px!important;margin:0!important;scale:1!important}
+.haven-layer .haven-zig.marker-brix .sprite-stage{width:34px!important;height:50px!important}
+.haven-layer .haven-zig.marker-oz .sprite-stage{width:26px!important;height:40px!important}
+.haven-layer .haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{transform:translateX(-50%) scaleX(-1)!important}
+.haven-layer .haven-zig .sprite-stage>*{position:absolute;inset:0;width:100%!important;height:100%!important;margin:0!important;transform:none!important}
+.haven-layer .haven-zig .sprite-stage:after{display:none}
+.haven-bubble{max-width:min(130px,40vw);font-size:9px;line-height:1.25;padding:3px 6px;border-radius:8px;top:auto;bottom:calc(20% + 62px)}
+.haven-bubble b{font-size:7px}
