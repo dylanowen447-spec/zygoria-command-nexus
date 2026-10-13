@@ -31,7 +31,7 @@ import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
 import { PrologueScene } from "@/components/PrologueScene";
-import { PROLOGUE_KEY, PROLOGUE_SCENES } from "@/lib/prologue";
+import { PROLOGUE_KEY, PROLOGUE_SCENES, CLEARED_KEY, EDITOR_KEY, RETURN_OPENINGS } from "@/lib/prologue";
 import { HavenScene } from "@/components/HavenScene";
 import shackDefinition from "@/assets/sanctuary-shack-definition.png";
 import { WORLD_OBJECTS, WORLD_KEY, EMPTY_WORLD, applyAction, chooseVerb, objectFor, objectPoint, type WorldChange, type WorldState } from "@/lib/world-state";
@@ -215,7 +215,29 @@ function CommandCentre() {
   const [prologue, setPrologue] = useState<"off" | "on" | "walk">("off");
   const [prologueStep, setPrologueStep] = useState(0);
   const [prologueCmd, setPrologueCmd] = useState<{ id: number; text: string } | null>(null);
-  const scene = PROLOGUE_SCENES[prologueStep]!;
+  const [cleared, setCleared] = useState<string[]>([]);
+  const clearedRef = useRef<string[]>([]);
+  const [editor, setEditor] = useState(false);
+  const logoTaps = useRef<number[]>([]);
+  useEffect(() => {
+    try { const c = JSON.parse(localStorage.getItem(CLEARED_KEY) ?? "[]"); if (Array.isArray(c)) { clearedRef.current = c; setCleared(c); } } catch { /* optional */ }
+    try { setEditor(localStorage.getItem(EDITOR_KEY) === "1"); } catch { /* optional */ }
+  }, []);
+  function markCleared(id: string) {
+    if (clearedRef.current.includes(id)) return;
+    const next = [...clearedRef.current, id]; clearedRef.current = next; setCleared(next);
+    try { localStorage.setItem(CLEARED_KEY, JSON.stringify(next)); } catch { /* optional */ }
+  }
+  /** Secret creator switch: triple-tap the Z logo. */
+  function tapLogo() {
+    const now = Date.now();
+    logoTaps.current = [...logoTaps.current.filter(t => now - t < 900), now];
+    if (logoTaps.current.length < 3) return;
+    logoTaps.current = [];
+    setEditor(on => { const v = !on; try { localStorage.setItem(EDITOR_KEY, v ? "1" : "0"); } catch { /* optional */ } return v; });
+  }
+  const baseScene = PROLOGUE_SCENES[prologueStep]!;
+  const scene = cleared.includes(baseScene.id) && RETURN_OPENINGS[baseScene.id] ? { ...baseScene, opening: RETURN_OPENINGS[baseScene.id]! } : baseScene;
   useEffect(() => {
     
     // Every visit opens at Three Eggs; the skip button still jumps to the Sanctuary.
@@ -225,6 +247,7 @@ function CommandCentre() {
   }, []);
   /** Strict order: Landing → Old City → Library → Long Walk (Chapter 03) → Sanctuary. */
   function nextPrologue() {
+    markCleared(PROLOGUE_SCENES[prologueStep]!.id);
     if (prologueStep + 1 < PROLOGUE_SCENES.length) {
       setPrologueStep(prologueStep + 1);
       try { localStorage.setItem("zygoria-prologue-step", String(prologueStep + 1)); } catch { /* optional */ }
@@ -245,6 +268,7 @@ function CommandCentre() {
   }
   const finishBuild = useCallback(() => { setBuilding(false); endPrologue(); }, []);
   function endPrologue() {
+    markCleared("sanctuary");
     try { localStorage.setItem(PROLOGUE_KEY, "done"); } catch { /* optional */ }
     setPrologue("off");
   }
@@ -1585,15 +1609,15 @@ function CommandCentre() {
   const crew = moxiJoined ? [...agents, MOXI_AGENT] : agents;
   return <div className="command-app"><StartCover/>
     <header className="command-header">
-      <div className="brand-lockup"><div className="brand-mark"><Hexagon size={25} strokeWidth={1.5}/><span>Z</span></div><div className="brand-copy"><div className="brand-title">ZYGORIA<span className="brand-tm">™</span></div><div className="brand-subtitle"><span className="brand-subtitle-rule"/>FIRST GENESIS<span className="brand-subtitle-rule"/></div></div></div>
+      <div className="brand-lockup"><div className="brand-mark" onClick={tapLogo}><Hexagon size={25} strokeWidth={1.5}/><span>Z</span></div><div className="brand-copy"><div className="brand-title">ZYGORIA<span className="brand-tm">™</span></div><div className="brand-subtitle"><span className="brand-subtitle-rule"/>FIRST GENESIS<span className="brand-subtitle-rule"/></div></div></div>
       <div className="header-right"><ShackRadio trigger={radioKick}/><div className="live-indicator"><span className="live-dot"/> WORLD ONLINE</div><div className="header-divider"/><div className="header-coordinate"><Signal size={14}/> 47° N / 09° E</div><div className="header-avatar">Z</div></div>
     </header>
     <main className="command-layout">
       <div className="world-column">
         <div className="section-heading"><div><div className="eyebrow"><span className="eyebrow-line"/> {prologue === "off" ? "LIVE WORLD FEED" : "FIRST GENESIS"} <span className="eyebrow-line"/></div>{prologue === "walk" ? <><h1>The Long <span>Walk</span></h1><p>Dead roads. Broken hills. No water yet.</p></> : prologue === "on" ? <><h1>{scene.title[0]}<span>{scene.title[1]}</span></h1><p>{scene.sub}</p></> : <><h1>{zone.title[0]}<span>{zone.title[1]}</span></h1><p>{zone.sub}</p></>}</div><div className="world-index"><CircleDot size={14}/> {prologue === "on" ? <>{scene.chapter}</> : prologue === "walk" ? <>THE LONG WALK</> : zoneId === "sanctuary" ? <>{sancChapter[0]}</> : <>{zone.indexA} <span> / </span> {zone.indexB}</>}</div></div>
-        <div className="zone-selector" role="group" aria-label="Zygoria zones"><span className="scene-jump"><button type="button" className="zone-chip scene-jump-btn" aria-expanded={scenesOpen} onClick={() => setScenesOpen(o => !o)}><span className="zone-dot"/>SCENES ▾</button>{scenesOpen && <span className="scene-jump-menu" role="menu">{[...PROLOGUE_SCENES.map(s => s.title.join(" ").trim()), "Riverside Sanctuary", "Underground Haven"].map((label, i) => { const here = i === PROLOGUE_SCENES.length + 1 ? haven : i < PROLOGUE_SCENES.length ? prologue === "on" && prologueStep === i : !haven && prologue === "off" && zoneId === "sanctuary"; return <button key={i} type="button" role="menuitem" className={here ? "is-active" : ""} onClick={() => jumpScene(i)}>{label}</button>; })}</span>}</span>{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : zoneId === "sanctuary" ? sancChapter[0] : canon.stage}</span><span className={`hunger-meter ${hunger <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew hunger" aria-valuenow={hunger} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">FOOD</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${hunger}%` }}/></span><span className="hunger-num">{hunger}%</span></span><span className={`hunger-meter water-meter ${water <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew water" aria-valuenow={water} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">WATER</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${water}%` }}/></span><span className="hunger-num">{water}%</span></span><span className={`hunger-meter rest-meter ${rest <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew rest" aria-valuenow={rest} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">REST</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${rest}%` }}/></span><span className="hunger-num">{rest}%</span></span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
+        <div className="zone-selector" role="group" aria-label="Zygoria zones">{(editor || cleared.length > 0) && <span className="scene-jump"><button type="button" className={`zone-chip scene-jump-btn ${editor ? "is-editor" : ""}`} aria-expanded={scenesOpen} onClick={() => setScenesOpen(o => !o)}><span className="zone-dot"/>{editor ? "DEV · SCENES ▾" : "VISITED ▾"}</button>{scenesOpen && <span className="scene-jump-menu" role="menu">{[...PROLOGUE_SCENES.map(s => s.title.join(" ").trim()), "Riverside Sanctuary", "Underground Haven"].map((label, i) => { const sid = i < PROLOGUE_SCENES.length ? PROLOGUE_SCENES[i]!.id : i === PROLOGUE_SCENES.length ? "sanctuary" : "haven"; if (!editor && !cleared.includes(sid)) return null; const here = i === PROLOGUE_SCENES.length + 1 ? haven : i < PROLOGUE_SCENES.length ? prologue === "on" && prologueStep === i : !haven && prologue === "off" && zoneId === "sanctuary"; return <button key={i} type="button" role="menuitem" className={here ? "is-active" : ""} onClick={() => jumpScene(i)}>{label}</button>; })}</span>}</span>}{prologue === "off" && <button type="button" className="zone-chip" disabled={phase !== "idle"} onClick={() => { setPrologueStep(0); setPrologue("on"); }}><span className="zone-dot"/>PROLOGUE</button>}<span className="stage-chip">{prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : zoneId === "sanctuary" ? sancChapter[0] : canon.stage}</span><span className={`hunger-meter ${hunger <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew hunger" aria-valuenow={hunger} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">FOOD</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${hunger}%` }}/></span><span className="hunger-num">{hunger}%</span></span><span className={`hunger-meter water-meter ${water <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew water" aria-valuenow={water} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">WATER</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${water}%` }}/></span><span className="hunger-num">{water}%</span></span><span className={`hunger-meter rest-meter ${rest <= 20 ? "is-low" : ""}`} role="meter" aria-label="Crew rest" aria-valuenow={rest} aria-valuemin={0} aria-valuemax={100}><span className="hunger-label">REST</span><span className="hunger-track"><span className="hunger-fill" style={{ width: `${rest}%` }}/></span><span className="hunger-num">{rest}%</span></span>{prologue === "off" && ZONE_LIST.filter(z => canon.unlockedZones.includes(z.id) && !lockedZones(story).includes(z.id)).map(z => <button key={z.id} type="button" className={`zone-chip ${z.id === zoneId ? "is-active" : ""}`} disabled={phase !== "idle"} onClick={() => selectZone(z.id)}><span className="zone-dot"/>{z.chip}</button>)}</div>
         <div className="world-frame">
-          {haven ? <HavenScene/> : prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="The Long Walk"><span className="prologue-card-eyebrow">THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river ›</button></div></div> : <div onClick={onWorldClick} className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""} ${zone.id === "sanctuary" ? "is-clickable" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />{zone.id === "sanctuary" && <DayNight/>}
+          {haven ? <HavenScene/> : prologue === "on" && building ? <BuildInterlude onDone={finishBuild}/> : prologue === "on" ? <PrologueScene key={scene.id} scene={scene} command={prologueCmd} onLog={log} onNext={nextPrologue} onSkip={endPrologue} canSkip={editor || cleared.includes("sanctuary")}/> : prologue === "walk" ? <div className="world-image-wrap prologue-scene long-walk"><img className="world-image" src={CHRONICLES[2]!.img} alt="The Long Walk: the Zigs cross dead roads and broken hills" /><div className="world-vignette"/><div className="map-coordinate top-right">THE LONG WALK</div><div className="prologue-card" role="dialog" aria-label="The Long Walk"><span className="prologue-card-eyebrow">THE LONG WALK</span><strong>Searching for water</strong><p>{CHRONICLES[2]!.text}</p><button type="button" onClick={endPrologue}>Arrive at the river ›</button></div></div> : <div onClick={onWorldClick} className={`world-image-wrap ${scannerEvent ? "scanner-event" : ""} ${zone.id === "sanctuary" ? "is-clickable" : ""}`} style={{ "--zone-aspect": String(zone.aspect) } as CSSProperties}><img key={zoneId} className="world-image" src={zone.img} width={1520} height={1024} loading={zone.id === "sanctuary" ? undefined : "lazy"} alt={zone.alt} />{zone.id === "sanctuary" && <DayNight/>}
             {zone.id === "sanctuary" && <img className="shack-definition" src={shackDefinition} alt="" aria-hidden="true" draggable={false} />}
             <div className="world-vignette"/>
             <div className="map-coordinate top-left">◉ &nbsp; {zone.label}</div>
