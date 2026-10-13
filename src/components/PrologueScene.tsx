@@ -184,22 +184,29 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       // Player attacks aim at the mouse: lock onto an enemy near the cursor, otherwise strike toward it.
       const aimP = auto ? null : aimRef.current;
       let t = nearestTo(aimP ?? me);
-      // Oz: if the aim misses but an enemy is within zap range, zap that enemy instead.
-      if (a === "Oz" && aimP && (!t || cdist(t, aimP) > 10)) { const n = nearestTo(me); if (n && cdist(n, me) <= REACH.Oz) t = n; }
-      // Oz: nothing in range — still throw a bolt to a random nearby spot so every tap zaps.
-      if (a === "Oz" && (!t || cdist(me, t) > REACH.Oz) && !(aimP && t && cdist(t, aimP) <= 10)) {
+      // Oz: lock on when an enemy is within zap range; otherwise wild randomized sparks.
+      if (a === "Oz") {
         lastAtk[a] = now;
-        const dir = me.x > 50 ? -1 : 1;
-        const base = aimP ?? { x: me.x + dir * REACH.Oz * 0.6, y: me.y };
-        const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * 0.6 / d);
-        const end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * 4, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * 4 };
+        const near = t && cdist(me, t) <= REACH.Oz ? t : null;
+        let end: Point;
+        if (near) {
+          end = { x: near.x, y: near.y - 4 };
+        } else {
+          const dir = me.x > 50 ? -1 : 1;
+          const base = aimP ?? { x: me.x + dir * REACH.Oz * 0.6, y: me.y };
+          const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * (0.5 + Math.random() * 0.4) / d);
+          const spread = heavy ? 3 : 6;
+          end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * spread * 2, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * spread * 2 };
+        }
         faceTo(a, end);
         flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
         boltRef.current(coords.current.Oz, end.x, end.y, heavy);
-        const landed = !!ambushHit.current(end); impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
+        const landed = !!ambushHit.current(end);
+        impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
+        if (!auto) zap.current(end, landed);
         return;
       }
-      if (a !== "Oz" && aimP && (!t || cdist(t, aimP) > 10)) {
+      if (aimP && (!t || cdist(t, aimP) > 10)) {
         lastAtk[a] = now; faceTo(a, aimP);
         flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
@@ -213,10 +220,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
       flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
-      if (a === "Oz") boltRef.current(coords.current.Oz, t.x, t.y - 4, heavy);
       const landed = !!ambushHit.current(aim(t));
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
-      if (a === "Oz" && !auto) zap.current(aim(t), landed);
       // Heavy blows land a second impact a beat later (Shelton's own hit timing still applies).
       if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
     };
