@@ -184,7 +184,22 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       // Player attacks aim at the mouse: lock onto an enemy near the cursor, otherwise strike toward it.
       const aimP = auto ? null : aimRef.current;
       let t = nearestTo(aimP ?? me);
-      if (aimP && (!t || cdist(t, aimP) > 10)) {
+      // Oz: if the aim misses but an enemy is within zap range, zap that enemy instead.
+      if (a === "Oz" && aimP && (!t || cdist(t, aimP) > 10)) { const n = nearestTo(me); if (n && cdist(n, me) <= REACH.Oz) t = n; }
+      // Oz: nothing in range — still throw a bolt to a random nearby spot so every tap zaps.
+      if (a === "Oz" && (!t || cdist(me, t) > REACH.Oz) && !(aimP && t && cdist(t, aimP) <= 10)) {
+        lastAtk[a] = now;
+        const dir = facing.current?.Oz === "left" ? -1 : 1;
+        const base = aimP ?? { x: me.x + dir * REACH.Oz * 0.6, y: me.y };
+        const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * 0.6 / d);
+        const end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * 4, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * 4 };
+        faceTo(a, end);
+        flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
+        boltRef.current(coords.current.Oz, end.x, end.y, heavy);
+        const landed = !!ambushHit.current(end); impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
+        return;
+      }
+      if (a !== "Oz" && aimP && (!t || cdist(t, aimP) > 10)) {
         lastAtk[a] = now; faceTo(a, aimP);
         flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
