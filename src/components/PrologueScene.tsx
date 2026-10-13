@@ -218,7 +218,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         faceTo(a, end);
         flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
         boltRef.current(coords.current.Oz, end.x, end.y, heavy);
-        hitCtx.by = "Oz"; const landed = !!ambushHit.current(end);
+        hitCtx.heavy = false; hitCtx.by = "Oz"; const landed = !!ambushHit.current(end);
         impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
         if (!auto) zap.current(end, landed);
         return;
@@ -237,7 +237,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
       flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
-      hitCtx.by = a; const landed = !!ambushHit.current(aim(t));
+      hitCtx.by = a; hitCtx.heavy = heavy; const landed = !!ambushHit.current(aim(t)); hitCtx.heavy = false;
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
       // Heavy blows land a second impact a beat later (Shelton's own hit timing still applies).
       if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { hitCtx.by = a; const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
