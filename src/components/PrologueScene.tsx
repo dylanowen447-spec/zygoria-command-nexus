@@ -184,15 +184,20 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       // Player attacks aim at the mouse: lock onto an enemy near the cursor, otherwise strike toward it.
       const aimP = auto ? null : aimRef.current;
       let t = nearestTo(aimP ?? me);
-      // Oz: wild randomized sparks — never lock on. Scatter a bolt around the aim point;
-      // it only damages an enemy if a random spark happens to land on one.
+      // Oz: lock on when an enemy is within zap range; otherwise wild randomized sparks.
       if (a === "Oz") {
         lastAtk[a] = now;
-        const dir = me.x > 50 ? -1 : 1;
-        const base = aimP ?? { x: me.x + dir * REACH.Oz * 0.6, y: me.y };
-        const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * (0.5 + Math.random() * 0.4) / d);
-        const spread = heavy ? 3 : 6;
-        const end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * spread * 2, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * spread * 2 };
+        const near = t && cdist(me, t) <= REACH.Oz ? t : null;
+        let end: Point;
+        if (near) {
+          end = { x: near.x, y: near.y - 4 };
+        } else {
+          const dir = me.x > 50 ? -1 : 1;
+          const base = aimP ?? { x: me.x + dir * REACH.Oz * 0.6, y: me.y };
+          const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * (0.5 + Math.random() * 0.4) / d);
+          const spread = heavy ? 3 : 6;
+          end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * spread * 2, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * spread * 2 };
+        }
         faceTo(a, end);
         flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
         boltRef.current(coords.current.Oz, end.x, end.y, heavy);
