@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import bg from "@/assets/brix-workshop.png";
 import { CharacterSprite } from "@/components/CharacterSprite";
 
@@ -14,15 +14,20 @@ export function WorkshopScene({ onExit }: { onExit: () => void }) {
   const [x, setX] = useState(55);
   const [moving, setMoving] = useState<{ dir: "left" | "right"; ms: number } | null>(null);
   const [bubble, setBubble] = useState<string>("Mind the floor. Everything on it is important.");
+  const posRef = useRef(55);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { const t = setTimeout(() => setBubble(""), 4200); return () => clearTimeout(t); }, [bubble]);
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   const walkTo = (tx: number, then?: () => void) => {
     tx = Math.min(80, Math.max(12, tx));
-    const dx = tx - x, ms = Math.max(300, Math.abs(dx) * 70);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const dx = tx - posRef.current, ms = Math.max(300, Math.abs(dx) * 70);
+    posRef.current = tx;
     setMoving({ dir: dx < 0 ? "left" : "right", ms });
     setX(tx);
-    setTimeout(() => { setMoving(null); then?.(); }, ms);
+    timerRef.current = setTimeout(() => { setMoving(null); then?.(); }, ms);
   };
 
   return <div className="world-image-wrap prologue-scene haven-scene workshop-scene" onPointerDown={e => {
