@@ -2,9 +2,9 @@ import type { Agent, Point } from "@/lib/zones";
 
 /** Shared mutant-rat behaviour: charge → telegraphed bite → retreat → pause → charge again. 2 HP; each zap flashes + recoils. */
 export type RatMode = "charge" | "windup" | "bite" | "retreat" | "pause";
-export type Rat = { id: number; x: number; y: number; hp: number; dead: number; flip: boolean; mode: RatMode; t: number; hurt: number; back: Point; hitBy?: Agent };
+export type Rat = { id: number; x: number; y: number; hp: number; dead: number; flip: boolean; mode: RatMode; t: number; hurt: number; back: Point; hitBy?: Agent; launch?: number };
 /** Who is landing the current blow, set by the scene just before calling the hit handler, so rats react to a punch vs a zap. */
-export const hitCtx: { by: Agent } = { by: "Oz" };
+export const hitCtx: { by: Agent; heavy?: boolean } = { by: "Oz" };
 export const RAT_HP = 2;
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -52,9 +52,11 @@ export function zapRats(rats: Rat[], p: Point, crew: Record<Agent, Point>): bool
   if (!best) return false;
   const r = best, now = performance.now();
   const by = hitCtx.by, punch = by === "Brix";
+  const src = crew[by] ?? crew.Oz, ex = r.x - src.x, ey = r.y - src.y, e = Math.hypot(ex, ey) || 1;
+  // Brix's charged punch sends a rat flying clean off the screen.
+  if (punch && hitCtx.heavy) { r.hp = 0; r.hurt = now; r.hitBy = by; r.dead = now; r.launch = ex >= 0 ? 1 : -1; return true; }
   r.hp -= 1; r.hurt = now; r.hitBy = by;
   if (r.hp <= 0) { r.dead = now; return true; }
-  const src = crew[by] ?? crew.Oz, ex = r.x - src.x, ey = r.y - src.y, e = Math.hypot(ex, ey) || 1;
   const kb = punch ? 7 : by === "Oz" ? 1 : 3;
   r.x = clamp(r.x + ex / e * kb, 3, 97); r.y = clamp(r.y + ey / e * kb * 0.6, 42, 97);
   r.flip = ex > 0; // face the attacker while reeling
