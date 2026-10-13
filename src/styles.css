@@ -792,6 +792,13 @@
 .haven-layer .haven-zig .sprite-stage{position:absolute!important;left:50%!important;bottom:0!important;top:auto!important;transform:translateX(-50%)!important;width:28px!important;height:44px!important;margin:0!important;scale:1!important}
 .haven-layer .haven-zig.marker-brix .sprite-stage{width:34px!important;height:50px!important}
 .workshop-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:41px!important;height:60px!important}
+/* PC: Brix looms large in his own workshop (2x the interior size). */
+@media(min-width:601px){.workshop-scene .haven-layer .haven-zig.marker-brix{width:82px;height:124px}.workshop-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:82px!important;height:120px!important}}
+/* Underground Haven: all Zygs doubled so they read clearly against the cavern. */
+.haven-scene:not(.workshop-scene) .haven-layer .haven-zig{width:56px;height:100px}
+.haven-scene:not(.workshop-scene) .haven-layer .haven-zig .sprite-stage{width:56px!important;height:88px!important}
+.haven-scene:not(.workshop-scene) .haven-layer .haven-zig.marker-brix .sprite-stage{width:68px!important;height:100px!important}
+.haven-scene:not(.workshop-scene) .haven-layer .haven-zig.marker-oz .sprite-stage{width:52px!important;height:80px!important}
 .haven-layer .haven-zig.marker-oz .sprite-stage{width:26px!important;height:40px!important}
 .haven-layer .haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{transform:translateX(-50%) scaleX(-1)!important}
 .haven-layer .haven-zig .sprite-stage>*{position:absolute;inset:0;width:100%!important;height:100%!important;margin:0!important;transform:none!important}
