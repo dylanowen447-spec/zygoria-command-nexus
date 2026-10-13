@@ -1345,6 +1345,7 @@ function CommandCentre() {
   const visitLines = (a: Agent) => GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!;
   function onWorldClick(e: React.MouseEvent<HTMLDivElement>) {
     const tg = e.target as Element | null;
+    console.log("WCLICK", zoneId, !!stageRef.current, phaseRef.current, prologue, zoneRef.current, sleepRef.current);
     if (zoneId !== "sanctuary" || !stageRef.current || (tg && typeof tg.closest === "function" && tg.closest("button,a,.welcome-card"))) return;
     if (!canClick()) return;
     const r = stageRef.current.getBoundingClientRect();
