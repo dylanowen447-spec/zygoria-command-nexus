@@ -387,6 +387,11 @@
 .idle-bubble{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);width:max-content;max-width:170px;padding:5px 8px;font-family:var(--font-mono);font-size:10px;line-height:1.3;text-align:center;white-space:normal;color:var(--foreground);background:oklch(0.16 0.04 270 / 0.92);border:1px solid var(--electric);border-radius:8px;box-shadow:0 0 10px oklch(0.7 0.18 230 / 0.35);z-index:30;pointer-events:none;animation:idle-bubble-in .25s ease-out}
 @keyframes idle-bubble-in{from{opacity:0;transform:translate(-50%,4px)}to{opacity:1;transform:translate(-50%,0)}}
 @media(max-width:600px){.idle-bubble{font-size:9px;max-width:130px}}
+/* Speaker colour-coding: a thin ring so it's always clear who is talking. */
+.marker-oz .idle-bubble,.build-oz .idle-bubble{border-color:oklch(0.85 0.17 95);box-shadow:0 0 8px oklch(0.85 0.17 95 / 0.45)}
+.marker-lowkey .idle-bubble,.build-lowkey .idle-bubble{border-color:oklch(0.62 0.22 25);box-shadow:0 0 8px oklch(0.62 0.22 25 / 0.45)}
+.marker-brix .idle-bubble,.build-brix .idle-bubble{border-color:oklch(0.65 0.19 240);box-shadow:0 0 8px oklch(0.65 0.19 240 / 0.45)}
+.moxi-resident .idle-bubble{border-color:oklch(0.72 0.18 150);box-shadow:0 0 8px oklch(0.72 0.18 150 / 0.45)}
 .agent-marker .idle-bubble{z-index:2000}
 .world-image-wrap{isolation:isolate}
 /* Story: workshop scanner awakening */
