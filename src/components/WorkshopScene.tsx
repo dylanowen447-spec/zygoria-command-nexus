@@ -41,7 +41,7 @@ export function WorkshopScene({ onExit }: { onExit: () => void }) {
       </span>
       <button type="button" className="workshop-spot workshop-door" style={{ left: "84%", top: "48%" }} aria-label="Back outside"
         onPointerDown={e => e.stopPropagation()} onClick={() => walkTo(80, onExit)}><span>Outside ›</span></button>
-      {bubble && <div key={bubble} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, x))}%`, bottom: "calc(16% + 70px)" }}><b>BRIX</b>{bubble}</div>}
+      {bubble && <div key={bubble} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, x))}%`, bottom: "calc(16% + var(--zig-lift))" }}><b>BRIX</b>{bubble}</div>}
     </div>
     <div className="map-coordinate top-right">BRIX'S WORKSHOP</div>
   </div>;
