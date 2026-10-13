@@ -610,9 +610,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       }
       if (combat) { moveCtrl.current({ x, y }); return; }
       if (steerRef.current) { steerMove.current(steerRef.current, { x, y }); return; }
-      // Straight, swift beam: only tiny crackle along the line.
-      boltRef.current(coords.current.Oz, x, y);
-      zap.current({ x, y }, !!ambushHit.current({ x, y }));
+      // Tapping the ground no longer aims Oz's lightning — he zaps from the ATTACK button or Space only.
     }}>
     <img className="world-image" src={scene.img} width={1520} height={1024} alt={scene.alt} />
     <div className="world-vignette"/>
