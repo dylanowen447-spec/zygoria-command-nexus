@@ -201,7 +201,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         if (!auto) zap.current(end, landed);
         return;
       }
-      if (a !== "Oz" && aimP && (!t || cdist(t, aimP) > 10)) {
+      if (aimP && (!t || cdist(t, aimP) > 10)) {
         lastAtk[a] = now; faceTo(a, aimP);
         flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
@@ -215,10 +215,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
       flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
-      if (a === "Oz") boltRef.current(coords.current.Oz, t.x, t.y - 4, heavy);
       const landed = !!ambushHit.current(aim(t));
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
-      if (a === "Oz" && !auto) zap.current(aim(t), landed);
       // Heavy blows land a second impact a beat later (Shelton's own hit timing still applies).
       if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
     };
