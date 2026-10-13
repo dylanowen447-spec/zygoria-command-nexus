@@ -1048,6 +1048,13 @@ function CommandCentre() {
   const visiting = useRef<Agent | null>(null);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
+  // Safety net: an interrupted scene can exit without resetting the phase, which silently blocks
+  // taps (water, food, visits). If the crew stays "busy" with nobody talking or walking, free them up.
+  useEffect(() => {
+    if (phase === "idle" || bubble || walking.length) return;
+    const t = setTimeout(() => { if (phaseRef.current !== "idle") setPhase("idle"); }, 12000);
+    return () => clearTimeout(t);
+  }, [phase, bubble, walking]);
   /** Crew hunger: drifts down slowly; cosmetic before the Sanctuary, restored by the cookout. */
   const [hunger, setHunger] = useState(HUNGER_START);
   const hungerSaid = useRef<number[]>([]);
