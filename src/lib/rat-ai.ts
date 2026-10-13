@@ -2,7 +2,9 @@ import type { Agent, Point } from "@/lib/zones";
 
 /** Shared mutant-rat behaviour: charge → telegraphed bite → retreat → pause → charge again. 2 HP; each zap flashes + recoils. */
 export type RatMode = "charge" | "windup" | "bite" | "retreat" | "pause";
-export type Rat = { id: number; x: number; y: number; hp: number; dead: number; flip: boolean; mode: RatMode; t: number; hurt: number; back: Point };
+export type Rat = { id: number; x: number; y: number; hp: number; dead: number; flip: boolean; mode: RatMode; t: number; hurt: number; back: Point; hitBy?: Agent };
+/** Who is landing the current blow, set by the scene just before calling the hit handler, so rats react to a punch vs a zap. */
+export const hitCtx: { by: Agent } = { by: "Oz" };
 export const RAT_HP = 2;
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -49,17 +51,20 @@ export function zapRats(rats: Rat[], p: Point, crew: Record<Agent, Point>): bool
   }
   if (!best) return false;
   const r = best, now = performance.now();
-  r.hp -= 1; r.hurt = now;
+  const by = hitCtx.by, punch = by === "Brix";
+  r.hp -= 1; r.hurt = now; r.hitBy = by;
   if (r.hp <= 0) { r.dead = now; return true; }
-  const oz = crew.Oz, ex = r.x - oz.x, ey = r.y - oz.y, e = Math.hypot(ex, ey) || 1;
-  r.x = clamp(r.x + ex / e * 3, 3, 97); r.y = clamp(r.y + ey / e * 2, 42, 97);
-  r.mode = "pause"; r.t = 0;
+  const src = crew[by] ?? crew.Oz, ex = r.x - src.x, ey = r.y - src.y, e = Math.hypot(ex, ey) || 1;
+  const kb = punch ? 7 : by === "Oz" ? 1 : 3;
+  r.x = clamp(r.x + ex / e * kb, 3, 97); r.y = clamp(r.y + ey / e * kb * 0.6, 42, 97);
+  r.flip = ex > 0; // face the attacker while reeling
+  r.mode = "pause"; r.t = punch ? -0.5 : by === "Oz" ? -0.6 : 0; // stunned a beat longer
   return true;
 }
 
 export function ratFrame(r: Rat, now: number) {
   if (r.dead) return 12;
-  if (now - r.hurt < 300) return 11;
+  if (now - r.hurt < (r.hitBy === "Oz" ? 500 : 350)) return 11;
   if (r.mode === "windup") return 8;
   if (r.mode === "bite") return r.t < 0.15 ? 9 : 10;
   if (r.mode === "pause") return Math.floor(now / 300) % 2;

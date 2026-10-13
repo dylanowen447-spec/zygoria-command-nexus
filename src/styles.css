@@ -772,3 +772,13 @@
 .haven-zig.marker-brix.is-walking.brix-facing-up .sheet-frames{background-position-y:100%}
 .haven-zig.marker-lowkey.is-walking .sheet-frames{animation:ozWalk .5s steps(4,end) infinite!important}
 .haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{scale:-1 1}
+
+/* Rat hit reactions: Brix's punch knocks them reeling, Oz's zap shocks them in place. */
+.ambush-rat.is-hurt.is-punched{animation:ratPunched .35s cubic-bezier(.2,.8,.3,1)}
+@keyframes ratPunched{0%{translate:0 0;rotate:0deg;scale:1.15 .8}25%{translate:0 -18%;rotate:-14deg;scale:.9 1.1;filter:brightness(1.8)}60%{translate:0 0;rotate:6deg;scale:1.1 .9}100%{translate:0 0;rotate:0deg;scale:1}}
+.ambush-rat.is-hurt.is-zapped{animation:ratZapped .5s steps(10,end)}
+@keyframes ratZapped{0%,20%,40%,60%,80%{translate:-4% 0;filter:brightness(2.4) saturate(0) drop-shadow(0 0 6px var(--electric))}10%,30%,50%,70%,90%{translate:4% -2%;filter:brightness(1.4) drop-shadow(0 0 10px var(--electric))}100%{translate:0 0;filter:none}}
+.rat-punch-burst{position:absolute;left:50%;top:55%;width:40px;height:40px;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(circle,var(--foreground) 0 18%,var(--gold) 30%,transparent 62%);clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);animation:ratBurst .32s ease-out forwards}
+@keyframes ratBurst{0%{scale:.3;opacity:1}100%{scale:1.5;opacity:0}}
+.rat-zap-arcs{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);pointer-events:none;border-radius:50%;border:2px dashed var(--electric);box-shadow:0 0 12px var(--electric),inset 0 0 8px var(--electric);animation:ratArcs .5s linear forwards}
+@keyframes ratArcs{0%{rotate:0deg;opacity:1;scale:.8}50%{rotate:140deg;opacity:.9;scale:1.1}100%{rotate:300deg;opacity:0;scale:.9}}

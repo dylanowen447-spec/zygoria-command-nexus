@@ -7,7 +7,7 @@ import { OldCityRats } from "@/components/OldCityRats";
 import { ACKS, ASPECT, REACTIONS, SHRUGS, routeBetween, type Scene } from "@/lib/prologue";
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
-import { DEFAULT_BOUNDS, type CombatApi } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
@@ -200,7 +200,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         faceTo(a, end);
         flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
         boltRef.current(coords.current.Oz, end.x, end.y, heavy);
-        const landed = !!ambushHit.current(end);
+        hitCtx.by = "Oz"; const landed = !!ambushHit.current(end);
         impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
         if (!auto) zap.current(end, landed);
         return;
@@ -219,10 +219,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
       flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
-      const landed = !!ambushHit.current(aim(t));
+      hitCtx.by = a; const landed = !!ambushHit.current(aim(t));
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
       // Heavy blows land a second impact a beat later (Shelton's own hit timing still applies).
-      if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
+      if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { hitCtx.by = a; const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
     };
     moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
     steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [{ x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) }]); };
