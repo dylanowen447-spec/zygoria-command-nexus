@@ -34,8 +34,6 @@ export function WorkshopScene({ onExit }: { onExit: () => void }) {
       <span className={`haven-zig marker-brix ${moving ? `is-walking brix-facing-${moving.dir} facing-${moving.dir}` : ""}`} style={{ left: `${x}%`, bottom: "16%", transitionDuration: moving ? `${moving.ms}ms` : "0ms" }}>
         <span className="sprite-stage"><CharacterSprite character="Brix"/></span>
       </span>
-      {SPOTS.map(s => <button key={s.id} type="button" className="workshop-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} aria-label={s.label}
-        onPointerDown={e => e.stopPropagation()} onClick={() => walkTo(s.x, () => setBubble(s.line))}><span>{s.label}</span></button>)}
       <button type="button" className="workshop-spot workshop-door" style={{ left: "84%", top: "48%" }} aria-label="Back outside"
         onPointerDown={e => e.stopPropagation()} onClick={() => walkTo(80, onExit)}><span>Outside ›</span></button>
       {bubble && <div key={bubble} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, x))}%`, bottom: "calc(16% + 70px)" }}><b>BRIX</b>{bubble}</div>}
