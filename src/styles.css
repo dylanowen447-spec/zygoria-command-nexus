@@ -793,7 +793,7 @@
 .haven-layer .haven-zig.marker-brix .sprite-stage{width:34px!important;height:50px!important}
 .workshop-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:41px!important;height:60px!important}
 /* Speech bubbles float above the tallest head; the lift grows with PC sprite size. */
-.haven-scene{--zig-lift:62px;--human-lift:56px}
+.haven-scene{--zig-lift:62px;--human-lift:20.5%}
 .workshop-scene{--zig-lift:70px}
 /* PC: Brix looms large in his own workshop (4x the interior size). */
 @media(min-width:601px){
