@@ -203,12 +203,6 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         lastAtk[a] = now; faceTo(a, aimP);
         flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
-        if (a === "Oz") {
-          const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Oz / d);
-          const end = { x: me.x + (aimP.x - me.x) * k, y: me.y + (aimP.y - me.y) * k };
-          boltRef.current(coords.current.Oz, end.x, end.y, heavy);
-          const landed = !!ambushHit.current(end); impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
-        }
         return;
       }
       // Nothing to hit: still throw the move straight ahead so every tap shows a punch/swing.
