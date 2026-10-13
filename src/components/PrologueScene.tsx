@@ -192,11 +192,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
         if (near) {
           end = { x: near.x, y: near.y - 4 };
         } else {
-          const dir = me.x > 50 ? -1 : 1;
-          const base = aimP ?? { x: me.x + dir * REACH.Oz * 0.6, y: me.y };
-          const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * (0.5 + Math.random() * 0.4) / d);
-          const spread = heavy ? 3 : 6;
-          end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * spread * 2, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * spread * 2 };
+          // Wild sparks: a completely random direction and distance every tap.
+          const ang = Math.random() * Math.PI * 2;
+          const dist = REACH.Oz * (0.35 + Math.random() * 0.5);
+          end = { x: me.x + Math.cos(ang) * dist, y: me.y - 4 + Math.sin(ang) * dist * 0.6 };
         }
         faceTo(a, end);
         flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
