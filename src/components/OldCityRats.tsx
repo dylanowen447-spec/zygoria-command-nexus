@@ -1,3 +1,4 @@
+import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
 import { DEFAULT_BOUNDS, farSpawns, makeRat, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
@@ -44,7 +45,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
     let alive = true, raf = 0, last = performance.now(), spawned = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
-    const hurt = (n: number) => { crewHpRef.current = Math.max(15, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
+    const hurt = (n: number) => { playSfx("hurt"); crewHpRef.current = Math.max(15, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
 
     later(1200, () => {
       spawned = true; startBattleMusic();

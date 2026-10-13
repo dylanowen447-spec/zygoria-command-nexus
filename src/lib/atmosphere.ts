@@ -164,3 +164,21 @@ export function stopBattleMusic() {
   b.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.4);
   setTimeout(() => b.bus.disconnect(), 2500);
 }
+
+// ---------- Combat SFX: crunchy 8-bit hits (shares the atmosphere context) ----------
+export type Sfx = "swing" | "punch" | "punch-heavy" | "zap" | "zap-heavy" | "zap-hit" | "hurt" | "miss";
+export function playSfx(kind: Sfx) {
+  if (!ctx) boot();
+  if (!ctx || ctx.state !== "running") return;
+  const t = ctx.currentTime + 0.005; const r = Math.random;
+  switch (kind) {
+    case "swing": burst(t, 1200 + r() * 400, 0.09, 0.08); break;
+    case "miss": burst(t, 900, 0.07, 0.05); break;
+    case "punch": blip(t, 180, 60, 0.12, 0.35, "square"); burst(t, 700, 0.08, 0.35, "lowpass"); break;
+    case "punch-heavy": blip(t, 140, 40, 0.25, 0.45, "square"); burst(t, 500, 0.2, 0.5, "lowpass"); burst(t + 0.03, 2500, 0.08, 0.2); break;
+    case "zap": for (let i = 0; i < 5; i++) blip(t + i * 0.02, 1800 + r() * 1400, 400, 0.04, 0.06, "square"); burst(t, 5000, 0.12, 0.12, "highpass"); break;
+    case "zap-heavy": for (let i = 0; i < 9; i++) blip(t + i * 0.025, 2200 + r() * 1800, 200, 0.05, 0.07, "sawtooth"); burst(t, 4000, 0.3, 0.2, "highpass"); break;
+    case "zap-hit": blip(t, 900, 1600, 0.06, 0.12, "square"); blip(t + 0.06, 1600, 300, 0.1, 0.1, "square"); break;
+    case "hurt": blip(t, 420, 160, 0.16, 0.18, "square"); break;
+  }
+}
