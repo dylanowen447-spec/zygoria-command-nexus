@@ -41,7 +41,7 @@ export function HavenScene() {
   const introDone = step >= INTRO.length;
   // Double-click a Zig to steer them; clicking the cave floor walks that Zig there.
   type Zig = "Oz" | "Brix" | "Lowkey";
-  const [pos, setPos] = useState<Record<Zig, { x: number; b: number }>>({ Brix: { x: 18, b: 22 }, Oz: { x: 26, b: 22 }, Lowkey: { x: 33, b: 22 } });
+  const [pos, setPos] = useState<Record<Zig, { x: number; b: number }>>({ Brix: { x: 14, b: FLOOR }, Oz: { x: 24, b: FLOOR }, Lowkey: { x: 34, b: FLOOR } });
   const [steer, setSteer] = useState<Zig | null>(null);
   const [moving, setMoving] = useState<{ a: Zig; dir: "left" | "right" | "up" | "down"; ms: number } | null>(null);
   const lastTap = useRef<{ a: Zig; t: number } | null>(null);
