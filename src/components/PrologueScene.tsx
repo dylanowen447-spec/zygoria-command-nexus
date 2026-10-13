@@ -189,7 +189,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
       // Oz: nothing in range — still throw a bolt to a random nearby spot so every tap zaps.
       if (a === "Oz" && (!t || cdist(me, t) > REACH.Oz) && !(aimP && t && cdist(t, aimP) <= 10)) {
         lastAtk[a] = now;
-        const dir = facing.current?.Oz === "left" ? -1 : 1;
+        const dir = me.x > 50 ? -1 : 1;
         const base = aimP ?? { x: me.x + dir * REACH.Oz * 0.6, y: me.y };
         const d = cdist(me, base) || 1, k = Math.min(1, REACH.Oz * 0.6 / d);
         const end = { x: me.x + (base.x - me.x) * k + (Math.random() - 0.5) * 4, y: me.y - 4 + (base.y - me.y) * k + (Math.random() - 0.5) * 4 };
