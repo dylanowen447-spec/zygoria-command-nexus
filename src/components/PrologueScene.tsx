@@ -160,6 +160,23 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip }: Props) 
     let lastEnemy = 0;
     const inCombat = () => { if (enemies.current.targets().length) lastEnemy = performance.now(); return lastEnemy > 0 && performance.now() - lastEnemy < 3500; };
     const clampB = (p: Point): Point => { const b = enemies.current.bounds(); return { x: Math.min(b.x1, Math.max(b.x0, p.x)), y: Math.min(b.y1, Math.max(b.y0, p.y)) }; };
+    // Body collisions: Zigs gently bump apart from each other and from rats/Shelton, never overlapping.
+    const R_ZIG = 5, R_FOE = 4.5;
+    const separate = () => {
+      if (!alive) return;
+      const push: Partial<Record<Agent, Point>> = {};
+      const add = (a: Agent, x: number, y: number) => { const q = push[a] ?? { x: 0, y: 0 }; push[a] = { x: q.x + x, y: q.y + y }; };
+      const sep = (p: Point, o: Point, r: number) => { const dx = p.x - o.x, dy = (p.y - o.y) * 1.6, d = Math.hypot(dx, dy); if (d >= r) return null; const k = (r - d) / r; if (d < 0.01) return { x: k * 0.8, y: 0 }; return { x: (dx / d) * k * 0.8, y: (dy / d) * k * 0.5 }; };
+      for (let i = 0; i < ALL.length; i++) for (let j = i + 1; j < ALL.length; j++) {
+        const a = ALL[i]!, b = ALL[j]!; const s = sep(coords.current[a], coords.current[b], R_ZIG); if (!s) continue;
+        add(a, s.x, s.y); add(b, -s.x, -s.y);
+      }
+      const foes = enemies.current.targets();
+      for (const a of ALL) for (const f of foes) { const s = sep(coords.current[a], f, R_FOE); if (s) add(a, s.x * 1.5, s.y * 1.5); }
+      for (const a of ALL) { const v = push[a]; if (!v) continue; const p = coords.current[a]; coords.current[a] = { x: Math.min(97, Math.max(3, p.x + v.x)), y: Math.min(97, Math.max(8, p.y + v.y)) }; paint(a); }
+      requestAnimationFrame(separate);
+    };
+    requestAnimationFrame(separate);
     const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];

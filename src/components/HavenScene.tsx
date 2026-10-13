@@ -55,8 +55,14 @@ export function HavenScene() {
     const tg = e.target as Element | null;
     if (!steer || !wrapRef.current || (tg && typeof tg.closest === "function" && tg.closest("button,form,.haven-zig"))) return;
     const r = wrapRef.current.getBoundingClientRect();
-    const x = Math.min(92, Math.max(6, ((e.clientX - r.left) / r.width) * 100));
+    let x = Math.min(92, Math.max(6, ((e.clientX - r.left) / r.width) * 100));
     const b = FLOOR; // walk flat along the cave floor
+    // Collisions: stop short of other Zigs and the survivors instead of walking through them.
+    const others = [...(Object.keys(pos) as Zig[]).filter(z => z !== steer).map(z => pos[z].x), ...SURVIVORS.map(s => s.x)];
+    const from0 = pos[steer].x, goingRight = x > from0;
+    let xx = x;
+    for (const o of others) { if (goingRight ? o > from0 && o - 6 < xx : o < from0 && o + 6 > xx) xx = goingRight ? o - 6 : o + 6; }
+    x = Math.min(92, Math.max(6, xx));
     const from = pos[steer], dx = x - from.x;
     const ms = Math.max(300, Math.abs(dx) * 90);
     const dir = dx < 0 ? "left" : "right";
