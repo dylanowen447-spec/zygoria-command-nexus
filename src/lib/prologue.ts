@@ -252,3 +252,16 @@ export function routeBetween(scene: Scene, from: string, to: string): string[] {
   for (let n: string | null = to; n && n !== from; n = prev[n] ?? null) path.unshift(n);
   return path;
 }
+
+/** Scenes the visitor has actually finished, in story order (prologue ids + "sanctuary" + "haven"). */
+export const CLEARED_KEY = "zygoria-cleared-v1";
+/** Device-only creator switch: unlocks the full scene picker and skips. */
+export const EDITOR_KEY = "zygoria-editor-mode";
+
+/** Openings used when the crew comes back to a scene they've already lived through. */
+export const RETURN_OPENINGS: Record<string, [Agent, string][]> = {
+  landing: [["Oz", "Our eggs. Still here. Still cracked. Still mine."], ["Lowkey", "Something's growing by the blue pod. That's new."], ["Brix", "First place we ever stood. Feels smaller now."]],
+  city: [["Brix", "Back in the Old City. Eyes open — those rats came from somewhere."], ["Lowkey", "We missed corners last time. Let's check them."], ["Oz", "If a rat so much as squeaks, it's getting zapped."]],
+  library: [["Lowkey", "The library. We only read the first shelf last time."], ["Oz", "Our books are still where we left them. Kind of sweet."], ["Brix", "Look for what we didn't see. Not what we did."]],
+  "long-walk": [["Brix", "The road where we beat Shelton. Ground still scorched."], ["Oz", "Ha. Remember his face? Classic."], ["Lowkey", "He'll be back. Keep scanning the ridge."]],
+};
