@@ -96,7 +96,7 @@ export function HavenScene() {
       {SURVIVORS.map(s => <button key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
         <img src={s.img} alt="" draggable={false}/><span className="haven-name">{s.name}</span>
       </button>)}
-      {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${xOf(bubble.who)}%` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
+      {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(20% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? 58 : 52}px + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
     <div className="map-coordinate top-right">UNDERGROUND HAVEN</div>
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the floor to walk · double-tap {steer} to let go</div>}
