@@ -10,13 +10,14 @@ type Survivor = "Orin" | "Mara" | "Vale";
 type Speaker = Survivor | "Oz" | "Brix" | "Lowkey";
 type Line = { who: Speaker; text: string };
 
+const FLOOR = 20; // shared flat ground line (% from bottom)
 const SURVIVORS: { id: Survivor; name: string; img: string; x: number; h: number }[] = [
-  { id: "Vale", name: "VALE", img: valeImg, x: 60, h: 30 },
-  { id: "Mara", name: "MARA", img: maraImg, x: 72, h: 31 },
-  { id: "Orin", name: "ELDER ORIN", img: orinImg, x: 85, h: 32 },
+  { id: "Vale", name: "VALE", img: valeImg, x: 62, h: 18 },
+  { id: "Mara", name: "MARA", img: maraImg, x: 74, h: 19 },
+  { id: "Orin", name: "ELDER ORIN", img: orinImg, x: 86, h: 19.5 },
 ];
-const CREW: { id: "Oz" | "Brix" | "Lowkey"; x: number }[] = [{ id: "Brix", x: 18 }, { id: "Oz", x: 26 }, { id: "Lowkey", x: 33 }];
-const X: Record<Speaker, number> = { Vale: 60, Mara: 72, Orin: 85, Brix: 18, Oz: 26, Lowkey: 33 };
+const CREW: { id: "Oz" | "Brix" | "Lowkey"; x: number }[] = [{ id: "Brix", x: 14 }, { id: "Oz", x: 24 }, { id: "Lowkey", x: 34 }];
+const X: Record<Speaker, number> = { Vale: 62, Mara: 74, Orin: 86, Brix: 14, Oz: 24, Lowkey: 34 };
 
 /** First contact, one voice at a time: neither side has ever seen anyone else. */
 const INTRO: Line[] = [
@@ -55,10 +56,10 @@ export function HavenScene() {
     if (!steer || !wrapRef.current || (tg && typeof tg.closest === "function" && tg.closest("button,form,.haven-zig"))) return;
     const r = wrapRef.current.getBoundingClientRect();
     const x = Math.min(92, Math.max(6, ((e.clientX - r.left) / r.width) * 100));
-    const b = Math.min(30, Math.max(8, ((r.bottom - e.clientY) / r.height) * 100));
-    const from = pos[steer], dx = x - from.x, db = b - from.b;
-    const ms = Math.max(300, Math.hypot(dx, db * 0.7) * 90);
-    const dir = Math.abs(db) > Math.abs(dx) * 0.7 ? (db > 0 ? "up" : "down") : dx < 0 ? "left" : "right";
+    const b = FLOOR; // walk flat along the cave floor
+    const from = pos[steer], dx = x - from.x;
+    const ms = Math.max(300, Math.abs(dx) * 90);
+    const dir = dx < 0 ? "left" : "right";
     const a = steer;
     setMoving({ a, dir, ms });
     setPos(p => ({ ...p, [a]: { x, b } }));
