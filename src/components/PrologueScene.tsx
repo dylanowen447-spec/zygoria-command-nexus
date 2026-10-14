@@ -9,6 +9,7 @@ import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playSfx } from "@/lib/atmosphere";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
+import { meleeTarget } from "@/lib/combat-targeting";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
@@ -223,7 +224,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         if (!auto) zap.current(end, landed);
         return;
       }
-      if (aimP && (!t || cdist(t, aimP) > 10)) {
+      const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
+      t = meleeTarget(enemies.current.targets(), me, reach, aimP);
+      if (aimP && !t) {
         lastAtk[a] = now; faceTo(a, aimP);
         flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
@@ -232,7 +235,6 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       // Nothing to hit: still throw the move straight ahead so every tap shows a punch/swing.
       if (!t) { lastAtk[a] = now; flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? (heavy ? 620 : 460) : 260); return; }
       lastAtk[a] = now; faceTo(a, t);
-      const reach = a === "Lowkey" && heavy ? 32 : REACH[a];
       if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 460 : 260); return; }
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
