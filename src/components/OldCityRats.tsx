@@ -1,14 +1,12 @@
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
-import { DEFAULT_BOUNDS, farSpawns, makeRat, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, makeRat, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
+import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
 
-/** Old City ambush: three mutant rats rush the Zigs. One zap from Oz kills each; they never respawn. Self-contained so the scene's own exploration is untouched. */
-const KEY = "zygoria-oldcity-rats-v2";
-// Far edges of the walkable street; the three farthest from the crew are used.
-const SPAWNS: Point[] = [{ x: 4, y: 74 }, { x: 96, y: 70 }, { x: 8, y: 50 }, { x: 92, y: 52 }, { x: 50, y: 97 }];
+/** Nine finite directional waves, isolated from the scene's story progression. */
 
 export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
   combatRef?: MutableRefObject<CombatApi>;
@@ -22,6 +20,8 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
   const [ozH, setOzH] = useState(40);
   const [crewHp, setCrewHp] = useState(100);
   const crewHpRef = useRef(100);
+  const [wave, setWave] = useState(0);
+  const [cleared, setCleared] = useState(false);
 
   // Rats stand 5% shorter than Oz, matching his on-screen height on any device.
   useEffect(() => {
@@ -41,29 +41,34 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
   }, [combatRef]);
 
   useEffect(() => {
-    try { localStorage.removeItem(KEY); } catch { /* fine */ }
-    let alive = true, raf = 0, last = performance.now(), spawned = false;
+    let alive = true, raf = 0, last = performance.now(), waveIndex = -1, nextWaveAt = last + 1200, nextId = 1;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const hurt = (n: number) => { playSfx("hurt"); crewHpRef.current = Math.max(15, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
 
-    later(1200, () => {
-      spawned = true; startBattleMusic();
-      rats.current = farSpawns(SPAWNS, crew.current, 3).map((p, i) => makeRat(i + 1, p));
-      later(300, () => onAlarm("Three huge mutant rats just burst out of the Old City rubble and are charging straight at you!"));
-    });
+    rats.current = []; crewHpRef.current = 100; setCrewHp(100); setWave(0); setCleared(false);
 
     hitRef.current = (p: Point) => zapRats(rats.current, p, crew.current);
 
     const tick = (now: number) => {
       if (!alive) return;
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (nextWaveAt && now >= nextWaveAt) {
+        waveIndex += 1; nextWaveAt = 0;
+        if (waveIndex === 0) startBattleMusic();
+        rats.current = cityWaveSpawns(waveIndex).map(p => makeRat(nextId++, p));
+        setWave(waveIndex + 1);
+        if (waveIndex === 0) later(300, () => onAlarm("Mutant rats are charging down the avenue and rushing in from beside the wrecked bus and the temple steps!"));
+      }
       // Rats scurry at the nearest Zig, nip, then hop back and try again.
       for (const r of rats.current) stepRat(r, dt, crew.current, hurt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
-      if (spawned && rats.current.length === 0) {
-        stopBattleMusic();
-        return; // all dead: stop the loop, the city simply goes quiet
+      if (waveIndex >= 0 && rats.current.length === 0 && !nextWaveAt) {
+        if (waveIndex === CITY_WAVES - 1) {
+          stopBattleMusic(); setCleared(true); force(f => f + 1);
+          return;
+        }
+        nextWaveAt = now + 1800;
       }
       force(f => (f + 1) % 1e6);
       raf = requestAnimationFrame(tick);
@@ -76,8 +81,9 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
   const ratH = ozH * 0.95 / 0.78, ratW = ratH * 340 / 250;
 
   return <>
-    {crewHp < 100 && <div className="boss-hud" role="status" aria-label="Crew health">
-      <div className="boss-hud-row crew"><span className="boss-name">CREW</span><span className="boss-bar crew-bar"><span className="boss-bar-fill" style={{ width: `${crewHp}%` }}/></span></div>
+    {wave > 0 && !cleared && <div className="boss-hud" role="status" aria-label={`Rat wave ${wave} of ${CITY_WAVES}`}>
+      <div className="boss-hud-row"><span className="boss-name">RATS</span><span>WAVE {wave} / {CITY_WAVES}</span></div>
+      {crewHp < 100 && <div className="boss-hud-row crew"><span className="boss-name">CREW</span><span className="boss-bar crew-bar"><span className="boss-bar-fill" style={{ width: `${crewHp}%` }}/></span></div>}
     </div>}
     {rats.current.map(r => <RatSprite key={r.id} r={r} w={ratW} h={ratH} now={now}/>)}
   </>;

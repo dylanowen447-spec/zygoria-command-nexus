@@ -1,4 +1,4 @@
-import ratSheet from "@/assets/mutant-rat.png.asset.json";
+import ratSheet from "@/assets/mutant-rat-clean.png.asset.json";
 import { RAT_HP, ratFrame, type Rat } from "@/lib/rat-ai";
 
 const FRAMES = 13;
