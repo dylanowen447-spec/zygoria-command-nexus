@@ -32,6 +32,10 @@ export type Scene = {
   bottom: string;
   /** Where each Zig appears, and the first spot they step to. */
   spawn: Record<Agent, { from: Point; out: string }>;
+  /** Crew appear already standing at their spawn, facing the viewer, instead of walking in. */
+  startStill?: boolean;
+  /** Safe walkable ground outline (artwork %); steering and fights never leave it, so nobody walks off cliffs. */
+  ground?: Point[];
   edges: [string, string][];
   spots: Record<string, Spot>;
   objectives: Objective[];
@@ -203,7 +207,14 @@ const LONG_WALK: Scene = {
   alt: "A cracked road winds out of grey ruins through dead hills; grass and a clean stream appear further on, and from a rocky ridge a lush green river valley shines below the mountains",
   label: "OLD EARTH / THE LONG WALK",
   bottom: "BROKEN HILLS — LEAVING OLD CITY",
-  spawn: { Oz: { from: { x: 13, y: 99 }, out: "road" }, Brix: { from: { x: 19, y: 99 }, out: "sign" }, Lowkey: { from: { x: 16, y: 99 }, out: "road" } },
+  spawn: { Oz: { from: { x: 42, y: 84 }, out: "plateau" }, Brix: { from: { x: 50, y: 85 }, out: "plateau" }, Lowkey: { from: { x: 58, y: 84 }, out: "plateau" } },
+  startStill: true,
+  // Road from the city, the stream flats and the rock plateau; the right-hand ledge drop and far hills are off limits.
+  ground: [
+    { x: 4, y: 98 }, { x: 8, y: 80 }, { x: 12, y: 66 }, { x: 20, y: 56 }, { x: 25, y: 48 }, { x: 30, y: 41 },
+    { x: 46, y: 41 }, { x: 58, y: 42 }, { x: 74, y: 41 }, { x: 76, y: 56 }, { x: 78, y: 68 }, { x: 84, y: 76 },
+    { x: 98, y: 80 }, { x: 98, y: 98 },
+  ],
   edges: [
     ["road", "bend"], ["road", "sign"], ["bend", "ruins"], ["bend", "deadtree"], ["sign", "sprout"],
     ["bend", "stream"], ["deadtree", "stream"], ["stream", "sprout"], ["stream", "trees"], ["sprout", "plateau"],

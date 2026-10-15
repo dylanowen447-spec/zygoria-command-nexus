@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { LongWalkAmbush } from "@/components/LongWalkAmbush";
 import { OldCityRats } from "@/components/OldCityRats";
-import { ACKS, ASPECT, REACTIONS, SHRUGS, routeBetween, type Scene } from "@/lib/prologue";
+import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } from "@/lib/prologue";
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playSfx } from "@/lib/atmosphere";
@@ -160,7 +160,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     // ---- Direct combat ----
     let lastEnemy = 0;
     const inCombat = () => { if (enemies.current.targets().length) lastEnemy = performance.now(); return lastEnemy > 0 && performance.now() - lastEnemy < 3500; };
-    const clampB = (p: Point): Point => { const b = enemies.current.bounds(); return { x: Math.min(b.x1, Math.max(b.x0, p.x)), y: Math.min(b.y1, Math.max(b.y0, p.y)) }; };
+    const clampB = (p: Point): Point => { const b = enemies.current.bounds(); return onGround(scene, { x: Math.min(b.x1, Math.max(b.x0, p.x)), y: Math.min(b.y1, Math.max(b.y0, p.y)) }); };
     // Body collisions: Zigs gently bump apart from each other and from rats/Shelton, never overlapping.
     const R_ZIG = 11, R_FOE = 8;
     const separate = () => {
@@ -245,7 +245,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { hitCtx.by = a; const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
     };
     moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
-    steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [{ x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) }]); };
+    steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [onGround(scene, { x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) })]); };
     attack.current = (heavy: boolean) => { void strike(inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current, heavy); };
     resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current] = 0; };
     // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
@@ -586,7 +586,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       await wait(900);
       if (!alive) return;
       setShown(true);
-      await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
+      if (scene.startStill) await wait(600);
+      else await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
       if (!alive) return;
       for (const [who, text] of scene.opening) { say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP); }
       ALL.forEach(a => void explore(a));
