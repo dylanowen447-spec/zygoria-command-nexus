@@ -1059,7 +1059,7 @@ function CommandCentre() {
   useEffect(() => {
     if (phase === "idle" || bubble || walking.length) return;
     const t = setInterval(() => { if (longWaits === 0 && phaseRef.current !== "idle") setPhase("idle"); }, 12000);
-    return () => clearTimeout(t);
+    return () => clearInterval(t);
   }, [phase, bubble, walking]);
   /** Crew hunger: drifts down slowly; cosmetic before the Sanctuary, restored by the cookout. */
   const [hunger, setHunger] = useState(HUNGER_START);
