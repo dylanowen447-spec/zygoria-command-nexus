@@ -32,6 +32,10 @@ export type Scene = {
   bottom: string;
   /** Where each Zig appears, and the first spot they step to. */
   spawn: Record<Agent, { from: Point; out: string }>;
+  /** Crew appear already standing at their spawn, facing the viewer, instead of walking in. */
+  startStill?: boolean;
+  /** Safe walkable ground outline (artwork %); steering and fights never leave it, so nobody walks off cliffs. */
+  ground?: Point[];
   edges: [string, string][];
   spots: Record<string, Spot>;
   objectives: Objective[];
@@ -203,7 +207,14 @@ const LONG_WALK: Scene = {
   alt: "A cracked road winds out of grey ruins through dead hills; grass and a clean stream appear further on, and from a rocky ridge a lush green river valley shines below the mountains",
   label: "OLD EARTH / THE LONG WALK",
   bottom: "BROKEN HILLS — LEAVING OLD CITY",
-  spawn: { Oz: { from: { x: 13, y: 99 }, out: "road" }, Brix: { from: { x: 19, y: 99 }, out: "sign" }, Lowkey: { from: { x: 16, y: 99 }, out: "road" } },
+  spawn: { Oz: { from: { x: 42, y: 84 }, out: "plateau" }, Brix: { from: { x: 50, y: 85 }, out: "plateau" }, Lowkey: { from: { x: 58, y: 84 }, out: "plateau" } },
+  startStill: true,
+  // Road from the city, the stream flats and the rock plateau; the right-hand ledge drop and far hills are off limits.
+  ground: [
+    { x: 4, y: 98 }, { x: 8, y: 80 }, { x: 12, y: 66 }, { x: 20, y: 56 }, { x: 25, y: 48 }, { x: 30, y: 41 },
+    { x: 46, y: 41 }, { x: 58, y: 42 }, { x: 74, y: 41 }, { x: 76, y: 56 }, { x: 78, y: 68 }, { x: 84, y: 76 },
+    { x: 98, y: 80 }, { x: 98, y: 98 },
+  ],
   edges: [
     ["road", "bend"], ["road", "sign"], ["bend", "ruins"], ["bend", "deadtree"], ["sign", "sprout"],
     ["bend", "stream"], ["deadtree", "stream"], ["stream", "sprout"], ["stream", "trees"], ["sprout", "plateau"],
@@ -265,3 +276,24 @@ export const RETURN_OPENINGS: Record<string, [Agent, string][]> = {
   library: [["Lowkey", "The library. We only read the first shelf last time."], ["Oz", "Our books are still where we left them. Kind of sweet."], ["Brix", "Look for what we didn't see. Not what we did."]],
   "long-walk": [["Brix", "The road where we beat Shelton. Ground still scorched."], ["Oz", "Ha. Remember his face? Classic."], ["Lowkey", "He'll be back. Keep scanning the ridge."]],
 };
+
+/** Keep a point on a scene's safe ground: inside stays put, outside snaps just inside the nearest edge. */
+export function onGround(scene: Scene, p: Point): Point {
+  const g = scene.ground; if (!g || g.length < 3) return p;
+  let inside = false;
+  for (let i = 0, j = g.length - 1; i < g.length; j = i++) {
+    const a = g[i]!, b = g[j]!;
+    if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  if (inside) return p;
+  let best = p, bd = Infinity;
+  for (let i = 0, j = g.length - 1; i < g.length; j = i++) {
+    const a = g[j]!, b = g[i]!, dx = b.x - a.x, dy = b.y - a.y;
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1)));
+    const q = { x: a.x + dx * t, y: a.y + dy * t }, d = Math.hypot(p.x - q.x, p.y - q.y);
+    if (d < bd) { bd = d; best = q; }
+  }
+  const cx = g.reduce((s, v) => s + v.x, 0) / g.length, cy = g.reduce((s, v) => s + v.y, 0) / g.length;
+  const k = Math.hypot(cx - best.x, cy - best.y) || 1;
+  return { x: best.x + (cx - best.x) / k * 1.5, y: best.y + (cy - best.y) / k * 1.5 };
+}
