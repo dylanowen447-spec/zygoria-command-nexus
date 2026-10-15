@@ -84,6 +84,12 @@ const BED: Record<Agent, { door: Point; out: Point; zzz: Point }> = {
 };
 /** How long the night lasts before morning arrives (skippable). */
 const NAP_MS = 16000;
+/** Count of legitimate long waits (night's sleep, crew AI replies) so the stuck-phase safety net leaves them alone. */
+let longWaits = 0;
+async function holdBusy<T>(p: Promise<T>): Promise<T> {
+  longWaits++;
+  try { return await p; } finally { longWaits--; }
+}
 const WALK_SPEED = 5.5; // percent of world width per second
 const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 22, 0), 1) * 0.12).toFixed(3);
 const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ZONES.sanctuary.aspect);
@@ -521,7 +527,7 @@ function CommandCentre() {
     log(agent, staysPut ? `Working on the ${target.name.toLowerCase()} right here at the shack.` : `Heading to the ${target.name.toLowerCase()}.`);
     let output: Awaited<typeof call>;
     try {
-      [output] = await Promise.all([call, staysPut ? Promise.resolve() : goTo(agent, "work", run)]);
+      [output] = await holdBusy(Promise.all([call, staysPut ? Promise.resolve() : goTo(agent, "work", run)]));
     } catch (error) {
       if (run !== runId.current) return null;
       const message = error instanceof Error ? error.message : "The crew could not finish this step.";
@@ -1052,8 +1058,8 @@ function CommandCentre() {
   // taps (water, food, visits). If the crew stays "busy" with nobody talking or walking, free them up.
   useEffect(() => {
     if (phase === "idle" || bubble || walking.length) return;
-    const t = setTimeout(() => { if (phaseRef.current !== "idle") setPhase("idle"); }, 12000);
-    return () => clearTimeout(t);
+    const t = setInterval(() => { if (longWaits === 0 && phaseRef.current !== "idle") setPhase("idle"); }, 12000);
+    return () => clearInterval(t);
   }, [phase, bubble, walking]);
   /** Crew hunger: drifts down slowly; cosmetic before the Sanctuary, restored by the cookout. */
   const [hunger, setHunger] = useState(HUNGER_START);
@@ -1279,10 +1285,10 @@ function CommandCentre() {
     setFire("embers");
     setSleepStage("asleep");
     log("Oz", "The camp settles in for the night.");
-    await new Promise<void>(resolve => {
+    await holdBusy(new Promise<void>(resolve => {
       const t = setTimeout(() => { napSkip.current = null; resolve(); }, NAP_MS);
       napSkip.current = () => { clearTimeout(t); napSkip.current = null; resolve(); };
-    });
+    }));
     if (run !== runId.current) return;
     // Morning: the doors open and everyone stretches back into the day.
     setSleepStage("waking");
