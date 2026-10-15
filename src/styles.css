@@ -839,3 +839,5 @@
 .ambush-rat-wrap.is-launched{animation:ratLaunch .8s cubic-bezier(.25,.6,.4,1) forwards;pointer-events:none}
 .ambush-rat-wrap.is-launched .ambush-rat{animation:none!important}
 @keyframes ratLaunch{0%{translate:0 0;rotate:0deg}30%{translate:calc(var(--launch) * 25vw) -30vh;rotate:calc(var(--launch) * 360deg)}100%{translate:calc(var(--launch) * 120vw) -90vh;rotate:calc(var(--launch) * 1080deg);opacity:.9}}
+/* Scene start pose: Oz and Brix stand with their backs to the viewer, looking out over the land. */
+.marker-oz.look-away:not(.is-walking) .sheet-frames,.marker-brix.look-away:not(.is-walking) .sheet-frames{background-position:0 100%}
