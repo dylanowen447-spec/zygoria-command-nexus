@@ -276,3 +276,24 @@ export const RETURN_OPENINGS: Record<string, [Agent, string][]> = {
   library: [["Lowkey", "The library. We only read the first shelf last time."], ["Oz", "Our books are still where we left them. Kind of sweet."], ["Brix", "Look for what we didn't see. Not what we did."]],
   "long-walk": [["Brix", "The road where we beat Shelton. Ground still scorched."], ["Oz", "Ha. Remember his face? Classic."], ["Lowkey", "He'll be back. Keep scanning the ridge."]],
 };
+
+/** Keep a point on a scene's safe ground: inside stays put, outside snaps just inside the nearest edge. */
+export function onGround(scene: Scene, p: Point): Point {
+  const g = scene.ground; if (!g || g.length < 3) return p;
+  let inside = false;
+  for (let i = 0, j = g.length - 1; i < g.length; j = i++) {
+    const a = g[i]!, b = g[j]!;
+    if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  if (inside) return p;
+  let best = p, bd = Infinity;
+  for (let i = 0, j = g.length - 1; i < g.length; j = i++) {
+    const a = g[j]!, b = g[i]!, dx = b.x - a.x, dy = b.y - a.y;
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1)));
+    const q = { x: a.x + dx * t, y: a.y + dy * t }, d = Math.hypot(p.x - q.x, p.y - q.y);
+    if (d < bd) { bd = d; best = q; }
+  }
+  const cx = g.reduce((s, v) => s + v.x, 0) / g.length, cy = g.reduce((s, v) => s + v.y, 0) / g.length;
+  const k = Math.hypot(cx - best.x, cy - best.y) || 1;
+  return { x: best.x + (cx - best.x) / k * 1.5, y: best.y + (cy - best.y) / k * 1.5 };
+}
