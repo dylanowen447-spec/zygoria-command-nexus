@@ -414,6 +414,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       say(z, pick(ACKS[z]), true);
       timers.push(setTimeout(() => alive && say(z, null, true), 1600));
     };
+    // After Shelton is beaten, onSheltonDefeat uses this to walk the crew to the ridge.
+    if (scene.id === "long-walk") autoFinish.current = () => { ALL.forEach((z, i) => timers.push(setTimeout(() => alive && send(z, "ridge"), i * 1500))); };
     /** Real in-character replies, scoped to what the crew know in this scene. */
     async function chat(text: string, speakers: Agent[]) {
       const previous: { agent: Agent; result: string }[] = [];
