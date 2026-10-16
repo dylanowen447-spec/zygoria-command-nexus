@@ -792,6 +792,8 @@
 .haven-layer .haven-zig .sprite-stage{position:absolute!important;left:50%!important;bottom:0!important;top:auto!important;transform:translateX(-50%)!important;width:28px!important;height:44px!important;margin:0!important;scale:1!important}
 .haven-layer .haven-zig.marker-brix .sprite-stage{width:34px!important;height:50px!important}
 .workshop-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:41px!important;height:60px!important}
+.workshop-scene .haven-layer .haven-zig.marker-oz .sprite-stage{width:30px!important;height:46px!important}
+.workshop-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:34px!important;height:52px!important}
 /* Speech bubbles float above the tallest head; the lift grows with PC sprite size. */
 .haven-scene{--zig-lift:62px;--human-lift:23%}
 .workshop-scene{--zig-lift:70px}
@@ -800,6 +802,10 @@
 .workshop-scene{--zig-lift:250px}
 .workshop-scene .haven-layer .haven-zig.marker-brix{width:164px;height:248px}
 .workshop-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:164px!important;height:240px!important}
+.workshop-scene .haven-layer .haven-zig.marker-oz{width:120px;height:184px}
+.workshop-scene .haven-layer .haven-zig.marker-oz .sprite-stage{width:120px!important;height:184px!important}
+.workshop-scene .haven-layer .haven-zig.marker-lowkey{width:136px;height:210px}
+.workshop-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:136px!important;height:210px!important}
 .workshop-scene .haven-layer .haven-zig .ctrl-ring{width:118px;height:18px}
 }
 /* Underground Haven: all Zygs doubled so they read clearly against the cavern. */
