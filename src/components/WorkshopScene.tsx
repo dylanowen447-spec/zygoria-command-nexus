@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { INTERIORS, type InteriorId } from "@/lib/interiors";
+import { startShackMusic, stopShackMusic } from "@/lib/atmosphere";
 
 type Zig = "Oz" | "Brix" | "Lowkey";
 
@@ -17,6 +18,7 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix" }: { 
 
   useEffect(() => { const t = setTimeout(() => setBubble(""), 4200); return () => clearTimeout(t); }, [bubble]);
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+  useEffect(() => { if (place !== "oz") return; startShackMusic(); return () => stopShackMusic(); }, [place]);
 
   const walkTo = (tx: number, then?: () => void) => {
     tx = Math.min(80, Math.max(12, tx));

@@ -91,6 +91,7 @@ export function ShackRadio({ trigger }: { trigger: number }) {
     setOn(true);
   };
   useEffect(() => { if (trigger > 0) play(); }, [trigger]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const h = () => stop(); window.addEventListener("zygoria-music-takeover", h); return () => window.removeEventListener("zygoria-music-takeover", h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => stop(), []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { localStorage.setItem(KEY, String(vol)); if (eng.current) eng.current.master.gain.value = vol; }, [vol]);
   return (
