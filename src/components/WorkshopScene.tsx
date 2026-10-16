@@ -10,10 +10,18 @@ const SPOTS = [
   { id: "loft", x: 30, y: 26, label: "The loft", line: "Spare parts up there. And a hammock. Don't tell the others about the hammock." },
 ] as const;
 
-export function WorkshopScene({ onExit }: { onExit: () => void }) {
+type Zig = "Oz" | "Brix" | "Lowkey";
+const GREETING: Record<Zig, string> = {
+  Brix: "Mind the floor. Everything on it is important.",
+  Oz: "Ooh, Brix's workshop. Don't touch anything. Touching one thing.",
+  Lowkey: "Quiet in here. Smells like oil and old ideas.",
+};
+
+export function WorkshopScene({ onExit, character = "Brix" }: { onExit: () => void; character?: Zig }) {
   const [x, setX] = useState(55);
   const [moving, setMoving] = useState<{ dir: "left" | "right"; ms: number } | null>(null);
-  const [bubble, setBubble] = useState<string>("Mind the floor. Everything on it is important.");
+  const [bubble, setBubble] = useState<string>(GREETING[character]);
+  const low = character.toLowerCase();
   const posRef = useRef(55);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -36,12 +44,12 @@ export function WorkshopScene({ onExit }: { onExit: () => void }) {
   }}>
     <img className="world-image" src={bg} alt="Inside Brix's workshop: timber rafters, a blueprint wall, a loft and a big covered machine on a workbench" />
     <div className="haven-layer">
-      <span className={`haven-zig marker-brix ${moving ? `is-walking brix-facing-${moving.dir} facing-${moving.dir}` : ""}`} style={{ left: `${x}%`, bottom: "16%", transitionDuration: moving ? `${moving.ms}ms` : "0ms" }}>
-        <span className="sprite-stage"><CharacterSprite character="Brix"/></span>
+      <span className={`haven-zig marker-${low} ${moving ? `is-walking ${low}-facing-${moving.dir} facing-${moving.dir}` : ""}`} style={{ left: `${x}%`, bottom: "16%", transitionDuration: moving ? `${moving.ms}ms` : "0ms" }}>
+        <span className="sprite-stage"><CharacterSprite character={character}/></span>
       </span>
       <button type="button" className="workshop-spot workshop-door" style={{ left: "84%", top: "48%" }} aria-label="Back outside"
         onPointerDown={e => e.stopPropagation()} onClick={() => walkTo(80, onExit)}><span>Outside ›</span></button>
-      {bubble && <div key={bubble} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, x))}%`, bottom: "calc(16% + var(--zig-lift))" }}><b>BRIX</b>{bubble}</div>}
+      {bubble && <div key={bubble} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, x))}%`, bottom: "calc(16% + var(--zig-lift))" }}><b>{character.toUpperCase()}</b>{bubble}</div>}
     </div>
     <div className="map-coordinate top-right">BRIX'S WORKSHOP</div>
   </div>;
