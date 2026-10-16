@@ -184,3 +184,44 @@ export function playSfx(kind: Sfx) {
     case "hurt": blip(t, 420, 160, 0.16, 0.18, "square"); break;
   }
 }
+
+// ---------- Oz's shack: procedural drum & bass (174 BPM). Only one music track at a time. ----------
+let dnb: { timer: number; step: number; next: number; bus: GainNode } | null = null;
+const DNB_ROOTS = [38, 38, 41, 36]; // D, D, F, C — one per bar
+function dnbTick() {
+  if (!ctx || !dnb) return;
+  const d = dnb; const s16 = 60 / 174 / 4;
+  while (d.next < ctx.currentTime + 0.25) {
+    const t = d.next, sub = d.step % 16, bar = Math.floor(d.step / 16) % 4;
+    // two-step break: kick 0 & 10, snare 4 & 12, ghost snare 7
+    if (sub === 0 || sub === 10) { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g).connect(d.bus); o.start(t); o.stop(t + 0.25); }
+    if (sub === 4 || sub === 12) { hit(d.bus, t, 1200, 0.16, 0.32); chip(d.bus, t, 200, 0.06, 0.12, "triangle"); }
+    if (sub === 7 && bar % 2) hit(d.bus, t, 1500, 0.06, 0.1);
+    hit(d.bus, t, 8000, 0.025, sub % 2 ? 0.035 : 0.06);
+    // rolling reese-ish sub bass
+    if (sub % 4 === 0 || sub === 14) { const root = DNB_ROOTS[bar]!; const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz(root); const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(140, t + s16 * 3); const g = ctx.createGain(); g.gain.setValueAtTime(0.16, t); g.gain.linearRampToValueAtTime(0, t + s16 * 3.6); o.connect(f).connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 4); }
+    // airy liquid pad stab each bar
+    if (sub === 0) for (const m of [62, 65, 69].map(n => n + (DNB_ROOTS[bar]! - 38))) { const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = hz(m); const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.03, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + s16 * 16); o.connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 16); }
+    d.step++; d.next += s16;
+  }
+}
+/** Start Oz's shack drum & bass: stops battle music and Shack Radio, ducks outdoor ambience. */
+export function startShackMusic() {
+  if (typeof window === "undefined") return;
+  if (!ctx) boot();
+  if (!ctx || dnb) return;
+  stopBattleMusic();
+  window.dispatchEvent(new Event("zygoria-music-takeover"));
+  master.gain.setTargetAtTime(MASTER * 0.12, ctx.currentTime, 0.3);
+  const bus = ctx.createGain(); bus.gain.value = 0; bus.connect(ctx.destination);
+  bus.gain.setTargetAtTime(0.55, ctx.currentTime, 0.4);
+  dnb = { timer: window.setInterval(dnbTick, 50), step: 0, next: ctx.currentTime + 0.05, bus };
+  dnbTick();
+}
+export function stopShackMusic() {
+  if (!dnb || !ctx) { dnb = null; return; }
+  const d = dnb; dnb = null; clearInterval(d.timer);
+  d.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
+  master.gain.setTargetAtTime(MASTER, ctx.currentTime, 0.4);
+  setTimeout(() => d.bus.disconnect(), 1500);
+}
