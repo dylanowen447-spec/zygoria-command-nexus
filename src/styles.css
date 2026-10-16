@@ -842,3 +842,16 @@
 /* Scene start pose: Oz and Brix stand with their backs to the viewer, looking out over the land. */
 .marker-oz.look-away:not(.is-walking) .sheet-frames,.marker-brix.look-away:not(.is-walking) .sheet-frames{background-position:0 100%}
 
+
+/* Lowkey's four-direction sheet: 7 columns (idle + 6 walk) x 4 rows (down, left, right, up), like Oz and Brix. */
+.sheet-lowkey .sheet-frames{background-size:700% 400%!important;background-position:0 0}
+.agent-marker.marker-lowkey .sheet-frames,.agent-marker.marker-lowkey.is-thinking .sheet-frames,.haven-zig.marker-lowkey .sheet-frames{background-position:0 0}
+.marker-lowkey.is-walking.lowkey-facing-left .sheet-frames{background-position:0 33.3333%}
+.marker-lowkey.is-walking.lowkey-facing-right .sheet-frames{background-position:0 66.6667%}
+.marker-lowkey.is-walking.lowkey-facing-up .sheet-frames{background-position:0 100%}
+.agent-marker.marker-lowkey.is-walking .sheet-frames{animation:lowkeyDirectionalWalk .6s step-end infinite,ozBounce .3s ease-in-out infinite alternate!important}
+.haven-zig.marker-lowkey.is-walking .sheet-frames{animation:lowkeyDirectionalWalk .6s step-end infinite!important}
+@keyframes lowkeyDirectionalWalk{0%,100%{background-position-x:16.6667%}16.66%{background-position-x:33.3333%}33.33%{background-position-x:50%}50%{background-position-x:66.6667%}66.66%{background-position-x:83.3333%}83.33%{background-position-x:100%}}
+.world-image-wrap .marker-lowkey.is-walking.facing-left .sprite-stage,.haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{scale:1 1}
+.haven-layer .haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{transform:translateX(-50%)!important}
+.marker-lowkey.look-away:not(.is-walking) .sheet-frames{background-position:0 100%}
