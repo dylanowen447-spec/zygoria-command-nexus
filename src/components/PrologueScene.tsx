@@ -53,7 +53,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const ambushHit = useRef<(p: Point) => boolean>(() => false);
   const sheltonBeaten = useRef(false);
   useEffect(() => { try { sheltonBeaten.current = localStorage.getItem("zygoria-longwalk-ambush-v1") === "done"; } catch { /* fight required */ } }, []);
-  const onSheltonDefeat = useCallback(() => { sheltonBeaten.current = true; }, []);
+  /** Set by the Long Walk scene: orders the whole crew to the valley overlook. */
+  const autoFinish = useRef<() => void>(() => {});
+  const onSheltonDefeat = useCallback(() => {
+    sheltonBeaten.current = true;
+    // One minute after Shelton flees, the crew head for the valley on their own.
+    setTimeout(() => autoFinish.current(), 60000);
+  }, []);
   /** Danger moment: the crew improvise their reaction live through the AI, never a fixed script. */
   const alarm = useRef<(situation: string) => void>(() => undefined);
   const onAlarm = useCallback((s: string) => alarm.current(s), []);
