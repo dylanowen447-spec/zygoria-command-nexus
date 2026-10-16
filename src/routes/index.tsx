@@ -1368,7 +1368,7 @@ function CommandCentre() {
     if (!pts.length || distance(pts.at(-1)!, door) > 1) pts.push(door);
     setSelected(who);
     setWalking(w => w.filter(a => a !== who));
-    void walk(who, pts, "central", run).then(() => { if (run === runId.current) setWorkshop(true); });
+    void walk(who, pts, "central", run).then(() => setWorkshop(true));
   };
   function onWorldClick(e: React.MouseEvent<HTMLDivElement>) {
     const tg = e.target as Element | null;
