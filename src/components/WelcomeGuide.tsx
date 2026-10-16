@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const KEY = "zygoria-welcome-v1";
@@ -65,7 +65,19 @@ export function WelcomeGuide({ onAsk }: { onAsk?: (text: string) => void }) {
           <h3>WELCOME TO <span>ZYGORIA</span></h3>
           <Button ref={closeRef} type="button" variant="ghost" size="icon" className="welcome-close" onClick={dismiss} aria-label="Close the field guide"><X size={15}/></Button>
         </header>
-        <p className="welcome-lead"><strong>Three eggs have fallen from the sky.</strong> Oz, Brix and Lowkey have just woken in a world they don't recognise.</p>
+        <p className="welcome-lead"><strong>Three eggs have fallen from the sky.</strong></p>
+        <p className="welcome-lead">Oz, Brix and Lowkey have just woken in a world they do not recognise.</p>
+        <p className="welcome-note">They remember their names. They know how to speak. Some instincts feel strangely familiar.</p>
+        <p className="welcome-note">But they do not know where they are, why they were sent here, or what waits beyond the landing site.</p>
+        <div className="welcome-col">
+          <span className="welcome-label">Your journey starts here</span>
+          <ul>
+            <li>Explore the area.</li>
+            <li>Talk to the Zigs.</li>
+            <li>Help them investigate their surroundings.</li>
+            <li>Follow what they discover.</li>
+          </ul>
+        </div>
         <div className="welcome-col">
           <span className="welcome-label">How to play</span>
           <ul>
@@ -75,6 +87,7 @@ export function WelcomeGuide({ onAsk }: { onAsk?: (text: string) => void }) {
             <li>Tap strange objects to uncover Codex clues.</li>
           </ul>
         </div>
+        <p className="welcome-note">New places, characters and dangers will reveal themselves as the story unfolds.</p>
         <div className="welcome-col">
           <span className="welcome-label">Try asking</span>
           <ul className="welcome-asks">
