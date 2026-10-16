@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Sparkles, X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const KEY = "zygoria-welcome-v1";
@@ -65,27 +65,22 @@ export function WelcomeGuide({ onAsk }: { onAsk?: (text: string) => void }) {
           <h3>WELCOME TO <span>ZYGORIA</span></h3>
           <Button ref={closeRef} type="button" variant="ghost" size="icon" className="welcome-close" onClick={dismiss} aria-label="Close the field guide"><X size={15}/></Button>
         </header>
-        <p className="welcome-lead"><strong>Three eggs have fallen from the sky.</strong></p>
-        <p className="welcome-lead">Oz, Brix and Lowkey have just woken in a world they do not recognise.</p>
-        <p className="welcome-note">They remember their names. They know how to speak. Some instincts feel strangely familiar.</p>
-        <p className="welcome-note">But they do not know where they are, why they were sent here, or what waits beyond the landing site.</p>
+        <p className="welcome-lead"><strong>Three eggs have fallen from the sky.</strong> Oz, Brix and Lowkey have just woken in a world they don't recognise.</p>
         <div className="welcome-col">
-          <span className="welcome-label">Your journey starts here</span>
+          <span className="welcome-label">How to play</span>
           <ul>
-            <li>Explore the area.</li>
-            <li>Talk to the Zigs.</li>
-            <li>Help them investigate their surroundings.</li>
-            <li>Follow what they discover.</li>
+            <li>Tap the ground to walk.</li>
+            <li>Double-tap a Zig to take control — then ATTACK or Space.</li>
+            <li>Watch their food, water and rest meters.</li>
+            <li>Tap strange objects to uncover Codex clues.</li>
           </ul>
         </div>
-        <p className="welcome-note">New places, characters and dangers will reveal themselves as the story unfolds.</p>
         <div className="welcome-col">
           <span className="welcome-label">Try asking</span>
           <ul className="welcome-asks">
             {ASKS.map(q => <li key={q}><button type="button" onClick={() => ask(q)}>“{q}”</button></li>)}
           </ul>
         </div>
-        <div className="welcome-tip"><Sparkles size={13}/> Tip: the world should be discovered with the Zigs, not explained in advance.</div>
         <Button type="button" className="welcome-enter" onClick={dismiss}>BEGIN EXPLORATION <ChevronDown size={13}/></Button>
       </section>
     </div>}
