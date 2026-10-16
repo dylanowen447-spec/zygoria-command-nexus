@@ -632,6 +632,7 @@
 /* All in-game character sprites are 10% smaller, anchored at their feet. */
 .world-image-wrap .agent-marker .sprite-stage{transform:translateY(4px) scale(calc(var(--depth,1) * var(--desktop-sprite-scale,1) * .9))!important;transform-origin:center bottom}
 .shel-overhead{position:absolute;left:50%;bottom:100%;transform:translate(-50%,-4px);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;font:700 9px/1 var(--font-mono,monospace);letter-spacing:.12em;color:var(--foreground);text-shadow:0 0 4px var(--background)}
+.shel-overhead.is-below{bottom:auto;top:100%;transform:translate(-50%,4px)}
 .shel-overhead-bar{display:block;width:64px;height:6px;background:var(--background);border:1px solid var(--electric);overflow:hidden}
 .shel-overhead-bar>span{display:block;height:100%;background:var(--destructive);transition:width .25s ease-out}
 .ambush-shelton-art.is-hurt{animation:shelHurt .38s ease-out}
