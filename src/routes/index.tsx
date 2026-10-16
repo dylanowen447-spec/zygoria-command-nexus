@@ -329,10 +329,11 @@ function CommandCentre() {
         const origin = coords.current[zoneRef.current][agent];
         const dx = target.x - origin.x;
         const dy = target.y - origin.y;
-        if ((agent === "Oz" || agent === "Brix") && (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3)) {
+        if ((agent === "Oz" || agent === "Brix" || agent === "Lowkey") && (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3)) {
           const direction = Math.abs(dy) > Math.abs(dx) * 0.7 ? (dy < 0 ? "up" : "down") : (dx < 0 ? "left" : "right");
           if (agent === "Oz") setOzDirection(previous => previous === direction ? previous : direction);
-          else setBrixDirection(previous => previous === direction ? previous : direction);
+          else if (agent === "Brix") setBrixDirection(previous => previous === direction ? previous : direction);
+          else setLowkeyDirection(previous => previous === direction ? previous : direction);
         }
         if (Math.abs(dx) < 0.3) return;
         const dir = dx < 0 ? "left" as const : "right" as const;
@@ -407,6 +408,7 @@ function CommandCentre() {
   facingRef.current = facing;
   const [ozDirection, setOzDirection] = useState<"down" | "left" | "right" | "up">("down");
   const [brixDirection, setBrixDirection] = useState<"down" | "left" | "right" | "up">("down");
+  const [lowkeyDirection, setLowkeyDirection] = useState<"down" | "left" | "right" | "up">("down");
   /** Pixel offset from an agent's feet to the hand they carry the task in (follows facing). */
   const handOffset = (a: Agent) => {
     const h = HAND[a], dir = facingRef.current[a] === "right" ? 1 : -1;
