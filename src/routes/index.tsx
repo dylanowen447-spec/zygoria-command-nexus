@@ -1358,6 +1358,18 @@ function CommandCentre() {
   };
   const beside = (a: Agent) => { const p = coords.current.sanctuary[a]; return { x: p.x + (p.x > 50 ? -6 : 6), y: p.y + 1 }; };
   const visitLines = (a: Agent) => GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!;
+  // The chosen Zig walks the trails to the workshop door before the interior opens.
+  const enterWorkshop = () => {
+    const pick = steerRef.current ?? selected ?? "Brix";
+    const who: Agent = pick === "Moxi" ? "Brix" : pick;
+    const door = { x: 71, y: 52.8 };
+    const run = ++runId.current;
+    const pts = routeNodes(coords.current.sanctuary[who], door);
+    if (!pts.length || distance(pts.at(-1)!, door) > 1) pts.push(door);
+    setSelected(who);
+    setWalking(w => w.filter(a => a !== who));
+    void walk(who, pts, "central", run).then(() => { if (run === runId.current) setWorkshop(true); });
+  };
   function onWorldClick(e: React.MouseEvent<HTMLDivElement>) {
     const tg = e.target as Element | null;
     if (zoneId !== "sanctuary" || !stageRef.current || (tg && typeof tg.closest === "function" && tg.closest("button,a,.welcome-card"))) return;
