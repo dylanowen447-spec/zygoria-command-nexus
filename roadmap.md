@@ -7,4 +7,4 @@
 - [x] Brix charged punch launches rats off screen
 - [x] Long Walk safe ground from the collision map
 - [x] Long Walk crew start standing, facing forward
-- [ ] One tap on a door while steering a Zig walks him over and inside
+- [x] One tap on a door while steering a Zig walks him over and inside
