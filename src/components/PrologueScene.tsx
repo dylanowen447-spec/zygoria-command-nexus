@@ -26,7 +26,8 @@ const cdist = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
 /** Attack reach in artwork %: Oz zaps from range, Brix and Lowkey must get close (Lowkey's heavy dash closes a gap). */
 const REACH: Record<Agent, number> = { Oz: 42, Brix: 14, Lowkey: 9 };
 /** Brix throws a real punch from his punch sheet; the others keep their swing nudge. */
-const swingKind = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? "atk-punch is-heavy" : "atk-punch") : heavy ? "atk-heavy" : "atk-quick";
+const swingKind = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? "atk-punch is-heavy" : "atk-punch") : a === "Lowkey" ? (heavy ? "atk-slash is-heavy" : "atk-slash") : heavy ? "atk-heavy" : "atk-quick";
+const swingMs = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? 620 : 460) : a === "Lowkey" ? (heavy ? 560 : 420) : heavy ? 420 : 240;
 const HOLD_MS = 600;
 
 type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void; canSkip?: boolean };
@@ -183,8 +184,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];
-    const flashSwing = (a: Agent, kind: string, ms: number) => { if (a === "Oz") playSfx(kind.includes("heavy") ? "zap-heavy" : "zap"); else playSfx("swing"); setSwing(w => ({ ...w, [a]: undefined })); requestAnimationFrame(() => alive && setSwing(w => ({ ...w, [a]: kind }))); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms + 30)); };
-    const impact = (p: Point, kind: string) => { playSfx(kind === "miss" ? "miss" : kind.startsWith("oz") ? "zap-hit" : kind.endsWith("heavy") ? "punch-heavy" : "punch"); const id = performance.now() + Math.random(); setHits(h => [...h.slice(-6), { id, x: p.x, y: p.y, kind }]); timers.push(setTimeout(() => alive && setHits(h => h.filter(v => v.id !== id)), 450)); };
+    const flashSwing = (a: Agent, kind: string, ms: number) => { if (a === "Oz") playSfx(kind.includes("heavy") ? "zap-heavy" : "zap"); else if (a === "Lowkey") playSfx("slash"); else playSfx("swing"); setSwing(w => ({ ...w, [a]: undefined })); requestAnimationFrame(() => alive && setSwing(w => ({ ...w, [a]: kind }))); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms + 30)); };
+    const impact = (p: Point, kind: string) => { playSfx(kind === "miss" ? "miss" : kind.startsWith("oz") ? "zap-hit" : kind.startsWith("lowkey") ? "slash-hit" : kind.endsWith("heavy") ? "punch-heavy" : "punch"); const id = performance.now() + Math.random(); setHits(h => [...h.slice(-6), { id, x: p.x, y: p.y, kind }]); timers.push(setTimeout(() => alive && setHits(h => h.filter(v => v.id !== id)), 450)); };
     const faceTo = (a: Agent, t: Point) => {
       const o = coords.current[a], dx = t.x - o.x, dy = t.y - o.y;
       setFacing(f => ({ ...f, [a]: dx < 0 ? "left" : "right" }));
@@ -230,17 +231,17 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       t = meleeTarget(enemies.current.targets(), me, reach, aimP);
       if (aimP && !t) {
         lastAtk[a] = now; faceTo(a, aimP);
-        flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
+        flashSwing(a, swingKind(a, heavy), swingMs(a, heavy));
         if (a === "Brix") { const d = cdist(me, aimP) || 1, k = Math.min(1, REACH.Brix * 0.6 / d); impact({ x: me.x + (aimP.x - me.x) * k, y: me.y - 4 + (aimP.y - me.y) * k }, "miss"); }
         return;
       }
       // Nothing to hit: still throw the move straight ahead so every tap shows a punch/swing.
-      if (!t) { lastAtk[a] = now; flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? (heavy ? 620 : 460) : 260); return; }
+      if (!t) { lastAtk[a] = now; flashSwing(a, a !== "Oz" ? swingKind(a, heavy) : "atk-whiff", a !== "Oz" ? swingMs(a, heavy) : 260); return; }
       lastAtk[a] = now; faceTo(a, t);
-      if (cdist(me, t) > reach) { flashSwing(a, a === "Brix" ? swingKind(a, heavy) : "atk-whiff", a === "Brix" ? 460 : 260); return; }
+      if (cdist(me, t) > reach) { flashSwing(a, a !== "Oz" ? swingKind(a, heavy) : "atk-whiff", a !== "Oz" ? swingMs(a, false) : 260); return; }
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
-      flashSwing(a, swingKind(a, heavy), a === "Brix" ? (heavy ? 620 : 460) : heavy ? 420 : 240);
+      flashSwing(a, swingKind(a, heavy), swingMs(a, heavy));
       hitCtx.by = a; hitCtx.heavy = heavy; const landed = !!ambushHit.current(aim(t)); hitCtx.heavy = false;
       impact(aim(t), landed ? `${a.toLowerCase()}${heavy ? "-heavy" : ""}` : "miss");
       // Heavy blows land a second impact a beat later (Shelton's own hit timing still applies).

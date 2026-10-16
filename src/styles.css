@@ -855,3 +855,17 @@
 .world-image-wrap .marker-lowkey.is-walking.facing-left .sprite-stage,.haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{scale:1 1}
 .haven-layer .haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{transform:translateX(-50%)!important}
 .marker-lowkey.look-away:not(.is-walking) .sheet-frames{background-position:0 100%}
+
+/* Lowkey's slash: plays his 7-frame attack row from the supplied sheet (drawn facing right, mirrored for left). */
+.sheet-slash{position:absolute;left:50%;bottom:0;width:137%;height:112%;transform:translateX(-50%);background-size:700% 100%;background-repeat:no-repeat;background-position:0 0;visibility:hidden;pointer-events:none}
+.marker-lowkey.atk-slash .sheet-frames{visibility:hidden}
+.marker-lowkey.atk-slash .sheet-slash{visibility:visible;animation:lowkeySlash .42s steps(7,jump-none) forwards}
+.marker-lowkey.atk-slash.is-heavy .sheet-slash{animation-duration:.56s;filter:drop-shadow(0 0 6px oklch(0.6 0.25 300))}
+.marker-lowkey.atk-slash.facing-left .sheet-slash,.marker-lowkey.atk-slash.lowkey-facing-left .sheet-slash{transform:translateX(-50%) scaleX(-1)}
+.world-image-wrap .marker-lowkey.atk-slash .sprite-stage{scale:1 1}
+@keyframes lowkeySlash{from{background-position-x:0%}to{background-position-x:100%}}
+/* Rat hit by Lowkey: a purple crescent cut and a shadowy stagger. */
+.ambush-rat.is-hurt.is-slashed{animation:ratSliced .4s ease-out}
+@keyframes ratSliced{0%{translate:0 0;skew:0deg;filter:brightness(.4) drop-shadow(0 0 8px oklch(0.6 0.25 300))}30%{translate:-10% 0;skew:-12deg;filter:brightness(.6) saturate(.4) drop-shadow(0 0 10px oklch(0.6 0.25 300))}100%{translate:0 0;skew:0deg;filter:none}}
+.rat-slash-burst{position:absolute;left:50%;top:50%;width:50px;height:50px;transform:translate(-50%,-50%) rotate(-35deg);pointer-events:none;border-radius:50%;border-top:4px solid oklch(0.7 0.25 300);border-right:2px solid transparent;border-left:2px solid transparent;box-shadow:0 -6px 12px -4px oklch(0.6 0.25 300);animation:ratSlash .4s ease-out forwards}
+@keyframes ratSlash{0%{scale:.5;opacity:1;rotate:-60deg}100%{scale:1.4;opacity:0;rotate:30deg}}
