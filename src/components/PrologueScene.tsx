@@ -236,9 +236,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         return;
       }
       // Nothing to hit: still throw the move straight ahead so every tap shows a punch/swing.
-      if (!t) { lastAtk[a] = now; flashSwing(a, a !== "Oz" ? swingKind(a, heavy) : "atk-whiff", a !== "Oz" ? swingMs(a, heavy) : 260); return; }
+      if (!t) { lastAtk[a] = now; flashSwing(a, swingKind(a, heavy), swingMs(a, heavy)); return; }
       lastAtk[a] = now; faceTo(a, t);
-      if (cdist(me, t) > reach) { flashSwing(a, a !== "Oz" ? swingKind(a, heavy) : "atk-whiff", a !== "Oz" ? swingMs(a, false) : 260); return; }
+      if (cdist(me, t) > reach) { flashSwing(a, swingKind(a, heavy), swingMs(a, false)); return; }
       const aim = (p: Point) => ({ x: p.x, y: p.y - 4 });
       if (a === "Lowkey" && heavy) { const d = cdist(me, t) || 1; await dash(a, clampB({ x: t.x - (t.x - me.x) / d * 3, y: t.y - (t.y - me.y) / d * 1.5 })); if (!alive) return; }
       flashSwing(a, swingKind(a, heavy), swingMs(a, heavy));
