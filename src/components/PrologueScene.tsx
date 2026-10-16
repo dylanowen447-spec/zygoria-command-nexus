@@ -604,7 +604,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       setLookAway(false);
       ALL.forEach(a => void explore(a));
     })();
-    return () => { alive = false; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
+    return () => { alive = false; autoFinish.current = () => {}; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, [scene]);
 
   // Space: tap = quick attack, hold ~0.6s then release = heavy. Key auto-repeat is ignored.
