@@ -48,6 +48,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const [bubbles, setBubbles] = useState<Partial<Record<Agent, string>>>({});
   const [found, setFound] = useState<string[]>([]);
   const [done, setDone] = useState(false);
+  // After the Long Walk's valley moment, don't wait for a tap: carry on to the Sanctuary on its own.
+  useEffect(() => {
+    if (done && scene.id === "long-walk") { const t = setTimeout(onNext, 6000); return () => clearTimeout(t); }
+    return undefined;
+  }, [done, scene.id, onNext]);
   const zap = useRef<(p: Point, hit?: boolean) => void>(() => undefined);
   const stageRef = useRef<HTMLDivElement>(null);
   const ambushHit = useRef<(p: Point) => boolean>(() => false);
