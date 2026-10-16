@@ -53,7 +53,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const ambushHit = useRef<(p: Point) => boolean>(() => false);
   const sheltonBeaten = useRef(false);
   useEffect(() => { try { sheltonBeaten.current = localStorage.getItem("zygoria-longwalk-ambush-v1") === "done"; } catch { /* fight required */ } }, []);
-  const onSheltonDefeat = useCallback(() => { sheltonBeaten.current = true; }, []);
+  /** Set by the Long Walk scene: orders the whole crew to the valley overlook. */
+  const autoFinish = useRef<() => void>(() => {});
+  const onSheltonDefeat = useCallback(() => {
+    sheltonBeaten.current = true;
+    // One minute after Shelton flees, the crew head for the valley on their own.
+    setTimeout(() => autoFinish.current(), 60000);
+  }, []);
   /** Danger moment: the crew improvise their reaction live through the AI, never a fixed script. */
   const alarm = useRef<(situation: string) => void>(() => undefined);
   const onAlarm = useCallback((s: string) => alarm.current(s), []);
@@ -408,6 +414,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       say(z, pick(ACKS[z]), true);
       timers.push(setTimeout(() => alive && say(z, null, true), 1600));
     };
+    // After Shelton is beaten, onSheltonDefeat uses this to walk the crew to the ridge.
+    if (scene.id === "long-walk") autoFinish.current = () => { ALL.forEach((z, i) => timers.push(setTimeout(() => alive && send(z, "ridge"), i * 1500))); };
     /** Real in-character replies, scoped to what the crew know in this scene. */
     async function chat(text: string, speakers: Agent[]) {
       const previous: { agent: Agent; result: string }[] = [];
@@ -596,7 +604,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       setLookAway(false);
       ALL.forEach(a => void explore(a));
     })();
-    return () => { alive = false; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
+    return () => { alive = false; autoFinish.current = () => {}; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, [scene]);
 
   // Space: tap = quick attack, hold ~0.6s then release = heavy. Key auto-repeat is ignored.
