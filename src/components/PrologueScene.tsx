@@ -188,7 +188,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       }
       const foes = enemies.current.targets();
       for (const a of ALL) for (const f of foes) { const s = sep(coords.current[a], f, R_FOE); if (s) add(a, s.x * 2, s.y * 2); }
-      for (const a of ALL) { const v = push[a]; if (!v) continue; const p = coords.current[a]; coords.current[a] = { x: Math.min(97, Math.max(3, p.x + v.x)), y: Math.min(97, Math.max(8, p.y + v.y)) }; paint(a); }
+      for (const a of ALL) { const v = push[a]; if (!v) continue; const p = coords.current[a];
+        // Cap the nudge well under walking speed: a walking Zig always wins the tug-of-war,
+        // so a clustered spawn can never deadlock the scene (they still drift apart when idle).
+        const m = Math.hypot(v.x, v.y), cap = 0.06, s = m > cap ? cap / m : 1;
+        coords.current[a] = { x: Math.min(97, Math.max(3, p.x + v.x * s)), y: Math.min(97, Math.max(8, p.y + v.y * s)) }; paint(a); }
       requestAnimationFrame(separate);
     };
     requestAnimationFrame(separate);
