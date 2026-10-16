@@ -94,6 +94,7 @@ export function WelcomeGuide({ onAsk }: { onAsk?: (text: string) => void }) {
             {ASKS.map(q => <li key={q}><button type="button" onClick={() => ask(q)}>“{q}”</button></li>)}
           </ul>
         </div>
+        <div className="welcome-tip"><Sparkles size={13}/> Tip: the world should be discovered with the Zigs, not explained in advance.</div>
         <Button type="button" className="welcome-enter" onClick={dismiss}>BEGIN EXPLORATION <ChevronDown size={13}/></Button>
       </section>
     </div>}
