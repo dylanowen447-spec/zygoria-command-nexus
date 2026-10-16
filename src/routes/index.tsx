@@ -1360,7 +1360,7 @@ function CommandCentre() {
   const visitLines = (a: Agent) => GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!;
   // The chosen Zig walks the trails to the workshop door before the interior opens.
   const enterWorkshop = () => {
-    const pick = steerRef.current ?? selected ?? "Brix";
+    console.log("ENTER WS"); const pick = steerRef.current ?? selected ?? "Brix";
     const who: Agent = pick === "Moxi" ? "Brix" : pick;
     const door = { x: 71, y: 52.8 };
     const run = ++runId.current;
