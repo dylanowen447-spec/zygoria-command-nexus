@@ -808,6 +808,16 @@
 .workshop-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:136px!important;height:210px!important}
 .workshop-scene .haven-layer .haven-zig .ctrl-ring{width:118px;height:18px}
 }
+/* Oz's shack interior: Zygs at 300% of the interior size (phone and PC). */
+.shack-scene{--zig-lift:210px}
+.shack-scene .haven-layer .haven-zig.marker-brix{width:123px;height:188px}
+.shack-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:123px!important;height:180px!important}
+.shack-scene .haven-layer .haven-zig.marker-oz{width:90px;height:146px}
+.shack-scene .haven-layer .haven-zig.marker-oz .sprite-stage{width:90px!important;height:138px!important}
+.shack-scene .haven-layer .haven-zig.marker-lowkey{width:102px;height:164px}
+.shack-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:102px!important;height:156px!important}
+.shack-scene .haven-layer .haven-zig .ctrl-ring{width:90px;height:16px}
+
 /* Underground Haven: all Zygs doubled so they read clearly against the cavern. */
 .haven-scene:not(.workshop-scene) .haven-layer .haven-zig{width:56px;height:100px}
 .haven-scene:not(.workshop-scene) .haven-layer .haven-zig .sprite-stage{width:56px!important;height:88px!important}
