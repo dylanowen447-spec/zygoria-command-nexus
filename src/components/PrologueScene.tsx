@@ -182,16 +182,26 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       const push: Partial<Record<Agent, Point>> = {};
       const add = (a: Agent, x: number, y: number) => { const q = push[a] ?? { x: 0, y: 0 }; push[a] = { x: q.x + x, y: q.y + y }; };
       const sep = (p: Point, o: Point, r: number) => { const dx = p.x - o.x, dy = (p.y - o.y) * 1.6, d = Math.hypot(dx, dy); if (d >= r) return null; const k = (r - d) * 0.5; if (d < 0.01) return { x: k, y: 0 }; return { x: (dx / d) * k, y: (dy / d) * k / 1.6 }; };
+      // Right of way: a Zig heading to a story objective, then Brix, then the steered Zig.
+      // The lower-priority Zig yields fully and sidesteps (turns out of the way); equals share the bump.
+      const rank = (z: Agent) => (heading[z] && objectiveSpots.has(heading[z]!) ? 4 : 0) + (z === "Brix" ? 2 : 0) + (steerRef.current === z || (inCombat() && ctrlRef.current === z) ? 1 : 0);
+      const yielding = new Set<Agent>();
       for (let i = 0; i < ALL.length; i++) for (let j = i + 1; j < ALL.length; j++) {
         const a = ALL[i]!, b = ALL[j]!; const s = sep(coords.current[a], coords.current[b], R_ZIG); if (!s) continue;
-        add(a, s.x, s.y); add(b, -s.x, -s.y);
+        const ra = rank(a), rb = rank(b);
+        if (ra === rb) { add(a, s.x, s.y); add(b, -s.x, -s.y); continue; }
+        const [lo, sx, sy] = ra < rb ? [a, s.x, s.y] : [b, -s.x, -s.y];
+        // Sidestep: away from the other Zig plus a sideways turn, so they curve around instead of stalling.
+        const side = coords.current[lo].x <= coords.current[lo === a ? b : a].x ? -1 : 1;
+        const lat = Math.hypot(sx, sy);
+        add(lo, sx * 2 + side * lat * 1.5, sy * 2); yielding.add(lo);
       }
       const foes = enemies.current.targets();
       for (const a of ALL) for (const f of foes) { const s = sep(coords.current[a], f, R_FOE); if (s) add(a, s.x * 2, s.y * 2); }
       for (const a of ALL) { const v = push[a]; if (!v) continue; const p = coords.current[a];
-        // Cap the nudge well under walking speed: a walking Zig always wins the tug-of-war,
+        // Cap the nudge near walking speed: a walking Zig always wins the tug-of-war,
         // so a clustered spawn can never deadlock the scene (they still drift apart when idle).
-        const m = Math.hypot(v.x, v.y), cap = 0.06, s = m > cap ? cap / m : 1;
+        const m = Math.hypot(v.x, v.y), cap = yielding.has(a) ? 0.1 : 0.06, s = m > cap ? cap / m : 1;
         coords.current[a] = { x: Math.min(97, Math.max(3, p.x + v.x * s)), y: Math.min(97, Math.max(8, p.y + v.y * s)) }; paint(a); }
       requestAnimationFrame(separate);
     };
