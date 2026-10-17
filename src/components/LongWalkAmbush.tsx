@@ -1,3 +1,4 @@
+import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT } from "@/lib/fight-lines";
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
