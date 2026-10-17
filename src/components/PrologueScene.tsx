@@ -10,6 +10,7 @@ import type { Agent, Point } from "@/lib/zones";
 import { playSfx } from "@/lib/atmosphere";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
+import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
@@ -212,6 +213,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     };
     requestAnimationFrame(separate);
     const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
+    let lastZapHit = 0;
     const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];
     const flashSwing = (a: Agent, kind: string, ms: number) => { if (a === "Oz") playSfx(kind.includes("heavy") ? "zap-heavy" : "zap"); else if (a === "Lowkey") playSfx("slash"); else playSfx("swing"); setSwing(w => ({ ...w, [a]: undefined })); requestAnimationFrame(() => alive && setSwing(w => ({ ...w, [a]: kind }))); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms + 30)); };
@@ -252,7 +254,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         faceTo(a, end);
         flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
         boltRef.current(coords.current.Oz, end.x, end.y, heavy);
-        hitCtx.heavy = false; hitCtx.by = "Oz"; const landed = !!ambushHit.current(end);
+        hitCtx.heavy = false; hitCtx.by = "Oz"; const landed = !!ambushHit.current(end); if (landed) lastZapHit = performance.now();
         impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
         if (!auto) zap.current(end, landed);
         return;
