@@ -10,6 +10,7 @@ import type { Agent, Point } from "@/lib/zones";
 import { playSfx } from "@/lib/atmosphere";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
+import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
@@ -68,10 +69,15 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   /** Danger moment: the crew improvise their reaction live through the AI, never a fixed script. */
   const alarm = useRef<(situation: string) => void>(() => undefined);
   const onAlarm = useCallback((s: string) => alarm.current(s), []);
+  // Scripted fight lines hush the random fight banter for a moment so bubbles never overlap.
+  const fightQuietUntil = useRef(0);
   const ambushSay = useCallback((a: Agent, text: string) => {
+    fightQuietUntil.current = performance.now() + 3200;
     setBubbles(b => ({ ...b, [a]: text }));
     setTimeout(() => setBubbles(b => (b[a] === text ? { ...b, [a]: undefined } : b)), 2600);
   }, []);
+  const bubblesRef = useRef(bubbles);
+  bubblesRef.current = bubbles;
   const [bolts, setBolts] = useState<{ id: number; d: string; x: number; y: number; heavy?: boolean }[]>([]);
   const [jolt, setJolt] = useState(0);
   const logRef = useRef(onLog);
@@ -207,6 +213,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     };
     requestAnimationFrame(separate);
     const lastAtk: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
+    let lastZapHit = 0;
     const aiNext: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
     const nearestTo = (p: Point) => enemies.current.targets().sort((u, v) => cdist(u, p) - cdist(v, p))[0];
     const flashSwing = (a: Agent, kind: string, ms: number) => { if (a === "Oz") playSfx(kind.includes("heavy") ? "zap-heavy" : "zap"); else if (a === "Lowkey") playSfx("slash"); else playSfx("swing"); setSwing(w => ({ ...w, [a]: undefined })); requestAnimationFrame(() => alive && setSwing(w => ({ ...w, [a]: kind }))); timers.push(setTimeout(() => alive && setSwing(w => (w[a] === kind ? { ...w, [a]: undefined } : w)), ms + 30)); };
@@ -247,7 +254,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         faceTo(a, end);
         flashSwing(a, swingKind(a, heavy), heavy ? 420 : 240);
         boltRef.current(coords.current.Oz, end.x, end.y, heavy);
-        hitCtx.heavy = false; hitCtx.by = "Oz"; const landed = !!ambushHit.current(end);
+        hitCtx.heavy = false; hitCtx.by = "Oz"; const landed = !!ambushHit.current(end); if (landed) lastZapHit = performance.now();
         impact(end, landed ? (heavy ? "oz-heavy" : "oz") : "miss");
         if (!auto) zap.current(end, landed);
         return;
@@ -299,6 +306,48 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     };
     const combatTimer = setInterval(() => alive && companionTick(), 450);
     timers.push(combatTimer as unknown as ReturnType<typeof setTimeout>);
+
+    // ---- Fight banter: a random cue-matched line every 5–8s from a Zig who is actually fighting ----
+    let fightStart = 0, nextFightLine = 0, lastFightLine = "";
+    const fightTick = () => {
+      if (scene.id !== "city" && scene.id !== "long-walk") return;
+      const ts = enemies.current.targets(), now = performance.now();
+      if (!ts.length) { fightStart = 0; nextFightLine = 0; return; } // combat over: stop at once
+      if (!fightStart) { fightStart = now; nextFightLine = now + 7000; } // let the opening exchange play first
+      if (now < nextFightLine || now < fightQuietUntil.current || voiceBusy || talking.size) return;
+      if (Object.values(bubblesRef.current).some(Boolean)) return;
+      const fighting = (a: Agent) => now - lastAtk[a] < 4000 || ts.some(t => cdist(t, coords.current[a]) <= REACH[a] * 1.3);
+      const near = (a: Agent, r: number) => ts.filter(t => cdist(t, coords.current[a]) < r);
+      const behind = () => ALL.some(m => {
+        const close = near(m, 10); if (close.length < 2) return false;
+        const front = close.sort((u, v) => cdist(u, coords.current[m]) - cdist(v, coords.current[m]))[0]!;
+        const side = Math.sign(front.x - coords.current[m].x);
+        return close.some(t => t !== front && Math.sign(t.x - coords.current[m].x) === -side);
+      });
+      const ok = (l: FightLine) => {
+        if (!fighting(l.who) || l.text === lastFightLine) return false;
+        switch (l.cue) {
+          case "zap-hit": return now - lastZapHit < 2500;
+          case "behind-teammate": return behind();
+          case "foe-at-feet": return near(l.who, 6).length > 0;
+          case "foe-close": return near(l.who, 9).length > 0;
+          case "crowd": return ts.length >= 4;
+          default: return true;
+        }
+      };
+      const pool = FIGHT_LINES.filter(ok);
+      nextFightLine = now + FIGHT_GAP_MS[0] + Math.random() * (FIGHT_GAP_MS[1] - FIGHT_GAP_MS[0]);
+      if (!pool.length) return;
+      const l = pool[Math.floor(Math.random() * pool.length)]!;
+      lastFightLine = l.text;
+      setBubbles(b => ({ ...b, [l.who]: l.text }));
+      timers.push(setTimeout(() => setBubbles(b => (b[l.who] === l.text ? { ...b, [l.who]: undefined } : b)), 2600));
+      // Hide it the instant the fight ends.
+      const watch = setInterval(() => { if (!enemies.current.targets().length) { setBubbles(b => (b[l.who] === l.text ? { ...b, [l.who]: undefined } : b)); clearInterval(watch); } }, 150);
+      timers.push(setTimeout(() => clearInterval(watch), 2700));
+    };
+    const fightTimer = setInterval(() => alive && fightTick(), 300);
+    timers.push(fightTimer as unknown as ReturnType<typeof setTimeout>);
 
     const objectiveSpots = new Set(scene.objectives.map(o => o.spot));
     const at: Record<Agent, string> = { Oz: scene.spawn.Oz.out, Brix: scene.spawn.Brix.out, Lowkey: scene.spawn.Lowkey.out };

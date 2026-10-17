@@ -1,3 +1,4 @@
+import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT } from "@/lib/fight-lines";
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
@@ -105,7 +106,10 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       wave.current = n; startBattleMusic();
       setBanner(`RATS · WAVE ${n + 1} OF 3`); later(1800, () => setBanner(null));
       rats.current = farSpawns(EDGES, crew.current, 3).map(p => makeRat(nextId++, p));
-      if (n === 0) later(300, () => onAlarm?.("A pack of snarling mutant rats just burst from the grass on the long walk and is charging you!"));
+      if (n === 0) {
+        later(300, () => onAlarm?.(RAT_ALARM.longWalk));
+        LONG_WALK_RAT_RECALL.forEach(([who, t], i) => later(200 + i * 2800, () => onSay(who, t)));
+      }
     };
     const hurt = (n: number) => { playSfx("hurt"); crewHpRef.current = Math.max(CREW_FLOOR, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
     const spawnRats = (n: number) => { for (const p of farSpawns(EDGES, crew.current, n)) rats.current.push(makeRat(nextId++, p)); };
@@ -117,6 +121,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       // Six rats march in with him; they join the fight (existing rat behaviour) once he reaches the plateau.
       escorts.current = ESCORT.map(o => { const r = makeRat(nextId++, { x: p0.x + o.x * persp(p0.y), y: p0.y + o.y * persp(p0.y) }); rats.current.push(r); return { r, o }; });
       later(400, () => onSay("Brix", "Something bigger's coming."));
+      SHELTON_FIRST_SIGHT.forEach(([who, t], i) => later(3200 + i * 2800, () => onSay(who, t)));
     };
     later(2500, () => startWave(0));
 

@@ -8,3 +8,5 @@
 - [x] Long Walk safe ground from the collision map
 - [x] Long Walk crew start standing, facing forward
 - [x] One tap on a door while steering a Zig walks him over and inside
+- [x] Fight banter in Old City rats and Long Walk/Shelton fights
+- [x] Rat encounter memory (Old City first sight, Long Walk recall) + Shelton first-sight lines

@@ -5,6 +5,7 @@ import { DEFAULT_BOUNDS, makeRat, stepRat, zapRats, type CombatApi, type Rat } f
 import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
+import { RAT_ALARM } from "@/lib/fight-lines";
 
 /** Nine finite directional waves, isolated from the scene's story progression. */
 
@@ -58,7 +59,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
         if (waveIndex === 0) startBattleMusic();
         rats.current = cityWaveSpawns(waveIndex).map(p => makeRat(nextId++, p));
         setWave(waveIndex + 1);
-        if (waveIndex === 0) later(300, () => onAlarm("Mutant rats are charging down the avenue and rushing in from beside the wrecked bus and the temple steps!"));
+        if (waveIndex === 0) later(300, () => onAlarm(RAT_ALARM.city));
       }
       // Rats scurry at the nearest Zig, nip, then hop back and try again.
       for (const r of rats.current) stepRat(r, dt, crew.current, hurt);
