@@ -17,14 +17,25 @@ export const FIGHT_LINES: FightLine[] = [
   { who: "Lowkey", text: "Why are there SO MANY?!", cue: "crowd" },
 ];
 
-export const FIGHT_GAP_MS: [number, number] = [5000, 8000];
+export const FIGHT_GAP_MS: [number, number] = [2500, 3800];
 
 /** Encounter memory: Old City is the first time they meet the rats; the Long Walk remembers them. */
 export const RAT_ALARM = {
   city: "Mutant rats — something none of you have EVER seen before — are charging down the avenue and rushing in from beside the wrecked bus and the temple steps!",
   longWalk: "The same ugly mutant rats you fought back in the Old City just burst from the grass on the long walk and are charging you again!",
 };
-export const LONG_WALK_RAT_RECALL: [Agent, string][] = [["Brix", "Oh, it’s those ugly rats again!"]];
+/** Instant scripted reactions the moment wave 1 charges in (spaced so bubbles never overlap). */
+export const ARRIVAL_GAP_MS = 2200;
+export const CITY_RAT_ARRIVAL: [Agent, string][] = [
+  ["Brix", "Hold up—INCOMING! What are those things?!"],
+  ["Oz", "Are those... RATS?! Why do they have so many teeth?!"],
+  ["Lowkey", "They’re fast! Form up!"],
+];
+export const LONG_WALK_RAT_RECALL: [Agent, string][] = [
+  ["Brix", "Oh, it’s those ugly rats again!"],
+  ["Lowkey", "They’re tracking us. Watch the grass!"],
+  ["Oz", "Come on then! I’ve got plenty of voltage left!"],
+];
 
 /** First sight of Shelton: they know the rats now, but have never seen anything like him. */
 export const SHELTON_FIRST_SIGHT: [Agent, string][] = [

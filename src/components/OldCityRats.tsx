@@ -5,16 +5,17 @@ import { DEFAULT_BOUNDS, makeRat, stepRat, zapRats, type CombatApi, type Rat } f
 import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
-import { RAT_ALARM } from "@/lib/fight-lines";
+import { CITY_RAT_ARRIVAL, ARRIVAL_GAP_MS } from "@/lib/fight-lines";
 
 /** Nine finite directional waves, isolated from the scene's story progression. */
 
-export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
+export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay }: {
   combatRef?: MutableRefObject<CombatApi>;
   stageRef: RefObject<HTMLDivElement | null>;
   hitRef: MutableRefObject<(p: Point) => boolean>;
   crew: MutableRefObject<Record<Agent, Point>>;
   onAlarm: (situation: string) => void;
+  onSay: (who: Agent, text: string) => void;
 }) {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
@@ -59,7 +60,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm }: {
         if (waveIndex === 0) startBattleMusic();
         rats.current = cityWaveSpawns(waveIndex).map(p => makeRat(nextId++, p));
         setWave(waveIndex + 1);
-        if (waveIndex === 0) later(300, () => onAlarm(RAT_ALARM.city));
+        if (waveIndex === 0) CITY_RAT_ARRIVAL.forEach(([who, t], i) => later(i * ARRIVAL_GAP_MS, () => onSay(who, t)));
       }
       // Rats scurry at the nearest Zig, nip, then hop back and try again.
       for (const r of rats.current) stepRat(r, dt, crew.current, hurt);

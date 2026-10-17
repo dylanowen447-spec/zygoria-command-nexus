@@ -1,4 +1,4 @@
-import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT } from "@/lib/fight-lines";
+import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS } from "@/lib/fight-lines";
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
@@ -107,8 +107,8 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       setBanner(`RATS · WAVE ${n + 1} OF 3`); later(1800, () => setBanner(null));
       rats.current = farSpawns(EDGES, crew.current, 3).map(p => makeRat(nextId++, p));
       if (n === 0) {
-        later(300, () => onAlarm?.(RAT_ALARM.longWalk));
-        LONG_WALK_RAT_RECALL.forEach(([who, t], i) => later(200 + i * 2800, () => onSay(who, t)));
+        void onAlarm; void RAT_ALARM;
+        LONG_WALK_RAT_RECALL.forEach(([who, t], i) => later(i * ARRIVAL_GAP_MS, () => onSay(who, t)));
       }
     };
     const hurt = (n: number) => { playSfx("hurt"); crewHpRef.current = Math.max(CREW_FLOOR, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
