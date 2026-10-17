@@ -10,3 +10,6 @@
 - [x] One tap on a door while steering a Zig walks him over and inside
 - [x] Fight banter in Old City rats and Long Walk/Shelton fights
 - [x] Rat encounter memory (Old City first sight, Long Walk recall) + Shelton first-sight lines
+
+- [x] Instant rat arrival reactions (Old City + Long Walk)
+- [x] Fight chatter every <4s
