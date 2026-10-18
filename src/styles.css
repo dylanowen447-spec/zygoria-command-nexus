@@ -886,3 +886,32 @@
 @keyframes ratSliced{0%{translate:0 0;skew:0deg;filter:brightness(.4) drop-shadow(0 0 8px oklch(0.6 0.25 300))}30%{translate:-10% 0;skew:-12deg;filter:brightness(.6) saturate(.4) drop-shadow(0 0 10px oklch(0.6 0.25 300))}100%{translate:0 0;skew:0deg;filter:none}}
 .rat-slash-burst{position:absolute;left:50%;top:50%;width:50px;height:50px;transform:translate(-50%,-50%) rotate(-35deg);pointer-events:none;border-radius:50%;border-top:4px solid oklch(0.7 0.25 300);border-right:2px solid transparent;border-left:2px solid transparent;box-shadow:0 -6px 12px -4px oklch(0.6 0.25 300);animation:ratSlash .4s ease-out forwards}
 @keyframes ratSlash{0%{scale:.5;opacity:1;rotate:-60deg}100%{scale:1.4;opacity:0;rotate:30deg}}
+/* Tie Up the TV — Sanctuary side mission */
+.tv-block{position:absolute;inset:0;z-index:2050;background:transparent}
+.tv-actor{position:absolute;transform:translate(-50%,-100%);width:7%;padding:0;border:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tv-actor.is-alive{width:10%}
+.tv-actor img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
+.tv-walk{display:block;width:100%;aspect-ratio:256/220;background-size:600% 100%;background-repeat:no-repeat;background-position:0 0;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
+.tv-walk.is-walking{animation:tv-walk .6s steps(6) infinite}
+@keyframes tv-walk{to{background-position:120% 0}}
+.tv-actor.is-waking .tv-still{animation:tv-shake .12s linear infinite}
+@keyframes tv-shake{0%,100%{transform:translateX(0)}50%{transform:translateX(2px) rotate(1deg)}}
+.tv-eyes{position:absolute;left:30%;right:22%;top:44%;height:30%;pointer-events:none;background:radial-gradient(circle at 30% 50%,oklch(0.65 0.26 25) 0 14%,transparent 18%),radial-gradient(circle at 70% 50%,oklch(0.65 0.26 25) 0 14%,transparent 18%),repeating-linear-gradient(0deg,oklch(0.8 0 0 / .25) 0 1px,transparent 1px 3px);animation:tv-static .2s steps(2) infinite}
+@keyframes tv-static{50%{opacity:.75}}
+.tv-actor.is-lunge{animation:tv-lunge .38s ease-out}
+@keyframes tv-lunge{40%{transform:translate(-50%,-100%) translateY(6%) scale(1.12)}}
+.tv-actor.is-hit-punch{filter:brightness(1.8) drop-shadow(0 0 6px oklch(0.85 0.17 85))}
+.tv-actor.is-hit-slash{filter:brightness(1.5) drop-shadow(0 0 6px oklch(0.6 0.25 300))}
+.tv-actor.is-down .tv-walk{transform:rotate(-80deg) translateY(30%);transition:transform .4s}
+.tv-actor.is-caged{width:8%}
+.tv-actor.is-caged .tv-caged-set{position:absolute;left:22%;bottom:10%;width:58%}
+.tv-actor.is-caged .tv-eyes{left:30%;right:32%;top:46%;height:22%}
+.tv-actor.is-caged .tv-cage{position:relative}
+.tv-hp{position:absolute;left:10%;right:10%;top:-10px;height:5px;border:1px solid var(--electric);border-radius:3px;background:oklch(0.14 0.04 270 / .9);overflow:hidden}
+.tv-hp i{display:block;height:100%;background:oklch(0.62 0.24 25);transition:width .2s}
+.tv-caption{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);z-index:2150;width:min(340px,88%);padding:8px 12px;display:flex;flex-direction:column;gap:2px;text-align:center;font-family:var(--font-mono);font-size:11px;line-height:1.35;color:var(--foreground);background:oklch(0.14 0.04 270 / .95);border:1px solid var(--electric);border-radius:10px;pointer-events:none;animation:idle-bubble-in .25s ease-out}
+.tv-caption b{font-size:9px;letter-spacing:.12em;color:var(--electric)}
+.tv-caption.is-tv{border-color:oklch(0.62 0.24 25)}.tv-caption.is-tv b{color:oklch(0.7 0.22 25)}
+.tv-caption.is-oz{border-color:oklch(0.85 0.17 95)}.tv-caption.is-brix{border-color:oklch(0.65 0.18 250)}.tv-caption.is-lowkey{border-color:oklch(0.6 0.22 25)}
+.tv-caption.is-narration span{font-style:italic;opacity:.85}
+.tv-art-card img{width:100%;border-radius:8px}
