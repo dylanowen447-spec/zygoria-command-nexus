@@ -23,6 +23,8 @@ import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 import moxiWordmark from "@/assets/moxi-wordmark.png.asset.json";
 import firePitImg from "@/assets/fire-pit.png";
 import { FieldCodex } from "@/components/FieldCodex";
+import { SanctuaryTV } from "@/components/SanctuaryTV";
+import { TV_CODEX, TV_KEY } from "@/lib/tv-mission";
 import { EMPTY_STORY, MOXI_SCENE, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 const MP3_AFTER = 120;
 const PET_AFTER = 60;
@@ -226,6 +228,8 @@ function CommandCentre() {
   const [cleared, setCleared] = useState<string[]>([]);
   const clearedRef = useRef<string[]>([]);
   const [editor, setEditor] = useState(false);
+  const [tvDone, setTvDone] = useState(false);
+  useEffect(() => { try { if (localStorage.getItem(TV_KEY) === "done") setTvDone(true); } catch { /* optional */ } }, []);
   const logoTaps = useRef<number[]>([]);
   useEffect(() => {
     try { const c = JSON.parse(localStorage.getItem(CLEARED_KEY) ?? "[]"); if (Array.isArray(c)) { clearedRef.current = c; setCleared(c); } } catch { /* optional */ }
@@ -1622,13 +1626,14 @@ function CommandCentre() {
   const codexPages = useMemo(() => {
     const c = SANCTUARY_SIGNAL.codex, done = chapterDone(SANCTUARY_SIGNAL, story);
     const page = done ? { ...c, category: "Creatures" as const, level: "known" as const } : { id: c.id, category: "Creatures" as const, name: "Unrecorded", description: story.beats.includes("spotted") ? "Something small moving near the trees. Lowkey's sure he saw it." : "Nothing recorded yet.", location: null, recordedBy: null, level: "hidden" as const };
-    return [...canon.codexPages.filter(p => p.id !== c.id), page];
-  }, [canon.codexPages, story]);
+    return [...canon.codexPages.filter(p => p.id !== c.id && p.id !== TV_CODEX.id), page, ...(tvDone ? [TV_CODEX] : [])];
+  }, [canon.codexPages, story, tvDone]);
   const codexRecorded = useMemo(() => {
     const ids = chapterDone(SANCTUARY_SIGNAL, story) ? [...world.discoveries, SANCTUARY_SIGNAL.codex.id] : [...world.discoveries];
     if (story.beats.includes("thoth")) ids.push("thoth"); // Lowkey's lookout encounter records Thoth's page
+    if (tvDone) ids.push(TV_CODEX.id);
     return ids;
-  }, [world.discoveries, story]);
+  }, [world.discoveries, story, tvDone]);
   const codexLogs = useMemo(() => missions.map(m => ({ text: m.text, zone: m.zone, done: m.state === "Complete", results: m.steps.map(st => st.result).join(" ") })), [missions]);
   function selectZone(z: ZoneId) {
     if (phase !== "idle" || z === zoneId) return;
@@ -1670,6 +1675,7 @@ function CommandCentre() {
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: "74.5%", top: "44%" }} aria-label="Enter Brix's workshop" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("brix"); }}/>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: "18%", top: "56%" }} aria-label="Enter Oz's shack" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("oz"); }}/>}
             {zone.id === "sanctuary" && prologue === "off" && <BoulderPot happy={petHappy} asleep={sleepStage === "asleep"}/>}
+            {zone.id === "sanctuary" && prologue === "off" && <SanctuaryTV ready={phase === "idle" && sleepStage === "off" && !bubble} editor={editor} onLog={(who, text) => log(who as Agent, text)} onDone={() => setTvDone(true)}/>}
             {zone.id === "sanctuary" && thoth && <div className="thoth" style={{ left: `${HOME(zone, "Lowkey").x + 8}%`, top: `${HOME(zone, "Lowkey").y}%` }} role="img" aria-label="Thoth, a robed ibis-headed figure"><img src={thothImg.url} alt="" draggable={false}/>{thoth.line && <span className="thoth-bubble">{thoth.line}</span>}</div>}
             {zone.id === "sanctuary" && !carrying && <div className={`water-tank-spot is-${tank}`} style={{ left: `${WATER_TANK.x}%`, top: `${WATER_TANK.y}%` }}><img className="water-tank" src={waterTankImg} alt="Brix's water tank" width={816} height={816}/><span className={`tank-meter ${tankLevel < TANK_LOW ? "is-low" : ""}`} role="meter" aria-label="Water tank level" aria-valuenow={tankLevel} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${tankLevel}%` }}/></span></div>}
             {zone.id === "sanctuary" && <div className={`fire-pit is-${fire}`} style={{ left: `${FIRE_PIT.x}%`, top: `${FIRE_PIT.y}%`, zIndex: 10 + Math.round(FIRE_PIT.y * 10) }} aria-label={fire === "out" ? "Fire pit, cold" : "Fire pit, burning"}><span className="pit-glow"/><img className="pit-art" src={firePitImg} alt="" width={816} height={816} loading="lazy"/><span className="pit-ring"/><span className="pit-flame"/><span className="pit-fish"><i/><i/><i/></span><span className="pit-spark"/></div>}

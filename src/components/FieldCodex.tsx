@@ -1,3 +1,4 @@
+import tvNetwork from "@/assets/tv-network.webp.asset.json";
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, ChevronRight, LockKeyhole, MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -119,7 +120,7 @@ export function FieldCodex({ pages: allPages, logs, visited, currentZone, record
             </Button>;
           })}</div>
           {selected && <div className="codex-detail" aria-live="polite"><div className="codex-detail-label">{selected.level === "hidden" ? "BLANK PAGE" : selected.level === "partial" ? "INCOMPLETE RECORD" : "FIELD RECORD"}</div>
-            {selected.level !== "hidden" && selected.id === "cronk" && <img className="codex-card" src={kronkCard.url} alt="Kronk, Shiny 010: The Boss trading card"/>}{selected.level !== "hidden" && selected.id === "thoth" && <img className="codex-card" src={thothCard.url} alt="Thoth, Shiny 006 trading card"/>}{selected.level !== "hidden" && selected.id === "moxi" && <img className="codex-card" src={moxiCard.url} alt="Moxi, Shiny 004 trading card"/>}<h3>{selected.level === "hidden" ? "Unrecorded" : selected.name}</h3><p>{selected.description}</p>
+            {selected.level !== "hidden" && selected.id === "cronk" && <img className="codex-card" src={kronkCard.url} alt="Kronk, Shiny 010: The Boss trading card"/>}{selected.level !== "hidden" && selected.id === "thoth" && <img className="codex-card" src={thothCard.url} alt="Thoth, Shiny 006 trading card"/>}{selected.level !== "hidden" && selected.id === "old-tv" && <img className="codex-card" src={tvNetwork.url} alt="Old TV — Network Manifestation"/>}{selected.level !== "hidden" && selected.id === "moxi" && <img className="codex-card" src={moxiCard.url} alt="Moxi, Shiny 004 trading card"/>}<h3>{selected.level === "hidden" ? "Unrecorded" : selected.name}</h3><p>{selected.description}</p>
             {selected.level !== "hidden" && <div className="codex-detail-meta"><span><MapPin size={13}/> {selected.location ? `Known location · ${selected.location}` : "Location not yet recorded"}</span><span><BookOpen size={13}/> {selected.recordedBy ? `Recorded by ${selected.recordedBy}` : "Crew journal"}</span><span>{selected.level === "partial" ? "DISCOVERY STATUS · INCOMPLETE" : "DISCOVERY STATUS · KNOWN"}</span></div>}
           </div>}
           {!selected && <div className="codex-quiet">Choose a page to read the crew's notes.</div>}
