@@ -13,3 +13,5 @@
 
 - [x] Instant rat arrival reactions (Old City + Long Walk)
 - [x] Fight chatter every <4s
+
+- [x] Tie Up the TV side mission (Sanctuary first night)
