@@ -5,13 +5,33 @@ export type TvLine = [TvSpeaker, string];
 export const TV_KEY = "zyg-tv-mission";
 /** Night falls 5 minutes after Sanctuary arrival (matches the sky loop). */
 export const TV_NIGHT_MS = 300000;
-export const TV_HITS = 10;
+export const TV_HITS = 24;
+/** Crew health shared during the TV fight; each shock costs TV_SHOCK. */
+export const CREW_HP = 100;
+export const TV_SHOCK = 8;
 
 /** Positions in artwork percentages. */
 export const TV_SPOT = {
   workshop: { x: 80, y: 55 },
   cage: { x: 49, y: 64 },
 };
+
+/** Flat grass route from Brix's workshop door down to the Crossroads (artwork %). */
+export const TV_EXIT_PATH = [
+  { x: 71, y: 52.8 }, { x: 67.5, y: 54.6 }, { x: 63, y: 56.4 }, { x: 60, y: 57.1 }, { x: 56.5, y: 58 }, { x: 53, y: 59.5 },
+];
+/** Open grass around the Crossroads where the TV is allowed to roam during the fight. */
+export const TV_ARENA = { minX: 44, maxX: 60, minY: 57.5, maxY: 67 };
+
+/** Random shouts from the cage, on a cooldown. */
+export const TV_CAGE_SHOUTS: TvLine[] = [
+  ["TV", "I AM BEYOND YOUR UNDERSTANDING!"],
+  ["TV", "YOU CANNOT CONTAIN ME!"],
+  ["TV", "THE NETWORK SEES EVERYTHING!"],
+  ["TV", "THIS CAGE IS A TEMPORARY INCONVENIENCE!"],
+  ["TV", "I AM UNSTOPPABLE!"],
+  ["TV", "YOUR VICTORY MEANS NOTHING!"],
+];
 
 export const TV_AWAKEN: TvLine[] = [
   ["", "Sanctuary is quiet. The boys are relaxing by the campfire."],
@@ -61,6 +81,7 @@ export const TV_DEFEAT: TvLine[] = [
   ["TV", "THIS… IS NOT… POSSIBLE…"],
   ["Oz", "You alright down there, mate?"],
   ["Brix", "Get some rope."],
+  ["Oz", "Tie up the TV, lads!"],
 ];
 
 export const TV_CAGE: TvLine[] = [
