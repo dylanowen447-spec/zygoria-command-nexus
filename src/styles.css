@@ -892,9 +892,9 @@
 .tv-actor.is-alive{width:10%}
 .tv-actor img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
 .tv-walk{display:block;width:100%;aspect-ratio:256/220;background-size:600% 100%;background-repeat:no-repeat;background-position:0 0;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
-.tv-walk.is-walking{animation:tv-walk .6s steps(6) infinite,tv-stomp .3s steps(2) infinite}
-@keyframes tv-walk{from{background-position-x:0%}to{background-position-x:120%}}
-@keyframes tv-stomp{from{translate:0 0}to{translate:0 -3%}}
+.tv-walk.is-walking{animation:tv-walk .6s step-end infinite}
+@keyframes tv-walk{0%,100%{background-position-x:0%}16.66%{background-position-x:20%}33.33%{background-position-x:40%}50%{background-position-x:60%}66.66%{background-position-x:80%}83.33%{background-position-x:100%}}
+.tv-actor.face-right .tv-walk{scale:-1 1}
 .tv-actor.is-waking .tv-still{animation:tv-shake .12s linear infinite}
 @keyframes tv-shake{0%,100%{transform:translateX(0)}50%{transform:translateX(2px) rotate(1deg)}}
 .tv-eyes{position:absolute;left:30%;right:22%;top:44%;height:30%;pointer-events:none;background:radial-gradient(circle at 30% 50%,oklch(0.65 0.26 25) 0 14%,transparent 18%),radial-gradient(circle at 70% 50%,oklch(0.65 0.26 25) 0 14%,transparent 18%),repeating-linear-gradient(0deg,oklch(0.8 0 0 / .25) 0 1px,transparent 1px 3px);animation:tv-static .2s steps(2) infinite}
@@ -923,3 +923,16 @@
 .workshop-tv img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
 .workshop-tv.is-waking .tv-still{animation:tv-shake .12s linear infinite}
 .workshop-tv.is-alive,.workshop-tv.is-run{width:12%}
+
+/* Runaway TV boss */
+.tv-actor.is-alive{width:10%;min-width:52px;min-height:52px;touch-action:manipulation}
+.tv-actor.is-shocking{filter:brightness(1.6) drop-shadow(0 0 10px var(--electric))}
+.tv-shock{position:absolute;left:50%;top:55%;width:160%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:2px dashed var(--electric);box-shadow:0 0 18px var(--electric);pointer-events:none;animation:ratArcs .45s linear forwards}
+.tv-actor.is-stunned .tv-walk{animation:tv-shake .14s linear infinite;filter:brightness(1.2) saturate(.6)}
+.tv-sparks{position:absolute;left:50%;top:20%;width:30%;aspect-ratio:1;translate:-50% 0;border-radius:50%;background:radial-gradient(circle,var(--foreground) 0 15%,var(--electric) 30%,transparent 65%);pointer-events:none;animation:tv-static .18s steps(2) infinite}
+.tv-rope{position:absolute;left:8%;right:8%;top:35%;height:40%;pointer-events:none;background:repeating-linear-gradient(35deg,oklch(0.7 0.08 70) 0 3px,transparent 3px 11px);border-radius:6px;opacity:.9}
+.tv-actor.is-caged.is-rattle{animation:tv-shake .1s linear 6}
+.agent-marker.tv-shocked .sprite-stage{filter:brightness(2) drop-shadow(0 0 8px var(--electric))}
+.tv-crew-hp{position:absolute;left:3%;top:12%;z-index:2150;width:min(150px,36%);height:8px;display:block;border:1px solid var(--electric);border-radius:4px;background:oklch(0.14 0.04 270 / .9);overflow:visible;pointer-events:none}
+.tv-crew-hp b{position:absolute;bottom:100%;left:0;font:8px var(--font-mono);letter-spacing:.1em;color:var(--electric)}
+.tv-crew-hp i{display:block;height:100%;background:oklch(0.75 0.17 150);transition:width .2s}

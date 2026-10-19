@@ -210,7 +210,7 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
   const fighting = stage === "fight" || stage === "visitor";
   const z = 10 + Math.round(pos.y * 10);
   return <>
-    {busy && <div className="tv-block" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}/>}
+    {busy && stage !== "fight" && <div className="tv-block" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}/>}
     {fighting && <span className="tv-crew-hp" aria-label={`Crew health ${crew} of ${CREW_HP}`}><b>CREW</b><i style={{ width: `${crew}%` }}/></span>}
     {fighting && <button type="button" className={`combat-attack in-fight tv-attack ${charging ? "is-charged" : ""}`} aria-label="Attack the TV — tap for quick, hold for heavy"
       onPointerDown={e => { e.stopPropagation(); holdStart.current = performance.now(); setTimeout(() => holdStart.current && setCharging(true), 600); }}
