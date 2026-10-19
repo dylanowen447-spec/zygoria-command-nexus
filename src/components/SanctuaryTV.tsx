@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import tvNormal from "@/assets/tv-normal.png.asset.json";
-import tvWalkSheet from "@/assets/tv-walk-aligned.png";
+import tvDirections from "@/assets/tv-directions.png.asset.json";
 import tvCage from "@/assets/tv-cage.png.asset.json";
 import tvNetwork from "@/assets/tv-network.webp.asset.json";
 import { playSfx } from "@/lib/atmosphere";
@@ -19,7 +19,7 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
   const [stage, setStage] = useState<Stage>("dormant");
   const [line, setLine] = useState<TvLine | null>(null);
   const [pos, setPos] = useState<P>(TV_EXIT_PATH[0]!);
-  const [face, setFace] = useState<"left" | "right">("left");
+  const [face, setFace] = useState<"left" | "right" | "up" | "down">("down");
   const [moving, setMoving] = useState(false);
   const [hp, setHp] = useState(TV_HITS);
   const [crew, setCrew] = useState(CREW_HP);
@@ -47,7 +47,9 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
     for (const to of nodes) {
       const from = posRef.current, d = Math.hypot(to.x - from.x, to.y - from.y);
       if (d < 0.1) continue;
-      setFace(to.x < from.x ? "left" : "right");
+      // Heading picks the atlas row; artwork % is wider than tall, so scale x before comparing.
+      const dx = (to.x - from.x) * 1.48, dy = to.y - from.y;
+      setFace(Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down"));
       const dur = (d / speed) * 1000, t0 = performance.now();
       const ok = await new Promise<boolean>(res => { const f = (now: number) => { if (!alive.current || ending.current && stageRef.current === "fight") return res(false); const k = Math.min(1, (now - t0) / dur); place({ x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k }); k < 1 ? requestAnimationFrame(f) : res(true); }; requestAnimationFrame(f); });
       if (!ok) break;
@@ -219,7 +221,7 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
       ? <button ref={btnRef} type="button" className={`tv-actor is-caged ${rattle ? "is-rattle" : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: z }} aria-label="The caged TV" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); tapCage(); }}><img className="tv-caged-set" src={tvNormal.url} alt=""/><span className="tv-eyes"/><img className="tv-cage" src={tvCage.url} alt=""/></button>
       : <button ref={btnRef} type="button" className={`tv-actor is-alive face-${face} ${stage === "stun" || stage === "tie" || stage === "escort" ? "is-stunned" : ""} ${stage === "tie" || stage === "escort" ? "is-tied" : ""} ${shock ? "is-shocking" : ""} ${hit ? `is-hit-${hit}` : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: fighting ? 2900 : 2100 }} aria-label={fighting ? "Hit the TV" : "Old TV"}
           onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (fighting) strike(); }}>
-        <span className={`tv-walk ${moving ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalkSheet})` }}/>
+        <span className={`tv-walk ${moving ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvDirections.url})` }}/>
         {(stage === "stun" || stage === "tie") && <span className="tv-sparks" aria-hidden="true"/>}
         {shock && <span className="tv-shock" aria-hidden="true"/>}
         {(stage === "tie" || stage === "escort") && <span className="tv-rope" aria-hidden="true"/>}
