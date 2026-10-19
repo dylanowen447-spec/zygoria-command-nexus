@@ -229,7 +229,9 @@ function CommandCentre() {
   const clearedRef = useRef<string[]>([]);
   const [editor, setEditor] = useState(false);
   const [tvDone, setTvDone] = useState(false);
-  useEffect(() => { try { if (localStorage.getItem(TV_KEY) === "done") setTvDone(true); } catch { /* optional */ } }, []);
+  const [tvEscaped, setTvEscaped] = useState(false);
+  const [tvNight, setTvNight] = useState(false);
+  useEffect(() => { try { const v = localStorage.getItem(TV_KEY); if (v === "done") setTvDone(true); if (v === TV_ESCAPED) setTvEscaped(true); } catch { /* optional */ } }, []);
   const logoTaps = useRef<number[]>([]);
   useEffect(() => {
     try { const c = JSON.parse(localStorage.getItem(CLEARED_KEY) ?? "[]"); if (Array.isArray(c)) { clearedRef.current = c; setCleared(c); } } catch { /* optional */ }
