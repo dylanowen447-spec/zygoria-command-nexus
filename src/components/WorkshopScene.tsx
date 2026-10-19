@@ -7,7 +7,7 @@ import { WorkshopTV } from "@/components/WorkshopTV";
 type Zig = "Oz" | "Brix" | "Lowkey";
 
 /** A walk-in interior (Brix's workshop, Oz's shack) entered from a Sanctuary door. */
-export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }: { onExit: () => void; character?: Zig; place?: InteriorId; tv?: { wake: boolean; editor: boolean; onEscape: () => void } }) {
+export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }: { onExit: () => void; character?: Zig; place?: InteriorId; tv?: { wake: boolean; editor: boolean; onEscape: () => void } | undefined }) {
   const room = INTERIORS[place];
   const exitX = parseFloat(room.exit.left) < 50 ? 12 : 80;
   const [x, setX] = useState(55);

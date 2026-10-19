@@ -13,7 +13,7 @@ export function WorkshopTV({ wake, editor, exitX, onEscape }: { wake: boolean; e
   const [line, setLine] = useState<TvLine | null>(null);
   const alive = useRef(true), started = useRef(false), idle = useRef(0);
   useEffect(() => () => { alive.current = false; }, []);
-  useEffect(() => { if (wake) { const t = setTimeout(() => void run(), 1800); return () => clearTimeout(t); } }, [wake]);
+  useEffect(() => { if (!wake) return; const t = setTimeout(() => void run(), 1800); return () => clearTimeout(t); }, [wake]);
 
   async function run() {
     if (started.current) return; started.current = true;
