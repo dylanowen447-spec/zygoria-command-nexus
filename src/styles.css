@@ -892,8 +892,8 @@
 .tv-actor.is-alive{width:10%}
 .tv-actor img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
 .tv-walk{display:block;width:100%;aspect-ratio:256/220;background-size:600% 100%;background-repeat:no-repeat;background-position:0 0;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
-.tv-walk.is-walking{animation:tv-walk .6s steps(6) infinite}
-@keyframes tv-walk{to{background-position:120% 0}}
+.tv-walk.is-walking{animation:tv-walk .6s step-end infinite,ozBounce .3s ease-in-out infinite alternate}
+@keyframes tv-walk{0%,100%{background-position-x:0%}16.66%{background-position-x:20%}33.33%{background-position-x:40%}50%{background-position-x:60%}66.66%{background-position-x:80%}83.33%{background-position-x:100%}}
 .tv-actor.is-waking .tv-still{animation:tv-shake .12s linear infinite}
 @keyframes tv-shake{0%,100%{transform:translateX(0)}50%{transform:translateX(2px) rotate(1deg)}}
 .tv-eyes{position:absolute;left:30%;right:22%;top:44%;height:30%;pointer-events:none;background:radial-gradient(circle at 30% 50%,oklch(0.65 0.26 25) 0 14%,transparent 18%),radial-gradient(circle at 70% 50%,oklch(0.65 0.26 25) 0 14%,transparent 18%),repeating-linear-gradient(0deg,oklch(0.8 0 0 / .25) 0 1px,transparent 1px 3px);animation:tv-static .2s steps(2) infinite}

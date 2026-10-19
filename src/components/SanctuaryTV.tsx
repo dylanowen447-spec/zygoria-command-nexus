@@ -43,7 +43,9 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
     setStage("visitor");
     onFightStart?.();
     if (!await speak(TV_VISITOR)) return;
+    if (ending.current) return;
     if (!await speak(TV_FIGHT_START, 2000)) return;
+    if (ending.current) return;
     setStage("fight");
     setLine(["", "ATTACK (or Space) — Brix punches, Lowkey slashes. Hold for a heavy hit!"]);
   }
@@ -68,7 +70,7 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
   }
 
   async function strike(heavy = false) {
-    if (stage !== "fight" || ending.current) return;
+    if ((stage !== "fight" && stage !== "visitor") || ending.current) return;
     const who = turn.current++ % 2 ? "Lowkey" : "Brix";
     swing(who, heavy);
     hits.current += heavy ? 2 : 1;
@@ -92,7 +94,7 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
 
   // Space: tap = quick, hold ~0.6s = heavy (same feel as the other fights).
   useEffect(() => {
-    if (stage !== "fight") return;
+    if (stage !== "fight" && stage !== "visitor") return;
     let down = 0;
     const kd = (e: KeyboardEvent) => { if (e.code !== "Space") return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); };
     const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || !down) return; e.preventDefault(); const held = performance.now() - down; down = 0; void strikeRef.current(held >= 600); };
@@ -110,7 +112,7 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
   const z = 10 + Math.round(pos.y * 10);
   return <>
     {busy && <div className="tv-block" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}/>}
-    {stage === "fight" && <button type="button" className={`combat-attack in-fight tv-attack ${charging ? "is-charged" : ""}`} aria-label="Attack the TV — tap for quick, hold for heavy"
+    {(stage === "fight" || stage === "visitor") && <button type="button" className={`combat-attack in-fight tv-attack ${charging ? "is-charged" : ""}`} aria-label="Attack the TV — tap for quick, hold for heavy"
       onClick={e => e.stopPropagation()}
       onPointerDown={e => { e.stopPropagation(); holdStart.current = performance.now(); setTimeout(() => holdStart.current && setCharging(true), 600); }}
       onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; setCharging(false); void strike(held >= 600); }}
@@ -120,7 +122,7 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
       : <button type="button" className={`tv-actor ${walking || stage === "visitor" || stage === "defeat" ? "is-alive" : ""} ${stage === "awaken" ? "is-waking" : ""} ${stage === "defeat" ? "is-down" : ""} ${lunge ? "is-lunge" : ""} ${hit ? `is-hit-${hit}` : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: busy ? 2100 : z }} aria-label={stage === "fight" ? "Hit the TV" : "Old TV"} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); stage === "fight" ? void strike() : tapIdle(); }}>
         {stage === "awaken" ? <img className="tv-still" src={tvNormal.url} alt=""/> : <span className={`tv-walk ${walking ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalk.url})` }}/>}
         {stage === "awaken" && <span className="tv-eyes"/>}
-        {stage === "fight" && <span className="tv-hp" aria-label={`TV health ${hp} of ${TV_HITS}`}><i style={{ width: `${(hp / TV_HITS) * 100}%` }}/></span>}
+        {(stage === "fight" || stage === "visitor") && <span className="tv-hp" aria-label={`TV health ${hp} of ${TV_HITS}`}><i style={{ width: `${(hp / TV_HITS) * 100}%` }}/></span>}
       </button>}
     {line && <div className={`tv-caption ${line[0] ? `is-${line[0].toLowerCase()}` : "is-narration"}`} role="status">{line[0] && <b>{line[0] === "TV" ? "TV" : line[0].toUpperCase()}</b>}<span>{line[1]}</span></div>}
     {art && <div className="prologue-card tv-art-card" role="dialog" aria-label="Codex art unlocked" onClick={e => e.stopPropagation()}><span className="prologue-card-eyebrow">MISSION COMPLETE — TIE UP THE TV</span><img src={tvNetwork.url} alt="Old TV — Network Manifestation"/><strong>Codex art unlocked: Old TV — Network Manifestation</strong><button type="button" onClick={() => setArt(false)}>Close ›</button></div>}
