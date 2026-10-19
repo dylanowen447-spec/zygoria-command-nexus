@@ -43,7 +43,9 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
     setStage("visitor");
     onFightStart?.();
     if (!await speak(TV_VISITOR)) return;
+    if (ending.current) return;
     if (!await speak(TV_FIGHT_START, 2000)) return;
+    if (ending.current) return;
     setStage("fight");
     setLine(["", "ATTACK (or Space) — Brix punches, Lowkey slashes. Hold for a heavy hit!"]);
   }
@@ -68,7 +70,7 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
   }
 
   async function strike(heavy = false) {
-    if (stage !== "fight" || ending.current) return;
+    if ((stage !== "fight" && stage !== "visitor") || ending.current) return;
     const who = turn.current++ % 2 ? "Lowkey" : "Brix";
     swing(who, heavy);
     hits.current += heavy ? 2 : 1;
@@ -92,7 +94,7 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
 
   // Space: tap = quick, hold ~0.6s = heavy (same feel as the other fights).
   useEffect(() => {
-    if (stage !== "fight") return;
+    if (stage !== "fight" && stage !== "visitor") return;
     let down = 0;
     const kd = (e: KeyboardEvent) => { if (e.code !== "Space") return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); };
     const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || !down) return; e.preventDefault(); const held = performance.now() - down; down = 0; void strikeRef.current(held >= 600); };
@@ -110,7 +112,7 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
   const z = 10 + Math.round(pos.y * 10);
   return <>
     {busy && <div className="tv-block" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}/>}
-    {stage === "fight" && <button type="button" className={`combat-attack in-fight tv-attack ${charging ? "is-charged" : ""}`} aria-label="Attack the TV — tap for quick, hold for heavy"
+    {(stage === "fight" || stage === "visitor") && <button type="button" className={`combat-attack in-fight tv-attack ${charging ? "is-charged" : ""}`} aria-label="Attack the TV — tap for quick, hold for heavy"
       onClick={e => e.stopPropagation()}
       onPointerDown={e => { e.stopPropagation(); holdStart.current = performance.now(); setTimeout(() => holdStart.current && setCharging(true), 600); }}
       onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; setCharging(false); void strike(held >= 600); }}
