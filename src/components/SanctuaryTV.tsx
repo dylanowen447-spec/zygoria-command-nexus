@@ -10,7 +10,7 @@ type Stage = "dormant" | "awaken" | "walk" | "visitor" | "fight" | "defeat" | "c
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 /** Self-contained first-night TV encounter; never touches crew movement or story state. */
-export function SanctuaryTV({ escaped, onLog, onDone }: { escaped: boolean; onLog: (who: string, text: string) => void; onDone: () => void }) {
+export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped: boolean; onLog: (who: string, text: string) => void; onDone: () => void; onFightStart?: () => void }) {
   const [stage, setStage] = useState<Stage>("dormant");
   const [line, setLine] = useState<TvLine | null>(null);
   const [pos, setPos] = useState(TV_SPOT.workshop);
@@ -18,9 +18,13 @@ export function SanctuaryTV({ escaped, onLog, onDone }: { escaped: boolean; onLo
   const [hit, setHit] = useState<"" | "punch" | "slash">("");
   const [lunge, setLunge] = useState(false);
   const [art, setArt] = useState(false);
+  const [charging, setCharging] = useState(false);
   const alive = useRef(true);
   const hits = useRef(0);
   const started = useRef(false);
+  const turn = useRef(0);
+  const holdStart = useRef(0);
+  const ending = useRef(false);
 
   useEffect(() => { alive.current = true; try { if (localStorage.getItem(TV_KEY) === "done") { setStage("caged"); setPos(TV_SPOT.cage); } } catch { /* optional */ } return () => { alive.current = false; }; }, []);
   // The TV wakes inside Brix's workshop; out here it only appears once it has bolted out the door.
@@ -37,10 +41,11 @@ export function SanctuaryTV({ escaped, onLog, onDone }: { escaped: boolean; onLo
     const from = TV_SPOT.workshop, to = TV_SPOT.cage, t0 = performance.now(), dur = 6500;
     await new Promise<void>(res => { const f = (now: number) => { if (!alive.current) return res(); const k = Math.min(1, (now - t0) / dur); setPos({ x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k }); k < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
     setStage("visitor");
+    onFightStart?.();
     if (!await speak(TV_VISITOR)) return;
     if (!await speak(TV_FIGHT_START, 2000)) return;
     setStage("fight");
-    setLine(["", "Tap the TV to fight it!"]);
+    setLine(["", "ATTACK (or Space) — Brix punches, Lowkey slashes. Hold for a heavy hit!"]);
   }
 
   // TV lunges at the crew every couple of seconds during the scrap; Oz shouts from the side.
@@ -52,14 +57,27 @@ export function SanctuaryTV({ escaped, onLog, onDone }: { escaped: boolean; onLo
     return () => { clearInterval(l); clearInterval(c); };
   }, [stage]);
 
-  async function strike() {
-    if (stage !== "fight") return;
-    hits.current += 1;
-    const kind = hits.current % 2 ? "punch" : "slash";
-    playSfx(kind === "punch" ? "punch-heavy" : "slash-hit");
+  /** Plays the fighter's real attack animation on their Sanctuary marker (Oz only directs). */
+  function swing(who: "Brix" | "Lowkey", heavy: boolean) {
+    const el = document.querySelector<HTMLElement>(`.agent-marker.marker-${who.toLowerCase()}`);
+    if (!el) return;
+    const cls = who === "Brix" ? "atk-punch" : "atk-slash";
+    el.classList.remove("atk-punch", "atk-slash", "is-heavy"); void el.offsetWidth;
+    el.classList.add(cls); if (heavy) el.classList.add("is-heavy");
+    setTimeout(() => el.classList.remove(cls, "is-heavy"), heavy ? 640 : 480);
+  }
+
+  async function strike(heavy = false) {
+    if (stage !== "fight" || ending.current) return;
+    const who = turn.current++ % 2 ? "Lowkey" : "Brix";
+    swing(who, heavy);
+    hits.current += heavy ? 2 : 1;
+    const kind = who === "Brix" ? "punch" : "slash";
+    playSfx(kind === "punch" ? (heavy ? "punch-heavy" : "punch") : "slash-hit");
     setHit(kind); setTimeout(() => setHit(""), 260);
-    const left = TV_HITS - hits.current; setHp(left);
+    const left = Math.max(0, TV_HITS - hits.current); setHp(left);
     if (left > 0) return;
+    ending.current = true;
     setStage("defeat");
     if (!await speak(TV_DEFEAT)) return;
     setStage("cage");
@@ -70,6 +88,17 @@ export function SanctuaryTV({ escaped, onLog, onDone }: { escaped: boolean; onLo
     onDone();
     setArt(true);
   }
+  const strikeRef = useRef(strike); strikeRef.current = strike;
+
+  // Space: tap = quick, hold ~0.6s = heavy (same feel as the other fights).
+  useEffect(() => {
+    if (stage !== "fight") return;
+    let down = 0;
+    const kd = (e: KeyboardEvent) => { if (e.code !== "Space") return; e.preventDefault(); if (e.repeat || down) return; down = performance.now(); };
+    const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || !down) return; e.preventDefault(); const held = performance.now() - down; down = 0; void strikeRef.current(held >= 600); };
+    window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
+    return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); };
+  }, [stage]);
 
   function tapIdle() {
     if (stage === "caged") { const l = TV_CAGED[Math.floor(Math.random() * TV_CAGED.length)]!; setLine(l); playSfx("zap"); setTimeout(() => alive.current && setLine(null), 2600); }
