@@ -20,6 +20,16 @@ export const TV_AWAKEN: TvLine[] = [
   ["", "CLANK! CLANK! Metal arms and legs burst out of the television."],
 ];
 
+/** Awakening played inside Brix's workshop, in front of whoever walked in. */
+export const TV_WAKE_INSIDE: TvLine[] = [
+  ["TV", "BZZZT… KRRRZZZT…"],
+  ["", "The screen flickers. Two evil red eyes appear through the static."],
+  ["", "CLANK! CLANK! Metal arms and legs burst out of the television."],
+  ["TV", "YOU WILL BOW BEFORE ME!"],
+];
+/** localStorage value once the TV has bolted out of the workshop. */
+export const TV_ESCAPED = "escaped";
+
 export const TV_VISITOR: TvLine[] = [
   ["Oz", "Erm… Brix?"],
   ["Brix", "What?"],
