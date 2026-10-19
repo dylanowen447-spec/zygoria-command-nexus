@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import tvNormal from "@/assets/tv-normal.png.asset.json";
 import tvWalkSheet from "@/assets/tv-walk-aligned.png";
 import tvCage from "@/assets/tv-cage.png.asset.json";
@@ -32,6 +33,9 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
   const posRef = useRef<P>(TV_EXIT_PATH[0]!);
   const stageRef = useRef<Stage>("dormant"); stageRef.current = stage;
   const btnRef = useRef<HTMLButtonElement>(null);
+  // HUD (attack button, captions, health) lives on the visible map frame, not the wider artwork layer, so nothing is cut off on phones.
+  const [hud, setHud] = useState<HTMLElement | null>(null);
+  useEffect(() => { setHud(btnRef.current?.closest<HTMLElement>(".world-image-wrap") ?? null); }, [stage]);
 
   useEffect(() => { alive.current = true; try { if (localStorage.getItem(TV_KEY) === "done") { setStage("caged"); setPos(TV_SPOT.cage); } } catch { /* optional */ } return () => { alive.current = false; }; }, []);
   useEffect(() => { if (escaped && stage === "dormant" && !started.current) void run(); }, [escaped, stage]);
@@ -211,15 +215,9 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
   const z = 10 + Math.round(pos.y * 10);
   return <>
     {busy && stage !== "fight" && <div className="tv-block" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}/>}
-    {fighting && <span className="tv-crew-hp" aria-label={`Crew health ${crew} of ${CREW_HP}`}><b>CREW</b><i style={{ width: `${crew}%` }}/></span>}
-    {fighting && <button type="button" className={`combat-attack in-fight tv-attack ${charging ? "is-charged" : ""}`} aria-label="Attack the TV — tap for quick, hold for heavy"
-      onPointerDown={e => { e.stopPropagation(); holdStart.current = performance.now(); setTimeout(() => holdStart.current && setCharging(true), 600); }}
-      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; setCharging(false); strike(held >= 600); }}
-      onPointerCancel={() => { holdStart.current = 0; setCharging(false); }}
-      onClick={e => e.stopPropagation()}>ATTACK<small>hold = heavy</small></button>}
     {stage === "caged" || stage === "cage"
       ? <button ref={btnRef} type="button" className={`tv-actor is-caged ${rattle ? "is-rattle" : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: z }} aria-label="The caged TV" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); tapCage(); }}><img className="tv-caged-set" src={tvNormal.url} alt=""/><span className="tv-eyes"/><img className="tv-cage" src={tvCage.url} alt=""/></button>
-      : <button ref={btnRef} type="button" className={`tv-actor is-alive face-${face} ${stage === "stun" || stage === "tie" || stage === "escort" ? "is-stunned" : ""} ${stage === "tie" || stage === "escort" ? "is-tied" : ""} ${shock ? "is-shocking" : ""} ${hit ? `is-hit-${hit}` : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: 2100 }} aria-label={fighting ? "Hit the TV" : "Old TV"}
+      : <button ref={btnRef} type="button" className={`tv-actor is-alive face-${face} ${stage === "stun" || stage === "tie" || stage === "escort" ? "is-stunned" : ""} ${stage === "tie" || stage === "escort" ? "is-tied" : ""} ${shock ? "is-shocking" : ""} ${hit ? `is-hit-${hit}` : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: fighting ? 2900 : 2100 }} aria-label={fighting ? "Hit the TV" : "Old TV"}
           onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (fighting) strike(); }}>
         <span className={`tv-walk ${moving ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalkSheet})` }}/>
         {(stage === "stun" || stage === "tie") && <span className="tv-sparks" aria-hidden="true"/>}
@@ -227,7 +225,15 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
         {(stage === "tie" || stage === "escort") && <span className="tv-rope" aria-hidden="true"/>}
         {fighting && <span className="tv-hp" aria-label={`TV health ${hp} of ${TV_HITS}`}><i style={{ width: `${(hp / TV_HITS) * 100}%` }}/></span>}
       </button>}
+    {hud && createPortal(<>
+    {fighting && <span className="tv-crew-hp" aria-label={`Crew health ${crew} of ${CREW_HP}`}><b>CREW</b><i style={{ width: `${crew}%` }}/></span>}
+    {fighting && <button type="button" className={`combat-attack in-fight tv-attack ${charging ? "is-charged" : ""}`} aria-label="Attack the TV — tap for quick, hold for heavy"
+      onPointerDown={e => { e.stopPropagation(); holdStart.current = performance.now(); setTimeout(() => holdStart.current && setCharging(true), 600); }}
+      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; setCharging(false); strike(held >= 600); }}
+      onPointerCancel={() => { holdStart.current = 0; setCharging(false); }}
+      onClick={e => e.stopPropagation()}>ATTACK<small>hold = heavy</small></button>}
     {line && <div className={`tv-caption ${line[0] ? `is-${line[0].toLowerCase()}` : "is-narration"}`} role="status">{line[0] && <b>{line[0] === "TV" ? "TV" : line[0].toUpperCase()}</b>}<span>{line[1]}</span></div>}
     {art && <div className="prologue-card tv-art-card" role="dialog" aria-label="Codex art unlocked" onClick={e => e.stopPropagation()}><span className="prologue-card-eyebrow">MISSION COMPLETE — TIE UP THE TV</span><img src={tvNetwork.url} alt="Old TV — Network Manifestation"/><strong>Codex art unlocked: Old TV — Network Manifestation</strong><button type="button" onClick={() => setArt(false)}>Close ›</button></div>}
+    </>, hud)}
   </>;
 }
