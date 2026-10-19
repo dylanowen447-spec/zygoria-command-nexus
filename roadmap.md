@@ -15,3 +15,4 @@
 - [x] Fight chatter every <4s
 
 - [x] Tie Up the TV side mission (Sanctuary first night)
+- [x] Use the new 4-direction TV walking sheet for the runaway TV
