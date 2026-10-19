@@ -34,7 +34,8 @@ export function WorkshopTV({ wake, editor, exitX, onEscape }: { wake: boolean; e
 
   function tap() {
     if (stage !== "still") return;
-    if (editor) { void run(); return; }
+    // Editor: wake instantly. Players: one look at it, then the next tap wakes it.
+    if (editor || idle.current >= 1) { void run(); return; }
     const l = TV_DORMANT[idle.current++ % TV_DORMANT.length]!; setLine(l);
     setTimeout(() => alive.current && setLine(l2 => l2 === l ? null : l2), 3200);
   }
