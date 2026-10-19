@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { INTERIORS, type InteriorId } from "@/lib/interiors";
 import { startShackMusic, stopShackMusic } from "@/lib/atmosphere";
+import { WorkshopTV } from "@/components/WorkshopTV";
 
 type Zig = "Oz" | "Brix" | "Lowkey";
 
 /** A walk-in interior (Brix's workshop, Oz's shack) entered from a Sanctuary door. */
-export function WorkshopScene({ onExit, character = "Brix", place = "brix" }: { onExit: () => void; character?: Zig; place?: InteriorId }) {
+export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }: { onExit: () => void; character?: Zig; place?: InteriorId; tv?: { wake: boolean; editor: boolean; onEscape: () => void } }) {
   const room = INTERIORS[place];
   const exitX = parseFloat(room.exit.left) < 50 ? 12 : 80;
   const [x, setX] = useState(55);
@@ -39,6 +40,7 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix" }: { 
       <span className={`haven-zig marker-${low} ${moving ? `is-walking ${low}-facing-${moving.dir} facing-${moving.dir}` : ""}`} style={{ left: `${x}%`, bottom: "16%", transitionDuration: moving ? `${moving.ms}ms` : "0ms" }}>
         <span className="sprite-stage"><CharacterSprite character={character}/></span>
       </span>
+      {place === "brix" && tv && <WorkshopTV wake={tv.wake} editor={tv.editor} exitX={exitX} onEscape={tv.onEscape}/>}
       <button type="button" className="workshop-spot workshop-door" style={room.exit} aria-label="Back outside"
         onPointerDown={e => e.stopPropagation()} onClick={() => walkTo(exitX, onExit)}><span>Outside ›</span></button>
       {bubble && <div key={bubble} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, x))}%`, bottom: "calc(16% + var(--zig-lift))" }}><b>{character.toUpperCase()}</b>{bubble}</div>}
