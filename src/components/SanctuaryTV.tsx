@@ -4,7 +4,7 @@ import tvWalk from "@/assets/tv-walk.png.asset.json";
 import tvCage from "@/assets/tv-cage.png.asset.json";
 import tvNetwork from "@/assets/tv-network.webp.asset.json";
 import { playSfx } from "@/lib/atmosphere";
-import { TV_AWAKEN, TV_CAGE, TV_CAGED, TV_DEFEAT, TV_DORMANT, TV_FIGHT_CALLS, TV_FIGHT_START, TV_HITS, TV_KEY, TV_NIGHT_MS, TV_SPOT, TV_VISITOR, type TvLine } from "@/lib/tv-mission";
+import { TV_CAGE, TV_CAGED, TV_DEFEAT, TV_FIGHT_CALLS, TV_FIGHT_START, TV_HITS, TV_KEY, TV_SPOT, TV_VISITOR, type TvLine } from "@/lib/tv-mission";
 
 type Stage = "dormant" | "awaken" | "walk" | "visitor" | "fight" | "defeat" | "cage" | "caged";
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -71,16 +71,12 @@ export function SanctuaryTV({ escaped, onLog, onDone }: { escaped: boolean; onLo
     setArt(true);
   }
 
-  const idle = useRef(0);
   function tapIdle() {
-    if (stage === "dormant") {
-      if (editor && readyRef.current && !started.current) { void run(); return; }
-      const l = TV_DORMANT[idle.current++ % TV_DORMANT.length]!; setLine(l); setTimeout(() => alive.current && setLine(null), 3200); return;
-    }
     if (stage === "caged") { const l = TV_CAGED[Math.floor(Math.random() * TV_CAGED.length)]!; setLine(l); playSfx("zap"); setTimeout(() => alive.current && setLine(null), 2600); }
   }
 
-  const busy = stage !== "dormant" && stage !== "caged";
+  if (stage === "dormant") return null;
+  const busy = stage !== "caged";
   const walking = stage === "walk" || stage === "fight";
   const z = 10 + Math.round(pos.y * 10);
   return <>
