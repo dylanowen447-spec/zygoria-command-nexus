@@ -238,7 +238,10 @@ function CommandCentre() {
     const t = setTimeout(() => { setTvNight(true); log("Brix", "Did anyone else hear that? Something's buzzing in my workshop…"); }, TV_NIGHT_MS);
     return () => clearTimeout(t);
   }, [prologue, tvDone, tvEscaped, tvNight]);
-  const tvEscape = () => { try { localStorage.setItem(TV_KEY, TV_ESCAPED); } catch { /* optional */ } setWorkshop(false); setTvEscaped(true); };
+  const [tvRun, setTvRun] = useState(0);
+  const tvEscape = () => { try { localStorage.setItem(TV_KEY, TV_ESCAPED); } catch { /* optional */ } setWorkshop(false); setTvDone(false); setTvRun(n => n + 1); setTvEscaped(true); };
+  /** Brix and Lowkey head to the Crossroads to take on the TV; Oz stays back and directs. */
+  const tvFightStart = () => { setZoneId("sanctuary"); const r = runId.current; void goTo("Brix", "central", r); void goTo("Lowkey", "central", r); };
   const logoTaps = useRef<number[]>([]);
   useEffect(() => {
     try { const c = JSON.parse(localStorage.getItem(CLEARED_KEY) ?? "[]"); if (Array.isArray(c)) { clearedRef.current = c; setCleared(c); } } catch { /* optional */ }

@@ -110,6 +110,11 @@ export function SanctuaryTV({ escaped, onLog, onDone, onFightStart }: { escaped:
   const z = 10 + Math.round(pos.y * 10);
   return <>
     {busy && <div className="tv-block" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}/>}
+    {stage === "fight" && <button type="button" className={`combat-attack in-fight tv-attack ${charging ? "is-charged" : ""}`} aria-label="Attack the TV — tap for quick, hold for heavy"
+      onClick={e => e.stopPropagation()}
+      onPointerDown={e => { e.stopPropagation(); holdStart.current = performance.now(); setTimeout(() => holdStart.current && setCharging(true), 600); }}
+      onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; setCharging(false); void strike(held >= 600); }}
+      onPointerLeave={() => { holdStart.current = 0; setCharging(false); }}>ATTACK<small>hold = heavy</small></button>}
     {stage === "caged" || stage === "cage"
       ? <button type="button" className="tv-actor is-caged" style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: z }} aria-label="The caged TV" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); tapIdle(); }}><img className="tv-caged-set" src={tvNormal.url} alt=""/><span className="tv-eyes"/><img className="tv-cage" src={tvCage.url} alt=""/></button>
       : <button type="button" className={`tv-actor ${walking || stage === "visitor" || stage === "defeat" ? "is-alive" : ""} ${stage === "awaken" ? "is-waking" : ""} ${stage === "defeat" ? "is-down" : ""} ${lunge ? "is-lunge" : ""} ${hit ? `is-hit-${hit}` : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: busy ? 2100 : z }} aria-label={stage === "fight" ? "Hit the TV" : "Old TV"} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); stage === "fight" ? void strike() : tapIdle(); }}>
