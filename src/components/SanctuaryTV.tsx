@@ -54,7 +54,7 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
       const ok = await new Promise<boolean>(res => { const f = (now: number) => { if (!alive.current || ending.current && stageRef.current === "fight") return res(false); const k = Math.min(1, (now - t0) / dur); place({ x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k }); k < 1 ? requestAnimationFrame(f) : res(true); }; requestAnimationFrame(f); });
       if (!ok) break;
     }
-    setMoving(false);
+    setMoving(false); setFace("down");
   }
 
   async function speak(seq: TvLine[], gap = 2600) {
