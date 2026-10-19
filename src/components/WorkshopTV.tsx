@@ -9,7 +9,7 @@ const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 /** The dormant TV inside Brix's workshop; at night it wakes in front of the player and bolts out the door. */
 export function WorkshopTV({ wake, editor, exitX, onEscape }: { wake: boolean; editor: boolean; exitX: number; onEscape: () => void }) {
   const [stage, setStage] = useState<"still" | "waking" | "alive" | "run">("still");
-  const [x, setX] = useState(34);
+  const [x, setX] = useState(52);
   const [line, setLine] = useState<TvLine | null>(null);
   const alive = useRef(true), started = useRef(false), idle = useRef(0);
   useEffect(() => () => { alive.current = false; }, []);
