@@ -84,7 +84,7 @@ export function SanctuaryTV({ escaped, onLog, onDone }: { escaped: boolean; onLo
     {stage === "caged" || stage === "cage"
       ? <button type="button" className="tv-actor is-caged" style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: z }} aria-label="The caged TV" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); tapIdle(); }}><img className="tv-caged-set" src={tvNormal.url} alt=""/><span className="tv-eyes"/><img className="tv-cage" src={tvCage.url} alt=""/></button>
       : <button type="button" className={`tv-actor ${walking || stage === "visitor" || stage === "defeat" ? "is-alive" : ""} ${stage === "awaken" ? "is-waking" : ""} ${stage === "defeat" ? "is-down" : ""} ${lunge ? "is-lunge" : ""} ${hit ? `is-hit-${hit}` : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: busy ? 2100 : z }} aria-label={stage === "fight" ? "Hit the TV" : "Old TV"} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); stage === "fight" ? void strike() : tapIdle(); }}>
-        {stage === "dormant" || stage === "awaken" ? <img className="tv-still" src={tvNormal.url} alt=""/> : <span className={`tv-walk ${walking ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalk.url})` }}/>}
+        {stage === "awaken" ? <img className="tv-still" src={tvNormal.url} alt=""/> : <span className={`tv-walk ${walking ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalk.url})` }}/>}
         {stage === "awaken" && <span className="tv-eyes"/>}
         {stage === "fight" && <span className="tv-hp" aria-label={`TV health ${hp} of ${TV_HITS}`}><i style={{ width: `${(hp / TV_HITS) * 100}%` }}/></span>}
       </button>}
