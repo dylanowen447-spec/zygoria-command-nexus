@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import tvNormal from "@/assets/tv-normal.png.asset.json";
-import tvWalk from "@/assets/tv-walk.png.asset.json";
+import tvWalkSheet from "@/assets/tv-walk-aligned.png";
 import { playSfx } from "@/lib/atmosphere";
 import { TV_DORMANT, TV_WAKE_INSIDE, type TvLine } from "@/lib/tv-mission";
 
@@ -43,7 +43,7 @@ export function WorkshopTV({ wake, editor, exitX, onEscape }: { wake: boolean; e
   return <>
     <button type="button" className={`workshop-tv ${stage !== "still" ? `is-${stage}` : ""}`} style={{ left: `${x}%` }} aria-label="Old TV"
       onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); tap(); }}>
-      {stage === "still" || stage === "waking" ? <img className="tv-still" src={tvNormal.url} alt=""/> : <span className={`tv-walk ${stage === "run" ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalk.url})` }}/>}
+      {stage === "still" || stage === "waking" ? <img className="tv-still" src={tvNormal.url} alt=""/> : <span className={`tv-walk ${stage === "run" ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalkSheet})` }}/>}
       {stage === "waking" && <span className="tv-eyes"/>}
     </button>
     {line && <div className={`tv-caption ${line[0] ? `is-${line[0].toLowerCase()}` : "is-narration"}`} role="status">{line[0] && <b>{line[0] === "TV" ? "TV" : line[0].toUpperCase()}</b>}<span>{line[1]}</span></div>}
