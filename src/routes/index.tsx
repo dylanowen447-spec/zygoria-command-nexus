@@ -24,7 +24,7 @@ import moxiWordmark from "@/assets/moxi-wordmark.png.asset.json";
 import firePitImg from "@/assets/fire-pit.png";
 import { FieldCodex } from "@/components/FieldCodex";
 import { SanctuaryTV } from "@/components/SanctuaryTV";
-import { TV_CODEX, TV_KEY } from "@/lib/tv-mission";
+import { TV_CODEX, TV_ESCAPED, TV_KEY, TV_NIGHT_MS } from "@/lib/tv-mission";
 import { EMPTY_STORY, MOXI_SCENE, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 const MP3_AFTER = 120;
 const PET_AFTER = 60;
@@ -232,6 +232,13 @@ function CommandCentre() {
   const [tvEscaped, setTvEscaped] = useState(false);
   const [tvNight, setTvNight] = useState(false);
   useEffect(() => { try { const v = localStorage.getItem(TV_KEY); if (v === "done") setTvDone(true); if (v === TV_ESCAPED) setTvEscaped(true); } catch { /* optional */ } }, []);
+  // Night falls on the TV: it now wakes the next time someone walks into Brix's workshop.
+  useEffect(() => {
+    if (prologue !== "off" || tvDone || tvEscaped || tvNight) return;
+    const t = setTimeout(() => { setTvNight(true); log("Brix", "Did anyone else hear that? Something's buzzing in my workshop…"); }, TV_NIGHT_MS);
+    return () => clearTimeout(t);
+  }, [prologue, tvDone, tvEscaped, tvNight]);
+  const tvEscape = () => { try { localStorage.setItem(TV_KEY, TV_ESCAPED); } catch { /* optional */ } setWorkshop(false); setTvEscaped(true); };
   const logoTaps = useRef<number[]>([]);
   useEffect(() => {
     try { const c = JSON.parse(localStorage.getItem(CLEARED_KEY) ?? "[]"); if (Array.isArray(c)) { clearedRef.current = c; setCleared(c); } } catch { /* optional */ }
