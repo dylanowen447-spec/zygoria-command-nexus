@@ -888,7 +888,7 @@
 @keyframes ratSlash{0%{scale:.5;opacity:1;rotate:-60deg}100%{scale:1.4;opacity:0;rotate:30deg}}
 /* Tie Up the TV — Sanctuary side mission */
 .tv-block{position:absolute;inset:0;z-index:2050;background:transparent}
-.tv-actor{position:absolute;transform:translate(-50%,-100%);width:7%;padding:0;border:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tv-actor{pointer-events:auto;position:absolute;transform:translate(-50%,-100%);width:7%;padding:0;border:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .tv-actor.is-alive{width:10%}
 .tv-actor img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
 .tv-walk{display:block;width:100%;aspect-ratio:1;background-size:400% 400%;background-repeat:no-repeat;background-position:0 0;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
