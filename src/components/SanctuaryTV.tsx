@@ -10,7 +10,7 @@ type Stage = "dormant" | "awaken" | "walk" | "visitor" | "fight" | "defeat" | "c
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 /** Self-contained first-night TV encounter; never touches crew movement or story state. */
-export function SanctuaryTV({ ready, editor, onLog, onDone }: { ready: boolean; editor: boolean; onLog: (who: string, text: string) => void; onDone: () => void }) {
+export function SanctuaryTV({ escaped, onLog, onDone }: { escaped: boolean; onLog: (who: string, text: string) => void; onDone: () => void }) {
   const [stage, setStage] = useState<Stage>("dormant");
   const [line, setLine] = useState<TvLine | null>(null);
   const [pos, setPos] = useState(TV_SPOT.workshop);
@@ -18,15 +18,13 @@ export function SanctuaryTV({ ready, editor, onLog, onDone }: { ready: boolean; 
   const [hit, setHit] = useState<"" | "punch" | "slash">("");
   const [lunge, setLunge] = useState(false);
   const [art, setArt] = useState(false);
-  const [nightDue, setNightDue] = useState(false);
   const alive = useRef(true);
   const hits = useRef(0);
-  const readyRef = useRef(ready); readyRef.current = ready;
   const started = useRef(false);
 
   useEffect(() => { alive.current = true; try { if (localStorage.getItem(TV_KEY) === "done") { setStage("caged"); setPos(TV_SPOT.cage); } } catch { /* optional */ } return () => { alive.current = false; }; }, []);
-  useEffect(() => { const t = setTimeout(() => setNightDue(true), TV_NIGHT_MS); return () => clearTimeout(t); }, []);
-  useEffect(() => { if (nightDue && ready && stage === "dormant" && !started.current) void run(); }, [nightDue, ready, stage]);
+  // The TV wakes inside Brix's workshop; out here it only appears once it has bolted out the door.
+  useEffect(() => { if (escaped && stage === "dormant" && !started.current) void run(); }, [escaped, stage]);
 
   async function speak(seq: TvLine[], gap = 2600) {
     for (const l of seq) { if (!alive.current) return false; setLine(l); onLog(l[0] || "Sanctuary", l[1]); await wait(Math.max(gap, 1400 + l[1].length * 40)); }
@@ -35,8 +33,6 @@ export function SanctuaryTV({ ready, editor, onLog, onDone }: { ready: boolean; 
 
   async function run() {
     started.current = true;
-    setStage("awaken");
-    if (!await speak(TV_AWAKEN)) return;
     setStage("walk");
     const from = TV_SPOT.workshop, to = TV_SPOT.cage, t0 = performance.now(), dur = 6500;
     await new Promise<void>(res => { const f = (now: number) => { if (!alive.current) return res(); const k = Math.min(1, (now - t0) / dur); setPos({ x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k }); k < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
