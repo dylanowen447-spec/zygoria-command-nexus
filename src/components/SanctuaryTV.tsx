@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import tvNormal from "@/assets/tv-normal.png.asset.json";
-import tvWalk from "@/assets/tv-walk.png.asset.json";
+import tvWalkSheet from "@/assets/tv-walk-aligned.png";
 import tvCage from "@/assets/tv-cage.png.asset.json";
 import tvNetwork from "@/assets/tv-network.webp.asset.json";
 import { playSfx } from "@/lib/atmosphere";
@@ -221,7 +221,7 @@ export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }
       ? <button ref={btnRef} type="button" className={`tv-actor is-caged ${rattle ? "is-rattle" : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: z }} aria-label="The caged TV" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); tapCage(); }}><img className="tv-caged-set" src={tvNormal.url} alt=""/><span className="tv-eyes"/><img className="tv-cage" src={tvCage.url} alt=""/></button>
       : <button ref={btnRef} type="button" className={`tv-actor is-alive face-${face} ${stage === "stun" || stage === "tie" || stage === "escort" ? "is-stunned" : ""} ${stage === "tie" || stage === "escort" ? "is-tied" : ""} ${shock ? "is-shocking" : ""} ${hit ? `is-hit-${hit}` : ""}`} style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: 2100 }} aria-label={fighting ? "Hit the TV" : "Old TV"}
           onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (fighting) strike(); }}>
-        <span className={`tv-walk ${moving ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalk.url})` }}/>
+        <span className={`tv-walk ${moving ? "is-walking" : ""}`} style={{ backgroundImage: `url(${tvWalkSheet})` }}/>
         {(stage === "stun" || stage === "tie") && <span className="tv-sparks" aria-hidden="true"/>}
         {shock && <span className="tv-shock" aria-hidden="true"/>}
         {(stage === "tie" || stage === "escort") && <span className="tv-rope" aria-hidden="true"/>}
