@@ -916,7 +916,7 @@
 .tv-caption.is-narration span{font-style:italic;opacity:.85}
 .tv-art-card img{width:100%;border-radius:8px}
 /* Dormant TV inside Brix's workshop; wakes at night and runs out the door. */
-.workshop-tv{position:absolute;bottom:16%;width:11%;transform:translateX(-50%);padding:0;border:0;background:transparent;cursor:pointer;z-index:6;transition:left 1.5s linear;-webkit-tap-highlight-color:transparent}
+.workshop-tv{position:absolute;bottom:28%;width:8.5%;transform:translateX(-50%);padding:0;border:0;background:transparent;cursor:pointer;z-index:4;transition:left 1.5s linear;-webkit-tap-highlight-color:transparent}
 .workshop-tv img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 3px 2px oklch(0 0 0 / .45))}
 .workshop-tv.is-waking .tv-still{animation:tv-shake .12s linear infinite}
-.workshop-tv.is-alive,.workshop-tv.is-run{width:15%}
+.workshop-tv.is-alive,.workshop-tv.is-run{width:12%}
