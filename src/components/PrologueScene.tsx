@@ -287,10 +287,21 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     const companionTick = () => {
       const on = inCombat(); setCombat(c => (c === on ? c : on));
       if (!on) return;
-      const ts = enemies.current.targets(); if (!ts.length) return;
+      const ts = enemies.current.targets();
+      // Scripted choreography (Old City swarm): non-steered Zigs hold their stage spots; Brix holds the middle and swings at whatever closes in.
+      const plan = enemies.current.stage?.();
+      const staged = new Set<Agent>();
+      if (plan) for (const z of ALL) {
+        const spot = plan[z]; if (!spot || z === steerRef.current) continue;
+        staged.add(z);
+        const me = coords.current[z], t = ts.length ? nearestTo(me) : undefined;
+        if (z === "Brix" && t && cdist(me, t) <= REACH.Brix * 1.2) { faceTo(z, t); const now = performance.now(); if (now > aiNext[z]) { aiNext[z] = now + 450 + Math.random() * 350; void strike(z, Math.random() < 0.35, true); } continue; }
+        if (cdist(me, spot) > 2.5) void walk(z, [clampB(spot)]); else if (t && z === "Brix") faceTo(z, t);
+      }
+      if (!ts.length) return;
       const taken: Point[] = [];
       const ctl = ctrlRef.current; const ctlT = nearestTo(coords.current[ctl]); if (ctlT) taken.push(ctlT);
-      ALL.filter(z => z !== ctl).forEach((z, i) => {
+      ALL.filter(z => z !== ctl && !staged.has(z)).forEach((z, i) => {
         const me = coords.current[z];
         const sorted = ts.slice().sort((u, v) => cdist(u, me) - cdist(v, me));
         const t = sorted.find(u => !taken.some(k => k === u)) ?? sorted[0]!;

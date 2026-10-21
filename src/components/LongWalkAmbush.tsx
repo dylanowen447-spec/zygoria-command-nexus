@@ -2,7 +2,7 @@ import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS } 
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
-import { DEFAULT_BOUNDS, farSpawns, makeRat, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, farSpawns, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
 import sheltonSheet from "@/assets/shelton.webp.asset.json";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import battleArt from "@/assets/long-walk-battle.webp";
@@ -171,6 +171,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
         stepRat(r, dt, crew.current, hurt);
         if (wave.current === 3 && !r.dead) { const c = clampPlat(r); r.x = c.x; r.y = c.y; }
       }
+      separateRats(rats.current.filter(r => !marching.has(r)), dt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (wave.current >= 0 && wave.current < 3 && rats.current.length === 0) {
         const n = wave.current; wave.current = 10 + n;
