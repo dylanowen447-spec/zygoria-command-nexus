@@ -294,7 +294,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       const plan = enemies.current.stage?.();
       const staged = new Set<Agent>();
       if (plan) for (const z of ALL) {
-        const spot = plan[z]; if (!spot || z === steerRef.current) continue;
+        const spot = plan[z]; if (!spot || z === steerRef.current || z === ctrlRef.current) continue;
         staged.add(z);
         const me = coords.current[z], t = ts.length ? nearestTo(me) : undefined;
         if (z === "Brix" && t && cdist(me, t) <= REACH.Brix * 1.2) { faceTo(z, t); const now = performance.now(); if (now > aiNext[z]) { aiNext[z] = now + 450 + Math.random() * 350; void strike(z, Math.random() < 0.35, true); } continue; }
@@ -511,7 +511,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         setBubbles(b => ({ ...b, [z]: "…" }));
         let reply: string;
         try {
-          const out = await runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: [scene.story, voiceName() ? `The voice from the sky is called ${voiceName()}; occasionally call them by name.` : "", ...[...found].map(f => scene.learned[f]).filter(Boolean)].join(" "), prologue: true } });
+          const out = await Promise.race([runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: [scene.story, voiceName() ? `The voice from the sky is called ${voiceName()}; occasionally call them by name.` : "", ...[...found].map(f => scene.learned[f]).filter(Boolean)].join(" "), prologue: true } }), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("slow")), 8000))]);
           reply = out.result.replace(/\s+/g, " ").trim().slice(0, 220);
         } catch { reply = pick(SHRUGS[z]); }
         if (!alive) return;
@@ -681,7 +681,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (scene.startStill) await wait(600);
       else await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
       if (!alive) return;
-      for (const [who, text] of scene.opening) { say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP); }
+      for (const [who, text] of scene.opening) { if (inCombat()) break; say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP); }
       setLookAway(false);
       ALL.forEach(a => void explore(a));
     })();
