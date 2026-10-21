@@ -171,6 +171,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
         stepRat(r, dt, crew.current, hurt);
         if (wave.current === 3 && !r.dead) { const c = clampPlat(r); r.x = c.x; r.y = c.y; }
       }
+      separateRats(rats.current.filter(r => !marching.has(r)), dt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (wave.current >= 0 && wave.current < 3 && rats.current.length === 0) {
         const n = wave.current; wave.current = 10 + n;
