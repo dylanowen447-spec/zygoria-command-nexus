@@ -44,3 +44,10 @@ export const SHELTON_FIRST_SIGHT: [Agent, string][] = [
   ["Oz", "I dno lads?"],
   ["Lowkey", "Looks angry."],
 ];
+
+/** Old City swarm choreography: Brix takes centre stage, then the others rejoin him. */
+export const BRIX_SWARM_CALL = "Oi, boys! Stand back. I’ve got this!";
+export const SWARM_CLEARED: [Agent, string][] = [
+  ["Oz", "Alright, alright… show-off!"],
+  ["Lowkey", "Okay. That was actually impressive."],
+];

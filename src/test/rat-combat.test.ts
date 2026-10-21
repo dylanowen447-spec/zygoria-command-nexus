@@ -35,9 +35,9 @@ describe("Brix rat punches", () => {
 });
 
 describe("Old City reinforcements", () => {
-  it("adds eight waves after the original three rats", () => {
+  it("opens with an 18-rat swarm then eight waves", () => {
     expect(CITY_WAVES).toBe(9);
-    expect(Array.from({ length: CITY_WAVES }, (_, i) => cityWaveSpawns(i).length)).toEqual([3, 3, 4, 4, 4, 5, 5, 6, 6]);
+    expect(Array.from({ length: CITY_WAVES }, (_, i) => cityWaveSpawns(i).length)).toEqual([18, 3, 4, 4, 4, 5, 5, 6, 6]);
     expect(cityWaveSpawns(9)).toEqual([]);
   });
   it("uses all three approaches and keeps every spawn on combat ground", () => {
@@ -46,5 +46,16 @@ describe("Old City reinforcements", () => {
     expect(spawns.some(p => p.x > 90)).toBe(true);
     expect(spawns.some(p => p.x > 40 && p.x < 60)).toBe(true);
     for (const p of spawns) { expect(p.x).toBeGreaterThanOrEqual(4); expect(p.x).toBeLessThanOrEqual(96); expect(p.y).toBeGreaterThanOrEqual(44); expect(p.y).toBeLessThanOrEqual(95); }
+  });
+});
+describe("Brix swarm", () => {
+  it("shockwave flings nearby rats for 1 damage and leaves far rats alone", async () => {
+    const { brixShockwave, separateRats } = await import("@/lib/rat-ai");
+    const near = makeRat(1, { x: 56, y: 66 }), far = makeRat(2, { x: 90, y: 66 });
+    expect(brixShockwave([near, far], { x: 55, y: 61 }, crew.Brix)).toBe(1);
+    expect(near.hp).toBe(1); expect(near.kv!.x).toBeGreaterThan(0); expect(far.hp).toBe(2);
+    const a = makeRat(3, { x: 50, y: 60 }), b = makeRat(4, { x: 50, y: 60 });
+    for (let i = 0; i < 60; i++) separateRats([a, b], 0.016);
+    expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(2);
   });
 });
