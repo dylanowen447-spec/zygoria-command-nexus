@@ -652,15 +652,17 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     };
 
     async function gatherAll(finder: Agent) {
+      // Safety net: whatever happens on the way over, the next-scene card always appears.
+      const safety = setTimeout(() => alive && setDone(true), 30000); timers.push(safety);
       await wait(1500);
       // Others finish their walk, then come over on the walkable trails.
       await Promise.all(ALL.map(async (z, i) => {
         // They set off one behind another, at least two seconds apart.
         await wait(i * 2000);
-        while (alive && heading[z]) await wait(200);
+        for (let n = 0; alive && heading[z] && n < 40; n++) await wait(200);
         if (!alive) return;
         const nodes = routeBetween(scene, at[z], scene.gather.spot);
-        await walk(z, z === finder && !nodes.length ? [scene.gather.at[z]] : [...pathTo(z, nodes.slice(0, -1)), scene.gather.at[z]]);
+        await Promise.race([walk(z, z === finder && !nodes.length ? [scene.gather.at[z]] : [...pathTo(z, nodes.slice(0, -1)), scene.gather.at[z]]), wait(15000)]);
         at[z] = scene.gather.spot;
       }));
       if (!alive) return;
@@ -668,9 +670,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       const cx = ALL.reduce((t, z) => t + coords.current[z].x, 0) / 3;
       setFacing(Object.fromEntries(ALL.map(z => [z, coords.current[z].x <= cx ? "right" : "left"])) as Record<Agent, "left" | "right">);
       for (const [who, text] of scene.finale) {
-        say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP);
+        say(who, text, true); await wait(hold(text)); if (!alive) return; say(who, null, true); await wait(GAP);
       }
-      setDone(true);
+      clearTimeout(safety); setDone(true);
     }
 
     (async () => {
