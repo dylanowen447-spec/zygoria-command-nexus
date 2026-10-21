@@ -96,7 +96,7 @@ const LANDING: Scene = {
     rim: { at: { x: 58, y: 34 }, words: "north|top|up there|view|horizon|city|tower|skyline", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
   objectives: [{ spot: "rim", tag: { label: "OLD CITY — DISTANT", x: 42, y: 16 }, found: { Lowkey: ["Towers. North, past the road.", "Over here."], Oz: ["Wait — there's a whole city out there!", "Lads! Up here!"], Brix: ["Buildings. Lots of them. Far off.", "Over here."] } }],
-  unlock: { seen: 2, ms: 40000, maxMs: 100000 },
+  unlock: { seen: 2, ms: 18000, maxMs: 35000 },
   hints: { Lowkey: "Light's different past the north rim.", Brix: "Ground slopes up behind the pods. Could see further.", Oz: "Bet you can see loads from up top." },
   opening: [["Oz", "Ow. My head... What even are we?"], ["Brix", "We must have crash landed here. Pods are scorched... I can't remember a thing."], ["Lowkey", "Neither can I. Look up through the dust... that star up there. Maybe that's where we came from."], ["Oz", "From a star? In three metal eggs? ...Right. Brilliant. Well, we're down here now. Let's have a look around."]],
   gather: { spot: "rim", at: { Oz: { x: 49, y: 37 }, Brix: { x: 67, y: 39 }, Lowkey: { x: 58, y: 34 } } },

@@ -954,7 +954,7 @@ function CommandCentre() {
   }
   /** Shared directive pipeline — the input form and the field guide's ask buttons both use it. */
   async function dispatchDirective(text: string) {
-    if (prologue === "on") { setPrologueCmd({ id: Date.now(), text }); return; }
+    if (prologue === "on") { setPrologueCmd({ id: Date.now(), text }); setDraft(""); return; }
     await ozHome();
     cancelVisit();
     setPlanningError("");
