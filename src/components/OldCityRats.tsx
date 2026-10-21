@@ -76,7 +76,9 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay 
         } else stage.current = null;
       }
       // Rats scurry at the nearest Zig, nip, then hop back and try again.
-      for (const r of rats.current) stepRat(r, dt, crew.current, hurt);
+      // Brix's swarm only goes for Brix; later waves pick the nearest Zig.
+      const b = crew.current.Brix, targets = waveIndex === 0 ? { Oz: b, Brix: b, Lowkey: b } : crew.current;
+      for (const r of rats.current) stepRat(r, dt, targets, hurt);
       separateRats(rats.current, dt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (waveIndex >= 0 && rats.current.length === 0 && !nextWaveAt) {
