@@ -1,11 +1,11 @@
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
-import { DEFAULT_BOUNDS, makeRat, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, brixShockwave, hitCtx, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat, type StagePlan } from "@/lib/rat-ai";
 import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
-import { CITY_RAT_ARRIVAL, ARRIVAL_GAP_MS } from "@/lib/fight-lines";
+import { CITY_RAT_ARRIVAL, ARRIVAL_GAP_MS, BRIX_SWARM_CALL, SWARM_CLEARED } from "@/lib/fight-lines";
 
 /** Nine finite directional waves, isolated from the scene's story progression. */
 
@@ -24,6 +24,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay 
   const crewHpRef = useRef(100);
   const [wave, setWave] = useState(0);
   const [cleared, setCleared] = useState(false);
+  const stage = useRef<StagePlan>(null);
 
   // Rats stand 5% shorter than Oz, matching his on-screen height on any device.
   useEffect(() => {
@@ -38,7 +39,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay 
 
   useEffect(() => {
     if (!combatRef) return;
-    combatRef.current = { targets: () => rats.current.filter(r => !r.dead).map(r => ({ x: r.x, y: r.y })), bounds: () => DEFAULT_BOUNDS };
+    combatRef.current = { targets: () => rats.current.filter(r => !r.dead).map(r => ({ x: r.x, y: r.y })), bounds: () => DEFAULT_BOUNDS, stage: () => stage.current };
     return () => { combatRef.current = { targets: () => [], bounds: () => DEFAULT_BOUNDS }; };
   }, [combatRef]);
 
@@ -50,7 +51,13 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay 
 
     rats.current = []; crewHpRef.current = 100; setCrewHp(100); setWave(0); setCleared(false);
 
-    hitRef.current = (p: Point) => zapRats(rats.current, p, crew.current);
+    // During Brix's swarm his blows also send a shockwave through the rats around the impact.
+    hitRef.current = (p: Point) => {
+      const by = hitCtx.by, heavy = hitCtx.heavy;
+      const hit = zapRats(rats.current, p, crew.current);
+      if (waveIndex === 0 && by === "Brix") { const n = brixShockwave(rats.current, p, crew.current.Brix, heavy ? 13 : 9); if (n) playSfx("punch-heavy"); return hit || n > 0; }
+      return hit;
+    };
 
     const tick = (now: number) => {
       if (!alive) return;
@@ -60,17 +67,31 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay 
         if (waveIndex === 0) startBattleMusic();
         rats.current = cityWaveSpawns(waveIndex).map(p => makeRat(nextId++, p));
         setWave(waveIndex + 1);
-        if (waveIndex === 0) CITY_RAT_ARRIVAL.forEach(([who, t], i) => later(i * ARRIVAL_GAP_MS, () => onSay(who, t)));
+        if (waveIndex === 0) {
+          // Brix takes centre stage; Oz and Lowkey stand back on opposite sides of the street.
+          stage.current = { Brix: { x: 50, y: 66 }, Oz: { x: 16, y: 72 }, Lowkey: { x: 84, y: 72 } };
+          rats.current.forEach((r, i) => { r.mode = "pause"; r.t = -(i % 6) * 0.35; }); // staggered charges
+          const lines: [Agent, string][] = [CITY_RAT_ARRIVAL[0]!, ["Brix", BRIX_SWARM_CALL], ...CITY_RAT_ARRIVAL.slice(1)];
+          lines.forEach(([who, t], i) => later(i * ARRIVAL_GAP_MS, () => onSay(who, t)));
+        } else stage.current = null;
       }
       // Rats scurry at the nearest Zig, nip, then hop back and try again.
       for (const r of rats.current) stepRat(r, dt, crew.current, hurt);
+      separateRats(rats.current, dt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (waveIndex >= 0 && rats.current.length === 0 && !nextWaveAt) {
         if (waveIndex === CITY_WAVES - 1) {
           stopBattleMusic(); setCleared(true); force(f => f + 1);
           return;
         }
-        nextWaveAt = now + 1800;
+        if (waveIndex === 0) {
+          // Swarm beaten: the others rejoin Brix, then normal companion play resumes.
+          const b = crew.current.Brix;
+          stage.current = { Oz: { x: b.x - 9, y: b.y + 1 }, Lowkey: { x: b.x + 9, y: b.y + 1 } };
+          SWARM_CLEARED.forEach(([who, t], i) => later(400 + i * ARRIVAL_GAP_MS, () => onSay(who, t)));
+          later(3200, () => { stage.current = null; });
+          nextWaveAt = now + 5200;
+        } else nextWaveAt = now + 1800;
       }
       force(f => (f + 1) % 1e6);
       raf = requestAnimationFrame(tick);

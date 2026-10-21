@@ -2,7 +2,7 @@ import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS } 
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
-import { DEFAULT_BOUNDS, farSpawns, makeRat, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, farSpawns, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
 import sheltonSheet from "@/assets/shelton.webp.asset.json";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import battleArt from "@/assets/long-walk-battle.webp";
