@@ -85,8 +85,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   // Direct combat: the ambush exposes live enemy feet points + safe ground; the player steers one Zig.
   const enemies = useRef<CombatApi>({ targets: () => [], bounds: () => DEFAULT_BOUNDS });
   const [combat, setCombat] = useState(false);
-  const [ctrl, setCtrl] = useState<Agent>("Oz");
-  const ctrlRef = useRef<Agent>("Oz");
+  // Old City opens with Brix front and centre (his swarm moment); everywhere else starts with Oz.
+  const startCtrl: Agent = scene.id === "city" ? "Brix" : "Oz";
+  const [ctrl, setCtrl] = useState<Agent>(startCtrl);
+  const ctrlRef = useRef<Agent>(startCtrl);
   // Outside fights: a double-tapped Zig is steered by the player until double-tapped again.
   const [steered, setSteered] = useState<Agent | null>(null);
   const steerRef = useRef<Agent | null>(null);
