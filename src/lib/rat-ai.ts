@@ -2,7 +2,7 @@ import type { Agent, Point } from "@/lib/zones";
 
 /** Shared mutant-rat behaviour: charge → telegraphed bite → retreat → pause → charge again. 2 HP; each zap flashes + recoils. */
 export type RatMode = "charge" | "windup" | "bite" | "retreat" | "pause";
-export type Rat = { id: number; x: number; y: number; hp: number; dead: number; flip: boolean; mode: RatMode; t: number; hurt: number; back: Point; hitBy?: Agent; launch?: number; kv?: Point };
+export type Rat = { id: number; x: number; y: number; hp: number; dead: number; flip: boolean; mode: RatMode; t: number; hurt: number; back: Point; hitBy?: Agent; launch?: number; kv?: Point | undefined };
 /** Who is landing the current blow, set by the scene just before calling the hit handler, so rats react to a punch vs a zap. */
 export const hitCtx: { by: Agent; heavy?: boolean } = { by: "Oz" };
 export const RAT_HP = 2;
