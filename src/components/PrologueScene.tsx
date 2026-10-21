@@ -292,7 +292,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       const plan = enemies.current.stage?.();
       const staged = new Set<Agent>();
       if (plan) for (const z of ALL) {
-        const spot = plan[z]; if (!spot || z === ctrlRef.current) continue;
+        const spot = plan[z]; if (!spot || z === steerRef.current) continue;
         staged.add(z);
         const me = coords.current[z], t = ts.length ? nearestTo(me) : undefined;
         if (z === "Brix" && t && cdist(me, t) <= REACH.Brix * 1.2) { faceTo(z, t); const now = performance.now(); if (now > aiNext[z]) { aiNext[z] = now + 450 + Math.random() * 350; void strike(z, Math.random() < 0.35, true); } continue; }
