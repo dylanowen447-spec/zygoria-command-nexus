@@ -937,3 +937,8 @@
 .tv-crew-hp{position:absolute;left:3%;top:12%;z-index:2150;width:min(150px,36%);height:8px;display:block;border:1px solid var(--electric);border-radius:4px;background:oklch(0.14 0.04 270 / .9);overflow:visible;pointer-events:none}
 .tv-crew-hp b{position:absolute;bottom:100%;left:0;font:8px var(--font-mono);letter-spacing:.1em;color:var(--electric)}
 .tv-crew-hp i{display:block;height:100%;background:oklch(0.75 0.17 150);transition:width .2s}
+.codex-flip{display:block;width:min(100%,240px);aspect-ratio:1061/1482;margin:0 auto 12px;padding:0;border:0;background:transparent;perspective:1000px;cursor:pointer}
+.codex-flip-inner{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s ease}
+.codex-flip.is-flipped .codex-flip-inner{transform:rotateY(180deg)}
+.codex-flip-face{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:10px;backface-visibility:hidden;box-shadow:0 6px 24px hsl(0 0% 0% / .5)}
+.codex-flip-back{transform:rotateY(180deg)}

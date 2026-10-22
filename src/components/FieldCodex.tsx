@@ -8,7 +8,11 @@ import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
 import kronkCard from "@/assets/kronk-card.png.asset.json";
 import thothCard from "@/assets/thoth-card.png.asset.json";
-import moxiCard from "@/assets/moxi-card.png.asset.json";
+import moxiCard from "@/assets/moxi-card-genesis.png.asset.json";
+import ozCard from "@/assets/oz-card.png.asset.json";
+import lowkeyCard from "@/assets/lowkey-card.png.asset.json";
+import brixCard from "@/assets/brix-card.png.asset.json";
+import cardBack from "@/assets/card-back.png.asset.json";
 import { CHRONICLES } from "@/lib/chronicles";
 
 type Category = "Characters" | "Creatures" | "Locations" | "Objects" | "Old Earth discoveries" | "Network-related discoveries" | "Unsolved mysteries";
@@ -18,6 +22,12 @@ const CATEGORIES: Category[] = ["Characters", "Creatures", "Locations", "Objects
 const PORTRAITS: Record<string, string> = { oz: ozPortrait.url, brix: brixPortrait.url, lowkey: lowkeyPortrait.url, cronk: kronkCard.url, thoth: thothCard.url, moxi: moxiCard.url };
 const ZONE_IMAGES: Record<string, ZoneId> = { sanctuary: "sanctuary", ruins: "ruins", caves: "caves", swamp: "cronk", camp: "shelton" };
 const KEY = "zygoria-codex-v1";
+const GENESIS: Record<string, { url: string; alt: string }> = { oz: { url: ozCard.url, alt: "Oz, ZYG 001 trading card" }, lowkey: { url: lowkeyCard.url, alt: "Lowkey, ZYG 002 trading card" }, brix: { url: brixCard.url, alt: "Brix, ZYG 003 trading card" }, moxi: { url: moxiCard.url, alt: "Moxi, ZYG 004 trading card" } };
+function FlipCard({ front, alt }: { front: string; alt: string }) {
+  const [flipped, setFlipped] = useState(false);
+  useEffect(() => setFlipped(false), [front]);
+  return <button type="button" className={`codex-flip ${flipped ? "is-flipped" : ""}`} onClick={() => setFlipped(f => !f)} aria-label={flipped ? "Show card front" : "Flip card"}><span className="codex-flip-inner"><img className="codex-flip-face" src={front} alt={alt}/><img className="codex-flip-face codex-flip-back" src={cardBack.url} alt="Zygoria First Genesis card back"/></span></button>;
+}
 
 const OPENING_NOTE: Record<string, string> = { oz: "Freshly hatched from the yellow pod. Quick, curious, already talking.", brix: "Climbed out of the big blue pod. Strong, steady, likes fixing things.", lowkey: "Came out of the red pod quietly. Watches everything.", pods: "Three egg-shaped pods: yellow, red and blue. We woke up inside them.", ruins: "A dead city of broken towers and empty roads. Someone lived here once." };
 const GATED: Record<string, string> = { survivors: "caves", caves: "caves", shelton: "shelton", camp: "shelton", cronk: "cronk", swamp: "cronk" };
@@ -120,7 +130,7 @@ export function FieldCodex({ pages: allPages, logs, visited, currentZone, record
             </Button>;
           })}</div>
           {selected && <div className="codex-detail" aria-live="polite"><div className="codex-detail-label">{selected.level === "hidden" ? "BLANK PAGE" : selected.level === "partial" ? "INCOMPLETE RECORD" : "FIELD RECORD"}</div>
-            {selected.level !== "hidden" && selected.id === "cronk" && <img className="codex-card" src={kronkCard.url} alt="Kronk, Shiny 010: The Boss trading card"/>}{selected.level !== "hidden" && selected.id === "thoth" && <img className="codex-card" src={thothCard.url} alt="Thoth, Shiny 006 trading card"/>}{selected.level !== "hidden" && selected.id === "old-tv" && <img className="codex-card" src={tvNetwork.url} alt="Old TV — Network Manifestation"/>}{selected.level !== "hidden" && selected.id === "moxi" && <img className="codex-card" src={moxiCard.url} alt="Moxi, Shiny 004 trading card"/>}<h3>{selected.level === "hidden" ? "Unrecorded" : selected.name}</h3><p>{selected.description}</p>
+            {selected.level !== "hidden" && selected.id === "cronk" && <img className="codex-card" src={kronkCard.url} alt="Kronk, Shiny 010: The Boss trading card"/>}{selected.level !== "hidden" && selected.id === "thoth" && <img className="codex-card" src={thothCard.url} alt="Thoth, Shiny 006 trading card"/>}{selected.level !== "hidden" && selected.id === "old-tv" && <img className="codex-card" src={tvNetwork.url} alt="Old TV — Network Manifestation"/>}{selected.level !== "hidden" && GENESIS[selected.id] && <FlipCard front={GENESIS[selected.id]!.url} alt={GENESIS[selected.id]!.alt}/>}<h3>{selected.level === "hidden" ? "Unrecorded" : selected.name}</h3><p>{selected.description}</p>
             {selected.level !== "hidden" && <div className="codex-detail-meta"><span><MapPin size={13}/> {selected.location ? `Known location · ${selected.location}` : "Location not yet recorded"}</span><span><BookOpen size={13}/> {selected.recordedBy ? `Recorded by ${selected.recordedBy}` : "Crew journal"}</span><span>{selected.level === "partial" ? "DISCOVERY STATUS · INCOMPLETE" : "DISCOVERY STATUS · KNOWN"}</span></div>}
           </div>}
           {!selected && <div className="codex-quiet">Choose a page to read the crew's notes.</div>}
