@@ -16,7 +16,7 @@ import brixPortrait from "@/assets/brix.webp.asset.json";
 import lowkeyPortrait from "@/assets/lowkey.webp.asset.json";
 import moxiUnderTree from "@/assets/moxi-under-tree.webp.asset.json";
 import moxiPortrait from "@/assets/moxi-sanctuary.webp.asset.json";
-import moxiCard from "@/assets/moxi-card.png.asset.json";
+import moxiCard from "@/assets/moxi-card-genesis.png.asset.json";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
 import brixWordmark from "@/assets/brix-wordmark.png.asset.json";
 import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
