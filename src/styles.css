@@ -148,7 +148,7 @@
 .marker-brix.is-walking.brix-facing-left .sheet-frames{background-position:0 33.3333%}
 .marker-brix.is-walking.brix-facing-right .sheet-frames{background-position:0 66.6667%}
 .marker-brix.is-walking.brix-facing-up .sheet-frames{background-position:0 100%}
-.marker-brix:not(.is-walking) .sheet-frames{background-position:0 0}
+.marker-brix:not(.is-walking) .sheet-frames{background-position:0 0}.marker-brix:not(.is-walking) .sheet-frames{background-image:url(/__l5e/assets-v1/fe1eaf18-dc7f-4b4a-b323-d3feee86d964/brix-idle.webp)!important;background-size:contain;background-position:center bottom;animation:none}
 .world-image-wrap .marker-brix.is-walking.facing-left .sprite-stage{scale:1 1}
 .marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .66s step-end infinite,ozBounce .33s ease-in-out infinite alternate!important}
 @keyframes brixDirectionalWalk{0%,100%{background-position-x:16.6667%}25%{background-position-x:33.3333%}50%{background-position-x:50%}75%{background-position-x:66.6667%}}
@@ -738,7 +738,7 @@
 .marker-brix.atk-punch .sheet-punch{visibility:visible;background-position-x:60%;animation:brixPunch .46s steps(1,end) forwards}
 /* Fists up while a fight is on and he's standing still. */
 .marker-brix.in-guard:not(.is-walking) .sheet-frames{visibility:hidden}
-.marker-brix.in-guard:not(.is-walking) .sheet-punch{visibility:visible}
+.marker-brix.in-guard:not(.is-walking) .sheet-punch{visibility:hidden}.marker-brix.in-guard:not(.is-walking) .sheet-combat{visibility:visible;animation:none;background-position:0 0}
 .marker-brix.in-guard.brix-facing-left .sheet-punch{background-position-y:33.3333%}
 .marker-brix.in-guard.brix-facing-right .sheet-punch{background-position-y:66.6667%}
 .marker-brix.in-guard.brix-facing-up .sheet-punch{background-position-y:100%}
@@ -753,7 +753,7 @@
 @keyframes brixPunchHeavy{0%{background-position-x:60%}100%{background-position-x:60%}}
 /* Heavy hold: Brix sits in his wind-up and lights up gold; release snaps straight to the fully extended fist. */
 .marker-brix.brix-charging .sheet-frames{visibility:hidden}
-.marker-brix.brix-charging .sheet-punch{visibility:visible;background-position-x:0%}
+.marker-brix.brix-charging .sheet-punch{visibility:hidden}.marker-brix.brix-charging .sheet-combat{visibility:visible;animation:none;background-position:0 100%}.marker-brix.brix-charging.is-charged .sheet-combat{background-position:33.3333% 100%}
 .agent-marker.marker-brix.brix-charging.facing-left .sheet-punch{background-position-y:33.3333%}
 .agent-marker.marker-brix.brix-charging.facing-right .sheet-punch{background-position-y:66.6667%}
 .world-image-wrap .marker-brix.brix-charging .sprite-stage{scale:1 1}
@@ -953,7 +953,7 @@
 .marker-oz.atk-heavy .sheet-combat,.marker-lowkey.atk-slash.is-heavy .sheet-combat,.marker-brix.atk-punch.is-heavy .sheet-combat{background-position-y:100%;animation-duration:.5s}
 .marker-lowkey.atk-slash .sheet-combat{animation-duration:.42s}
 .marker-brix.atk-punch .sheet-combat{animation-duration:.42s}
-.marker-brix.atk-punch.is-heavy .sheet-combat{animation-duration:.6s}
+.marker-brix.atk-punch.is-heavy .sheet-combat{animation-duration:.6s}@keyframes brixCombatPunch{0%{background-position-x:0}25%{background-position-x:33.3333%}50%{background-position-x:66.6667%}75%,100%{background-position-x:100%}}.marker-brix.atk-punch .sheet-combat{animation:brixCombatPunch .42s step-end forwards}.marker-brix.atk-punch.is-heavy .sheet-combat{animation:brixCombatPunch .6s step-end forwards;background-position-y:100%}
 .facing-left .sheet-combat{transform:translateX(-50%) scaleX(-1)}
 @keyframes combatFx{from{background-position-x:0%}to{background-position-x:100%}}
 
