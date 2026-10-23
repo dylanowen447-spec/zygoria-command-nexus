@@ -19,3 +19,4 @@
 - [x] Tie Up the TV side mission (Sanctuary first night)
 - [x] Use the new 4-direction TV walking sheet for the runaway TV
 - [x] Old City Brix rat swarm (18 rats, shockwave punches, rat spacing, crew stand back/rejoin)
+- [x] Brix idle = IDLE-DOWN (top-left) frame from his master combat sheet; fix skipped punch frame; guard/wind-up on new sheet
