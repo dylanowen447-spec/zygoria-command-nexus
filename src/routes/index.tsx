@@ -1384,6 +1384,9 @@ function CommandCentre() {
   const visitLines = (a: Agent) => GREET[a]![Math.floor(Math.random() * GREET[a]!.length)]!;
   // The chosen Zig walks the trails to the workshop door before the interior opens.
   const enterWorkshop = (place: InteriorId = "brix") => {
+    // Door taps only count while the crew is free — same rule as ground taps and Oz walks —
+    // so missions, story scenes and bedtime can't be cut off by bumping runId.
+    if (!canClick()) return;
     const pick = steerRef.current ?? selected ?? "Brix";
     const who: Agent = pick === "Moxi" ? "Brix" : pick;
     const door = place === "oz" ? { x: 19, y: 60 } : { x: 71, y: 52.8 };
