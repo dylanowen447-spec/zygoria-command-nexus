@@ -753,7 +753,7 @@
 @keyframes brixPunchHeavy{0%{background-position-x:60%}100%{background-position-x:60%}}
 /* Heavy hold: Brix sits in his wind-up and lights up gold; release snaps straight to the fully extended fist. */
 .marker-brix.brix-charging .sheet-frames{visibility:hidden}
-.marker-brix.brix-charging .sheet-punch{visibility:hidden}.marker-brix.brix-charging .sheet-combat{visibility:visible;animation:none;background-position:0 100%}.marker-brix.brix-charging.is-charged .sheet-combat{background-position:33.3333% 100%}
+.marker-brix.brix-charging .sheet-punch{visibility:hidden}.marker-brix.brix-charging:not(.is-charged) .sheet-frames{visibility:visible}.marker-brix.brix-charging:not(.is-charged) .sheet-combat{visibility:hidden}.marker-brix.brix-charging.is-charged .sheet-combat{visibility:visible;animation:none;background-position:66.6667% 100%}
 .agent-marker.marker-brix.brix-charging.facing-left .sheet-punch{background-position-y:33.3333%}
 .agent-marker.marker-brix.brix-charging.facing-right .sheet-punch{background-position-y:66.6667%}
 .world-image-wrap .marker-brix.brix-charging .sprite-stage{scale:1 1}
@@ -969,3 +969,6 @@
 .agent-marker:has(.idle-bubble):not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away) .sheet-frames{visibility:hidden}
 
 .marker-oz.atk-quick .sheet-combat{animation:ozCombatZap .3s step-end forwards}.marker-oz.atk-heavy .sheet-combat{animation:ozCombatZap .5s step-end forwards;background-position-y:100%}
+
+/* Charged release: one explosive frame only. */
+.marker-brix.atk-punch.is-heavy .sheet-combat{animation:none;background-position:100% 100%}
