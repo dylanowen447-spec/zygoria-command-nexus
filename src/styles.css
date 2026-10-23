@@ -942,3 +942,17 @@
 .codex-flip.is-flipped .codex-flip-inner{transform:rotateY(180deg)}
 .codex-flip-face{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:10px;backface-visibility:hidden;box-shadow:0 6px 24px hsl(0 0% 0% / .5)}
 .codex-flip-back{transform:rotateY(180deg)}
+
+/* New four-frame combat sheets (quick row, charged row); shown only while an attack plays, mirrored for left. */
+.sheet-combat{position:absolute;left:50%;bottom:-2%;height:112%;transform:translateX(-50%);background-size:400% 200%;background-repeat:no-repeat;background-position:0 0;visibility:hidden;pointer-events:none;image-rendering:pixelated}
+.sheet-oz .sheet-combat{aspect-ratio:456/162}
+.sheet-brix .sheet-combat{aspect-ratio:320/162}
+.sheet-lowkey .sheet-combat{aspect-ratio:334/162}
+.marker-oz:is(.atk-quick,.atk-heavy) :is(.sheet-frames),.marker-lowkey.atk-slash :is(.sheet-frames,.sheet-slash),.marker-brix.atk-punch :is(.sheet-frames,.sheet-punch){visibility:hidden !important}
+.marker-oz:is(.atk-quick,.atk-heavy) .sheet-combat,.marker-lowkey.atk-slash .sheet-combat,.marker-brix.atk-punch .sheet-combat{visibility:visible;animation:combatFx .3s steps(4,jump-none) forwards}
+.marker-oz.atk-heavy .sheet-combat,.marker-lowkey.atk-slash.is-heavy .sheet-combat,.marker-brix.atk-punch.is-heavy .sheet-combat{background-position-y:100%;animation-duration:.5s}
+.marker-lowkey.atk-slash .sheet-combat{animation-duration:.42s}
+.marker-brix.atk-punch .sheet-combat{animation-duration:.42s}
+.marker-brix.atk-punch.is-heavy .sheet-combat{animation-duration:.6s}
+:is(.facing-left,.lowkey-facing-left,.brix-facing-left) .sheet-combat{transform:translateX(-50%) scaleX(-1)}
+@keyframes combatFx{from{background-position-x:0%}to{background-position-x:100%}}
