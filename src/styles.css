@@ -966,6 +966,3 @@
 /* Talking: a standing Zig with a speech bubble shows its talk pose. */
 .agent-marker:has(.idle-bubble):not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away) .sheet-fx{visibility:visible;background-position:33.3333% 100%}
 .agent-marker:has(.idle-bubble):not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away) .sheet-frames{visibility:hidden}
-/* Idle blink: a quick blink frame every few seconds while standing still facing forward. */
-.agent-marker:not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away,.is-thinking,:has(.idle-bubble)) .sheet-fx{animation:zigBlink 4.6s steps(1,end) infinite;background-position:100% 100%}
-@keyframes zigBlink{0%,95%{visibility:hidden}96%,99%{visibility:visible}}
