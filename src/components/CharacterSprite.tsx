@@ -3,7 +3,7 @@ import brixSheet from "@/assets/brix-walk-v3.webp.asset.json";
 import brixPunch from "@/assets/brix-punch.webp.asset.json";
 import lowkeySheet from "@/assets/lowkey-walk-v3.webp.asset.json";
 import lowkeyAttack from "@/assets/lowkey-attack.webp.asset.json";
-import ozCombat from "@/assets/oz-combat.webp.asset.json";
+import ozCombat from "@/assets/oz-combat-v2.webp.asset.json";
 import brixCombat from "@/assets/brix-combat.webp.asset.json";
 import lowkeyCombat from "@/assets/lowkey-combat.webp.asset.json";
 import ozFx from "@/assets/oz-fx.webp.asset.json";
