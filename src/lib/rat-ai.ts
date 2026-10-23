@@ -36,7 +36,7 @@ export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n
     else go(c, 17);
   } else if (r.mode === "windup" && r.t > 0.4) {
     r.mode = "bite"; r.t = 0;
-    if (d < 5) { hurt(2); const who = (Object.keys(crew) as Agent[]).find(k => crew[k] === c); if (who && typeof window !== "undefined") window.dispatchEvent(new CustomEvent("zig-hurt", { detail: who })); }
+    if (d < 5) { hurt(2); const m = (Object.keys(crew) as Agent[]).filter(k => crew[k] === c), who = m.length > 1 && m.includes("Brix" as Agent) ? ("Brix" as Agent) : m[0]; if (who && typeof window !== "undefined") window.dispatchEvent(new CustomEvent("zig-hurt", { detail: who })); }
   } else if (r.mode === "bite" && r.t > 0.3) {
     r.mode = "retreat"; r.t = 0;
     r.back = { x: clamp(r.x - dx / d * 13, 3, 97), y: clamp(r.y - dy / d * 9, 42, 97) };
