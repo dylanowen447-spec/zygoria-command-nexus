@@ -390,9 +390,16 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         // Hold the wander while answering the Voice, then a quiet beat before carrying on.
         while (alive && (talking.has(a) || !floorFree())) await wait(200);
         if (steerRef.current === a && !inCombat()) {
-          while (alive && steerRef.current === a && !inCombat()) await wait(300);
+          // Walking a steered Zig onto a point of interest starts its task straight away.
+          let arrived: string | undefined;
+          while (alive && steerRef.current === a && !inCombat()) {
+            arrived = scene.objectives.find(o => !found.has(o.spot) && dist(scene.spots[o.spot]!.at, coords.current[a]) < 5)?.spot;
+            if (arrived) break;
+            await wait(300);
+          }
           if (!alive) return;
           at[a] = Object.keys(scene.spots).sort((x, y) => dist(scene.spots[x]!.at, coords.current[a]) - dist(scene.spots[y]!.at, coords.current[a]))[0]!;
+          if (arrived) { steerRef.current = null; setSteered(null); claimed.delete(arrived); orders[a] = arrived; }
           continue;
         }
         if (inCombat()) {
