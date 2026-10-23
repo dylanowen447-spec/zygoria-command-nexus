@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Identify Dylan Sion Owen as Zygoria's creator in page information and visible credits; verify rendered attribution
+
 - [x] Add eight extra directional Old City rat waves
 - [x] Fix Brix punch targeting and verify quick/charged hits
 - [x] Remove rat sprite backgrounds without changing the artwork

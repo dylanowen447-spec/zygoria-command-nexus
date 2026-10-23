@@ -6,6 +6,7 @@
 <!-- LOVABLE:END -->
 
 - Keep prototype simulation client-side; it requires no persistent services or credentials.
+- Keep public creator identity and linked search metadata in a shared browser-safe data module, with page-specific tags on the leaf route, so visible credits and crawler attribution stay consistent.
 - Keep visual roles and HUD styling in the global design tokens and stylesheet so the world interface remains consistent.
 - Keep character sprites as inline SVG; route movement is painted per animation frame from client state along per-character walkable path nodes in artwork-percentage space (a layer locked to the image cover box), so feet land on the same ground at every screen shape, while CSS loops the limb walk cycle only during that movement, so walking is synced and never a position tween.
 - Character route walking and the limb step cycle ignore the reduced-motion preference; walking is the core interaction, so ambient effects are the only motion that gets disabled.
