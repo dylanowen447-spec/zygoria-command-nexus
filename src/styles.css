@@ -148,7 +148,7 @@
 .marker-brix.is-walking.brix-facing-left .sheet-frames{background-position:0 33.3333%}
 .marker-brix.is-walking.brix-facing-right .sheet-frames{background-position:0 66.6667%}
 .marker-brix.is-walking.brix-facing-up .sheet-frames{background-position:0 100%}
-.marker-brix:not(.is-walking) .sheet-frames{background-position:0 0}.marker-brix:not(.is-walking) .sheet-frames{background-image:url(/__l5e/assets-v1/fe1eaf18-dc7f-4b4a-b323-d3feee86d964/brix-idle.webp)!important;background-size:contain;background-position:center bottom;animation:none}
+.marker-brix:not(.is-walking) .sheet-frames{background-position:0 0}.marker-brix:not(.is-walking) .sheet-frames{background-image:url(/__l5e/assets-v1/22d1d0f0-23ad-47ee-9228-524bf2337f47/brix-idle.webp)!important;background-size:contain;background-position:center bottom;animation:none}
 .world-image-wrap .marker-brix.is-walking.facing-left .sprite-stage{scale:1 1}
 .marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .66s step-end infinite,ozBounce .33s ease-in-out infinite alternate!important}
 @keyframes brixDirectionalWalk{0%,100%{background-position-x:16.6667%}25%{background-position-x:33.3333%}50%{background-position-x:50%}75%{background-position-x:66.6667%}}
