@@ -13,7 +13,7 @@ import moxiSheet from "@/assets/moxi-walk.png.asset.json";
 
 const SHEETS = { Oz: ozSheet.url, Brix: brixSheet.url, Lowkey: lowkeySheet.url, Moxi: moxiSheet.url } as const;
 
-const COMBAT: Partial<Record<string, string>> = { Oz: ozCombat.url, Brix: brixCombat.url, Lowkey: lowkeyCombat.url };
+const COMBAT: Partial<Record<string, string>> = { Oz: ozCombat.url, Brix: brixCombatUrl, Lowkey: lowkeyCombat.url };
 
 /** Extra poses sheet: 4 cols × 3 rows (hurt, special, extras: victory/talk/sleep/blink). */
 const FX: Partial<Record<string, string>> = { Oz: ozFx.url, Brix: brixFx.url, Lowkey: lowkeyFx.url };
