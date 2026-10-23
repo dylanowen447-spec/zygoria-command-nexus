@@ -32,6 +32,7 @@ const PET_KEY = "zygoria-boulder-pot-v1";
 import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
+import { SITE_IDENTITY, SITE_STRUCTURED_DATA } from "@/lib/site-identity";
 import { PrologueScene } from "@/components/PrologueScene";
 import { PROLOGUE_KEY, PROLOGUE_SCENES, CLEARED_KEY, EDITOR_KEY, RETURN_OPENINGS } from "@/lib/prologue";
 import { HavenScene } from "@/components/HavenScene";
@@ -172,13 +173,19 @@ function DayNight() {
 export const Route = createFileRoute("/")({
   loader: () => getCanonState(),
   head: () => ({ meta: [
-    { title: "Zygoria Command Centre" },
-    { name: "description", content: "Enter the Zygoria world and dispatch simulated missions to Oz, Brix, and Lowkey." },
-    { property: "og:title", content: "Zygoria Command Centre" },
-    { property: "og:description", content: "A living mission control world for Oz, Brix, and Lowkey." },
+    { title: SITE_IDENTITY.title },
+    { name: "description", content: SITE_IDENTITY.description },
+    { name: "author", content: SITE_IDENTITY.creator },
+    { property: "og:title", content: SITE_IDENTITY.title },
+    { property: "og:description", content: SITE_IDENTITY.description },
+    { property: "og:site_name", content: SITE_IDENTITY.name },
+    { property: "og:url", content: `${SITE_IDENTITY.url}/` },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  ],
+    links: [{ rel: "canonical", href: `${SITE_IDENTITY.url}/` }],
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(SITE_STRUCTURED_DATA) }],
+  }),
   component: CommandCentre,
 });
 
@@ -1707,7 +1714,7 @@ function CommandCentre() {
             <div className="map-coordinate bottom-left"><MapPin size={12}/> {zone.bottom}</div><div className="map-coordinate bottom-right">ZOOM 01 : 01 <span className="zoom-bars">▮▮▮▯</span></div>
           </div>}
           <WelcomeGuide onAsk={text => { if (phase === "idle") { setDraft(text); void dispatchDirective(text); } }} />
-          <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>{crew.length} AGENTS CONNECTED <span className="footer-cross">✦</span> {prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : "1 SANCTUARY"}</span><span className="creator-credit">Created by <span className="creator-signature">Dylan Owen</span><span className="creator-year">· 2026</span></span></div>
+          <div className="world-footer"><span><span className="live-dot"/> ALL SYSTEMS OPERATIONAL</span><span>{crew.length} AGENTS CONNECTED <span className="footer-cross">✦</span> {prologue === "on" ? scene.chapter : prologue === "walk" ? "THE LONG WALK" : "1 SANCTUARY"}</span><span className="creator-credit">Created by <span className="creator-signature">{SITE_IDENTITY.creator}</span><span className="creator-year">· 2026</span></span></div>
         </div>
         <form className="mission-form" onSubmit={submit}><div className="form-title"><span><Terminal size={16}/> NEW DIRECTIVE</span><span className="form-counter">{phase === "idle" ? "READY FOR INPUT" : phase === "planning" ? "SELECTING CREW" : "MISSION IN PROGRESS"}</span></div><div className="form-row"><span className="prompt-chevron">›</span><input aria-label="Enter a job for the crew" placeholder={prologue === "on" ? "Talk to the crew, or send them somewhere…" : "What needs doing around Zygoria?"} value={draft} onChange={e => setDraft(e.target.value)} maxLength={180} disabled={phase !== "idle"}/><Button className="dispatch-button" type="submit" disabled={!draft.trim() || phase !== "idle"}>{phase === "planning" ? "CHOOSING" : "DISPATCH"} <Send size={14}/></Button></div>{planningError && <p className="planning-error" role="alert">{planningError}</p>}<div className="form-foot"><span>DIRECTIVES ARE ROUTED THROUGH OZ</span><span>↵ TO SEND</span></div></form>
         <div className="roster-heading"><div className="section-label"><span className="section-symbol">✦</span> THE CREW <span className="label-count">/ {String(crew.length).padStart(2, "0")}</span></div><span className="roster-hint">SELECT AN AGENT TO INSPECT <ArrowDownRight size={14}/></span></div>
