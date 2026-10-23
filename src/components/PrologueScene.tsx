@@ -98,6 +98,12 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const resetAtk = useRef<() => void>(() => undefined);
   const lastMarkerTap = useRef<{ a: Agent; t: number } | null>(null);
   const [swing, setSwing] = useState<Partial<Record<Agent, string>>>({});
+  // Hurt flinch: rats announce which Zig they bit; that Zig plays its hurt frames briefly.
+  const [hurtZig, setHurtZig] = useState<Partial<Record<Agent, number>>>({});
+  useEffect(() => {
+    const on = (e: Event) => { const a = (e as CustomEvent<Agent>).detail; const id = Date.now(); setHurtZig(h => ({ ...h, [a]: id })); setTimeout(() => setHurtZig(h => (h[a] === id ? { ...h, [a]: undefined } : h)), 420); };
+    window.addEventListener("zig-hurt", on); return () => window.removeEventListener("zig-hurt", on);
+  }, []);
   const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
   const [charging, setCharging] = useState(false);
   // Brix shows his wind-up + building gold glow while the attack is held (after a short delay so quick taps never flash it).

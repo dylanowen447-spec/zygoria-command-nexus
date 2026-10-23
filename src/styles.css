@@ -956,3 +956,16 @@
 .marker-brix.atk-punch.is-heavy .sheet-combat{animation-duration:.6s}
 .facing-left .sheet-combat{transform:translateX(-50%) scaleX(-1)}
 @keyframes combatFx{from{background-position-x:0%}to{background-position-x:100%}}
+
+/* Extra poses sheet (4 cols × 3 rows: hurt, special, extras victory/talk/sleep/blink); feet share the walk sheet's ground line. */
+.sheet-fx{position:absolute;left:50%;bottom:0;width:200%;height:140%;transform:translateX(-50%);background-size:400% 300%;background-repeat:no-repeat;background-position:0 0;visibility:hidden;pointer-events:none;image-rendering:pixelated}
+.agent-marker.is-hurt .sheet-fx{visibility:visible;animation:zigHurt .42s steps(1,end) forwards}
+.agent-marker.is-hurt :is(.sheet-frames,.sheet-punch){visibility:hidden!important}
+.agent-marker.is-hurt.facing-left .sheet-fx{transform:translateX(-50%) scaleX(-1)}
+@keyframes zigHurt{0%{background-position:0 0}25%{background-position:33.3333% 0}60%{background-position:66.6667% 0}100%{background-position:66.6667% 0}}
+/* Talking: a standing Zig with a speech bubble shows its talk pose. */
+.agent-marker:has(.idle-bubble):not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away) .sheet-fx{visibility:visible;background-position:33.3333% 100%}
+.agent-marker:has(.idle-bubble):not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away) .sheet-frames{visibility:hidden}
+/* Idle blink: a quick blink frame every few seconds while standing still facing forward. */
+.agent-marker:not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away,.is-thinking,:has(.idle-bubble)) .sheet-fx{animation:zigBlink 4.6s steps(1,end) infinite;background-position:100% 100%}
+@keyframes zigBlink{0%,95%{visibility:hidden}96%,99%{visibility:visible}}
