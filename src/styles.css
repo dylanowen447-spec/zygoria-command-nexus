@@ -954,5 +954,5 @@
 .marker-lowkey.atk-slash .sheet-combat{animation-duration:.42s}
 .marker-brix.atk-punch .sheet-combat{animation-duration:.42s}
 .marker-brix.atk-punch.is-heavy .sheet-combat{animation-duration:.6s}
-:is(.facing-left,.lowkey-facing-left,.brix-facing-left) .sheet-combat{transform:translateX(-50%) scaleX(-1)}
+.facing-left .sheet-combat{transform:translateX(-50%) scaleX(-1)}
 @keyframes combatFx{from{background-position-x:0%}to{background-position-x:100%}}
