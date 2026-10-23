@@ -132,7 +132,7 @@
 .marker-oz:not(.is-walking) .sheet-frames{background-position:0 0}
 .world-image-wrap .marker-oz.is-walking.facing-left .sprite-stage{scale:1 1}
 .marker-oz.is-walking .sheet-frames{animation:ozDirectionalWalk .6s step-end infinite,ozBounce .3s ease-in-out infinite alternate!important}
-@keyframes ozDirectionalWalk{0%,100%{background-position-x:16.6667%}16.66%{background-position-x:33.3333%}33.33%{background-position-x:50%}50%{background-position-x:66.6667%}66.66%{background-position-x:83.3333%}83.33%{background-position-x:100%}}
+@keyframes ozDirectionalWalk{0%,100%{background-position-x:16.6667%}25%{background-position-x:33.3333%}50%{background-position-x:50%}75%{background-position-x:66.6667%}}
 .sheet-lowkey{width:66px;height:70px;transform:translateX(-50%) scale(.86);transform-origin:center bottom}.sheet-lowkey .sheet-shadow{opacity:.45}
 @media(max-width:600px){.sheet-lowkey{width:50px;height:54px}}
 /* Lowkey stands 10% smaller on desktop; phone size and her feet anchor stay put. */
@@ -151,7 +151,7 @@
 .marker-brix:not(.is-walking) .sheet-frames{background-position:0 0}
 .world-image-wrap .marker-brix.is-walking.facing-left .sprite-stage{scale:1 1}
 .marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .66s step-end infinite,ozBounce .33s ease-in-out infinite alternate!important}
-@keyframes brixDirectionalWalk{0%,100%{background-position-x:16.6667%}16.66%{background-position-x:33.3333%}33.33%{background-position-x:50%}50%{background-position-x:66.6667%}66.66%{background-position-x:83.3333%}83.33%{background-position-x:100%}}
+@keyframes brixDirectionalWalk{0%,100%{background-position-x:16.6667%}25%{background-position-x:33.3333%}50%{background-position-x:50%}75%{background-position-x:66.6667%}}
 
 /* Moxi as a crew agent: her three-frame hop strip, smallest of the crew. The art faces right natively. */
 .sheet-moxi{width:52px;height:38px;transform:translateX(-50%);transform-origin:center bottom}
@@ -868,7 +868,7 @@
 .marker-lowkey.is-walking.lowkey-facing-up .sheet-frames{background-position:0 100%}
 .agent-marker.marker-lowkey.is-walking .sheet-frames{animation:lowkeyDirectionalWalk .6s step-end infinite,ozBounce .3s ease-in-out infinite alternate!important}
 .haven-zig.marker-lowkey.is-walking .sheet-frames{animation:lowkeyDirectionalWalk .6s step-end infinite!important}
-@keyframes lowkeyDirectionalWalk{0%,100%{background-position-x:16.6667%}16.66%{background-position-x:33.3333%}33.33%{background-position-x:50%}50%{background-position-x:66.6667%}66.66%{background-position-x:83.3333%}83.33%{background-position-x:100%}}
+@keyframes lowkeyDirectionalWalk{0%,100%{background-position-x:16.6667%}25%{background-position-x:33.3333%}50%{background-position-x:50%}75%{background-position-x:66.6667%}}
 .world-image-wrap .marker-lowkey.is-walking.facing-left .sprite-stage,.haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{scale:1 1}
 .haven-layer .haven-zig.marker-lowkey.is-walking.facing-left .sprite-stage{transform:translateX(-50%)!important}
 .marker-lowkey.look-away:not(.is-walking) .sheet-frames{background-position:0 100%}
