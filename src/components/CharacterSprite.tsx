@@ -1,5 +1,5 @@
 import ozSheet from "@/assets/oz-walk-v3.webp.asset.json";
-import brixSheet from "@/assets/brix-walk-v3.webp.asset.json";
+import brixSheet from "@/assets/brix-walk-v5.webp.asset.json";
 import brixPunch from "@/assets/brix-punch.webp.asset.json";
 import lowkeySheet from "@/assets/lowkey-walk-v6.webp.asset.json";
 import lowkeyAttack from "@/assets/lowkey-attack.webp.asset.json";

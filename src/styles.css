@@ -140,18 +140,18 @@
 
 .sheet-brix{width:51px;height:73px;bottom:-4px;transform:translateX(-50%) scale(.94);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
 /* Brix's atlas is 7 columns × 4 rows, so any Brix sprite anywhere (map marker, build scene, menus) shows one frame, never the whole sheet. */
-.sheet-brix .sheet-frames{background-size:700% 400%;background-position:0 0}
+.sheet-brix .sheet-frames{background-size:800% 400%;background-position:0 0}
 /* On phones Brix is 30% smaller; desktop size and his feet anchor stay put. */
 @media(max-width:600px){.sheet-brix{width:61px;height:88px;bottom:-3px;transform:translateX(-50%) scale(.784)}}
 /* Brix's supplied directional sheet: seven columns (rest + six strides) and four rows (front, left, right, back), same layout as Oz. */
-.marker-brix .sheet-frames{background-size:700% 400%;background-position:0 0}
+.marker-brix .sheet-frames{background-size:800% 400%;background-position:0 0}
 .marker-brix.is-walking.brix-facing-left .sheet-frames{background-position:0 33.3333%}
 .marker-brix.is-walking.brix-facing-right .sheet-frames{background-position:0 66.6667%}
 .marker-brix.is-walking.brix-facing-up .sheet-frames{background-position:0 100%}
 .marker-brix:not(.is-walking) .sheet-frames{background-position:0 0}.marker-brix:not(.is-walking) .sheet-frames{background-image:url(/__l5e/assets-v1/22d1d0f0-23ad-47ee-9228-524bf2337f47/brix-idle.webp)!important;background-size:contain;background-position:center bottom;animation:none}
 .world-image-wrap .marker-brix.is-walking.facing-left .sprite-stage{scale:1 1}
-.marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .66s step-end infinite,ozBounce .33s ease-in-out infinite alternate!important}
-@keyframes brixDirectionalWalk{0%,100%{background-position-x:16.6667%}25%{background-position-x:33.3333%}50%{background-position-x:50%}75%{background-position-x:66.6667%}}
+.marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .8s step-end infinite,ozBounce .33s ease-in-out infinite alternate!important}
+@keyframes brixDirectionalWalk{0%{background-position-x:0.0000%}12.5%{background-position-x:14.2857%}25%{background-position-x:28.5714%}37.5%{background-position-x:42.8571%}50%{background-position-x:57.1429%}62.5%{background-position-x:71.4286%}75%{background-position-x:85.7143%}87.5%{background-position-x:100.0000%}100%{background-position-x:0%}}
 
 /* Moxi as a crew agent: her three-frame hop strip, smallest of the crew. The art faces right natively. */
 .sheet-moxi{width:52px;height:38px;transform:translateX(-50%);transform-origin:center bottom}
@@ -525,7 +525,7 @@
 .world-stage .agent-marker{z-index:var(--z,10)!important}
 .world-stage .agent-marker:has(.idle-bubble){z-index:calc(1500 + var(--z,10))!important}
 /* Brix: directional sheet steps through its strides; no mirroring (left has its own row). */
-.marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .66s step-end infinite,ozBounce .33s ease-in-out infinite alternate!important}
+.marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .8s step-end infinite,ozBounce .33s ease-in-out infinite alternate!important}
 .marker-brix.is-walking .sheet-shadow{animation:cycleShadow .66s ease-in-out infinite}
 .world-image-wrap .marker-brix .sprite-stage{scale:1 1}
 
@@ -772,7 +772,7 @@
 .haven-zig.marker-oz.is-walking.oz-facing-left .sheet-frames{background-position-y:33.3333%}
 .haven-zig.marker-oz.is-walking.oz-facing-right .sheet-frames{background-position-y:66.6667%}
 .haven-zig.marker-oz.is-walking.oz-facing-up .sheet-frames{background-position-y:100%}
-.haven-zig.marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .66s step-end infinite!important}
+.haven-zig.marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .8s step-end infinite!important}
 .haven-zig.marker-brix.is-walking.brix-facing-left .sheet-frames{background-position-y:33.3333%}
 .haven-zig.marker-brix.is-walking.brix-facing-right .sheet-frames{background-position-y:66.6667%}
 .haven-zig.marker-brix.is-walking.brix-facing-up .sheet-frames{background-position-y:100%}
