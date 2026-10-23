@@ -947,7 +947,6 @@
 .sheet-combat{position:absolute;left:50%;bottom:-2%;height:112%;transform:translateX(-50%);background-size:400% 200%;background-repeat:no-repeat;background-position:0 0;visibility:hidden;pointer-events:none;image-rendering:pixelated}
 .sheet-oz .sheet-combat{aspect-ratio:500/164;height:112%;bottom:0}
 @keyframes ozCombatZap{0%{background-position-x:0}20%{background-position-x:33.3333%}40%{background-position-x:66.6667%}80%,100%{background-position-x:100%}}
-.marker-oz.atk-quick .sheet-combat{animation:ozCombatZap .3s step-end forwards}.marker-oz.atk-heavy .sheet-combat{animation:ozCombatZap .5s step-end forwards;background-position-y:100%}
 .sheet-brix .sheet-combat{aspect-ratio:320/162;height:90%;bottom:2%}
 .sheet-lowkey .sheet-combat{aspect-ratio:334/162;height:98%}
 .marker-oz:is(.atk-quick,.atk-heavy) :is(.sheet-frames),.marker-lowkey.atk-slash :is(.sheet-frames,.sheet-slash),.marker-brix.atk-punch :is(.sheet-frames,.sheet-punch){visibility:hidden !important}
@@ -968,3 +967,5 @@
 /* Talking: a standing Zig with a speech bubble shows its talk pose. */
 .agent-marker:has(.idle-bubble):not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away) .sheet-fx{visibility:visible;background-position:33.3333% 100%}
 .agent-marker:has(.idle-bubble):not(.is-walking,.is-hurt,[class*="atk-"],.in-guard,.look-away) .sheet-frames{visibility:hidden}
+
+.marker-oz.atk-quick .sheet-combat{animation:ozCombatZap .3s step-end forwards}.marker-oz.atk-heavy .sheet-combat{animation:ozCombatZap .5s step-end forwards;background-position-y:100%}
