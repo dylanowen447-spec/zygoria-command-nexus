@@ -945,9 +945,9 @@
 
 /* New four-frame combat sheets (quick row, charged row); shown only while an attack plays, mirrored for left. */
 .sheet-combat{position:absolute;left:50%;bottom:-2%;height:112%;transform:translateX(-50%);background-size:400% 200%;background-repeat:no-repeat;background-position:0 0;visibility:hidden;pointer-events:none;image-rendering:pixelated}
-.sheet-oz .sheet-combat{aspect-ratio:456/162}
-.sheet-brix .sheet-combat{aspect-ratio:320/162}
-.sheet-lowkey .sheet-combat{aspect-ratio:334/162}
+.sheet-oz .sheet-combat{aspect-ratio:456/162;height:120%}
+.sheet-brix .sheet-combat{aspect-ratio:320/162;height:90%;bottom:2%}
+.sheet-lowkey .sheet-combat{aspect-ratio:334/162;height:98%}
 .marker-oz:is(.atk-quick,.atk-heavy) :is(.sheet-frames),.marker-lowkey.atk-slash :is(.sheet-frames,.sheet-slash),.marker-brix.atk-punch :is(.sheet-frames,.sheet-punch){visibility:hidden !important}
 .marker-oz:is(.atk-quick,.atk-heavy) .sheet-combat,.marker-lowkey.atk-slash .sheet-combat,.marker-brix.atk-punch .sheet-combat{visibility:visible;animation:combatFx .3s steps(4,jump-none) forwards}
 .marker-oz.atk-heavy .sheet-combat,.marker-lowkey.atk-slash.is-heavy .sheet-combat,.marker-brix.atk-punch.is-heavy .sheet-combat{background-position-y:100%;animation-duration:.5s}
