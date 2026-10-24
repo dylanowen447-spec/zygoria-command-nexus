@@ -73,9 +73,9 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave }: { char
         <span className={`haven-zig marker-${low} ${dir ? `is-walking ${low}-facing-${dir} facing-${dir}` : ""} ${gone ? "is-gone" : ""}`} style={{ left: `${pos.x}%`, bottom: `${100 - pos.y}%`, transitionDuration: "0ms" }}>
           <span className="sprite-stage"><CharacterSprite character={character}/></span>
         </span>
-        <button type="button" className="workshop-spot workshop-door descent-cave" style={{ left: `${CAVE.x - 5}%`, top: `${CAVE.y - 9}%` }} aria-label="Enter the caves"
+        <button type="button" className="workshop-spot workshop-door descent-cave" style={{ left: `${CAVE.x}%`, top: `${CAVE.y - 5}%` }} aria-label="Enter the caves"
           onPointerDown={e => e.stopPropagation()} onClick={enterCave}><span>Enter caves ›</span></button>
-        <button type="button" className="workshop-spot workshop-door descent-back" style={{ left: "16%", top: "17%" }} aria-label="Back to the Sanctuary"
+        <button type="button" className="workshop-spot workshop-door descent-back" style={{ left: "22%", top: "21%" }} aria-label="Back to the Sanctuary"
           onPointerDown={e => e.stopPropagation()} onClick={back}><span>‹ Sanctuary</span></button>
       </div>
     </div>
