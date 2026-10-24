@@ -196,7 +196,7 @@ export function playDefeatSting() {
   for (const det of [0, 9]) {
     const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = hz(45); o.detune.value = det;
     o.frequency.linearRampToValueAtTime(hz(41), end + 2.2);
-    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, end); g.gain.linearRampToValueAtTime(0.38, end + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, end + 2.6);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, end); g.gain.linearRampToValueAtTime(0.7, end + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, end + 2.6);
     o.connect(g).connect(ctx.destination); o.start(end); o.stop(end + 2.7);
   }
 }
