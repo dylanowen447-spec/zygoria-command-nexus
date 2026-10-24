@@ -14,7 +14,7 @@ const AGENTS: Agent[] = ["Brix", "Oz", "Lowkey"];
 const DOWN_LINES: Record<Agent, string> = { Brix: "Ugh… just… need a sec…", Oz: "Ow ow ow — I'm down!", Lowkey: "…Not like this." };
 const UP_LINES: Record<Agent, string> = { Brix: "Right. Where were we?", Oz: "Back in it!", Lowkey: "Thanks." };
 
-export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay, onCleared, onSanctuary }: {
+export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay, onCleared, onSanctuary, onDefeatChange }: {
   combatRef?: MutableRefObject<CombatApi>;
   stageRef: RefObject<HTMLDivElement | null>;
   hitRef: MutableRefObject<(p: Point) => boolean>;
@@ -23,6 +23,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   onSay: (who: Agent, text: string) => void;
   onCleared: () => void;
   onSanctuary?: (() => void) | undefined;
+  onDefeatChange?: (d: "" | "falling" | "over") => void;
 }) {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
@@ -34,6 +35,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   const [wave, setWave] = useState(0);
   const [cleared, setCleared] = useState(false);
   const [defeat, setDefeat] = useState<"" | "falling" | "over">("");
+  const setDefeatState = (d: "" | "falling" | "over") => { setDefeat(d); onDefeatChange?.(d); };
   const [attempt, setAttempt] = useState(0);
   const startWave = useRef(0);
   const curWave = useRef(-1);
@@ -88,13 +90,13 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         sayRef.current(who, DOWN_LINES[who]);
         window.dispatchEvent(new CustomEvent("zig-downed", { detail: who }));
         if (allDown(s)) {
-          over = true; setDefeat("falling"); stopBattleMusic(); playDefeatSting();
-          later(1800, () => setDefeat("over"));
+          over = true; setDefeatState("falling"); stopBattleMusic(); playDefeatSting();
+          later(1800, () => setDefeatState("over"));
         }
       }
     };
 
-    rats.current = []; setSq(fullSquad()); setWave(0); setCleared(false); setDefeat("");
+    rats.current = []; setSq(fullSquad()); setWave(0); setCleared(false); setDefeatState("");
 
     // During Brix's swarm his blows also send a shockwave through the rats around the impact.
     hitRef.current = (p: Point) => {

@@ -52,6 +52,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const [done, setDone] = useState(false);
   const cityRatsCleared = useRef(false);
   const [ratsCleared, setRatsCleared] = useState(false);
+  const [cityDefeat, setCityDefeat] = useState<"" | "falling" | "over">("");
   const afterCityFight = useRef<() => void>(() => undefined);
   const onCityCleared = useCallback(() => {
     cityRatsCleared.current = true;
@@ -798,7 +799,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         <svg viewBox="0 0 28 42" aria-hidden="true"><rect className="mp3-case" x="3" y="2" width="22" height="38" rx="3"/><rect className="mp3-screen" x="7" y="7" width="14" height="11" rx="1"/><path className="mp3-crack" d="M15 7l-3 4 5 2-4 5"/><circle className="mp3-wheel" cx="14" cy="29" r="6"/><circle className="mp3-screen" cx="14" cy="29" r="2"/></svg>
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
-      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined}/>}
+      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined} onDefeatChange={setCityDefeat}/>}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
@@ -806,13 +807,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>
       </Button>; })}
     </div>
-    <button type="button" className={`combat-attack ${combat ? "in-fight" : "is-idle"} ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${combat ? ctrl : steered ?? ctrl} — tap for quick, hold for heavy`}
+    {!cityDefeat && <button type="button" className={`combat-attack ${combat ? "in-fight" : "is-idle"} ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${combat ? ctrl : steered ?? ctrl} — tap for quick, hold for heavy`}
       onPointerDown={e => { e.preventDefault(); e.stopPropagation(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older Safari */ } holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); clearTimeout(windTimer.current); windTimer.current = setTimeout(() => setHolding(true), 160); }}
       onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); clearTimeout(windTimer.current); setCharging(false); setHolding(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); }}
       onPointerCancel={() => { holdStart.current = 0; clearTimeout(chargeTimer.current); clearTimeout(windTimer.current); setCharging(false); setHolding(false); }}
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{combat ? ctrl : steered ?? ctrl}</small>
-    </button>
+    </button>}
     {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
     {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · click ground to move · Space attacks where the mouse points (hold = heavy)</div>}
     <div className="map-coordinate bottom-left"><MapPin size={12}/> {scene.bottom}</div>
