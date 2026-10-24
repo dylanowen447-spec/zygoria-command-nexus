@@ -110,7 +110,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const [hurtZig, setHurtZig] = useState<Partial<Record<Agent, number>>>({});
   useEffect(() => {
     const on = (e: Event) => { const a = (e as CustomEvent<Agent>).detail; const id = Date.now(); setHurtZig(h => ({ ...h, [a]: id })); setTimeout(() => setHurtZig(h => (h[a] === id ? { ...h, [a]: undefined } : h)), 420); };
-    window.addEventListener("zig-hurt", on); return () => window.removeEventListener("zig-hurt", on);
+    // Bite flinch: the bitten Zig is shoved a small step away from the rat.
+    const bit = (e: Event) => {
+      const { who, dx, dy } = (e as CustomEvent<{ who: Agent; dx: number; dy: number }>).detail; const p = coords.current[who]; if (!p) return;
+      coords.current[who] = { x: Math.min(97, Math.max(3, p.x + dx * 1.8)), y: Math.min(97, Math.max(8, p.y + dy * 1.1)) };
+      const el = markers.current[who]; if (el) { el.style.left = `${coords.current[who].x}%`; el.style.top = `${coords.current[who].y}%`; }
+    };
+    window.addEventListener("zig-hurt", on); window.addEventListener("zig-bitten", bit);
+    return () => { window.removeEventListener("zig-hurt", on); window.removeEventListener("zig-bitten", bit); };
   }, []);
   const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
   const [charging, setCharging] = useState(false);
@@ -783,7 +790,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared}/>}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""}`}>
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
