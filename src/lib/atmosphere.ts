@@ -185,19 +185,19 @@ export function playSfx(kind: Sfx) {
   }
 }
 
-/** Short retro defeat sting (~2.5s): tumbling minor arpeggio into a hollow detuned low tone. */
+/** Retro defeat sting (~4s): tumbling minor arpeggio into a long hollow detuned low tone. */
 export function playDefeatSting() {
   if (!ctx) boot();
   if (!ctx || ctx.state !== "running") return;
   const t0 = ctx.currentTime + 0.05;
-  const notes = [81, 76, 72, 69, 64, 60, 57, 52];
-  notes.forEach((m, i) => blip(t0 + i * 0.11, hz(m), hz(m) * 0.97, 0.12, 0.14, "square"));
-  const end = t0 + notes.length * 0.11;
+  const notes = [81, 76, 72, 69, 64, 60, 57, 52, 48, 45];
+  notes.forEach((m, i) => blip(t0 + i * 0.15, hz(m), hz(m) * 0.97, 0.2, 0.28, "square"));
+  const end = t0 + notes.length * 0.15;
   for (const det of [0, 9]) {
     const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = hz(45); o.detune.value = det;
-    o.frequency.linearRampToValueAtTime(hz(43), end + 1.4);
-    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, end); g.gain.linearRampToValueAtTime(0.22, end + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, end + 1.5);
-    o.connect(g).connect(ctx.destination); o.start(end); o.stop(end + 1.6);
+    o.frequency.linearRampToValueAtTime(hz(41), end + 2.2);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, end); g.gain.linearRampToValueAtTime(0.38, end + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, end + 2.6);
+    o.connect(g).connect(ctx.destination); o.start(end); o.stop(end + 2.7);
   }
 }
 
