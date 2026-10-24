@@ -26,3 +26,4 @@
 
 - [x] Old City combat balance: 2-biter limit, bite grace, kill heals, 1.2s knee bounce-back, small phone Game Over buttons
 - [x] Slow bounce-back to 2 seconds, allow 4 attacking rats, and verify health appears only at the top
+- [ ] Weaken bounce-back and increase vulnerability; verify recovery rules and Old City combat

@@ -7,7 +7,7 @@ import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
 import { CITY_RAT_ARRIVAL, ARRIVAL_GAP_MS, BRIX_SWARM_CALL, SWARM_CLEARED } from "@/lib/fight-lines";
-import { IFRAME_MS, KILLS_PER_HEAL, KNEEL_MS, MAX_BITERS, MAX_HP, mayBounceBack, allDown, damage, fullSquad, heal, liveSquad, revive, type Squad } from "@/lib/squad-health";
+import { IFRAME_MS, KILLS_PER_HEAL, KNEEL_MS, MAX_BITERS, MAX_HP, RECOVERY_RADIUS, RECOVERY_PUSH_X, RECOVERY_PUSH_Y, RECOVERY_PAUSE_SECONDS, mayBounceBack, allDown, damage, fullSquad, heal, liveSquad, revive, type Squad } from "@/lib/squad-health";
 
 /** Nine finite directional waves, isolated from the scene's story progression. */
 const AGENTS: Agent[] = ["Brix", "Oz", "Lowkey"];
@@ -104,10 +104,8 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       const before = rats.current.filter(r => r.dead).length;
       let hit = zapRats(rats.current, p, crew.current);
       if (waveIndex === 0 && by === "Brix") { const n = brixShockwave(rats.current, p, crew.current.Brix, heavy ? 13 : 9); if (n) playSfx("punch-heavy"); hit = hit || n > 0; }
-      // Grit: a charged-punch kill restores one pip to everyone standing.
       const killed = rats.current.filter(r => r.dead).length - before;
-      if (by === "Brix" && heavy && killed > 0) setSq(heal(squadRef.current));
-      // Fighting back heals: every 2 rats knocked out restores a pip to everyone standing.
+      // Charged kills count towards the same recovery threshold as every other kill, without bonus healing.
       if (killed > 0) { kills += killed; while (kills >= KILLS_PER_HEAL) { kills -= KILLS_PER_HEAL; setSq(heal(squadRef.current)); } }
       return hit;
     };
@@ -139,7 +137,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         if (sq[a] > 0 || !mayBounceBack(winds.current[a]) || now - reviveT.current[a] < KNEEL_MS) continue;
         winds.current[a] += 1;
         const z = crew.current[a];
-        for (const r of rats.current) { if (r.dead) continue; const ex = r.x - z.x, ey = r.y - z.y, e = Math.hypot(ex, ey) || 1; if (e < 14) { r.kv = { x: ex / e * 60, y: ey / e * 35 }; r.mode = "pause"; r.t = -0.4; } }
+        for (const r of rats.current) { if (r.dead) continue; const ex = r.x - z.x, ey = r.y - z.y, e = Math.hypot(ex, ey) || 1; if (e < RECOVERY_RADIUS) { r.kv = { x: ex / e * RECOVERY_PUSH_X, y: ey / e * RECOVERY_PUSH_Y }; r.mode = "pause"; r.t = -RECOVERY_PAUSE_SECONDS; } }
         lastBite[a] = now; setSq(revive(squadRef.current, a)); sayRef.current(a, UP_LINES[a]);
       }
       // Rats only chase Zigs still standing; Brix's swarm goes for Brix while he's up.
