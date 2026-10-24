@@ -1041,3 +1041,13 @@
   .hud-vitals .hunger-track{flex:1;width:auto;min-width:14px}
   .hud-vitals .hunger-num{min-width:0}
 }
+
+/* Lowkey's mountain interior: same Zyg scale as Oz's shack. */
+.lowkey-scene{--zig-lift:210px}
+.lowkey-scene .haven-layer .haven-zig.marker-brix{width:123px;height:188px}
+.lowkey-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:123px!important;height:180px!important}
+.lowkey-scene .haven-layer .haven-zig.marker-oz{width:90px;height:146px}
+.lowkey-scene .haven-layer .haven-zig.marker-oz .sprite-stage{width:90px!important;height:138px!important}
+.lowkey-scene .haven-layer .haven-zig.marker-lowkey{width:102px;height:164px}
+.lowkey-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:102px!important;height:156px!important}
+.lowkey-scene .haven-layer .haven-zig .ctrl-ring{width:90px;height:16px}
