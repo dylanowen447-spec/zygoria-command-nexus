@@ -1,4 +1,4 @@
-import { playSfx } from "@/lib/atmosphere";
+import { playSfx, playDefeatSting } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
 import { GameOverScreen } from "@/components/GameOverScreen";
@@ -88,7 +88,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         sayRef.current(who, DOWN_LINES[who]);
         window.dispatchEvent(new CustomEvent("zig-downed", { detail: who }));
         if (allDown(s)) {
-          over = true; setDefeat("falling"); stopBattleMusic();
+          over = true; setDefeat("falling"); stopBattleMusic(); playDefeatSting();
           later(1800, () => setDefeat("over"));
         }
       }
