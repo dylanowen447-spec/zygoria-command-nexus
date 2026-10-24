@@ -62,7 +62,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   useEffect(() => {
     const st = stageRef.current; if (!st) return;
     for (const a of AGENTS) st.querySelector(`.marker-${a.toLowerCase()}`)?.classList.toggle("is-downed", squad[a] <= 0);
-  }, [squad, stageRef]);
+  });
   useEffect(() => () => {
     liveSquad.hp = fullSquad();
     stageRef.current?.querySelectorAll(".is-downed").forEach(el => el.classList.remove("is-downed"));
