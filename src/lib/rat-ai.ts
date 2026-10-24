@@ -19,7 +19,7 @@ export function farSpawns(cands: Point[], crew: Record<Agent, Point>, n: number)
   return [...cands].sort((a, b) => dist(b) - dist(a)).slice(0, n);
 }
 
-export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n: number, who?: Agent) => void) {
+export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n: number, who?: Agent) => void, canAttack: () => boolean = () => true) {
   if (r.dead) return;
   // Knockback slide: a punched rat skids across the street, decaying fast, never past the bounds.
   if (r.kv) {
@@ -32,7 +32,9 @@ export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n
   r.t += dt;
   const go = (p: Point, sp: number) => { const ex = p.x - r.x, ey = p.y - r.y, e = Math.hypot(ex, ey); if (e < sp * dt) { r.x = p.x; r.y = p.y; return true; } r.x += ex / e * sp * dt; r.y += ey / e * sp * dt; r.flip = ex < 0; return false; };
   if (r.mode === "charge") {
-    if (d < 3.2) { r.mode = "windup"; r.t = 0; r.flip = dx < 0; }
+    // Attack token: only a couple of rats may bite at once; the rest hang back and circle.
+    if (d < 3.2) { if (canAttack()) { r.mode = "windup"; r.t = 0; r.flip = dx < 0; } else { r.mode = "retreat"; r.t = 0.5; r.back = { x: clamp(r.x - dx / d * 6, 3, 97), y: clamp(r.y - dy / d * 4, 42, 97) }; } }
+    else if (d < 8 && !canAttack()) { r.flip = dx < 0; r.x = clamp(r.x - dy / d * 6 * dt, 3, 97); r.y = clamp(r.y + dx / d * 4 * dt, 42, 97); }
     else go(c, 17);
   } else if (r.mode === "windup" && r.t > 0.4) {
     r.mode = "bite"; r.t = 0;

@@ -1000,14 +1000,15 @@
 .zig-pips .pip { width: 6px; height: 4px; }
 .revive-bar { width: 34px; height: 4px; border-radius: 2px; background: color-mix(in oklab, var(--foreground) 20%, transparent); overflow: hidden; }
 .revive-bar > span { display: block; height: 100%; background: var(--primary); }
-.agent-marker.is-downed .sheet-sprite { transform-origin: 50% 100%; transform: rotate(-88deg) translateX(30%); filter: grayscale(.8) brightness(.7); transition: transform .35s ease-in, filter .35s; }
+.agent-marker.is-downed .sheet-sprite { transform-origin: 50% 100%; transform: scaleY(.78) translateY(4%); filter: grayscale(.6) brightness(.7); transition: transform .15s ease-in, filter .15s; }
 .agent-marker.is-downed { pointer-events: none; }
 .defeat-fade { position: fixed; inset: 0; z-index: 9000; pointer-events: none; background: radial-gradient(circle, transparent 20%, color-mix(in oklab, var(--destructive) 55%, var(--background)) 100%); animation: defeat-fade 1.8s ease-in forwards; }
 .defeat-fade.is-over { opacity: 1; animation: none; }
 @keyframes defeat-fade { from { opacity: 0; } to { opacity: 1; } }
 .game-over { position: fixed; inset: 0; z-index: 9100; display: grid; place-items: center; background: var(--background); animation: defeat-fade .6s ease-out; }
 .game-over-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
-.game-over-actions { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); display: flex; flex-direction: column; gap: .7rem; width: min(80vw, 22rem); }
-.game-over-btn { font-family: inherit; letter-spacing: .12em; font-size: 1rem; padding: .8rem 1rem; border-radius: 4px; color: var(--foreground); background: color-mix(in oklab, var(--background) 82%, transparent); border: 2px solid color-mix(in oklab, var(--foreground) 60%, transparent); cursor: pointer; }
+.game-over-actions { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); display: flex; flex-direction: row; gap: .5rem; justify-content: center; width: max-content; }
+.game-over-btn { font-family: inherit; letter-spacing: .12em; font-size: .78rem; padding: .45rem .8rem; border-radius: 4px; color: var(--foreground); background: color-mix(in oklab, var(--background) 82%, transparent); border: 2px solid color-mix(in oklab, var(--foreground) 60%, transparent); cursor: pointer; }
 .game-over-btn.is-primary { border-color: var(--destructive); box-shadow: 0 0 14px var(--destructive), inset 0 0 10px color-mix(in oklab, var(--destructive) 50%, transparent); }
+@media (max-width: 600px) { .game-over-actions { bottom: 2%; gap: .35rem; } .game-over-btn { font-size: .6rem; padding: .32rem .55rem; letter-spacing: .08em; border-width: 1px; } }
 .game-over-btn:hover, .game-over-btn:focus-visible { filter: brightness(1.25); outline: none; }

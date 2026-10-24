@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allDown, damage, fullSquad, heal, isDown, revive } from "@/lib/squad-health";
+import { IFRAME_MS, KILLS_PER_HEAL, KNEEL_MS, MAX_BITERS, allDown, damage, fullSquad, heal, isDown, revive } from "@/lib/squad-health";
 
 describe("squad health", () => {
   it("Brix takes 5 bites, Lowkey and Oz 4", () => {
@@ -22,5 +22,8 @@ describe("squad health", () => {
     expect(allDown(s)).toBe(false);
     s = damage(s, "Brix", 5);
     expect(allDown(s)).toBe(true);
+  });
+  it("balance: 1.2s knee, 1.2s bite grace, 2 biters, heal every 2 kills", () => {
+    expect(KNEEL_MS).toBe(1200); expect(IFRAME_MS).toBe(1200); expect(MAX_BITERS).toBe(2); expect(KILLS_PER_HEAL).toBe(2);
   });
 });
