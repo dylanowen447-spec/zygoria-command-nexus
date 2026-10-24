@@ -236,7 +236,7 @@
 
 /* Zone switching */
 .world-stage{width:max(100cqw,calc(100cqh * var(--zone-aspect,1.4906)));height:max(100cqh,calc(100cqw / var(--zone-aspect,1.4906)))}
-.zone-selector{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-13px 0 12px}
+.zone-selector{position:relative;z-index:30;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-13px 0 12px}
 .zone-chip{font:700 9px var(--font-mono);letter-spacing:1px;color:var(--dim);background:transparent;border:1px solid var(--line-soft);border-radius:2px;padding:5px 9px;display:inline-flex;align-items:center;gap:6px;transition:color .2s,border-color .2s,box-shadow .2s}
 .zone-chip .zone-dot{width:4px;height:4px;border-radius:50%;background:var(--dim);box-shadow:0 0 4px var(--dim);transition:background .2s,box-shadow .2s}
 .zone-chip:hover:not(:disabled){color:var(--foreground);border-color:var(--electric)}
