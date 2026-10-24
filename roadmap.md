@@ -28,4 +28,5 @@
 - [x] Slow bounce-back to 2 seconds, allow 4 attacking rats, and verify health appears only at the top
 - [ ] Weaken bounce-back and increase vulnerability; verify recovery rules and Old City combat
 - [x] Repair missing black boot details (verified solid, no defect found) in Brix's sideways walk frames from original artwork; verify charged punch final frame; test in-game (brix-boot-repair)
+- [x] Taking the Sanctuary caves exit walks all three Zigs down the waterfall road together into the caves
 - [x] Game Over screen speed-up: 2.5MB PNG → 337KB WebP, preloaded when Old City mounts, defeat fade 1.8s → 0.8s
