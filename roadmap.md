@@ -23,3 +23,5 @@
 - [x] Old City Brix rat swarm (18 rats, shockwave punches, rat spacing, crew stand back/rejoin)
 - [x] Brix idle = IDLE-DOWN (top-left) frame from his master combat sheet; fix skipped punch frame; guard/wind-up on new sheet
 - [x] Squad health (5/4/4), downed + revive, Game Over / retry screen in Old City
+
+- [x] Old City combat balance: 2-biter limit, bite grace, kill heals, 1.2s knee bounce-back, small phone Game Over buttons
