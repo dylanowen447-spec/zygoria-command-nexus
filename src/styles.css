@@ -446,7 +446,7 @@
 .fire-pit:is(.is-lit,.is-grilling) .pit-flame::before{animation:pitEmberRise 2.1s ease-out infinite}
 .fire-pit:is(.is-lit,.is-grilling) .pit-flame::after{animation:pitEmberRise 2.7s .9s ease-out infinite}
 .fire-pit.is-lit .pit-glow,.fire-pit.is-grilling .pit-glow{opacity:1;animation:pitLight 2.6s ease-in-out infinite}
-.fire-pit.is-grilling .pit-fish{opacity:1}
+.fire-pit .pit-fish,.fire-pit .pit-flame::before,.fire-pit .pit-flame::after{display:none}
 .fire-pit.is-grilling .pit-fish i{animation:pitSizzle .4s ease-in-out infinite alternate}
 .fire-pit.is-embers .pit-flame{opacity:.85;height:9%;width:35%;background-image:radial-gradient(ellipse,var(--fire-core),var(--fire-ember) 45%,transparent 72%);background-size:100% 100%;animation:pitLight 3.4s ease-in-out infinite}
 .fire-pit.is-embers .pit-glow{opacity:.4}
