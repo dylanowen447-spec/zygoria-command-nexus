@@ -6,9 +6,9 @@ export const REVIVE_HP = 2;
 export const REVIVE_MS = 2000;
 /** Seconds-on-one-knee before a downed Zig bounces back, and bite grace after each hit. */
 export const KNEEL_MS = 1200;
-export const IFRAME_MS = 1200;
-export const MAX_BITERS = 2;
-export const KILLS_PER_HEAL = 2;
+export const IFRAME_MS = 800;
+export const MAX_BITERS = 3;
+export const KILLS_PER_HEAL = 3;
 
 export type Squad = Record<Agent, number>;
 export const fullSquad = (): Squad => ({ ...MAX_HP });
