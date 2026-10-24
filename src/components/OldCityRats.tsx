@@ -2,6 +2,7 @@ import { playSfx, playDefeatSting } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
 import { GameOverScreen } from "@/components/GameOverScreen";
+import gameOverArt from "@/assets/game-over.webp.asset.json";
 import { DEFAULT_BOUNDS, brixShockwave, hitCtx, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat, type StagePlan } from "@/lib/rat-ai";
 import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
@@ -43,6 +44,11 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   const clearedCallback = useRef(onCleared);
   clearedCallback.current = onCleared;
   const sayRef = useRef(onSay); sayRef.current = onSay;
+
+  // Preload the Game Over art while the fight plays so defeat shows it instantly.
+  useEffect(() => {
+    const img = new Image(); img.src = gameOverArt.url;
+  }, []);
 
   // Rats stand 5% shorter than Oz, matching his on-screen height on any device.
   useEffect(() => {
@@ -91,7 +97,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         window.dispatchEvent(new CustomEvent("zig-downed", { detail: who }));
         if (allDown(s)) {
           over = true; setDefeatState("falling"); stopBattleMusic(); playDefeatSting();
-          later(1800, () => setDefeatState("over"));
+          later(800, () => setDefeatState("over"));
         }
       }
     };
