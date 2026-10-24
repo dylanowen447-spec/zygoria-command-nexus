@@ -7,11 +7,13 @@ type Pt = { x: number; y: number };
 
 /** Walkable road down to the caves, in artwork-percentage space (square image). One chain: top terrace → cave mouth. */
 export const DESCENT_PATH: Pt[] = [
-  { x: 24, y: 26 }, { x: 40, y: 25 }, { x: 54, y: 26 }, { x: 62, y: 31 }, { x: 68, y: 36 },
-  { x: 74, y: 41 }, { x: 80, y: 46 }, { x: 85, y: 50 }, { x: 80, y: 56 }, { x: 70, y: 60 },
-  { x: 61, y: 64 }, { x: 62, y: 69 }, { x: 65, y: 74 }, { x: 69, y: 79 }, { x: 76, y: 84 }, { x: 84, y: 84 },
+  { x: 18, y: 24 }, { x: 28, y: 24 }, { x: 38, y: 24 }, { x: 48, y: 24 }, { x: 54, y: 25 }, { x: 59, y: 30 },
+  { x: 64, y: 35 }, { x: 69, y: 40 }, { x: 75, y: 44 }, { x: 81, y: 47 }, { x: 87, y: 49 }, { x: 82, y: 53 },
+  { x: 76, y: 57 }, { x: 70, y: 60 }, { x: 65, y: 63 }, { x: 63, y: 67 }, { x: 65, y: 72 }, { x: 68, y: 77 },
+  { x: 73, y: 80 }, { x: 79, y: 81 },
 ];
 const CAVE: Pt = { x: 87, y: 79 };
+const ARRIVE = DESCENT_PATH.length - 1;
 const SPEED = 14; // % per second
 
 /** The waterfall descent between the Sanctuary and the Underground Haven. The Zig only walks the mapped road. */
@@ -25,6 +27,8 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave }: { char
   const low = character.toLowerCase();
 
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
+  // Arrive from the Sanctuary and walk the painted road down to the cave terrace.
+  useEffect(() => { const t = setTimeout(() => goTo(ARRIVE), 300); return () => clearTimeout(t); }, []);
 
   const walk = (pts: Pt[], then?: () => void) => {
     cancelAnimationFrame(raf.current);
