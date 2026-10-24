@@ -7,7 +7,7 @@ import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
 import { CITY_RAT_ARRIVAL, ARRIVAL_GAP_MS, BRIX_SWARM_CALL, SWARM_CLEARED } from "@/lib/fight-lines";
-import { MAX_HP, REVIVE_MS, allDown, damage, fullSquad, heal, liveSquad, revive, type Squad } from "@/lib/squad-health";
+import { IFRAME_MS, KILLS_PER_HEAL, KNEEL_MS, MAX_BITERS, MAX_HP, allDown, damage, fullSquad, heal, liveSquad, revive, type Squad } from "@/lib/squad-health";
 
 /** Nine finite directional waves, isolated from the scene's story progression. */
 const AGENTS: Agent[] = ["Brix", "Oz", "Lowkey"];
@@ -73,13 +73,16 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const setSq = (s: Squad) => { squadRef.current = s; liveSquad.hp = s; setSquad(s); };
+    const lastBite: Record<Agent, number> = { Brix: -1e9, Oz: -1e9, Lowkey: -1e9 };
+    let kills = 0;
     const hurt = (_n: number, who?: Agent) => {
       if (!who || over || squadRef.current[who] <= 0) return;
+      const t = performance.now(); if (t - lastBite[who] < IFRAME_MS) return; lastBite[who] = t;
       playSfx("hurt");
       const s = damage(squadRef.current, who);
       setSq(s);
       if (s[who] <= 0) {
-        reviveT.current[who] = 0;
+        reviveT.current[who] = performance.now();
         sayRef.current(who, DOWN_LINES[who]);
         window.dispatchEvent(new CustomEvent("zig-downed", { detail: who }));
         if (allDown(s)) {
@@ -100,7 +103,10 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       let hit = zapRats(rats.current, p, crew.current);
       if (waveIndex === 0 && by === "Brix") { const n = brixShockwave(rats.current, p, crew.current.Brix, heavy ? 13 : 9); if (n) playSfx("punch-heavy"); hit = hit || n > 0; }
       // Grit: a charged-punch kill restores one pip to everyone standing.
-      if (by === "Brix" && heavy && rats.current.filter(r => r.dead).length > before) setSq(heal(squadRef.current));
+      const killed = rats.current.filter(r => r.dead).length - before;
+      if (by === "Brix" && heavy && killed > 0) setSq(heal(squadRef.current));
+      // Fighting back heals: every 2 rats knocked out restores a pip to everyone standing.
+      if (killed > 0) { kills += killed; while (kills >= KILLS_PER_HEAL) { kills -= KILLS_PER_HEAL; setSq(heal(squadRef.current)); } }
       return hit;
     };
 
@@ -123,20 +129,21 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
           }
         } else stage.current = null;
       }
-      // Revive: a standing Zig beside a downed one for 2s gets him back up.
+      // Second wind: a downed Zig takes a knee for 1.2s, shoves nearby rats off, then is back up.
       const sq = squadRef.current;
       for (const a of AGENTS) {
-        if (sq[a] > 0) continue;
-        const helper = AGENTS.some(b => b !== a && sq[b] > 0 && Math.hypot(crew.current[b].x - crew.current[a].x, crew.current[b].y - crew.current[a].y) < 8);
-        reviveT.current[a] = helper ? reviveT.current[a] + dt * 1000 : Math.max(0, reviveT.current[a] - dt * 500);
-        if (reviveT.current[a] >= REVIVE_MS) { reviveT.current[a] = 0; setSq(revive(squadRef.current, a)); sayRef.current(a, UP_LINES[a]); }
+        if (sq[a] > 0 || now - reviveT.current[a] < KNEEL_MS) continue;
+        const z = crew.current[a];
+        for (const r of rats.current) { if (r.dead) continue; const ex = r.x - z.x, ey = r.y - z.y, e = Math.hypot(ex, ey) || 1; if (e < 14) { r.kv = { x: ex / e * 60, y: ey / e * 35 }; r.mode = "pause"; r.t = -0.4; } }
+        lastBite[a] = now; setSq(revive(squadRef.current, a)); sayRef.current(a, UP_LINES[a]);
       }
       // Rats only chase Zigs still standing; Brix's swarm goes for Brix while he's up.
       const up = AGENTS.filter(a => squadRef.current[a] > 0);
       const pool = Object.fromEntries(up.map(a => [a, crew.current[a]])) as Record<Agent, Point>;
       const b = crew.current.Brix;
       const targets = waveIndex === 0 && squadRef.current.Brix > 0 ? { Brix: b } as Record<Agent, Point> : pool;
-      if (up.length) for (const r of rats.current) stepRat(r, dt, targets, hurt);
+      const canAttack = () => rats.current.filter(x => !x.dead && (x.mode === "windup" || x.mode === "bite")).length < MAX_BITERS;
+      if (up.length) for (const r of rats.current) stepRat(r, dt, targets, hurt, canAttack);
       separateRats(rats.current, dt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (waveIndex >= 0 && rats.current.length === 0 && !nextWaveAt) {
@@ -182,7 +189,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       const p = crew.current[a];
       return <span key={a} className={`zig-pips ${squad[a] <= 0 ? "is-down" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-hidden="true">
         {squad[a] <= 0
-          ? <span className="revive-bar"><span style={{ width: `${Math.min(100, reviveT.current[a] / REVIVE_MS * 100)}%` }}/></span>
+          ? <span className="revive-bar"><span style={{ width: `${Math.min(100, (now - reviveT.current[a]) / KNEEL_MS * 100)}%` }}/></span>
           : Array.from({ length: MAX_HP[a] }, (_, i) => <span key={i} className={`pip ${i < squad[a] ? "on" : ""}`}/>)}
       </span>;
     })}
