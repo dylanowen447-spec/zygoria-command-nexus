@@ -30,6 +30,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   const [squad, setSquad] = useState<Squad>(fullSquad);
   const squadRef = useRef<Squad>(fullSquad());
   const reviveT = useRef<Record<Agent, number>>({ Brix: 0, Oz: 0, Lowkey: 0 });
+  const winds = useRef<Record<Agent, number>>({ Brix: 0, Oz: 0, Lowkey: 0 });
   const [wave, setWave] = useState(0);
   const [cleared, setCleared] = useState(false);
   const [defeat, setDefeat] = useState<"" | "falling" | "over">("");

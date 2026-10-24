@@ -995,7 +995,7 @@
 .squad-pips.is-down { opacity: .45; }
 .squad-pips .boss-name { margin-right: 3px; }
 .pip { width: 7px; height: 7px; border-radius: 2px; background: color-mix(in oklab, var(--foreground) 18%, transparent); }
-.pip.on { background: var(--destructive); box-shadow: 0 0 4px var(--destructive); }
+.pip.on { background: var(--health, oklch(0.78 0.2 145)); box-shadow: 0 0 4px var(--health, oklch(0.78 0.2 145)); }
 .zig-pips { position: absolute; transform: translate(-50%, 6px); display: flex; gap: 2px; pointer-events: none; z-index: 2000; }
 .zig-pips .pip { width: 6px; height: 4px; }
 .revive-bar { width: 34px; height: 4px; border-radius: 2px; background: color-mix(in oklab, var(--foreground) 20%, transparent); overflow: hidden; }

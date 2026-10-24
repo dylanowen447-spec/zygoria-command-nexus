@@ -27,3 +27,11 @@ describe("squad health", () => {
     expect(KNEEL_MS).toBe(1200); expect(IFRAME_MS).toBe(800); expect(MAX_BITERS).toBe(3); expect(KILLS_PER_HEAL).toBe(3);
   });
 });
+
+describe("second wind limit", () => {
+  it("lets a Zig bounce back once per wave, then stay down", async () => {
+    const { mayBounceBack } = await import("@/lib/squad-health");
+    expect(mayBounceBack(0)).toBe(true);
+    expect(mayBounceBack(1)).toBe(false);
+  });
+});
