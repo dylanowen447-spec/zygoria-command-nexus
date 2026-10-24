@@ -778,7 +778,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       {bolts.map(b => <div key={`f${b.id}`} className="zap-flash" style={{ left: `${b.x}%`, top: `${b.y}%` }} />)}
       {hits.map(h => <div key={h.id} className={`combat-hit is-${h.kind}`} style={{ left: `${h.x}%`, top: `${h.y}%` }} aria-hidden="true"/>)}
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
-      {scene.id === "city" && ratsCleared && !found.includes("crossing") && <div className="city-mp3" role="img" aria-label="Broken MP3 player in the street dust" style={{ left: `${scene.spots.crossing?.at.x ?? 45}%`, top: `${scene.spots.crossing?.at.y ?? 58}%` }}>
+      {scene.id === "city" && ratsCleared && !found.includes("crossing") && <div className="city-mp3" role="img" aria-label="Broken MP3 player in the street dust" style={{ left: `${scene.spots["crossing"]?.at.x ?? 45}%`, top: `${scene.spots["crossing"]?.at.y ?? 58}%` }}>
         <svg viewBox="0 0 28 42" aria-hidden="true"><rect className="mp3-case" x="3" y="2" width="22" height="38" rx="3"/><rect className="mp3-screen" x="7" y="7" width="14" height="11" rx="1"/><path className="mp3-crack" d="M15 7l-3 4 5 2-4 5"/><circle className="mp3-wheel" cx="14" cy="29" r="6"/><circle className="mp3-screen" cx="14" cy="29" r="2"/></svg>
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
