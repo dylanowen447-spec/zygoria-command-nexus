@@ -997,10 +997,6 @@
 .squad-pips .boss-name { margin-right: 3px; }
 .pip { width: 7px; height: 7px; border-radius: 2px; background: color-mix(in oklab, var(--foreground) 18%, transparent); }
 .pip.on { background: var(--health); box-shadow: 0 0 4px var(--health); }
-.zig-pips { position: absolute; transform: translate(-50%, 6px); display: flex; gap: 2px; pointer-events: none; z-index: 2000; }
-.zig-pips .pip { width: 6px; height: 4px; }
-.revive-bar { width: 34px; height: 4px; border-radius: 2px; background: color-mix(in oklab, var(--foreground) 20%, transparent); overflow: hidden; }
-.revive-bar > span { display: block; height: 100%; background: var(--primary); }
 .agent-marker.is-downed .sheet-sprite { transform-origin: 50% 100%; transform: scaleY(.78) translateY(4%); filter: grayscale(.6) brightness(.7); transition: transform .15s ease-in, filter .15s; }
 .agent-marker.is-downed { pointer-events: none; }
 .defeat-fade { position: fixed; inset: 0; z-index: 9000; pointer-events: none; background: radial-gradient(circle, transparent 20%, color-mix(in oklab, var(--destructive) 55%, var(--background)) 100%); animation: defeat-fade 1.8s ease-in forwards; }

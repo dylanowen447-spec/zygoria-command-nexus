@@ -59,7 +59,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
     return () => { combatRef.current = { targets: () => [], bounds: () => DEFAULT_BOUNDS }; };
   }, [combatRef]);
 
-  // Downed Zigs lie on the ground (class on their marker) until revived.
+  // Downed Zigs take a knee (class on their marker) until revived.
   useEffect(() => {
     const st = stageRef.current; if (!st) return;
     for (const a of AGENTS) st.querySelector(`.marker-${a.toLowerCase()}`)?.classList.toggle("is-downed", squad[a] <= 0);
@@ -133,7 +133,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
           }
         } else stage.current = null;
       }
-      // Second wind: a downed Zig takes a knee for 1.2s, shoves nearby rats off, then is back up.
+      // Second wind: a downed Zig takes a knee for KNEEL_MS, shoves nearby rats off, then is back up.
       const sq = squadRef.current;
       for (const a of AGENTS) {
         if (sq[a] > 0 || !mayBounceBack(winds.current[a]) || now - reviveT.current[a] < KNEEL_MS) continue;
@@ -190,14 +190,6 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         </span>)}
       </div>
     </div>}
-    {wave > 0 && !cleared && AGENTS.map(a => {
-      const p = crew.current[a];
-      return <span key={a} className={`zig-pips ${squad[a] <= 0 ? "is-down" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-hidden="true">
-        {squad[a] <= 0 && !mayBounceBack(winds.current[a]) ? null : squad[a] <= 0
-          ? <span className="revive-bar"><span style={{ width: `${Math.min(100, (now - reviveT.current[a]) / KNEEL_MS * 100)}%` }}/></span>
-          : Array.from({ length: MAX_HP[a] }, (_, i) => <span key={i} className={`pip ${i < squad[a] ? "on" : ""}`}/>)}
-      </span>;
-    })}
     {rats.current.map(r => <RatSprite key={r.id} r={r} w={ratW} h={ratH} now={now}/>)}
     {defeat && <div className={`defeat-fade ${defeat === "over" ? "is-over" : ""}`} aria-hidden="true"/>}
     {defeat === "over" && <GameOverScreen onRetry={() => retry(Math.max(0, curWave.current))} onRestart={() => retry(0)} onSanctuary={onSanctuary}/>}
