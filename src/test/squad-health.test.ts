@@ -23,7 +23,7 @@ describe("squad health", () => {
     s = damage(s, "Brix", 5);
     expect(allDown(s)).toBe(true);
   });
-  it("balance: 1.2s knee, 1.2s bite grace, 2 biters, heal every 2 kills", () => {
-    expect(KNEEL_MS).toBe(1200); expect(IFRAME_MS).toBe(1200); expect(MAX_BITERS).toBe(2); expect(KILLS_PER_HEAL).toBe(2);
+  it("balance: 1.2s knee, 0.8s bite grace, 3 biters, heal every 3 kills", () => {
+    expect(KNEEL_MS).toBe(1200); expect(IFRAME_MS).toBe(800); expect(MAX_BITERS).toBe(3); expect(KILLS_PER_HEAL).toBe(3);
   });
 });
