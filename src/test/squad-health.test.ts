@@ -31,10 +31,10 @@ describe("squad health", () => {
     expect(KNEEL_MS).toBe(2000);
   });
   it("allows four rats to attack together", () => {
-    expect(MAX_BITERS).toBe(4);
+    expect(MAX_BITERS).toBe(6);
   });
   it("makes Zigs vulnerable again after 0.6s bite grace", () => {
-    expect(IFRAME_MS).toBe(600);
+    expect(IFRAME_MS).toBe(350);
   });
   it("keeps healing every 3 kills", () => {
     expect(KILLS_PER_HEAL).toBe(3);

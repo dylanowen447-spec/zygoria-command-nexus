@@ -6,13 +6,13 @@ export const REVIVE_HP = 1;
 export const REVIVE_MS = 2000;
 /** Seconds-on-one-knee before a downed Zig bounces back, and bite grace after each hit. */
 export const KNEEL_MS = 2000;
-export const IFRAME_MS = 600;
+export const IFRAME_MS = 350;
 /** Second wind clears only immediate contact, not the whole surrounding swarm. */
 export const RECOVERY_RADIUS = 7;
 export const RECOVERY_PUSH_X = 30;
 export const RECOVERY_PUSH_Y = 17.5;
 export const RECOVERY_PAUSE_SECONDS = 0.2;
-export const MAX_BITERS = 4;
+export const MAX_BITERS = 6;
 export const KILLS_PER_HEAL = 3;
 /** Knee bounce-backs each Zig gets per wave; after that a fall keeps them down until the wave ends. */
 export const SECOND_WINDS = 1;

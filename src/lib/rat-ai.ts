@@ -44,9 +44,9 @@ export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n
   } else if (r.mode === "bite" && r.t > 0.3) {
     r.mode = "retreat"; r.t = 0;
     r.back = { x: clamp(r.x - dx / d * 13, 3, 97), y: clamp(r.y - dy / d * 9, 42, 97) };
-  } else if (r.mode === "retreat" && (go(r.back, 22) || r.t > 1.1)) {
+  } else if (r.mode === "retreat" && (go(r.back, 22) || r.t > 0.5)) {
     r.mode = "pause"; r.t = 0; r.flip = dx < 0;
-  } else if (r.mode === "pause" && r.t > 0.7 + (r.id % 3) * 0.25) {
+  } else if (r.mode === "pause" && r.t > 0.25 + (r.id % 3) * 0.08) {
     r.mode = "charge"; r.t = 0;
   }
 }
