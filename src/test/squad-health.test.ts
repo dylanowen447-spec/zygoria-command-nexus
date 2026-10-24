@@ -23,8 +23,14 @@ describe("squad health", () => {
     s = damage(s, "Brix", 5);
     expect(allDown(s)).toBe(true);
   });
-  it("balance: 1.2s knee, 0.8s bite grace, 3 biters, heal every 3 kills", () => {
-    expect(KNEEL_MS).toBe(1200); expect(IFRAME_MS).toBe(800); expect(MAX_BITERS).toBe(3); expect(KILLS_PER_HEAL).toBe(3);
+  it("slows the knee bounce-back to 2 seconds", () => {
+    expect(KNEEL_MS).toBe(2000);
+  });
+  it("allows four rats to attack together", () => {
+    expect(MAX_BITERS).toBe(4);
+  });
+  it("keeps 0.8s bite grace and healing every 3 kills", () => {
+    expect(IFRAME_MS).toBe(800); expect(KILLS_PER_HEAL).toBe(3);
   });
 });
 

@@ -25,3 +25,4 @@
 - [x] Squad health (5/4/4), downed + revive, Game Over / retry screen in Old City
 
 - [x] Old City combat balance: 2-biter limit, bite grace, kill heals, 1.2s knee bounce-back, small phone Game Over buttons
+- [ ] Slow bounce-back to 2 seconds, allow 4 attacking rats, and verify health appears only at the top
