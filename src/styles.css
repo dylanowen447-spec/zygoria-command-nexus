@@ -124,7 +124,7 @@
 @keyframes ozBreathe{from{translate:0 0}to{translate:0 -.6px}}
 @media(max-width:600px){.sheet-sprite{width:33px;height:42px}}
 @media(prefers-reduced-motion:reduce){.agent-marker.is-walking .sheet-frames{animation-duration:.5s,.25s!important;animation-iteration-count:infinite!important}}
-.sheet-oz{transform:translateX(-50%) scale(.814);transform-origin:center bottom}
+.sheet-oz{transform:translateX(-50%) scale(.8954);transform-origin:center bottom}
 /* Oz's supplied directional sheet has seven columns (rest + six strides) and four rows (front, left, right, back). */
 .marker-oz .sheet-frames{background-size:700% 400%;background-position:0 0}
 .marker-oz.is-walking.oz-facing-left .sheet-frames{background-position:0 33.3333%}
@@ -134,16 +134,16 @@
 .world-image-wrap .marker-oz.is-walking.facing-left .sprite-stage{scale:1 1}
 .marker-oz.is-walking .sheet-frames{animation:ozDirectionalWalk .6s step-end infinite,ozBounce .3s ease-in-out infinite alternate!important}
 @keyframes ozDirectionalWalk{0%,100%{background-position-x:16.6667%}25%{background-position-x:33.3333%}50%{background-position-x:50%}75%{background-position-x:66.6667%}}
-.sheet-lowkey{width:66px;height:70px;transform:translateX(-50%) scale(.86);transform-origin:center bottom}.sheet-lowkey .sheet-shadow{opacity:.45}
+.sheet-lowkey{width:66px;height:70px;transform:translateX(-50%) scale(.946);transform-origin:center bottom}.sheet-lowkey .sheet-shadow{opacity:.45}
 @media(max-width:600px){.sheet-lowkey{width:50px;height:54px}}
 /* Lowkey stands 10% smaller on desktop; phone size and her feet anchor stay put. */
-@media(min-width:901px){.sheet-lowkey{transform:translateX(-50%) scale(.774)}}
+@media(min-width:901px){.sheet-lowkey{transform:translateX(-50%) scale(.8514)}}
 
-.sheet-brix{width:51px;height:73px;bottom:-4px;transform:translateX(-50%) scale(.94);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
+.sheet-brix{width:51px;height:73px;bottom:-4px;transform:translateX(-50%) scale(1.034);transform-origin:center bottom}.sheet-brix .sheet-shadow{width:70%;height:6px}
 /* Brix's atlas is 7 columns × 4 rows, so any Brix sprite anywhere (map marker, build scene, menus) shows one frame, never the whole sheet. */
 .sheet-brix .sheet-frames{background-size:800% 400%;background-position:0 0}
 /* On phones Brix is 30% smaller; desktop size and his feet anchor stay put. */
-@media(max-width:600px){.sheet-brix{width:61px;height:88px;bottom:-3px;transform:translateX(-50%) scale(.784)}}
+@media(max-width:600px){.sheet-brix{width:61px;height:88px;bottom:-3px;transform:translateX(-50%) scale(.8624)}}
 /* Brix's supplied directional sheet: seven columns (rest + six strides) and four rows (front, left, right, back), same layout as Oz. */
 .marker-brix .sheet-frames{background-size:800% 400%;background-position:0 0}
 .marker-brix.is-walking.brix-facing-left .sheet-frames{background-position:0 33.3333%}
@@ -155,10 +155,10 @@
 @keyframes brixDirectionalWalk{0%{background-position-x:0.0000%}12.5%{background-position-x:14.2857%}25%{background-position-x:28.5714%}37.5%{background-position-x:42.8571%}50%{background-position-x:57.1429%}62.5%{background-position-x:71.4286%}75%{background-position-x:85.7143%}87.5%{background-position-x:100.0000%}100%{background-position-x:0%}}
 
 /* Moxi as a crew agent: her three-frame hop strip, smallest of the crew. The art faces right natively. */
-.sheet-moxi{width:52px;height:38px;transform:translateX(-50%);transform-origin:center bottom}
+.sheet-moxi{width:57px;height:42px;transform:translateX(-50%);transform-origin:center bottom}
 .sheet-moxi .sheet-frames{background-size:300% 100%;animation:ozBreathe 2.6s ease-in-out infinite alternate}
 .marker-moxi.is-walking .sheet-frames{animation:moxiHop .45s steps(3) infinite!important}
-@media(max-width:600px){.sheet-moxi{width:39px;height:29px}}
+@media(max-width:600px){.sheet-moxi{width:43px;height:32px}}
 .moxi-nametag{font:700 11px var(--font-display);letter-spacing:1px;color:var(--foreground)}
 .marker-moxi{left:60%;top:68%}
 
