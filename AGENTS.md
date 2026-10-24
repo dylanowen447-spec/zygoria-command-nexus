@@ -33,3 +33,4 @@
 - OldCityRats owns wave timing; city-waves defines approaches and counts so Long Walk combat remains independent.
 - Post-fight prologue discoveries use objective data gated by the encounter's completion callback, keeping movement and dialogue in the existing exploration flow and preventing early chapter exits.
 - Melee targeting prefers cursor-adjacent reachable foes, then nearest reachable foe, so stale cursor positions cannot cancel punches.
+- Journey scenes move the whole crew: one arc-length chain drives the steered Zig while the brothers trail at fixed lags with a sideways nudge, and each Zig's feet come from a per-frame custom property so the shared haven floor-line rule can never flatten the road back to a straight walk.
