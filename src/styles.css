@@ -431,22 +431,29 @@
 @media(max-width:600px){.creator-dock{left:8px;bottom:8px}.creator-dock .creator-badge{padding:4px 9px;gap:5px;font-size:7.5px;background:oklch(0.14 0.03 265 / 96%);backdrop-filter:none}.creator-dock .creator-badge-name{font-size:10px}.creator-dock .creator-badge-cta{padding-left:5px}}
 
 /* Crossroads fire pit: artwork-percentage overlay, lit only during a cookout */
-.fire-pit{--fire-core:hsl(45 100% 70%);--fire-mid:hsl(25 100% 55%);--fire-edge:hsl(8 90% 45%);--fire-stone:hsl(220 10% 28%);--spark:hsl(195 100% 80%);position:absolute;width:6.3%;aspect-ratio:1;transform:translate(-50%,-62%);z-index:2;pointer-events:none}
+.fire-pit{--fire-core:hsl(45 100% 70%);--fire-mid:hsl(25 100% 55%);--fire-edge:hsl(8 90% 45%);--fire-light:hsl(30 100% 55% / .26);--fire-ember:hsl(20 95% 55%);--fire-stone:hsl(220 10% 28%);--spark:hsl(195 100% 80%);position:absolute;width:6.3%;aspect-ratio:1;transform:translate(-50%,-62%);z-index:2;pointer-events:none}
 .fire-pit .pit-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 2px hsl(0 0% 0% / .45))}
 .fire-pit .pit-ring{display:none}
-.fire-pit .pit-flame{position:absolute;left:50%;bottom:26%;width:34%;height:0;transform:translateX(-50%);border-radius:50% 50% 35% 35%/70% 70% 30% 30%;background:radial-gradient(ellipse at 50% 85%,var(--fire-core),var(--fire-mid) 45%,var(--fire-edge) 70%,transparent 75%);filter:blur(.4px);transition:height .5s ease;transform-origin:50% 100%}
-.fire-pit .pit-glow{position:absolute;left:50%;top:50%;width:600%;aspect-ratio:2/1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(ellipse,hsl(30 100% 55% / .35),transparent 65%);opacity:0;transition:opacity .6s}
+.fire-pit .pit-flame{position:absolute;left:50%;bottom:26%;width:52%;height:78%;transform:translateX(-50%);background-image:url('./assets/campfire-flame.webp');background-size:800% 100%;background-repeat:no-repeat;image-rendering:pixelated;opacity:0;transition:opacity .5s ease;transform-origin:50% 100%}
+.fire-pit .pit-flame::before,.fire-pit .pit-flame::after{content:"";position:absolute;left:38%;bottom:30%;width:3%;aspect-ratio:1;background:var(--fire-core);opacity:0;pointer-events:none}
+.fire-pit .pit-flame::after{left:65%;background:var(--fire-mid)}
+.fire-pit .pit-glow{position:absolute;left:50%;top:62%;width:260%;aspect-ratio:2/1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(ellipse,var(--fire-light),transparent 68%);opacity:0;transition:opacity .6s}
 .fire-pit .pit-fish{position:absolute;left:28%;right:28%;bottom:42%;height:2px;background:var(--fire-stone);opacity:0;display:flex;justify-content:space-around;align-items:center}
 .fire-pit .pit-fish i{width:28%;height:4px;border-radius:50% 20% 20% 50%;background:hsl(200 15% 75%);box-shadow:0 0 3px hsl(30 100% 60%)}
 .fire-pit .pit-spark{position:absolute;left:50%;bottom:50%;width:8px;height:8px;border-radius:50%;background:var(--spark);box-shadow:0 0 12px 4px var(--spark);transform:translate(-50%,0) scale(0);opacity:0}
 .fire-pit.is-spark .pit-spark{animation:pitSpark .7s ease-out}
-.fire-pit.is-lit .pit-flame,.fire-pit.is-grilling .pit-flame{height:150%;animation:pitFlicker .18s ease-in-out infinite alternate}
-.fire-pit.is-lit .pit-glow,.fire-pit.is-grilling .pit-glow{opacity:1}
+.fire-pit.is-lit .pit-flame,.fire-pit.is-grilling .pit-flame{opacity:1;animation:pitFlameFrames .88s steps(8) infinite}
+.fire-pit:is(.is-lit,.is-grilling) .pit-flame::before{animation:pitEmberRise 2.1s ease-out infinite}
+.fire-pit:is(.is-lit,.is-grilling) .pit-flame::after{animation:pitEmberRise 2.7s .9s ease-out infinite}
+.fire-pit.is-lit .pit-glow,.fire-pit.is-grilling .pit-glow{opacity:1;animation:pitLight 2.6s ease-in-out infinite}
 .fire-pit.is-grilling .pit-fish{opacity:1}
 .fire-pit.is-grilling .pit-fish i{animation:pitSizzle .4s ease-in-out infinite alternate}
-.fire-pit.is-embers .pit-flame{height:35%}
+.fire-pit.is-embers .pit-flame{opacity:.85;height:9%;width:35%;background-image:radial-gradient(ellipse,var(--fire-core),var(--fire-ember) 45%,transparent 72%);background-size:100% 100%;animation:pitLight 3.4s ease-in-out infinite}
 .fire-pit.is-embers .pit-glow{opacity:.4}
-@keyframes pitFlicker{from{transform:translateX(-50%) scaleY(.9) skewX(-3deg)}to{transform:translateX(-50%) scaleY(1.08) skewX(3deg)}}
+@keyframes pitFlameFrames{to{background-position:114.285714% 0}}
+@keyframes pitLight{0%,100%{opacity:.7}30%{opacity:.95}55%{opacity:.8}75%{opacity:1}}
+@keyframes pitEmberRise{0%,15%{opacity:0;transform:translate(0,0)}25%{opacity:.9}80%{opacity:.4}100%{opacity:0;transform:translate(-250%,-2400%)}}
+@media(prefers-reduced-motion:reduce){.fire-pit .pit-flame,.fire-pit .pit-glow,.fire-pit .pit-flame::before,.fire-pit .pit-flame::after{animation:none!important}}
 @keyframes pitSpark{0%{opacity:1;transform:translate(-50%,-300%) scale(.4)}60%{opacity:1;transform:translate(-50%,0) scale(1.4)}100%{opacity:0;transform:translate(-50%,0) scale(2.2)}}
 @keyframes pitSizzle{from{transform:translateY(0)}to{transform:translateY(-1px)}}
 .fire-pit.fish-medium .pit-fish i{transform:scale(1.25)}.fire-pit.fish-large .pit-fish i{transform:scale(1.6)}.fire-pit.fish-medium.is-grilling .pit-fish i,.fire-pit.fish-large.is-grilling .pit-fish i{animation:none}
