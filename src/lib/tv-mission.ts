@@ -13,7 +13,8 @@ export const TV_SHOCK = 8;
 /** Positions in artwork percentages. */
 export const TV_SPOT = {
   workshop: { x: 80, y: 55 },
-  cage: { x: 49, y: 64 },
+  // Grassy rock ledge on the riverbank, below the workshop and out of the Crossroads path.
+  cage: { x: 80, y: 77 },
 };
 
 /** Flat grass route from Brix's workshop door down to the Crossroads (artwork %). */
