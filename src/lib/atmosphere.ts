@@ -181,7 +181,7 @@ export function playSfx(kind: Sfx) {
     case "zap-hit": blip(t, 900, 1600, 0.06, 0.12, "square"); blip(t + 0.06, 1600, 300, 0.1, 0.1, "square"); break;
     case "slash": blip(t, 260, 70, 0.22, 0.12, "sawtooth"); burst(t, 600, 0.22, 0.14, "lowpass"); break;
     case "slash-hit": blip(t, 120, 45, 0.2, 0.3, "sawtooth"); burst(t, 1800, 0.12, 0.18, "bandpass"); break;
-    case "hurt": blip(t, 420, 160, 0.16, 0.18, "square"); break;
+    case "hurt": burst(t, 2200, 0.05, 0.22, "bandpass"); blip(t + 0.01, 520, 140, 0.14, 0.2, "square"); burst(t + 0.05, 900, 0.06, 0.18, "lowpass"); break;
   }
 }
 

@@ -110,7 +110,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const [hurtZig, setHurtZig] = useState<Partial<Record<Agent, number>>>({});
   useEffect(() => {
     const on = (e: Event) => { const a = (e as CustomEvent<Agent>).detail; const id = Date.now(); setHurtZig(h => ({ ...h, [a]: id })); setTimeout(() => setHurtZig(h => (h[a] === id ? { ...h, [a]: undefined } : h)), 420); };
-    window.addEventListener("zig-hurt", on); return () => window.removeEventListener("zig-hurt", on);
+    // Bite flinch: the bitten Zig is shoved a small step away from the rat.
+    const bit = (e: Event) => {
+      const { who, dx, dy } = (e as CustomEvent<{ who: Agent; dx: number; dy: number }>).detail; const p = coords.current[who]; if (!p) return;
+      coords.current[who] = { x: Math.min(97, Math.max(3, p.x + dx * 1.8)), y: Math.min(97, Math.max(8, p.y + dy * 1.1)) };
+      const el = markers.current[who]; if (el) { el.style.left = `${coords.current[who].x}%`; el.style.top = `${coords.current[who].y}%`; }
+    };
+    window.addEventListener("zig-hurt", on); window.addEventListener("zig-bitten", bit);
+    return () => { window.removeEventListener("zig-hurt", on); window.removeEventListener("zig-bitten", bit); };
   }, []);
   const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
   const [charging, setCharging] = useState(false);
