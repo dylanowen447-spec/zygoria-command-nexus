@@ -22,7 +22,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   onAlarm: (situation: string) => void;
   onSay: (who: Agent, text: string) => void;
   onCleared: () => void;
-  onSanctuary?: () => void;
+  onSanctuary?: (() => void) | undefined;
 }) {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
