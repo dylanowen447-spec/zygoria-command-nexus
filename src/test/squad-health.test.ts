@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { IFRAME_MS, KILLS_PER_HEAL, KNEEL_MS, MAX_BITERS, allDown, damage, fullSquad, heal, isDown, revive } from "@/lib/squad-health";
+import { IFRAME_MS, KILLS_PER_HEAL, KNEEL_MS, MAX_BITERS, RECOVERY_RADIUS, RECOVERY_PUSH_X, RECOVERY_PUSH_Y, RECOVERY_PAUSE_SECONDS, allDown, damage, fullSquad, heal, isDown, revive } from "@/lib/squad-health";
 
 describe("squad health", () => {
   it("Brix takes 5 bites, Lowkey and Oz 4", () => {
@@ -9,9 +9,13 @@ describe("squad health", () => {
     expect(isDown(s, "Brix")).toBe(false);
     expect(isDown(damage(s, "Brix"), "Brix")).toBe(true);
   });
-  it("revive brings a downed Zig back to 2", () => {
-    const s = damage(fullSquad(), "Oz", 4);
-    expect(revive(s, "Oz").Oz).toBe(2);
+  it("weaker bounce-back returns each Zig with only one bite remaining", () => {
+    for (const a of ["Brix", "Oz", "Lowkey"] as const) {
+      const s = damage(fullSquad(), a, 5);
+      const recovered = revive(s, a);
+      expect(recovered[a]).toBe(1);
+      expect(isDown(damage(recovered, a), a)).toBe(true);
+    }
   });
   it("heal skips downed Zigs and caps at max", () => {
     const s = heal(damage(fullSquad(), "Oz", 4));
@@ -29,8 +33,17 @@ describe("squad health", () => {
   it("allows four rats to attack together", () => {
     expect(MAX_BITERS).toBe(4);
   });
-  it("keeps 0.8s bite grace and healing every 3 kills", () => {
-    expect(IFRAME_MS).toBe(800); expect(KILLS_PER_HEAL).toBe(3);
+  it("makes Zigs vulnerable again after 0.6s bite grace", () => {
+    expect(IFRAME_MS).toBe(600);
+  });
+  it("keeps healing every 3 kills", () => {
+    expect(KILLS_PER_HEAL).toBe(3);
+  });
+  it("halves the bounce-back clearance and rat pause", () => {
+    expect(RECOVERY_RADIUS).toBe(7);
+    expect(RECOVERY_PUSH_X).toBe(30);
+    expect(RECOVERY_PUSH_Y).toBe(17.5);
+    expect(RECOVERY_PAUSE_SECONDS).toBe(0.2);
   });
 });
 

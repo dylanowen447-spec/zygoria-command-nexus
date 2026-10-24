@@ -2,11 +2,16 @@ import type { Agent } from "@/lib/zones";
 
 /** Bites each Zig can take before going down. */
 export const MAX_HP: Record<Agent, number> = { Brix: 5, Lowkey: 4, Oz: 4 };
-export const REVIVE_HP = 2;
+export const REVIVE_HP = 1;
 export const REVIVE_MS = 2000;
 /** Seconds-on-one-knee before a downed Zig bounces back, and bite grace after each hit. */
 export const KNEEL_MS = 2000;
-export const IFRAME_MS = 800;
+export const IFRAME_MS = 600;
+/** Second wind clears only immediate contact, not the whole surrounding swarm. */
+export const RECOVERY_RADIUS = 7;
+export const RECOVERY_PUSH_X = 30;
+export const RECOVERY_PUSH_Y = 17.5;
+export const RECOVERY_PAUSE_SECONDS = 0.2;
 export const MAX_BITERS = 4;
 export const KILLS_PER_HEAL = 3;
 /** Knee bounce-backs each Zig gets per wave; after that a fall keeps them down until the wave ends. */
