@@ -1058,6 +1058,6 @@
 .descent-scene .haven-zig{pointer-events:none}
 .descent-scene .haven-zig.is-gone{opacity:0;transition:opacity .3s!important}
 .descent-cave{height:70px;width:70px}
-.sanctuary-exit span{position:relative;display:block;left:auto;top:auto;transform:none;font-size:8px;line-height:1.2;letter-spacing:.1em;white-space:nowrap;color:var(--foreground);background:var(--background);border:1px solid color-mix(in oklch, var(--foreground) 45%, transparent);padding:2px 7px;border-radius:3px}
+.sanctuary-exit span{position:relative;display:block;left:auto;top:auto;transform:none;font-size:9px;line-height:1.2;letter-spacing:.1em;white-space:nowrap;color:var(--foreground);background:var(--background);border:1px solid color-mix(in oklch, var(--foreground) 45%, transparent);padding:3px 8px;border-radius:3px}
 /* On the descent the crew walk the painted road, so each Zig's feet follow the path instead of the haven floor line. */
 .descent-scene .haven-layer .haven-zig{bottom:var(--feet,20%)!important}
