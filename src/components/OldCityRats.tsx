@@ -45,6 +45,11 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   clearedCallback.current = onCleared;
   const sayRef = useRef(onSay); sayRef.current = onSay;
 
+  // Preload the Game Over art while the fight plays so defeat shows it instantly.
+  useEffect(() => {
+    const img = new Image(); img.src = gameOverArt.url;
+  }, []);
+
   // Rats stand 5% shorter than Oz, matching his on-screen height on any device.
   useEffect(() => {
     const measure = () => {
@@ -92,7 +97,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         window.dispatchEvent(new CustomEvent("zig-downed", { detail: who }));
         if (allDown(s)) {
           over = true; setDefeatState("falling"); stopBattleMusic(); playDefeatSting();
-          later(1800, () => setDefeatState("over"));
+          later(800, () => setDefeatState("over"));
         }
       }
     };
