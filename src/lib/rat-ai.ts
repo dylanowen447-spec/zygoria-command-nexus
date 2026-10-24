@@ -19,7 +19,7 @@ export function farSpawns(cands: Point[], crew: Record<Agent, Point>, n: number)
   return [...cands].sort((a, b) => dist(b) - dist(a)).slice(0, n);
 }
 
-export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n: number) => void) {
+export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n: number, who?: Agent) => void) {
   if (r.dead) return;
   // Knockback slide: a punched rat skids across the street, decaying fast, never past the bounds.
   if (r.kv) {
