@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { LongWalkAmbush } from "@/components/LongWalkAmbush";
 import { OldCityRats } from "@/components/OldCityRats";
+import { liveSquad } from "@/lib/squad-health";
 import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } from "@/lib/prologue";
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
@@ -116,8 +117,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       coords.current[who] = { x: Math.min(97, Math.max(3, p.x + dx * 1.8)), y: Math.min(97, Math.max(8, p.y + dy * 1.1)) };
       const el = markers.current[who]; if (el) { el.style.left = `${coords.current[who].x}%`; el.style.top = `${coords.current[who].y}%`; }
     };
-    window.addEventListener("zig-hurt", on); window.addEventListener("zig-bitten", bit);
-    return () => { window.removeEventListener("zig-hurt", on); window.removeEventListener("zig-bitten", bit); };
+    // Downed: if the player's Zig falls, control passes to a crewmate still standing.
+    const down = (e: Event) => { const a = (e as CustomEvent<Agent>).detail; if (ctrlRef.current !== a) return; const n = ALL.find(z => liveSquad.hp[z] > 0); if (n) { ctrlRef.current = n; setCtrl(n); } };
+    window.addEventListener("zig-hurt", on); window.addEventListener("zig-bitten", bit); window.addEventListener("zig-downed", down);
+    return () => { window.removeEventListener("zig-hurt", on); window.removeEventListener("zig-bitten", bit); window.removeEventListener("zig-downed", down); };
   }, []);
   const [hits, setHits] = useState<{ id: number; x: number; y: number; kind: string }[]>([]);
   const [charging, setCharging] = useState(false);
@@ -256,6 +259,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     });
     /** One attack in the Zig's own style. Enemy damage goes through the ambush's existing hit logic, unchanged. */
     const strike = async (a: Agent, heavy: boolean, auto = false) => {
+      if (liveSquad.hp[a] <= 0) return;
       const now = performance.now();
       if (now - lastAtk[a] < (heavy ? 650 : a === "Brix" ? 200 : 260)) return;
       const me = coords.current[a];
@@ -303,7 +307,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       // Heavy blows land a second impact a beat later (Shelton's own hit timing still applies).
       if (heavy && landed) timers.push(setTimeout(() => { if (!alive) return; const t2 = nearestTo(t); if (t2 && cdist(t2, t) < 8) { hitCtx.by = a; const ok = ambushHit.current(aim(t2)); impact(aim(t2), ok ? `${a.toLowerCase()}-heavy` : "miss"); } }, 400));
     };
-    moveCtrl.current = (p: Point) => { if (!inCombat()) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
+    moveCtrl.current = (p: Point) => { if (!inCombat() || liveSquad.hp[ctrlRef.current] <= 0) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
     steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [onGround(scene, { x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) })]); };
     attack.current = (heavy: boolean) => { void strike(inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current, heavy); };
     resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current] = 0; };
@@ -316,7 +320,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       const plan = enemies.current.stage?.();
       const staged = new Set<Agent>();
       if (plan) for (const z of ALL) {
-        const spot = plan[z]; if (!spot || z === steerRef.current || z === ctrlRef.current) continue;
+        const spot = plan[z]; if (!spot || liveSquad.hp[z] <= 0 || z === steerRef.current || z === ctrlRef.current) continue;
         staged.add(z);
         const me = coords.current[z], t = ts.length ? nearestTo(me) : undefined;
         if (z === "Brix" && t && cdist(me, t) <= REACH.Brix * 1.2) { faceTo(z, t); const now = performance.now(); if (now > aiNext[z]) { aiNext[z] = now + 450 + Math.random() * 350; void strike(z, Math.random() < 0.35, true); } continue; }
@@ -325,13 +329,18 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (!ts.length) return;
       const taken: Point[] = [];
       const ctl = ctrlRef.current; const ctlT = nearestTo(coords.current[ctl]); if (ctlT) taken.push(ctlT);
-      ALL.filter(z => z !== ctl && !staged.has(z)).forEach((z, i) => {
+      ALL.filter(z => z !== ctl && !staged.has(z) && liveSquad.hp[z] > 0).forEach((z, i) => {
         const me = coords.current[z];
+        // Revive: a companion runs to a downed crewmate first.
+        const fallen = ALL.find(o => o !== z && liveSquad.hp[o] <= 0);
+        if (fallen) { const f = coords.current[fallen]; if (cdist(me, f) > 4) void walk(z, [clampB({ x: f.x + (me.x < f.x ? -3 : 3), y: f.y })]); return; }
         const sorted = ts.slice().sort((u, v) => cdist(u, me) - cdist(v, me));
         const t = sorted.find(u => !taken.some(k => k === u)) ?? sorted[0]!;
         taken.push(t);
         const now = performance.now();
-        if (cdist(me, t) <= REACH[z] * 0.9) { if (now > aiNext[z]) { aiNext[z] = now + 1300 + Math.random() * 900; void strike(z, false, true); } return; }
+        // On their last pip companions back off instead of trading bites.
+        if (liveSquad.hp[z] === 1 && cdist(me, t) < 10) { void walk(z, [clampB({ x: me.x + (me.x < t.x ? -10 : 10), y: me.y })]); return; }
+        if (cdist(me, t) <= REACH[z] * 0.9) { if (now > aiNext[z]) { aiNext[z] = now + 800 + Math.random() * 600; void strike(z, false, true); } return; }
         // Move to a stand-off spot: Oz keeps distance, the brawlers flank from opposite sides.
         const side = i === 0 ? -1 : 1;
         let goal = z === "Oz" ? { x: t.x + (me.x < t.x ? -18 : 18), y: t.y + side * 3 } : { x: t.x + side * 5, y: t.y + 1 };
@@ -763,7 +772,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (btn) {
         const a = ALL.find(z => markers.current[z] === btn);
         const last = lastMarkerTap.current, now = performance.now();
-        if (a && last && last.a === a && now - last.t < 380) {
+        if (a && last && last.a === a && now - last.t < 380 && liveSquad.hp[a] > 0) {
           lastMarkerTap.current = null;
           ctrlRef.current = a; setCtrl(a);
           if (!combat) { const next = steerRef.current === a ? null : a; steerRef.current = next; setSteered(next); }
@@ -789,7 +798,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         <svg viewBox="0 0 28 42" aria-hidden="true"><rect className="mp3-case" x="3" y="2" width="22" height="38" rx="3"/><rect className="mp3-screen" x="7" y="7" width="14" height="11" rx="1"/><path className="mp3-crack" d="M15 7l-3 4 5 2-4 5"/><circle className="mp3-wheel" cx="14" cy="29" r="6"/><circle className="mp3-screen" cx="14" cy="29" r="2"/></svg>
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
-      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared}/>}
+      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined}/>}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}

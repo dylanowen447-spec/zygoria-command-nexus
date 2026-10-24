@@ -19,7 +19,7 @@ export function farSpawns(cands: Point[], crew: Record<Agent, Point>, n: number)
   return [...cands].sort((a, b) => dist(b) - dist(a)).slice(0, n);
 }
 
-export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n: number) => void) {
+export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n: number, who?: Agent) => void) {
   if (r.dead) return;
   // Knockback slide: a punched rat skids across the street, decaying fast, never past the bounds.
   if (r.kv) {
@@ -38,7 +38,7 @@ export function stepRat(r: Rat, dt: number, crew: Record<Agent, Point>, hurt: (n
     r.mode = "bite"; r.t = 0;
     // Lunge: the rat snaps forward into the Zig as it bites.
     r.x = clamp(r.x + dx / d * Math.min(2, d * 0.6), 3, 97); r.y = clamp(r.y + dy / d * Math.min(1.2, d * 0.4), 42, 97);
-    if (d < 5) { hurt(2); const m = (Object.keys(crew) as Agent[]).filter(k => crew[k] === c), who = m.length > 1 && m.includes("Brix" as Agent) ? ("Brix" as Agent) : m[0]; if (who && typeof window !== "undefined") { window.dispatchEvent(new CustomEvent("zig-hurt", { detail: who })); window.dispatchEvent(new CustomEvent("zig-bitten", { detail: { who, dx: dx / d, dy: dy / d } })); } }
+    if (d < 5) { const m = (Object.keys(crew) as Agent[]).filter(k => crew[k] === c), who = m.length > 1 && m.includes("Brix" as Agent) ? ("Brix" as Agent) : m[0]; hurt(2, who); if (who && typeof window !== "undefined") { window.dispatchEvent(new CustomEvent("zig-hurt", { detail: who })); window.dispatchEvent(new CustomEvent("zig-bitten", { detail: { who, dx: dx / d, dy: dy / d } })); } }
   } else if (r.mode === "bite" && r.t > 0.3) {
     r.mode = "retreat"; r.t = 0;
     r.back = { x: clamp(r.x - dx / d * 13, 3, 97), y: clamp(r.y - dy / d * 9, 42, 97) };
