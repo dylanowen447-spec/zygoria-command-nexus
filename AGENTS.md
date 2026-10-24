@@ -30,4 +30,5 @@
 - LongWalkAmbush is isolated inside PrologueScene and sizes foes from live crew sprites so exploration and other chapters stay untouched.
 - Direct combat (PrologueScene) reads enemies/bounds via CombatApi and damages only through the ambush hitRef; outside fights a double-tapped Zig is player-steered and skipped by exploring — so ambushes own health, damage and story.
 - OldCityRats owns wave timing; city-waves defines approaches and counts so Long Walk combat remains independent.
+- Post-fight prologue discoveries use objective data gated by the encounter's completion callback, keeping movement and dialogue in the existing exploration flow and preventing early chapter exits.
 - Melee targeting prefers cursor-adjacent reachable foes, then nearest reachable foe, so stale cursor positions cannot cancel punches.

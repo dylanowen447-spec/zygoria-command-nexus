@@ -11,6 +11,8 @@ type Lines = Record<Agent, string[]>;
 export type Spot = { at: Point; lines: Lines; /** Words a visitor can use to send a Zig here. */ words?: string };
 export type Objective = {
   spot: string;
+  /** A discovery that only becomes available once this scene's fight is fully cleared. */
+  afterCombat?: boolean;
   /** Only this Zig can find it (e.g. their own book); otherwise anyone. */
   owner?: Agent;
   /** Lines the finder says, in order. */
@@ -135,9 +137,10 @@ const OLD_CITY: Scene = {
     library: { at: { x: 86, y: 32 }, words: "library|steps|door|arch|building", lines: { Oz: [], Brix: [], Lowkey: [] } },
   },
   objectives: [
+    { spot: "crossing", owner: "Oz", afterCombat: true, tag: { label: "BROKEN MP3 PLAYER", x: 45, y: 58 }, found: { Oz: ["Hang on. Something shiny in the dust.", "An MP3 player? Screen's cracked… and it won't switch on.", "I'm keeping it. Brix might get it working when we're somewhere safe."], Brix: [], Lowkey: [] } },
     { spot: "markings", owner: "Lowkey", tag: { label: "THE SIGN", x: 30, y: 33 }, found: { Lowkey: ["Same symbol as the big doors down the lane.", "It's not decoration. It points the way in — the side bolt."], Oz: [], Brix: [] } },
     { spot: "bus", owner: "Brix", tag: { label: "IRON BAR", x: 22, y: 58 }, found: { Brix: ["Loose bar on this wreck.", "Good lever. Taking it."], Oz: [], Lowkey: [] } },
-    { spot: "library", needs: ["markings", "bus"], tag: { label: "THE LIBRARY", x: 68, y: 12 },
+    { spot: "library", needs: ["markings", "bus", "crossing"], tag: { label: "THE LIBRARY", x: 68, y: 12 },
       locked: { Oz: ["Big doors… chained shut. Rude.", "Need something to open these."], Brix: ["Chained. Rusted solid.", "Need a lever."], Lowkey: ["Locked. There's a mark on the bolt.", "I've seen that mark somewhere."] },
       found: { Oz: ["Bar in the bolt — Brix, heave!", "It's OPEN! Lads, over here!"], Brix: ["Bar in the bolt. Heave.", "Open. Over here."], Lowkey: ["The bolt the sign showed. Bar here.", "It gives. Come."] } },
   ],
@@ -150,6 +153,7 @@ const OLD_CITY: Scene = {
   curios: { Oz: ["Found a little cog. Pocketing it.", "A tin with a picture of a fish on it. Empty. Tragic."], Brix: ["Copper wire. Keeping that.", "Bolts here were cut, not rusted. Someone salvaged this."], Lowkey: ["Torn scrap of paper. 'River… downstream… others.' The rest is gone.", "Small tracks in the dust. Not ours."] },
   story: "Day one, later. You walked from the landing crater into a dead, silent city: an overturned bus, a fallen statue, a dry fountain, strange painted symbols. You do not know what happened here and have found no water.",
   learned: {
+    crossing: "After the last rats were beaten, Oz found a scratched black MP3 player in the street dust. Its screen is cracked and it will not switch on. He pocketed it to show Brix once they find somewhere safe; it has not been repaired or powered yet.",
     markings: "Lowkey worked out the painted symbol matches a bolt on some big doors down a side lane.",
     bus: "Brix pulled a loose iron bar off the overturned bus to use as a lever.",
     library: "Down a side lane you found an old stone library chained shut; with Lowkey's sign and Brix's iron bar you forced the bolt open. Words carved over the arch, you can somehow read them.",
