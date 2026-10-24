@@ -1391,7 +1391,7 @@ function CommandCentre() {
     if (!canClick()) return;
     const pick = steerRef.current ?? selected ?? "Brix";
     const who: Agent = pick === "Moxi" ? "Brix" : pick;
-    const door = place === "oz" ? { x: 19, y: 60 } : { x: 71, y: 52.8 };
+    const door = place === "oz" ? { x: 19, y: 60 } : place === "lowkey" ? BED.Lowkey.out : { x: 71, y: 52.8 };
     const run = ++runId.current;
     const pts = routeNodes(coords.current.sanctuary[who], door);
     if (!pts.length || distance(pts.at(-1)!, door) > 1) pts.push(door);
@@ -1698,6 +1698,7 @@ function CommandCentre() {
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: "74.5%", top: "44%" }} aria-label="Enter Brix's workshop" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("brix"); }}/>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: "18%", top: "56%" }} aria-label="Enter Oz's shack" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("oz"); }}/>}
+            {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: `${BED.Lowkey.door.x}%`, top: `${BED.Lowkey.door.y}%` }} aria-label="Enter Lowkey's mountain home" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("lowkey"); }}/>}
             {zone.id === "sanctuary" && prologue === "off" && <BoulderPot happy={petHappy} asleep={sleepStage === "asleep"}/>}
             {zone.id === "sanctuary" && prologue === "off" && <SanctuaryTV escaped={tvEscaped} controlled={steer} onLog={(who, text) => log(who as Agent, text)} onDone={() => setTvDone(true)} onFightStart={tvFightStart}/>}
             {zone.id === "sanctuary" && thoth && <div className="thoth" style={{ left: `${HOME(zone, "Lowkey").x + 8}%`, top: `${HOME(zone, "Lowkey").y}%` }} role="img" aria-label="Thoth, a robed ibis-headed figure"><img src={thothImg.url} alt="" draggable={false}/>{thoth.line && !(tvEscaped && !tvDone) && <span className="thoth-bubble">{thoth.line}</span>}</div>}
