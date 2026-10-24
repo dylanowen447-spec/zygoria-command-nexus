@@ -331,16 +331,16 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       const ctl = ctrlRef.current; const ctlT = nearestTo(coords.current[ctl]); if (ctlT) taken.push(ctlT);
       ALL.filter(z => z !== ctl && !staged.has(z) && liveSquad.hp[z] > 0).forEach((z, i) => {
         const me = coords.current[z];
-        // Revive: a companion runs to a downed crewmate first.
-        const fallen = ALL.find(o => o !== z && liveSquad.hp[o] <= 0);
-        if (fallen) { const f = coords.current[fallen]; if (cdist(me, f) > 4) void walk(z, [clampB({ x: f.x + (me.x < f.x ? -3 : 3), y: f.y })]); return; }
-        const sorted = ts.slice().sort((u, v) => cdist(u, me) - cdist(v, me));
+        // Downed crewmates recover on their own; companions keep fighting. Prefer rats within reach, then rats closing on a brother.
+        const inReach = ts.filter(u => cdist(u, me) <= REACH[z] * 0.9).sort((u, v) => cdist(u, me) - cdist(v, me));
+        const near = (u: Point) => Math.min(...ALL.filter(o => liveSquad.hp[o] > 0).map(o => cdist(u, coords.current[o])));
+        const sorted = inReach.length ? inReach : ts.slice().sort((u, v) => (cdist(u, me) + near(u) * 0.8) - (cdist(v, me) + near(v) * 0.8));
         const t = sorted.find(u => !taken.some(k => k === u)) ?? sorted[0]!;
         taken.push(t);
         const now = performance.now();
         // On their last pip companions back off instead of trading bites.
         if (liveSquad.hp[z] === 1 && cdist(me, t) < 10) { void walk(z, [clampB({ x: me.x + (me.x < t.x ? -10 : 10), y: me.y })]); return; }
-        if (cdist(me, t) <= REACH[z] * 0.9) { if (now > aiNext[z]) { aiNext[z] = now + 800 + Math.random() * 600; void strike(z, false, true); } return; }
+        if (cdist(me, t) <= REACH[z] * 0.9) { if (now > aiNext[z]) { aiNext[z] = now + 400 + Math.random() * 200; void strike(z, false, true); } return; }
         // Move to a stand-off spot: Oz keeps distance, the brawlers flank from opposite sides.
         const side = i === 0 ? -1 : 1;
         let goal = z === "Oz" ? { x: t.x + (me.x < t.x ? -18 : 18), y: t.y + side * 3 } : { x: t.x + side * 5, y: t.y + 1 };
