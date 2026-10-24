@@ -2,6 +2,7 @@ import { playSfx, playDefeatSting } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
 import { GameOverScreen } from "@/components/GameOverScreen";
+import gameOverArt from "@/assets/game-over.webp.asset.json";
 import { DEFAULT_BOUNDS, brixShockwave, hitCtx, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat, type StagePlan } from "@/lib/rat-ai";
 import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";

@@ -1,4 +1,4 @@
-import gameOver from "@/assets/game-over.png.asset.json";
+import gameOver from "@/assets/game-over.webp.asset.json";
 
 /** Full-screen defeat artwork; buttons sit over the artwork's own button area. */
 export function GameOverScreen({ onRetry, onRestart, onSanctuary }: { onRetry: () => void; onRestart: () => void; onSanctuary?: (() => void) | undefined }) {
