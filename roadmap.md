@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Add and verify Oz finding the broken MP3 player after the Old City rats
+- [x] Add and verify Oz finding the broken MP3 player after the Old City rats
 
 - [x] Identify Dylan Sion Owen as Zygoria's creator in page information and visible credits; verify rendered attribution
 
