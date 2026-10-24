@@ -735,6 +735,7 @@
 .combat-attack small{font-size:10px;opacity:.75;font-weight:600}
 .combat-attack.is-charged{border-color:oklch(0.85 0.17 80);box-shadow:0 0 16px oklch(0.85 0.17 80 / .8)}
 .combat-hint{position:absolute;left:50%;bottom:1.5%;transform:translateX(-50%);z-index:2999;font-size:11px;padding:3px 10px;border-radius:999px;background:oklch(0.18 0.03 250);color:oklch(0.9 0.02 220);white-space:nowrap;pointer-events:none}
+@media (hover:hover) and (pointer:fine){.combat-hint{display:none}}
 @media (max-width:600px){.combat-attack{width:56px;height:56px;font-size:10px}.combat-attack small{font-size:8px}.combat-hint{display:none}}
 .combat-attack.is-idle{opacity:.8}
 @media (hover:hover) and (pointer:fine){.combat-attack{display:none}}
