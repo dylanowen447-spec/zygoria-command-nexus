@@ -1010,3 +1010,27 @@
 .game-over-btn.is-primary { border-color: var(--destructive); box-shadow: 0 0 14px var(--destructive), inset 0 0 10px color-mix(in oklab, var(--destructive) 50%, transparent); }
 @media (max-width: 600px) { .game-over-actions { bottom: 2%; gap: .35rem; } .game-over-btn { font-size: .6rem; padding: .32rem .55rem; letter-spacing: .08em; border-width: 1px; } }
 .game-over-btn:hover, .game-over-btn:focus-visible { filter: brightness(1.25); outline: none; }
+
+/* Unified command HUD: zone selector + crew vitals in one glass bar */
+:root{--food:oklch(0.8 0.15 75);--rest:oklch(0.7 0.17 295)}
+.zone-selector{position:relative;margin:-13px 0 12px;padding:7px 9px;gap:6px;background:linear-gradient(90deg,oklch(0.14 0.03 258 / 92%),oklch(0.12 0.025 262 / 88%));border:1px solid var(--border);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);box-shadow:inset 0 0 18px oklch(0.7 0.16 210 / 7%)}
+.zone-selector:before{content:'';position:absolute;left:0;top:0;width:40px;height:1px;background:var(--electric);box-shadow:0 0 6px var(--electric)}
+.hud-vitals{order:99;margin-left:auto;display:flex;align-items:center;gap:6px}
+.hud-vitals .hunger-meter{border-color:var(--line-soft);background:oklch(0.09 0.02 260 / 70%);padding:4px 7px}
+.hud-vitals .hunger-label{color:var(--foreground)}
+.hud-vitals .hunger-num{min-width:28px;text-align:right;color:var(--foreground)}
+.hud-vitals .hunger-track{height:4px;border-radius:0;box-shadow:inset 0 0 0 1px oklch(0 0 0 / 40%)}
+.hud-vitals .hunger-meter:not(.water-meter):not(.rest-meter) .hunger-fill{background:var(--food);box-shadow:0 0 6px var(--food)}
+.hud-vitals .water-meter .hunger-fill{box-shadow:0 0 6px var(--water)}
+.hud-vitals .rest-meter .hunger-fill{background:var(--rest);box-shadow:0 0 6px var(--rest)}
+.hud-vitals .hunger-meter.is-low{border-color:var(--destructive);animation:hudLow 1.2s ease-in-out infinite alternate}
+.hud-vitals .hunger-meter.is-low .hunger-fill{background:var(--destructive);box-shadow:0 0 6px var(--destructive)}
+@keyframes hudLow{from{box-shadow:none}to{box-shadow:0 0 8px var(--destructive)}}
+@media(max-width:900px){
+  .zone-selector{margin:-8px 0 10px;padding:6px}
+  .hud-vitals{order:-1;width:100%;margin:0 0 2px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+  .hud-vitals .stage-chip{grid-column:1/-1;text-align:center;padding:3px 6px;font-size:8px}
+  .hud-vitals .hunger-meter{gap:4px;padding:4px 5px;font-size:7.5px;letter-spacing:.5px;min-width:0}
+  .hud-vitals .hunger-track{flex:1;width:auto;min-width:14px}
+  .hud-vitals .hunger-num{min-width:0}
+}
