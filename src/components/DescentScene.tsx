@@ -56,9 +56,16 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave }: { char
     let last = performance.now();
     const step = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      const d = target.current - s.current, moving = Math.abs(d) > 0.02;
-      if (moving) s.current += Math.sign(d) * Math.min(SPEED * dt, Math.abs(d));
-      else if (d !== 0) { s.current = target.current; const f = then.current; then.current = null; f?.(); }
+      const d = target.current - s.current;
+      let moving = Math.abs(d) > 0.02;
+      if (moving) {
+        s.current += Math.sign(d) * Math.min(SPEED * dt, Math.abs(d));
+        // Landed on the target: snap, stop, and hand over to whatever the walk was for.
+        if (Math.abs(target.current - s.current) <= 0.02) {
+          s.current = target.current; moving = false;
+          const f = then.current; then.current = null; f?.();
+        }
+      }
       const back = d < -0.02;
       setWalkers(crew.map((_c, i) => {
         const { p, dx, dy } = pointAt(s.current - LAGS[i]!), n = Math.hypot(dx, dy) || 1, off = SIDES[i]!;
