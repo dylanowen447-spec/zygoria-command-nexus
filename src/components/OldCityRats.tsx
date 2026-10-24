@@ -7,7 +7,7 @@ import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
 import { CITY_RAT_ARRIVAL, ARRIVAL_GAP_MS, BRIX_SWARM_CALL, SWARM_CLEARED } from "@/lib/fight-lines";
-import { IFRAME_MS, KILLS_PER_HEAL, KNEEL_MS, MAX_BITERS, MAX_HP, allDown, damage, fullSquad, heal, liveSquad, revive, type Squad } from "@/lib/squad-health";
+import { IFRAME_MS, KILLS_PER_HEAL, KNEEL_MS, MAX_BITERS, MAX_HP, mayBounceBack, allDown, damage, fullSquad, heal, liveSquad, revive, type Squad } from "@/lib/squad-health";
 
 /** Nine finite directional waves, isolated from the scene's story progression. */
 const AGENTS: Agent[] = ["Brix", "Oz", "Lowkey"];
@@ -30,6 +30,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   const [squad, setSquad] = useState<Squad>(fullSquad);
   const squadRef = useRef<Squad>(fullSquad());
   const reviveT = useRef<Record<Agent, number>>({ Brix: 0, Oz: 0, Lowkey: 0 });
+  const winds = useRef<Record<Agent, number>>({ Brix: 0, Oz: 0, Lowkey: 0 });
   const [wave, setWave] = useState(0);
   const [cleared, setCleared] = useState(false);
   const [defeat, setDefeat] = useState<"" | "falling" | "over">("");
@@ -75,6 +76,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
     const setSq = (s: Squad) => { squadRef.current = s; liveSquad.hp = s; setSquad(s); };
     const lastBite: Record<Agent, number> = { Brix: -1e9, Oz: -1e9, Lowkey: -1e9 };
     let kills = 0;
+    winds.current = { Brix: 0, Oz: 0, Lowkey: 0 };
     const hurt = (_n: number, who?: Agent) => {
       if (!who || over || squadRef.current[who] <= 0) return;
       const t = performance.now(); if (t - lastBite[who] < IFRAME_MS) return; lastBite[who] = t;
@@ -116,6 +118,8 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       if (over) { force(f => (f + 1) % 1e6); raf = requestAnimationFrame(tick); return; }
       if (nextWaveAt && now >= nextWaveAt) {
         waveIndex += 1; nextWaveAt = 0; curWave.current = waveIndex;
+        winds.current = { Brix: 0, Oz: 0, Lowkey: 0 };
+        if (waveIndex > 0) { let s = squadRef.current; for (const a of AGENTS) s = revive(s, a); setSq(s); }
         startBattleMusic();
         rats.current = cityWaveSpawns(waveIndex).map(p => makeRat(nextId++, p));
         setWave(waveIndex + 1);
@@ -132,7 +136,8 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       // Second wind: a downed Zig takes a knee for 1.2s, shoves nearby rats off, then is back up.
       const sq = squadRef.current;
       for (const a of AGENTS) {
-        if (sq[a] > 0 || now - reviveT.current[a] < KNEEL_MS) continue;
+        if (sq[a] > 0 || !mayBounceBack(winds.current[a]) || now - reviveT.current[a] < KNEEL_MS) continue;
+        winds.current[a] += 1;
         const z = crew.current[a];
         for (const r of rats.current) { if (r.dead) continue; const ex = r.x - z.x, ey = r.y - z.y, e = Math.hypot(ex, ey) || 1; if (e < 14) { r.kv = { x: ex / e * 60, y: ey / e * 35 }; r.mode = "pause"; r.t = -0.4; } }
         lastBite[a] = now; setSq(revive(squadRef.current, a)); sayRef.current(a, UP_LINES[a]);
@@ -188,7 +193,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
     {wave > 0 && !cleared && AGENTS.map(a => {
       const p = crew.current[a];
       return <span key={a} className={`zig-pips ${squad[a] <= 0 ? "is-down" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-hidden="true">
-        {squad[a] <= 0
+        {squad[a] <= 0 && !mayBounceBack(winds.current[a]) ? null : squad[a] <= 0
           ? <span className="revive-bar"><span style={{ width: `${Math.min(100, (now - reviveT.current[a]) / KNEEL_MS * 100)}%` }}/></span>
           : Array.from({ length: MAX_HP[a] }, (_, i) => <span key={i} className={`pip ${i < squad[a] ? "on" : ""}`}/>)}
       </span>;

@@ -9,6 +9,9 @@ export const KNEEL_MS = 1200;
 export const IFRAME_MS = 800;
 export const MAX_BITERS = 3;
 export const KILLS_PER_HEAL = 3;
+/** Knee bounce-backs each Zig gets per wave; after that a fall keeps them down until the wave ends. */
+export const SECOND_WINDS = 1;
+export const mayBounceBack = (used: number) => used < SECOND_WINDS;
 
 export type Squad = Record<Agent, number>;
 export const fullSquad = (): Squad => ({ ...MAX_HP });
