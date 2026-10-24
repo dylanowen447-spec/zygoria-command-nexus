@@ -9,13 +9,14 @@ import { CITY_RAT_ARRIVAL, ARRIVAL_GAP_MS, BRIX_SWARM_CALL, SWARM_CLEARED } from
 
 /** Nine finite directional waves, isolated from the scene's story progression. */
 
-export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay }: {
+export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay, onCleared }: {
   combatRef?: MutableRefObject<CombatApi>;
   stageRef: RefObject<HTMLDivElement | null>;
   hitRef: MutableRefObject<(p: Point) => boolean>;
   crew: MutableRefObject<Record<Agent, Point>>;
   onAlarm: (situation: string) => void;
   onSay: (who: Agent, text: string) => void;
+  onCleared: () => void;
 }) {
   const [, force] = useState(0);
   const rats = useRef<Rat[]>([]);
@@ -25,6 +26,8 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay 
   const [wave, setWave] = useState(0);
   const [cleared, setCleared] = useState(false);
   const stage = useRef<StagePlan>(null);
+  const clearedCallback = useRef(onCleared);
+  clearedCallback.current = onCleared;
 
   // Rats stand 5% shorter than Oz, matching his on-screen height on any device.
   useEffect(() => {
@@ -83,7 +86,9 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay 
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (waveIndex >= 0 && rats.current.length === 0 && !nextWaveAt) {
         if (waveIndex === CITY_WAVES - 1) {
+          stage.current = null;
           stopBattleMusic(); setCleared(true); force(f => f + 1);
+          clearedCallback.current();
           return;
         }
         if (waveIndex === 0) {

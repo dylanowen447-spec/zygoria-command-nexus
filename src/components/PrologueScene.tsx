@@ -49,6 +49,14 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const [bubbles, setBubbles] = useState<Partial<Record<Agent, string>>>({});
   const [found, setFound] = useState<string[]>([]);
   const [done, setDone] = useState(false);
+  const cityRatsCleared = useRef(false);
+  const [ratsCleared, setRatsCleared] = useState(false);
+  const afterCityFight = useRef<() => void>(() => undefined);
+  const onCityCleared = useCallback(() => {
+    cityRatsCleared.current = true;
+    setRatsCleared(true);
+    afterCityFight.current();
+  }, []);
   // After the Long Walk's valley moment, don't wait for a tap: carry on to the Sanctuary on its own.
   useEffect(() => {
     if (done && scene.id === "long-walk") { const t = setTimeout(onNext, 6000); return () => clearTimeout(t); }
@@ -376,6 +384,15 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     const used = new Set<string>();
     const claimed = new Set<string>();
     const found = new Set<string>();
+    const objectiveAvailable = (o: Scene["objectives"][number]) => !o.afterCombat || cityRatsCleared.current;
+    afterCityFight.current = () => {
+      const discovery = scene.objectives.find(o => o.afterCombat && o.owner === "Oz");
+      if (!discovery || found.has(discovery.spot)) return;
+      steerRef.current = null; setSteered(null);
+      claimed.delete(discovery.spot);
+      orders.Oz = discovery.spot;
+      cancel.Oz = true;
+    };
     let unlockedAt = 0, finished = false;
     const start = performance.now();
     const line = (a: Agent, spot: string) => {
@@ -400,7 +417,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
           // Walking a steered Zig onto a point of interest starts its task straight away.
           let arrived: string | undefined;
           while (alive && steerRef.current === a && !inCombat()) {
-            arrived = scene.objectives.find(o => !found.has(o.spot) && dist(scene.spots[o.spot]!.at, coords.current[a]) < 5)?.spot;
+            arrived = scene.objectives.find(o => objectiveAvailable(o) && !found.has(o.spot) && dist(scene.spots[o.spot]!.at, coords.current[a]) < 5)?.spot;
             if (arrived) break;
             await wait(300);
           }
@@ -427,7 +444,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         const taken = new Set(ALL.filter(z => z !== a).flatMap(z => [at[z], heading[z]].filter(Boolean) as string[]));
         const ordered = orders[a];
         delete orders[a];
-        const goal = ordered ? undefined : unlockedAt ? scene.objectives.find(o => !claimed.has(o.spot) && (!o.owner || o.owner === a) && !taken.has(o.spot) && (o.needs ?? []).every(n => found.has(n))) : undefined;
+        const goal = ordered ? undefined : unlockedAt ? scene.objectives.find(o => objectiveAvailable(o) && !claimed.has(o.spot) && (!o.owner || o.owner === a) && !taken.has(o.spot) && (o.needs ?? []).every(n => found.has(n))) : undefined;
         let target: string;
         if (ordered) { target = ordered; if (objectiveSpots.has(ordered)) claimed.add(ordered); }
         else if (goal && (Math.random() < 0.4 || performance.now() - unlockedAt > 25000)) { target = goal.spot; claimed.add(goal.spot); }
@@ -451,6 +468,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         }
         at[a] = target; seen[a].add(target);
         const objective = scene.objectives.find(o => o.spot === target);
+        if (objective && !objectiveAvailable(objective)) {
+          claimed.delete(objective.spot);
+          await wait(500);
+          continue;
+        }
         if (objective && objective.owner && objective.owner !== a) {
           say(a, `Not mine. ${objective.owner}, this one's yours.`); claimed.delete(objective.spot);
           orders[objective.owner] = objective.spot; if (heading[objective.owner]) cancel[objective.owner] = true;
@@ -701,7 +723,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       setLookAway(false);
       ALL.forEach(a => void explore(a));
     })();
-    return () => { alive = false; autoFinish.current = () => {}; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
+    return () => { alive = false; autoFinish.current = () => {}; afterCityFight.current = () => {}; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, [scene]);
 
   // Space: tap = quick attack, hold ~0.6s then release = heavy. Key auto-repeat is ignored.
@@ -756,8 +778,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       {bolts.map(b => <div key={`f${b.id}`} className="zap-flash" style={{ left: `${b.x}%`, top: `${b.y}%` }} />)}
       {hits.map(h => <div key={h.id} className={`combat-hit is-${h.kind}`} style={{ left: `${h.x}%`, top: `${h.y}%` }} aria-hidden="true"/>)}
       {scene.objectives.filter(o => found.includes(o.spot)).map(o => <div key={o.spot} className="location-tag zone-tag prologue-found" style={{ left: `${o.tag.x}%`, top: `${o.tag.y}%` }}><span className="location-line"/> {o.tag.label}</div>)}
+      {scene.id === "city" && ratsCleared && !found.includes("crossing") && <div className="city-mp3" role="img" aria-label="Broken MP3 player in the street dust" style={{ left: `${scene.spots["crossing"]?.at.x ?? 45}%`, top: `${scene.spots["crossing"]?.at.y ?? 58}%` }}>
+        <svg viewBox="0 0 28 42" aria-hidden="true"><rect className="mp3-case" x="3" y="2" width="22" height="38" rx="3"/><rect className="mp3-screen" x="7" y="7" width="14" height="11" rx="1"/><path className="mp3-crack" d="M15 7l-3 4 5 2-4 5"/><circle className="mp3-wheel" cx="14" cy="29" r="6"/><circle className="mp3-screen" cx="14" cy="29" r="2"/></svg>
+      </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
-      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay}/>}
+      {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared}/>}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
