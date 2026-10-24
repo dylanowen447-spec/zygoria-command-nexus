@@ -123,7 +123,7 @@
 @keyframes ozBreathe{from{translate:0 0}to{translate:0 -.6px}}
 @media(max-width:600px){.sheet-sprite{width:33px;height:42px}}
 @media(prefers-reduced-motion:reduce){.agent-marker.is-walking .sheet-frames{animation-duration:.5s,.25s!important;animation-iteration-count:infinite!important}}
-.sheet-oz{transform:translateX(-50%) scale(.74);transform-origin:center bottom}
+.sheet-oz{transform:translateX(-50%) scale(.814);transform-origin:center bottom}
 /* Oz's supplied directional sheet has seven columns (rest + six strides) and four rows (front, left, right, back). */
 .marker-oz .sheet-frames{background-size:700% 400%;background-position:0 0}
 .marker-oz.is-walking.oz-facing-left .sheet-frames{background-position:0 33.3333%}
