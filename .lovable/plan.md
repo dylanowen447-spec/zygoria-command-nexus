@@ -5,7 +5,7 @@
 2. **Safe moment after a bite**: after a bite, that Zig can't be bitten again for 1.2 seconds, so you have time to punch back.
 3. **Fighting back heals you**: every 2 rats you knock out gives everyone still standing +1 health pip (on top of the existing heal for a charged-punch kill and for clearing a wave).
 4. **Quick knee drop, no lying flat**: at 0 pips a Zig drops to one knee, stays upright and dims for 1.2 seconds. A shove knocks nearby rats back, then he gets up with 2 pips. You only lose if all three are on their knees at the same moment.
-5. **Smaller Game Over buttons**: TRY AGAIN and RESTART/RETURN become compact side-by-side buttons that don't cover the artwork.
+5. **Smaller Game Over buttons, especially on phone**: TRY AGAIN and RESTART/RETURN become small side-by-side buttons near the bottom edge. On phones they get extra-small text and padding, so the death screen art stays clearly visible.
 
 ## Technical details
 - `rat-ai.ts`: an attack-token check is added before a rat starts its wind-up. A rat without a token holds a ring around its target.
