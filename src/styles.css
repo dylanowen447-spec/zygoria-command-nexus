@@ -1007,7 +1007,7 @@
 .pip.on { background: var(--health); box-shadow: 0 0 4px var(--health); }
 .agent-marker.is-downed .sheet-sprite { transform-origin: 50% 100%; transform: scaleY(.78) translateY(4%); filter: grayscale(.6) brightness(.7); transition: transform .15s ease-in, filter .15s; }
 .agent-marker.is-downed { pointer-events: none; }
-.defeat-fade { position: fixed; inset: 0; z-index: 9000; pointer-events: none; background: radial-gradient(circle, transparent 20%, color-mix(in oklab, var(--destructive) 55%, var(--background)) 100%); animation: defeat-fade .8s ease-in forwards; }
+.defeat-fade { position: fixed; inset: 0; z-index: 900; pointer-events: none; background: radial-gradient(circle, transparent 20%, color-mix(in oklab, var(--destructive) 55%, var(--background)) 100%); animation: defeat-fade .8s ease-in forwards; }
 .defeat-fade.is-over { opacity: 1; animation: none; }
 @keyframes defeat-fade { from { opacity: 0; } to { opacity: 1; } }
 .game-over { position: fixed; inset: 0; z-index: 9100; display: grid; place-items: center; background: var(--background); animation: defeat-fade .6s ease-out; }
@@ -1063,7 +1063,7 @@
 .descent-scene .haven-layer .haven-zig{bottom:var(--feet,20%)!important}
 
 /* Storybook opening — Page 01 */
-.storybook { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; padding: 1rem; background: radial-gradient(ellipse at center, var(--surface-raised) 0%, var(--background) 75%); overflow: hidden; }
+.storybook { position: fixed; inset: 0; z-index: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; padding: 1rem; background: radial-gradient(ellipse at center, var(--surface-raised) 0%, var(--background) 75%); overflow: hidden; }
 .storybook-book { position: relative; height: min(80vh, 92vw); aspect-ratio: 1; perspective: 1600px; opacity: 0; transform: translateY(14px) scale(0.97); transition: opacity 0.9s ease, transform 0.9s ease; }
 .storybook.is-ready .storybook-book { opacity: 1; transform: none; }
 .storybook-page { position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; overflow: hidden; transform-origin: left center; box-shadow: 0 0 0 1px var(--workshop-glow), 0 0 0 6px var(--surface), 0 0 0 7px var(--gold), 0 24px 60px oklch(0 0 0 / 65%), 0 0 60px var(--workshop-glow); transition: transform 0.9s cubic-bezier(.6,.05,.4,1), opacity 0.9s ease, filter 0.9s ease; }
