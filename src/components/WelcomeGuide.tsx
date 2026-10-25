@@ -21,9 +21,7 @@ export function WelcomeGuide({ onAsk }: { onAsk?: (text: string) => void }) {
   const tabRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    try {
-      if (localStorage.getItem(KEY) !== "seen") setOpen(true);
-    } catch { /* guide still shows when storage is unavailable */ }
+    // Guide stays closed until the player taps ✦ GUIDE.
     setReady(true);
   }, []);
 
