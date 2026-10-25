@@ -76,7 +76,7 @@ const LANDING: Scene = {
   alt: "Old Earth landing site: three cracked egg pods glowing blue, yellow and red in a dusty crater, a broken overpass and a distant ruined city at sunset",
   label: "OLD EARTH / LANDING SITE",
   bottom: "IMPACT CRATER — DAY ONE",
-  spawn: { Oz: { from: { x: 55.5, y: 55 }, out: "yellow" }, Brix: { from: { x: 33, y: 56 }, out: "blue" }, Lowkey: { from: { x: 74, y: 57 }, out: "red" } },
+  spawn: { Oz: { from: { x: 52, y: 70 }, out: "yellow" }, Brix: { from: { x: 30, y: 68 }, out: "blue" }, Lowkey: { from: { x: 72, y: 73 }, out: "red" } },
   edges: [
     ["blue", "slabs"], ["blue", "centre"], ["blue", "trees"], ["trees", "slabs"],
     ["yellow", "centre"], ["yellow", "floor"], ["floor", "red"], ["floor", "wall"],
@@ -84,9 +84,9 @@ const LANDING: Scene = {
     ["centre", "front"], ["front", "rubble"], ["front", "slabs"], ["overpass", "rubble"],
   ],
   spots: {
-    blue: { at: { x: 35, y: 63 }, words: "blue|big (egg|pod)|brix'?s (egg|pod)", lines: { Brix: ["Hull's cracked. Frame held.", "Big egg. Built to last."], Oz: ["Brix's egg is bigger than mine. Rude.", "Still glowing in there."], Lowkey: ["Still warm inside.", "Blue light. Like a heartbeat."] } },
-    yellow: { at: { x: 57, y: 60.5 }, words: "yellow|small(est)? (egg|pod)|tiny|oz'?s (egg|pod)", lines: { Oz: ["My egg. Tiny. I like it.", "Came out of that? Me? Nice."], Brix: ["Wiring's cooked. Might salvage it later.", "Small, but the welds are clean."], Lowkey: ["Something still hums in there."] } },
-    red: { at: { x: 71, y: 64 }, words: "red|lowkey'?s (egg|pod)", lines: { Lowkey: ["Mine. Quiet in there.", "Red glow. Still fading."], Brix: ["Same build as mine. Someone made three.", "Shell's thicker on this one."], Oz: ["Lowkey's egg looks grumpy. Suits him."] } },
+    blue: { at: { x: 34, y: 76 }, words: "blue|big (egg|pod)|brix'?s (egg|pod)", lines: { Brix: ["Hull's cracked. Frame held.", "Big egg. Built to last."], Oz: ["Brix's egg is bigger than mine. Rude.", "Still glowing in there."], Lowkey: ["Still warm inside.", "Blue light. Like a heartbeat."] } },
+    yellow: { at: { x: 52, y: 78 }, words: "yellow|small(est)? (egg|pod)|tiny|oz'?s (egg|pod)", lines: { Oz: ["My egg. Tiny. I like it.", "Came out of that? Me? Nice."], Brix: ["Wiring's cooked. Might salvage it later.", "Small, but the welds are clean."], Lowkey: ["Something still hums in there."] } },
+    red: { at: { x: 70, y: 82 }, words: "red|lowkey'?s (egg|pod)", lines: { Lowkey: ["Mine. Quiet in there.", "Red glow. Still fading."], Brix: ["Same build as mine. Someone made three.", "Shell's thicker on this one."], Oz: ["Lowkey's egg looks grumpy. Suits him."] } },
     slabs: { at: { x: 31, y: 77 }, words: "slab|concrete|stone", lines: { Brix: ["Poured stone. Old Earth built heavy.", "These were walls once."], Oz: ["Bet this was a wall. Now it's a seat."], Lowkey: ["Broken clean. A long time ago."] } },
     trees: { at: { x: 21, y: 63 }, words: "tree", lines: { Lowkey: ["Nothing's grown here in years."], Oz: ["Even the trees gave up.", "Dead end. Literally."], Brix: ["Dry wood. Burns well, if we need it."] } },
     centre: { at: { x: 57, y: 72 }, words: "middle|centre|center|path|track", lines: { Oz: ["Hello? …Nobody. Great.", "Anyone? No? Cool."], Brix: ["Old track. Something walked here once."], Lowkey: ["Listen. Nothing.", "Too quiet."] } },
