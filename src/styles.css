@@ -1007,7 +1007,7 @@
 .pip.on { background: var(--health); box-shadow: 0 0 4px var(--health); }
 .agent-marker.is-downed .sheet-sprite { transform-origin: 50% 100%; transform: scaleY(.78) translateY(4%); filter: grayscale(.6) brightness(.7); transition: transform .15s ease-in, filter .15s; }
 .agent-marker.is-downed { pointer-events: none; }
-.defeat-fade { position: fixed; inset: 0; z-index: 9000; pointer-events: none; background: radial-gradient(circle, transparent 20%, color-mix(in oklab, var(--destructive) 55%, var(--background)) 100%); animation: defeat-fade .8s ease-in forwards; }
+.defeat-fade { position: fixed; inset: 0; z-index: 900; pointer-events: none; background: radial-gradient(circle, transparent 20%, color-mix(in oklab, var(--destructive) 55%, var(--background)) 100%); animation: defeat-fade .8s ease-in forwards; }
 .defeat-fade.is-over { opacity: 1; animation: none; }
 @keyframes defeat-fade { from { opacity: 0; } to { opacity: 1; } }
 .game-over { position: fixed; inset: 0; z-index: 9100; display: grid; place-items: center; background: var(--background); animation: defeat-fade .6s ease-out; }
@@ -1061,3 +1061,21 @@
 .sanctuary-exit span{position:relative;display:block;left:auto;top:auto;transform:none;font-size:9px;line-height:1.2;letter-spacing:.1em;white-space:nowrap;color:var(--foreground);background:var(--background);border:1px solid color-mix(in oklch, var(--foreground) 45%, transparent);padding:3px 8px;border-radius:3px}
 /* On the descent the crew walk the painted road, so each Zig's feet follow the path instead of the haven floor line. */
 .descent-scene .haven-layer .haven-zig{bottom:var(--feet,20%)!important}
+
+/* Storybook opening — Page 01 */
+.storybook { position: fixed; inset: 0; z-index: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; padding: 1rem; background: radial-gradient(ellipse at center, var(--surface-raised) 0%, var(--background) 75%); overflow: hidden; }
+.storybook-book { position: relative; height: min(80vh, 92vw); aspect-ratio: 1; perspective: 1600px; opacity: 0; transform: translateY(14px) scale(0.97); transition: opacity 0.9s ease, transform 0.9s ease; }
+.storybook.is-ready .storybook-book { opacity: 1; transform: none; }
+.storybook-page { position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; overflow: hidden; transform-origin: left center; box-shadow: 0 0 0 1px var(--workshop-glow), 0 0 0 6px var(--surface), 0 0 0 7px var(--gold), 0 24px 60px oklch(0 0 0 / 65%), 0 0 60px var(--workshop-glow); transition: transform 0.9s cubic-bezier(.6,.05,.4,1), opacity 0.9s ease, filter 0.9s ease; }
+.storybook-page img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
+.storybook-page::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, oklch(0 0 0 / 45%) 0%, transparent 6%, transparent 94%, oklch(1 0 0 / 6%) 100%); }
+.storybook-spine { position: absolute; left: -10px; top: 2%; bottom: 2%; width: 10px; border-radius: 4px 0 0 4px; background: linear-gradient(90deg, var(--surface), var(--gold)); opacity: 0.7; }
+.storybook.is-turning .storybook-page { transform: rotateY(-100deg); opacity: 0; filter: brightness(0.5); }
+.storybook.is-turning { animation: storybook-out 0.9s ease forwards; }
+@keyframes storybook-out { 60% { opacity: 1; } 100% { opacity: 0; } }
+.storybook-meta { display: flex; align-items: center; gap: 0.7rem; font-family: var(--font-display); letter-spacing: 0.28em; font-size: 0.72rem; color: var(--gold); }
+.storybook-rule { width: 2.5rem; height: 1px; background: var(--gold); opacity: 0.6; }
+.storybook-turn { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.85rem; color: var(--background); background: var(--gold); border: 0; border-radius: 999px; padding: 0.6rem 1.4rem; cursor: pointer; box-shadow: 0 0 22px var(--workshop-glow); animation: storybook-pulse 2.4s ease-in-out infinite; }
+.storybook-turn em { font-style: normal; opacity: 0.7; text-transform: none; letter-spacing: 0.04em; }
+@keyframes storybook-pulse { 50% { box-shadow: 0 0 36px var(--gold); } }
+@media (max-width: 640px) { .storybook-book { height: auto; width: 92%; } .storybook-meta { font-size: 0.6rem; letter-spacing: 0.18em; } .storybook-turn em { display: none; } }

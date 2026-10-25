@@ -1,4 +1,4 @@
-import ch1 from "@/assets/chapter-1.webp.asset.json";
+import ch1 from "@/assets/chapter-1-page.webp.asset.json";
 import ch2 from "@/assets/chapter-2.webp.asset.json";
 import longWalkBattle from "@/assets/long-walk-battle.webp";
 import ch4 from "@/assets/chapter-4.webp.asset.json";
