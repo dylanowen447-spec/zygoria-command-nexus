@@ -1063,8 +1063,8 @@
 .descent-scene .haven-layer .haven-zig{bottom:var(--feet,20%)!important}
 
 /* Storybook opening — Page 01 */
-.storybook { position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; padding: 1rem; background: radial-gradient(ellipse at center, var(--surface-raised) 0%, var(--background) 75%); overflow: hidden; }
-.storybook-book { position: relative; height: min(78%, 92vw); aspect-ratio: 1; perspective: 1600px; opacity: 0; transform: translateY(14px) scale(0.97); transition: opacity 0.9s ease, transform 0.9s ease; }
+.storybook { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; padding: 1rem; background: radial-gradient(ellipse at center, var(--surface-raised) 0%, var(--background) 75%); overflow: hidden; }
+.storybook-book { position: relative; height: min(80vh, 92vw); aspect-ratio: 1; perspective: 1600px; opacity: 0; transform: translateY(14px) scale(0.97); transition: opacity 0.9s ease, transform 0.9s ease; }
 .storybook.is-ready .storybook-book { opacity: 1; transform: none; }
 .storybook-page { position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; overflow: hidden; transform-origin: left center; box-shadow: 0 0 0 1px var(--workshop-glow), 0 0 0 6px var(--surface), 0 0 0 7px var(--gold), 0 24px 60px oklch(0 0 0 / 65%), 0 0 60px var(--workshop-glow); transition: transform 0.9s cubic-bezier(.6,.05,.4,1), opacity 0.9s ease, filter 0.9s ease; }
 .storybook-page img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
