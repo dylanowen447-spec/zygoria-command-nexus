@@ -747,8 +747,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         const hatched = new Set<Agent>();
         let openGate = () => {};
         const emerge = (a: Agent) => { if (hatched.has(a)) return; hatched.add(a); if (alive) { setEmerged(e => ({ ...e, [a]: true })); void walk(a, [scene.spots[scene.spawn[a].out]!.at]); } };
-        const open = (a: Agent, kind: "heavy" | "pop" | "mist") => { if (skipped) return; playHatch(kind); setPodsOpen(p => ({ ...p, [a]: true })); };
-        skipHatch.current = () => { skipped = true; ALL.forEach(a => { setPodsOpen(p => ({ ...p, [a]: true })); emerge(a); }); setHatching(false); openGate(); };
+        const open = (a: Agent, kind: "heavy" | "pop" | "mist") => { if (skipped) return; playHatch(kind); };
+        skipHatch.current = () => { skipped = true; ALL.forEach(a => emerge(a)); setHatching(false); openGate(); };
         const hwait = (ms: number) => skipped ? Promise.resolve() : Promise.race([wait(ms), new Promise<void>(r => { openGate = r; })]);
         await hwait(1400); if (!alive) return;
         open("Brix", "heavy"); await hwait(1500); if (!alive) return; emerge("Brix");
