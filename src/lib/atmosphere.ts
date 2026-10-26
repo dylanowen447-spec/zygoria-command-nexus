@@ -263,23 +263,63 @@ export function playDefeatSting() {
   }
 }
 
-// ---------- Oz's shack: procedural drum & bass (174 BPM). Only one music track at a time. ----------
+// ---------- Oz's shack: procedural drum & bass (174 BPM). Eight deck tunes; the decks button changes them. ----------
 let dnb: { timer: number; step: number; next: number; bus: GainNode } | null = null;
-const DNB_ROOTS = [38, 38, 41, 36]; // D, D, F, C — one per bar
+type ShackTrack = { name: string; roots: number[]; kick: number[]; snare: number[]; ghost: number[]; pad: number[]; bass: "reese" | "square" | "wobble" | "acid"; hat: "straight" | "swing" | "sparse"; lead?: boolean };
+const SHACK_TRACKS: ShackTrack[] = [
+  { name: "RIVERSIDE ROLL", roots: [38, 38, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [7, 2], pad: [24, 27, 31], bass: "reese", hat: "straight" },
+  { name: "NEON STEP", roots: [36, 36, 39, 34], kick: [0, 11], snare: [4, 14], ghost: [7, 9], pad: [23, 27, 30], bass: "square", hat: "swing" },
+  { name: "JUNGLE STOMP", roots: [40, 40, 38, 43], kick: [0, 7, 10], snare: [4, 12], ghost: [5, 9, 14], pad: [24, 28, 31], bass: "reese", hat: "straight" },
+  { name: "SUNSET DUB", roots: [38, 41, 36, 38], kick: [0, 8], snare: [8], ghost: [12, 3], pad: [19, 26, 27], bass: "wobble", hat: "sparse" },
+  { name: "MIDNIGHT ACID", roots: [36, 36, 34, 41], kick: [0, 4, 10], snare: [4, 12], ghost: [7, 11], pad: [24, 27, 30], bass: "acid", hat: "straight" },
+  { name: "COPPER WIRE", roots: [38, 43, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [6, 14], pad: [24, 28, 31], bass: "reese", hat: "swing", lead: true },
+  { name: "THUNDER ROLL", roots: [36, 34, 39, 36], kick: [0, 8, 10], snare: [4, 12], ghost: [7, 9, 15], pad: [22, 26, 29], bass: "wobble", hat: "straight" },
+  { name: "FIREFLY DANCE", roots: [38, 40, 45, 41], kick: [0, 11], snare: [4, 12], ghost: [6, 9], pad: [24, 28, 32], bass: "square", hat: "swing", lead: true },
+];
+let shackTrack = 0;
+/** The tune currently cued up on Oz's decks. */
+export const shackTrackName = () => SHACK_TRACKS[shackTrack]!.name;
+/** Deck button: cue the next tune. If the decks are spinning, drop it in with a spinback flick. */
+export function cycleShackTrack(): string {
+  shackTrack = (shackTrack + 1) % SHACK_TRACKS.length;
+  if (dnb && ctx) {
+    clearInterval(dnb.timer);
+    dnb.step = 0; dnb.next = ctx.currentTime + 0.05;
+    dnb.timer = window.setInterval(dnbTick, 50);
+    // soft vinyl-stop: a low tone gliding down as the deck drops the new tune
+    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(340, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.35);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.1, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+    o.connect(g).connect(dnb.bus); o.start(); o.stop(ctx.currentTime + 0.4);
+    dnbTick();
+  }
+  return shackTrackName();
+}
 function dnbTick() {
   if (!ctx || !dnb) return;
-  const d = dnb; const s16 = 60 / 174 / 4;
+  const d = dnb, track = SHACK_TRACKS[shackTrack]!; const s16 = 60 / 174 / 4;
   while (d.next < ctx.currentTime + 0.25) {
     const t = d.next, sub = d.step % 16, bar = Math.floor(d.step / 16) % 4;
-    // two-step break: kick 0 & 10, snare 4 & 12, ghost snare 7
-    if (sub === 0 || sub === 10) { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g).connect(d.bus); o.start(t); o.stop(t + 0.25); }
-    if (sub === 4 || sub === 12) { hit(d.bus, t, 1200, 0.16, 0.32); chip(d.bus, t, 200, 0.06, 0.12, "triangle"); }
-    if (sub === 7 && bar % 2) hit(d.bus, t, 1500, 0.06, 0.1);
-    hit(d.bus, t, 8000, 0.025, sub % 2 ? 0.035 : 0.06);
-    // rolling reese-ish sub bass
-    if (sub % 4 === 0 || sub === 14) { const root = DNB_ROOTS[bar]!; const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz(root); const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(140, t + s16 * 3); const g = ctx.createGain(); g.gain.setValueAtTime(0.16, t); g.gain.linearRampToValueAtTime(0, t + s16 * 3.6); o.connect(f).connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 4); }
-    // airy liquid pad stab each bar
-    if (sub === 0) for (const m of [62, 65, 69].map(n => n + (DNB_ROOTS[bar]! - 38))) { const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = hz(m); const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.03, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + s16 * 16); o.connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 16); }
+    if (track.kick.includes(sub)) { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g).connect(d.bus); o.start(t); o.stop(t + 0.25); }
+    if (track.snare.includes(sub)) { hit(d.bus, t, 1200, 0.16, 0.32); chip(d.bus, t, 200, 0.06, 0.12, "triangle"); }
+    if (track.ghost.includes(sub)) hit(d.bus, t, 1500, 0.06, 0.1);
+    // per-track hats: straight, swung or sparse
+    if (track.hat !== "sparse" || sub % 4 === 0) {
+      const tt = track.hat === "swing" && sub % 2 ? t + s16 * 0.22 : t;
+      hit(d.bus, tt, 8000, 0.025, track.hat === "sparse" ? 0.05 : sub % 2 ? 0.035 : 0.06);
+    }
+    // per-track bass: rolling reese, squelchy square, wobbling sub or an acid line
+    if (sub % 4 === 0 || sub === 14) {
+      const root = track.roots[bar]!;
+      const isAcid = track.bass === "acid";
+      const o = ctx.createOscillator(); o.type = track.bass === "square" ? "square" : "sawtooth"; o.frequency.value = hz(root);
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = isAcid ? 12 : 1; f.frequency.setValueAtTime(isAcid ? (sub % 4 === 0 ? 1100 : 700) : track.bass === "wobble" ? (sub % 8 === 0 ? 620 : 300) : 500, t); f.frequency.exponentialRampToValueAtTime(isAcid ? 220 : 140, t + s16 * 3);
+      const g = ctx.createGain(); g.gain.setValueAtTime(track.bass === "square" ? 0.11 : 0.16, t); g.gain.linearRampToValueAtTime(0, t + s16 * 3.6);
+      o.connect(f).connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 4);
+    }
+    // sparky lead blip for the electric tunes
+    if (track.lead && sub % 4 === 3) chip(d.bus, t, hz(track.roots[bar]! + 36 + [0, 3, 5, 7, 10][(d.step * 3) % 5]!), 0.09, 0.09, "square");
+    // airy pad stab each bar, voiced from the track's roots
+    if (sub === 0) for (const m of track.pad.map(n => n + track.roots[bar]!)) { const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = hz(m); const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.03, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + s16 * 16); o.connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 16); }
     d.step++; d.next += s16;
   }
 }

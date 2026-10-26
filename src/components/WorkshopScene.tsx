@@ -2,7 +2,8 @@ import { voiceLine } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { INTERIORS, type InteriorId } from "@/lib/interiors";
-import { startShackMusic, stopShackMusic } from "@/lib/atmosphere";
+import { startShackMusic, stopShackMusic, cycleShackTrack, shackTrackName } from "@/lib/atmosphere";
+import { Disc3 } from "lucide-react";
 import { WorkshopTV } from "@/components/WorkshopTV";
 import ozDance from "@/assets/oz-dance-v2.webp.asset.json";
 
@@ -11,6 +12,9 @@ type Zig = "Oz" | "Brix" | "Lowkey";
 /** The shack dance strip holds 16 moves; the shack track runs 174 BPM, so Oz changes move on every beat. */
 const DANCE_MOVES = 16;
 const DANCE_MS = 344.85;
+
+/** Oz's between-tune patter for the deck button. */
+const OZ_TRACK_LINES = ["New tune. Trust me on this one.", "This one goes out to the river.", "Wait for the drop. Wait for it.", "Brix says it's too loud. That's how you know it's good."];
 
 /** A fresh run of moves in random order, so Oz never repeats the same routine twice. */
 function shuffledMoves() {
@@ -36,6 +40,12 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }
   const [move, setMove] = useState(0);
   const queueRef = useRef<number[]>([]);
   const dancing = place === "oz" && character === "Oz" && !moving;
+  /** The tune cued on Oz's decks; the deck button cycles the shack track list. */
+  const [track, setTrack] = useState(shackTrackName());
+  const changeTrack = () => {
+    setTrack(cycleShackTrack());
+    if (character === "Oz") setBubble(OZ_TRACK_LINES[Math.floor(Math.random() * OZ_TRACK_LINES.length)]!);
+  };
 
   const voiced = useRef("");
   useEffect(() => { if (bubble && voiced.current !== bubble) { voiced.current = bubble; voiceLine(character, bubble); } }, [bubble, character]);
@@ -79,6 +89,9 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }
       {place === "brix" && tv && <WorkshopTV wake={tv.wake} editor={tv.editor} exitX={exitX} onEscape={tv.onEscape}/>}
       <button type="button" className="workshop-spot workshop-door" style={room.exit} aria-label="Back outside"
         onPointerDown={e => e.stopPropagation()} onClick={() => walkTo(exitX, onExit)}><span>Outside ›</span></button>
+      {place === "oz" && <button type="button" className="workshop-spot deck-spot" style={{ left: "66%", top: "40%" }}
+        aria-label={`Change the tune on Oz's decks — now playing ${track}`}
+        onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); changeTrack(); }}><Disc3 size={16}/><span>DECKS · {track}</span></button>}
       {bubble && <div key={bubble} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, x))}%`, bottom: "calc(16% + var(--zig-lift))" }}><b>{character.toUpperCase()}</b>{bubble}</div>}
     </div>
     <div className="map-coordinate top-right">{room.label}</div>
