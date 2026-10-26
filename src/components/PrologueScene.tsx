@@ -43,8 +43,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const coords = useRef<Record<Agent, Point>>(Object.fromEntries(ALL.map(a => [a, { ...scene.spawn[a].from }])) as Record<Agent, Point>);
   const markers = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const [shown, setShown] = useState(false);
-  // Hatch state: which pod doors have folded open, and which Zigs have stepped out yet.
-  const [podsOpen, setPodsOpen] = useState<Partial<Record<Agent, boolean>>>({});
+  // Hatch state: which Zigs have stepped out yet. Pods play sounds only — no on-screen overlays.
   const [emerged, setEmerged] = useState<Record<Agent, boolean>>({ Oz: true, Brix: true, Lowkey: true });
   const [hatching, setHatching] = useState(false);
   const skipHatch = useRef<(() => void) | null>(null);
