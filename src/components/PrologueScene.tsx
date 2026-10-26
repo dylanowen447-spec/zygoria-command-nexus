@@ -92,7 +92,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const fightQuietUntil = useRef(0);
   const ambushSay = useCallback((a: Agent, text: string) => {
     fightQuietUntil.current = performance.now() + 3200;
-    setBubbles(b => ({ ...b, [a]: text }));
+    setBubbles(b => ({ ...b, [a]: text })); voiceLine(a, text);
     setTimeout(() => setBubbles(b => (b[a] === text ? { ...b, [a]: undefined } : b)), 2600);
   }, []);
   const bubblesRef = useRef(bubbles);
@@ -395,7 +395,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (!pool.length) return;
       const l = pool[Math.floor(Math.random() * pool.length)]!;
       lastFightLine = l.text;
-      setBubbles(b => ({ ...b, [l.who]: l.text }));
+      setBubbles(b => ({ ...b, [l.who]: l.text })); voiceLine(l.who, l.text);
       timers.push(setTimeout(() => setBubbles(b => (b[l.who] === l.text ? { ...b, [l.who]: undefined } : b)), 2600));
       // Hide it the instant the fight ends.
       const watch = setInterval(() => { if (!enemies.current.targets().length) { setBubbles(b => (b[l.who] === l.text ? { ...b, [l.who]: undefined } : b)); clearInterval(watch); } }, 150);
