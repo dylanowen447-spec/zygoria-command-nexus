@@ -96,6 +96,10 @@ function boot() {
 }
 
 let armed = false;
+/** Call synchronously from the page-turn gesture, before its animation or any timers. */
+export function unlockAtmosphere() {
+  if (typeof window !== "undefined") boot();
+}
 /** Start listening for the first user gesture (mobile audio policy). Safe to call repeatedly. */
 export function armAtmosphere() {
   if (armed || typeof window === "undefined") return; armed = true;
@@ -185,29 +189,62 @@ export function playSfx(kind: Sfx) {
   }
 }
 
-/** Egg-hatch SFX for the Three Eggs opening: heavy clunk, electric pop, slow mist (shares the atmosphere context). */
+/** Layered hatch cues have their own compressed mix; ambience and combat levels stay untouched. */
 export function playHatch(kind: "heavy" | "pop" | "mist") {
   if (typeof window === "undefined") return;
   if (!ctx) boot();
   if (!ctx || ctx.state !== "running") return;
-  const t = ctx.currentTime + 0.02;
-  if (kind === "heavy") { // Brix: deep mechanical clunk, metal groan, long hydraulic hiss
-    blip(t, 120, 45, 0.4, 0.5, "square");
-    burst(t + 0.05, 300, 0.3, 0.25, "lowpass");
-    blip(t + 0.1, 90, 60, 1.1, 0.12, "sawtooth", true);
-    burst(t + 0.15, 600, 1.4, 0.3, "bandpass");
-    burst(t + 0.3, 2400, 1.2, 0.14, "highpass");
-  } else if (kind === "pop") { // Oz: pressurised pop followed by an electric spark burst
-    blip(t, 500, 80, 0.4, 0.4, "square");
-    burst(t, 1800, 0.2, 0.3, "bandpass");
-    for (let i = 0; i < 9; i++) burst(t + 0.1 + i * 0.05 + Math.random() * 0.03, 5200, 0.04, 0.14, "highpass");
-    blip(t + 0.12, 2400, 500, 0.15, 0.1, "square");
-    burst(t + 0.2, 900, 0.7, 0.16, "bandpass");
-  } else { // Lowkey: slow whispering mist with a low hum
-    burst(t, 400, 2.2, 0.14, "lowpass");
-    burst(t + 0.2, 1300, 1.6, 0.06, "bandpass");
-    blip(t + 0.4, 220, 90, 1.4, 0.05, "sine", true);
+  const audio = ctx;
+  const t = audio.currentTime + 0.02;
+  const bus = audio.createGain(); bus.gain.value = 0.72;
+  const limiter = audio.createDynamicsCompressor();
+  limiter.threshold.value = -12; limiter.knee.value = 6; limiter.ratio.value = 8;
+  limiter.attack.value = 0.003; limiter.release.value = 0.18;
+  bus.connect(limiter).connect(audio.destination);
+  const tone = (offset: number, from: number, to: number, duration: number, level: number, type: OscillatorType = "sine", attack = 0.008) => {
+    const o = audio.createOscillator(); o.type = type;
+    const g = audio.createGain(); const at = t + offset;
+    o.frequency.setValueAtTime(from, at); o.frequency.exponentialRampToValueAtTime(to, at + duration);
+    g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(level, at + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+    o.connect(g).connect(bus); o.start(at); o.stop(at + duration + 0.02);
+    o.onended = () => { o.disconnect(); g.disconnect(); };
+  };
+  const air = (offset: number, frequency: number, duration: number, level: number, attack = 0.015, type: BiquadFilterType = "bandpass") => {
+    const n = audio.createBufferSource(); n.buffer = noise;
+    const f = audio.createBiquadFilter(); f.type = type; f.frequency.value = frequency; f.Q.value = 0.65;
+    const g = audio.createGain(); const at = t + offset;
+    g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(level, at + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+    n.connect(f).connect(g).connect(bus); n.start(at, Math.random() * 0.2); n.stop(at + duration + 0.02);
+    n.onended = () => { n.disconnect(); f.disconnect(); g.disconnect(); };
+  };
+  if (kind === "heavy") { // Weighty latch, resonant metal, then pressure releasing.
+    tone(0, 160, 48, 0.45, 0.65);
+    air(0, 650, 0.12, 0.42);
+    for (const f of [310, 487, 731]) tone(0.025, f, f * 0.83, 0.65, 0.1, "triangle");
+    tone(0.18, 94, 62, 1.2, 0.14, "triangle", 0.12);
+    air(0.14, 1900, 1.65, 0.48, 0.14);
+    air(0.3, 4200, 1.3, 0.19, 0.1, "highpass");
+    tone(1.08, 125, 58, 0.23, 0.22);
+  } else if (kind === "pop") { // Charged whine, sharp pop and uneven electrical arcs.
+    tone(0, 620, 2200, 0.18, 0.16, "triangle", 0.025);
+    tone(0.16, 360, 70, 0.22, 0.46);
+    air(0.16, 2800, 0.12, 0.52);
+    for (let i = 0; i < 12; i++) {
+      const at = 0.21 + i * 0.055 + Math.random() * 0.025;
+      air(at, 3200 + Math.random() * 3400, 0.035, 0.2 + Math.random() * 0.13, 0.002, "highpass");
+      tone(at, 1800 + Math.random() * 1600, 450, 0.045, 0.045, "sawtooth", 0.002);
+    }
+    air(0.24, 1400, 0.8, 0.22, 0.05);
+  } else { // A soft seal release, wide breath of mist and an eerie gentle hum.
+    air(0, 950, 0.22, 0.2, 0.025);
+    air(0.1, 650, 1.85, 0.44, 0.25);
+    air(0.25, 2400, 1.65, 0.22, 0.2);
+    tone(0.15, 155, 82, 1.8, 0.22, "sine", 0.25);
+    tone(0.3, 233, 123, 1.6, 0.08, "triangle", 0.3);
   }
+  window.setTimeout(() => { bus.disconnect(); limiter.disconnect(); }, 3000);
 }
 
 /** Retro defeat sting (~4s): tumbling minor arpeggio into a long hollow detuned low tone. */
