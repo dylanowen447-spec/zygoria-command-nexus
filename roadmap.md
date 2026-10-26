@@ -30,4 +30,4 @@
 - [x] Repair missing black boot details (verified solid, no defect found) in Brix's sideways walk frames from original artwork; verify charged punch final frame; test in-game (brix-boot-repair)
 - [x] Taking the Sanctuary caves exit walks all three Zigs down the waterfall road together into the caves
 - [x] Game Over screen speed-up: 2.5MB PNG → 337KB WebP, preloaded when Old City mounts, defeat fade 1.8s → 0.8s
-- Cinematic Three Eggs hatch: sealed pod doors fold out with steam + hatch sounds; Oz's pod pops with an electric spark burst (user request "Electricity"). Skippable, ~9s, first visit only.
+- Cinematic Three Eggs hatch: DONE — sealed pod doors fold out with steam, hatch sounds and Oz's electric spark burst; skippable, ~9s, first visit only (verified desktop + phone).
