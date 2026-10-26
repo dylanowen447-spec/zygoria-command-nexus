@@ -8,7 +8,7 @@ import { liveSquad } from "@/lib/squad-health";
 import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } from "@/lib/prologue";
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
-import { playSfx } from "@/lib/atmosphere";
+import { playHatch, playSfx } from "@/lib/atmosphere";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
@@ -32,15 +32,22 @@ const swingKind = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? "atk-pun
 const swingMs = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? 620 : 460) : a === "Lowkey" ? (heavy ? 560 : 420) : heavy ? 420 : 240;
 const HOLD_MS = 600;
 
-type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void; canSkip?: boolean };
+type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void; canSkip?: boolean; returning?: boolean };
 
 /** One prologue area: the Zigs explore its walkable graph on their own and only notice objectives after looking around. */
-export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip = false }: Props) {
+export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip = false, returning = false }: Props) {
   const handler = useRef<(text: string) => void>(() => undefined);
+  /** Three Eggs on a first visit: the pods play their fold-out hatch sequence before the crew steps out. */
+  const hatchOn = scene.id === "landing" && !returning;
   useEffect(() => { if (command) handler.current(command.text); }, [command]);
   const coords = useRef<Record<Agent, Point>>(Object.fromEntries(ALL.map(a => [a, { ...scene.spawn[a].from }])) as Record<Agent, Point>);
   const markers = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const [shown, setShown] = useState(false);
+  // Hatch state: which pod doors have folded open, and which Zigs have stepped out yet.
+  const [podsOpen, setPodsOpen] = useState<Partial<Record<Agent, boolean>>>({});
+  const [emerged, setEmerged] = useState<Record<Agent, boolean>>({ Oz: true, Brix: true, Lowkey: true });
+  const [hatching, setHatching] = useState(false);
+  const skipHatch = useRef<(() => void) | null>(null);
   const [walking, setWalking] = useState<Agent[]>([]);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "right", Lowkey: "left" });
   const [ozDir, setOzDir] = useState<"down" | "left" | "right" | "up">("down");
