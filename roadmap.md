@@ -33,3 +33,4 @@
 - Cinematic Three Eggs hatch: DONE — sealed pod doors fold out with steam, hatch sounds and Oz's electric spark burst; skippable, ~9s, first visit only (verified desktop + phone).
 - Voice the Zygs + Page 1 narrator with natural, expressive (non-robotic) AI speech; mute toggle.
 - [x] Oz dance sheet + bigger Oz in shack on PC
+- [x] Oz freestyles in the shack: he picks his next dance move himself on the beat, and the strip was rebuilt from each pose's true edges so nothing is clipped
