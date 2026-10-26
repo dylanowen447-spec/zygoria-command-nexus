@@ -302,15 +302,22 @@ function dnbTick() {
     if (track.kick.includes(sub)) { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g).connect(d.bus); o.start(t); o.stop(t + 0.25); }
     if (track.snare.includes(sub)) { hit(d.bus, t, 1200, 0.16, 0.32); chip(d.bus, t, 200, 0.06, 0.12, "triangle"); }
     if (track.ghost.includes(sub)) hit(d.bus, t, 1500, 0.06, 0.1);
-    hit(d.bus, t, 8000, 0.025, sub % 2 ? 0.035 : 0.06);
-    // per-track bass: rolling reese, squelchy square or a wobbling sub
+    // per-track hats: straight, swung or sparse
+    if (track.hat !== "sparse" || sub % 4 === 0) {
+      const tt = track.hat === "swing" && sub % 2 ? t + s16 * 0.22 : t;
+      hit(d.bus, tt, 8000, 0.025, track.hat === "sparse" ? 0.05 : sub % 2 ? 0.035 : 0.06);
+    }
+    // per-track bass: rolling reese, squelchy square, wobbling sub or an acid line
     if (sub % 4 === 0 || sub === 14) {
       const root = track.roots[bar]!;
+      const isAcid = track.bass === "acid";
       const o = ctx.createOscillator(); o.type = track.bass === "square" ? "square" : "sawtooth"; o.frequency.value = hz(root);
-      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(track.bass === "wobble" ? (sub % 8 === 0 ? 620 : 300) : 500, t); f.frequency.exponentialRampToValueAtTime(140, t + s16 * 3);
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = isAcid ? 12 : 1; f.frequency.setValueAtTime(isAcid ? (sub % 4 === 0 ? 1100 : 700) : track.bass === "wobble" ? (sub % 8 === 0 ? 620 : 300) : 500, t); f.frequency.exponentialRampToValueAtTime(isAcid ? 220 : 140, t + s16 * 3);
       const g = ctx.createGain(); g.gain.setValueAtTime(track.bass === "square" ? 0.11 : 0.16, t); g.gain.linearRampToValueAtTime(0, t + s16 * 3.6);
       o.connect(f).connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 4);
     }
+    // sparky lead blip for the electric tunes
+    if (track.lead && sub % 4 === 3) chip(d.bus, t, hz(track.roots[bar]! + 36 + [0, 3, 5, 7, 10][(d.step * 3) % 5]!), 0.09, 0.09, "square");
     // airy pad stab each bar, voiced from the track's roots
     if (sub === 0) for (const m of track.pad.map(n => n + track.roots[bar]!)) { const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = hz(m); const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.03, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + s16 * 16); o.connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 16); }
     d.step++; d.next += s16;
