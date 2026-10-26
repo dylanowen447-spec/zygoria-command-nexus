@@ -9,7 +9,7 @@ import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } f
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playHatch, playSfx } from "@/lib/atmosphere";
-import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn } from "@/lib/voice";
+import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine } from "@/lib/voice";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
@@ -170,7 +170,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     const tokens: Partial<Record<Agent, number>> = {};
     // While a Zig is answering the visitor, their own exploring chatter stays quiet.
     let voiceBusy = false;
-    const say = (a: Agent, text: string | null, force = false) => { if ((voiceBusy || talking.has(a)) && !force && text) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) logRef.current(a, text); };
+    const say = (a: Agent, text: string | null, force = false) => { if ((voiceBusy || talking.has(a)) && !force && text) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) { logRef.current(a, text); if (!openingNow) voiceLine(a, text); } };
+    let openingNow = false;
     /** Reading time: short lines at least 3.2s, long lines up to 6s, then a 1s breath. */
     const hold = (text: string) => Math.min(6000, Math.max(3200, 1800 + text.length * 45));
     const GAP = 1000;
@@ -767,7 +768,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       else if (scene.startStill) await wait(600);
       else await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
       if (!alive) return;
-      for (const [who, text] of scene.opening) { if (inCombat()) break; say(who, text); await Promise.all([wait(voicesOn() ? 1200 : hold(text)), speak(who, text)]); if (!alive) return; say(who, null); await wait(voicesOn() ? 400 : GAP); }
+      openingNow = true;
+      for (const [who, text] of scene.opening) { if (inCombat()) break; say(who, text); await Promise.all([wait(1200), speak(who, text)]); await wait(voicesOn() ? 0 : hold(text) - 1200); if (!alive) return; say(who, null); await wait(voicesOn() ? 400 : GAP); }
+      openingNow = false;
       setLookAway(false);
       ALL.forEach(a => void explore(a));
     })();

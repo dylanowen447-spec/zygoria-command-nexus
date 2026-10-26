@@ -1,3 +1,4 @@
+import { voiceLine } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { INTERIORS, type InteriorId } from "@/lib/interiors";
@@ -17,6 +18,7 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }
   const posRef = useRef(55);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => { if (bubble) voiceLine(character, bubble); }, [bubble, character]);
   useEffect(() => { const t = setTimeout(() => setBubble(""), 4200); return () => clearTimeout(t); }, [bubble]);
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
   useEffect(() => { if (place !== "oz") return; startShackMusic(); return () => stopShackMusic(); }, [place]);

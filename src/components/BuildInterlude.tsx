@@ -1,3 +1,4 @@
+import { voiceLine } from "@/lib/voice";
 import { useEffect, useState } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import walkImg from "@/assets/zone-long-walk.jpg";
@@ -43,7 +44,7 @@ export function BuildInterlude({ onDone }: { onDone: () => void }) {
     let ctx: AudioContext | null = null;
     try { ctx = new (window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)(); void ctx.resume(); } catch { /* silent fallback */ }
     const timers: ReturnType<typeof setTimeout>[] = [];
-    BEATS.forEach((b, i) => timers.push(setTimeout(() => { setStep(i); if (b.sound && ctx) playSound(ctx, b.sound); if (i === BEATS.length - 1) setFade(true); }, i * 2800)));
+    BEATS.forEach((b, i) => timers.push(setTimeout(() => { setStep(i); if (b.who) voiceLine(b.who, b.text); if (b.sound && ctx) playSound(ctx, b.sound); if (i === BEATS.length - 1) setFade(true); }, i * 2800)));
     timers.push(setTimeout(() => { if (ctx) playSound(ctx, "hammer"); }, BEATS.length * 2800 - 1200));
     timers.push(setTimeout(onDone, BEATS.length * 2800 + 2200));
     return () => { timers.forEach(clearTimeout); void ctx?.close(); };

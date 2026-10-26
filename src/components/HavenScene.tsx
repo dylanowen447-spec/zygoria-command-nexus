@@ -1,3 +1,4 @@
+import { voiceLine } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import bg from "@/assets/haven-bg.webp";
 import orinImg from "@/assets/haven-orin.webp";
@@ -71,6 +72,7 @@ export function HavenScene() {
     setPos(p => ({ ...p, [a]: { x, b } }));
     setTimeout(() => setMoving(m => (m && m.a === a && m.ms === ms ? null : m)), ms);
   };
+  useEffect(() => { if (bubble) voiceLine(bubble.who, bubble.text); }, [bubble]);
   const xOf = (w: Speaker) => (w === "Oz" || w === "Brix" || w === "Lowkey" ? pos[w].x : X[w]);
 
   useEffect(() => {

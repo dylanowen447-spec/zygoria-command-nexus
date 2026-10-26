@@ -5,6 +5,9 @@ const CAST: Record<string, { voice: string; instructions: string }> = {
   Brix: { voice: "Algenib", instructions: "You are Brix, a big, warm, protective older brother. Deep, grounded, gravelly voice with a light British accent. Speak naturally and conversationally with real emotion, small breaths and natural pauses — never robotic or announcer-like." },
   Oz: { voice: "Puck", instructions: "You are Oz, a small, restless, cheeky young lad with a light British accent. Quick, bright, expressive, a bit sarcastic and bewildered. Natural conversational delivery with genuine reactions, varied pitch and timing — never robotic." },
   Lowkey: { voice: "Enceladus", instructions: "You are Lowkey, a quiet, thoughtful, mysterious brother with a light British accent. Soft, smooth, unhurried, slightly hushed and wondering. Natural pauses and breath, intimate and human — never robotic." },
+  Orin: { voice: "Gacrux", instructions: "You are Elder Orin, an old, wise, weathered human elder. Slow, gentle, calm authority, natural and human." },
+  Mara: { voice: "Kore", instructions: "You are Mara, a protective, wary woman. Firm, alert, tense but human and natural." },
+  Vale: { voice: "Zephyr", instructions: "You are Vale, an excitable, frightened young person. Breathless, quick and natural." },
   Moxi: { voice: "Leda", instructions: "You are Moxi, a wary, sharp young girl. Quiet, guarded, natural and human — never robotic." },
 };
 
