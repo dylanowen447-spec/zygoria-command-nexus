@@ -1025,7 +1025,7 @@
 .game-over-btn:hover, .game-over-btn:focus-visible { filter: brightness(1.25); outline: none; }
 
 /* Unified command HUD: zone selector + crew vitals in one glass bar */
-:root{--food:oklch(0.8 0.15 75);--rest:oklch(0.7 0.17 295)}
+:root{--food:oklch(0.75 0.17 145);--rest:oklch(0.7 0.17 295)}
 .zone-selector{position:relative;margin:-13px 0 12px;padding:7px 9px;gap:6px;background:linear-gradient(90deg,oklch(0.14 0.03 258 / 92%),oklch(0.12 0.025 262 / 88%));border:1px solid var(--border);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);box-shadow:inset 0 0 18px oklch(0.7 0.16 210 / 7%)}
 .zone-selector:before{content:'';position:absolute;left:0;top:0;width:40px;height:1px;background:var(--electric);box-shadow:0 0 6px var(--electric)}
 .hud-vitals{order:99;margin-left:auto;display:flex;align-items:center;gap:6px}
