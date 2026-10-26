@@ -33,3 +33,16 @@ export async function speak(who: string, text: string, maxWaitMs = 4000): Promis
   await new Promise<void>(res => { a.onended = () => res(); a.onerror = () => res(); a.play().catch(() => res()); });
   if (current === a) current = null;
 }
+
+/** Fire-and-forget: queue any on-screen line so every bubble is spoken, in order, never overlapping. */
+const queue: [string, string][] = [];
+let playing = false;
+export function voiceLine(who: string, text: string) {
+  const t = text.replace(/\*[^*]*\*/g, "").trim();
+  if (!voicesOn() || !/[a-z]/i.test(t)) return;
+  if (queue.length > 2) queue.shift(); // drop stale chatter rather than lag behind
+  queue.push([who, t]); void load(who, t);
+  if (playing) return;
+  playing = true;
+  void (async () => { while (queue.length) { const [w, x] = queue.shift()!; await speak(w, x, 6000); } playing = false; })();
+}
