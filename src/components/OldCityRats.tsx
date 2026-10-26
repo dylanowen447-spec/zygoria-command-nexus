@@ -1,4 +1,5 @@
 import { playSfx, playDefeatSting } from "@/lib/atmosphere";
+import { preloadVoices } from "@/lib/voice";
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
 import { GameOverScreen } from "@/components/GameOverScreen";
@@ -48,6 +49,8 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
   // Preload the Game Over art while the fight plays so defeat shows it instantly.
   useEffect(() => {
     const img = new Image(); img.src = gameOverArt.url;
+    // Warm the ambush voices so reactions speak the instant the rats charge.
+    preloadVoices([CITY_RAT_ARRIVAL[0]!, ["Brix", BRIX_SWARM_CALL], ...CITY_RAT_ARRIVAL.slice(1), ...SWARM_CLEARED, ...AGENTS.map(a => [a, DOWN_LINES[a]] as [string, string]), ...AGENTS.map(a => [a, UP_LINES[a]] as [string, string])]);
   }, []);
 
   // Rats stand 5% shorter than Oz, matching his on-screen height on any device.
