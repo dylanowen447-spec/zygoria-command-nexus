@@ -40,7 +40,7 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }
     <img className="world-image" src={room.img} alt={room.alt} />
     <div className="haven-layer">
       <span className={`haven-zig marker-${low} ${moving ? `is-walking ${low}-facing-${moving.dir} facing-${moving.dir}` : ""}`} style={{ left: `${x}%`, bottom: "16%", transitionDuration: moving ? `${moving.ms}ms` : "0ms" }}>
-        <span className="sprite-stage"><CharacterSprite character={character}/></span>
+        <span className="sprite-stage"><span className={place === "oz" && character === "Oz" && !moving ? "shack-dance" : "shack-still"}><CharacterSprite character={character}/></span></span>
       </span>
       {place === "brix" && tv && <WorkshopTV wake={tv.wake} editor={tv.editor} exitX={exitX} onEscape={tv.onEscape}/>}
       <button type="button" className="workshop-spot workshop-door" style={room.exit} aria-label="Back outside"
