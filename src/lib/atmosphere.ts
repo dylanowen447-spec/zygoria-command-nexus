@@ -265,16 +265,18 @@ export function playDefeatSting() {
 
 // ---------- Oz's shack: procedural drum & bass (174 BPM). Eight deck tunes; the decks button changes them. ----------
 let dnb: { timer: number; step: number; next: number; bus: GainNode } | null = null;
-type ShackTrack = { name: string; roots: number[]; kick: number[]; snare: number[]; ghost: number[]; pad: number[]; bass: "reese" | "square" | "wobble" | "acid"; hat: "straight" | "swing" | "sparse"; lead?: boolean };
+/** Each tune has its own drums, bass voice, kick/snare tone and a 16-step melody (null = rest) so they are clearly different. */
+type ShackTrack = { name: string; roots: number[]; kick: number[]; snare: number[]; ghost: number[]; pad: number[]; bass: "reese" | "square" | "wobble" | "acid"; hat: "straight" | "swing" | "sparse"; bassSteps: number[]; kickHz: number; snareHz: number; mel: (number | null)[]; melWave: OscillatorType; melOct: number };
+const _ = null;
 const SHACK_TRACKS: ShackTrack[] = [
-  { name: "RIVERSIDE ROLL", roots: [38, 38, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [7, 2], pad: [24, 27, 31], bass: "reese", hat: "straight" },
-  { name: "NEON STEP", roots: [36, 36, 39, 34], kick: [0, 11], snare: [4, 14], ghost: [7, 9], pad: [23, 27, 30], bass: "square", hat: "swing" },
-  { name: "JUNGLE STOMP", roots: [40, 40, 38, 43], kick: [0, 7, 10], snare: [4, 12], ghost: [5, 9, 14], pad: [24, 28, 31], bass: "reese", hat: "straight" },
-  { name: "SUNSET DUB", roots: [38, 41, 36, 38], kick: [0, 8], snare: [8], ghost: [12, 3], pad: [19, 26, 27], bass: "wobble", hat: "sparse" },
-  { name: "MIDNIGHT ACID", roots: [36, 36, 34, 41], kick: [0, 4, 10], snare: [4, 12], ghost: [7, 11], pad: [24, 27, 30], bass: "acid", hat: "straight" },
-  { name: "COPPER WIRE", roots: [38, 43, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [6, 14], pad: [24, 28, 31], bass: "reese", hat: "swing", lead: true },
-  { name: "THUNDER ROLL", roots: [36, 34, 39, 36], kick: [0, 8, 10], snare: [4, 12], ghost: [7, 9, 15], pad: [22, 26, 29], bass: "wobble", hat: "straight" },
-  { name: "FIREFLY DANCE", roots: [38, 40, 45, 41], kick: [0, 11], snare: [4, 12], ghost: [6, 9], pad: [24, 28, 32], bass: "square", hat: "swing", lead: true },
+  { name: "RIVERSIDE ROLL", roots: [38, 38, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [7], pad: [24, 27, 31], bass: "reese", hat: "straight", bassSteps: [0, 4, 8, 12, 14], kickHz: 150, snareHz: 1200, mel: [_, _, _, _, _, _, _, _, 12, _, 10, _, 7, _, _, _], melWave: "triangle", melOct: 24 },
+  { name: "NEON STEP", roots: [36, 36, 39, 34], kick: [0, 3, 11], snare: [4, 14], ghost: [9], pad: [23, 27, 30], bass: "square", hat: "swing", bassSteps: [0, 3, 6, 10, 13], kickHz: 170, snareHz: 1800, mel: [0, _, 7, _, 12, _, 7, _, 0, _, 7, _, 15, _, 12, _], melWave: "square", melOct: 36 },
+  { name: "JUNGLE STOMP", roots: [40, 40, 38, 43], kick: [0, 7, 10], snare: [4, 12], ghost: [2, 5, 9, 14, 15], pad: [24, 28, 31], bass: "reese", hat: "straight", bassSteps: [0, 2, 8, 10], kickHz: 120, snareHz: 900, mel: [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _], melWave: "sine", melOct: 24 },
+  { name: "SUNSET DUB", roots: [38, 41, 36, 38], kick: [0], snare: [8], ghost: [], pad: [19, 26, 27], bass: "wobble", hat: "sparse", bassSteps: [0, 6, 8], kickHz: 100, snareHz: 700, mel: [7, _, _, _, _, _, 5, _, 3, _, _, _, 0, _, _, _], melWave: "sine", melOct: 24 },
+  { name: "MIDNIGHT ACID", roots: [36, 36, 34, 41], kick: [0, 4, 8, 12], snare: [4, 12], ghost: [], pad: [24, 27, 30], bass: "acid", hat: "straight", bassSteps: [0, 1, 3, 4, 6, 7, 9, 11, 12, 14, 15], kickHz: 140, snareHz: 1400, mel: [], melWave: "square", melOct: 36 },
+  { name: "COPPER WIRE", roots: [38, 43, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [6, 14], pad: [24, 28, 31], bass: "reese", hat: "swing", bassSteps: [0, 8, 14], kickHz: 160, snareHz: 1500, mel: [12, 15, 19, 24, 19, 15, 12, 15, 10, 14, 17, 22, 17, 14, 10, 14], melWave: "square", melOct: 24 },
+  { name: "THUNDER ROLL", roots: [36, 34, 39, 36], kick: [0, 2, 8, 10], snare: [4, 12, 13], ghost: [7, 15], pad: [22, 26, 29], bass: "wobble", hat: "straight", bassSteps: [0, 2, 4, 6, 8, 10, 12, 14], kickHz: 110, snareHz: 1000, mel: [_, _, _, _, 0, _, _, _, _, _, _, _, -2, _, _, _], melWave: "sawtooth", melOct: 12 },
+  { name: "FIREFLY DANCE", roots: [38, 40, 45, 41], kick: [0, 11], snare: [4, 12], ghost: [6], pad: [24, 28, 32], bass: "square", hat: "swing", bassSteps: [0, 8], kickHz: 180, snareHz: 2200, mel: [24, 19, 16, 12, 24, 19, 16, 12, 26, 21, 17, 14, 26, 21, 17, 14], melWave: "triangle", melOct: 24 },
 ];
 let shackTrack = 0;
 /** The tune currently cued up on Oz's decks. */
@@ -299,8 +301,8 @@ function dnbTick() {
   const d = dnb, track = SHACK_TRACKS[shackTrack]!; const s16 = 60 / 174 / 4;
   while (d.next < ctx.currentTime + 0.25) {
     const t = d.next, sub = d.step % 16, bar = Math.floor(d.step / 16) % 4;
-    if (track.kick.includes(sub)) { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g).connect(d.bus); o.start(t); o.stop(t + 0.25); }
-    if (track.snare.includes(sub)) { hit(d.bus, t, 1200, 0.16, 0.32); chip(d.bus, t, 200, 0.06, 0.12, "triangle"); }
+    if (track.kick.includes(sub)) { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(track.kickHz, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g).connect(d.bus); o.start(t); o.stop(t + 0.25); }
+    if (track.snare.includes(sub)) { hit(d.bus, t, track.snareHz, 0.16, 0.32); chip(d.bus, t, track.snareHz / 6, 0.06, 0.12, "triangle"); }
     if (track.ghost.includes(sub)) hit(d.bus, t, 1500, 0.06, 0.1);
     // per-track hats: straight, swung or sparse
     if (track.hat !== "sparse" || sub % 4 === 0) {
@@ -308,16 +310,17 @@ function dnbTick() {
       hit(d.bus, tt, 8000, 0.025, track.hat === "sparse" ? 0.05 : sub % 2 ? 0.035 : 0.06);
     }
     // per-track bass: rolling reese, squelchy square, wobbling sub or an acid line
-    if (sub % 4 === 0 || sub === 14) {
-      const root = track.roots[bar]!;
+    if (track.bassSteps.includes(sub)) {
+      const root = track.roots[bar]! + (track.bass === "acid" && sub % 3 === 0 ? 12 : 0);
       const isAcid = track.bass === "acid";
       const o = ctx.createOscillator(); o.type = track.bass === "square" ? "square" : "sawtooth"; o.frequency.value = hz(root);
       const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = isAcid ? 12 : 1; f.frequency.setValueAtTime(isAcid ? (sub % 4 === 0 ? 1100 : 700) : track.bass === "wobble" ? (sub % 8 === 0 ? 620 : 300) : 500, t); f.frequency.exponentialRampToValueAtTime(isAcid ? 220 : 140, t + s16 * 3);
       const g = ctx.createGain(); g.gain.setValueAtTime(track.bass === "square" ? 0.11 : 0.16, t); g.gain.linearRampToValueAtTime(0, t + s16 * 3.6);
       o.connect(f).connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 4);
     }
-    // sparky lead blip for the electric tunes
-    if (track.lead && sub % 4 === 3) chip(d.bus, t, hz(track.roots[bar]! + 36 + [0, 3, 5, 7, 10][(d.step * 3) % 5]!), 0.09, 0.09, "square");
+    // per-track melody
+    const note = track.mel[sub];
+    if (note != null) chip(d.bus, t, hz(track.roots[bar]! + track.melOct + note), track.melWave === "sine" ? 0.35 : 0.14, track.melWave === "square" || track.melWave === "sawtooth" ? 0.07 : 0.12, track.melWave);
     // airy pad stab each bar, voiced from the track's roots
     if (sub === 0) for (const m of track.pad.map(n => n + track.roots[bar]!)) { const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = hz(m); const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.03, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + s16 * 16); o.connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 16); }
     d.step++; d.next += s16;
