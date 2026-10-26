@@ -1149,3 +1149,4 @@
 .shack-scene .haven-layer .haven-zig.marker-lowkey{width:194px;height:306px}
 .shack-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:194px!important;height:296px!important}
 }
+.hunger-meter.is-tappable{cursor:pointer}.hunger-meter.is-tappable:hover{filter:brightness(1.25)}
