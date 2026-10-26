@@ -14,10 +14,6 @@
 - Oz, Brix and Lowkey render from four-direction atlases (7 cols idle+walk × 4 rows down/left/right/up), selected by segment heading only while walking; when stationary they face forward (or away in look-away scenes) — so direction never relies on mirroring.
 - Keep static Sanctuary creatures as decorative image overlays outside the agent simulation so discoveries do not alter movement or task state.
 - Crew AI runs as server-only Gateway calls: one routing call, then one call per handoff step that receives all earlier outputs, driven step-by-step by the client — so handoffs are genuine, never simulated.
-- Zygoria canon lives in one server-only module injected into every crew AI call; later dated entries override earlier ones — so all agents share one source of truth and never invent lore.
-- Live story progress lives in `src/lib/ai/canon-state.server.ts` (stage, canon truth, per-agent knowledge, discoveries, unlocked zones, hidden future canon); the UI reads it only through the safe `getCanonState` server function, never the client bundle — so one edit advances the whole world.
-- Keep Codex journal pages in the central server-only story state and expose only visitor-safe records through `getCanonState`, so the journal grows with the story without revealing undiscovered lore.
-- Crew group replies are sequential AI calls reacting to previous speakers, never simulated dialogue.
 - Keep Sanctuary building emphasis as a transparent artwork-aligned overlay above the original image, so local lighting changes never alter the map geometry or character paths.
 - Keep Sanctuary terrain edits localized to the scene artwork and align Lowkey's mountain route nodes to its painted switchback, so other landmarks and paths remain unchanged.
 - Scale desktop character artwork around the sprite stage's bottom anchor with a shared world-stage factor, and apply that factor to the carried task icon offsets; this preserves waypoint feet coordinates and untouched mobile proportions.
@@ -36,3 +32,5 @@
 - Melee targeting prefers cursor-adjacent reachable foes, then nearest reachable foe, so stale cursor positions cannot cancel punches.
 - Journey scenes move the whole crew: one arc-length chain drives the steered Zig while the brothers trail at fixed lags with a sideways nudge, and each Zig's feet come from a per-frame custom property so the shared haven floor-line rule can never flatten the road back to a straight walk.
 - Character speech is generated server-side via /api/voice (cast directions live there) and cached client-side in src/lib/voice.ts — so the key stays on the server and each line is fetched once.
+
+- Subdirectories have their own AGENTS.md (e.g. src/lib/ai/) — read it before changing files there.

@@ -1,0 +1,4 @@
+- Zygoria canon lives in one server-only module injected into every crew AI call; later dated entries override earlier ones — so all agents share one source of truth and never invent lore.
+- Live story progress lives in `src/lib/ai/canon-state.server.ts` (stage, canon truth, per-agent knowledge, discoveries, unlocked zones, hidden future canon); the UI reads it only through the safe `getCanonState` server function, never the client bundle — so one edit advances the whole world.
+- Keep Codex journal pages in the central server-only story state and expose only visitor-safe records through `getCanonState`, so the journal grows with the story without revealing undiscovered lore.
+- Crew group replies are sequential AI calls reacting to previous speakers, never simulated dialogue.
