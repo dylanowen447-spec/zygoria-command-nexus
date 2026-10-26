@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/voice")({
         const cast = body?.who ? CAST[body.who] : undefined;
         const text = typeof body?.text === "string" ? body.text.trim() : "";
         if (!cast || !text || text.length > 400) return new Response("Bad request", { status: 400 });
-        const key = process.env.LOVABLE_API_KEY;
+        const key = process.env["LOVABLE_API_KEY"];
         if (!key) return new Response("Voice unavailable", { status: 500 });
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
           method: "POST",
