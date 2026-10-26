@@ -4,7 +4,7 @@ export const HUNGER_START = 85;
 export const PROLOGUE_FLOOR = 30;
 export const SANCTUARY_FLOOR = 10;
 export const PROLOGUE_DRAIN_MS = 8000;
-export const SANCTUARY_DRAIN_MS = 30000;
+export const SANCTUARY_DRAIN_MS = 15000;
 export const FISH_RESTORE = { small: 20, medium: 30, large: 40 } as const;
 
 export const clampHunger = (v: number, floor: number) => Math.max(floor, Math.min(100, Math.round(v)));

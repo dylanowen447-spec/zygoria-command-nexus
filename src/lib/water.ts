@@ -1,7 +1,7 @@
 /** Crew water: full during the opening, drains gently in the Sanctuary (floor 10). Bottles hold limited drinks. Saved on-device. */
 export const WATER_KEY = "zygoria-water-v1";
 export const WATER_FLOOR = 10;
-export const WATER_DRAIN_MS = 30000;
+export const WATER_DRAIN_MS = 12000;
 export const DRINK_RESTORE = 30;
 export const BOTTLE_MAX = 3;
 
