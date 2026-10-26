@@ -4,7 +4,7 @@ import { CharacterSprite } from "@/components/CharacterSprite";
 import { INTERIORS, type InteriorId } from "@/lib/interiors";
 import { startShackMusic, stopShackMusic } from "@/lib/atmosphere";
 import { WorkshopTV } from "@/components/WorkshopTV";
-import ozDance from "@/assets/oz-dance.webp.asset.json";
+import ozDance from "@/assets/oz-dance-v2.webp.asset.json";
 
 type Zig = "Oz" | "Brix" | "Lowkey";
 
