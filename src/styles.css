@@ -813,15 +813,15 @@
 /* Speech bubbles float above the tallest head; the lift grows with PC sprite size. */
 .haven-scene{--zig-lift:62px;--human-lift:23%}
 .workshop-scene{--zig-lift:70px}
-/* PC: Brix looms large in his own workshop (4x the interior size). */
+/* PC: every interior Zig stands at the shack-dance scale, so walking sprites match the dancing sprite. */
 @media(min-width:601px){
-.workshop-scene{--zig-lift:250px}
-.workshop-scene .haven-layer .haven-zig.marker-brix{width:164px;height:248px}
-.workshop-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:164px!important;height:240px!important}
-.workshop-scene .haven-layer .haven-zig.marker-oz{width:120px;height:184px}
-.workshop-scene .haven-layer .haven-zig.marker-oz .sprite-stage{width:120px!important;height:184px!important}
-.workshop-scene .haven-layer .haven-zig.marker-lowkey{width:136px;height:210px}
-.workshop-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:136px!important;height:210px!important}
+.workshop-scene{--zig-lift:360px}
+.workshop-scene .haven-layer .haven-zig.marker-brix{width:234px;height:352px}
+.workshop-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:234px!important;height:342px!important}
+.workshop-scene .haven-layer .haven-zig.marker-oz{width:170px;height:276px}
+.workshop-scene .haven-layer .haven-zig.marker-oz .sprite-stage{width:170px!important;height:262px!important}
+.workshop-scene .haven-layer .haven-zig.marker-lowkey{width:194px;height:306px}
+.workshop-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:194px!important;height:296px!important}
 .workshop-scene .haven-layer .haven-zig .ctrl-ring{width:118px;height:18px}
 }
 /* Oz's shack interior: Zygs at 300% of the interior size (phone and PC). */
@@ -1051,6 +1051,17 @@
 .lowkey-scene .haven-layer .haven-zig.marker-lowkey{width:102px;height:164px}
 .lowkey-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:102px!important;height:156px!important}
 .lowkey-scene .haven-layer .haven-zig .ctrl-ring{width:90px;height:16px}
+/* PC: Lowkey's mountain interior matches the dance scale too. */
+@media(min-width:601px){
+.lowkey-scene{--zig-lift:360px}
+.lowkey-scene .haven-layer .haven-zig.marker-brix{width:234px;height:352px}
+.lowkey-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:234px!important;height:342px!important}
+.lowkey-scene .haven-layer .haven-zig.marker-oz{width:170px;height:276px}
+.lowkey-scene .haven-layer .haven-zig.marker-oz .sprite-stage{width:170px!important;height:262px!important}
+.lowkey-scene .haven-layer .haven-zig.marker-lowkey{width:194px;height:306px}
+.lowkey-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:194px!important;height:296px!important}
+.lowkey-scene .haven-layer .haven-zig .ctrl-ring{width:90px;height:16px}
+}
 /* Waterfall descent: square artwork box so path nodes stay on the road at any screen shape */
 .descent-scene{display:flex;align-items:center;justify-content:center;background:var(--background)}
 .descent-box{position:relative;aspect-ratio:1/1;height:100%;max-width:100%;max-height:100%;margin:auto;cursor:pointer}
@@ -1126,9 +1137,13 @@
 /* Oz's 16-frame headphone dance (one strip). The shack track runs 174 BPM, so a move lands every two beats;
    WorkshopScene picks which move shows, so Oz freestyles instead of looping the same routine. */
 .oz-dance-sheet{position:absolute;inset:0;display:block;background-repeat:no-repeat;background-size:1600% 100%;background-position-y:100%;background-position-x:0%}
-/* PC: Oz stands larger in his own shack only. */
+/* PC: every Zig inside the shack stands at the dance scale, so walking matches dancing. */
 @media(min-width:601px){
-.shack-scene{--zig-lift:300px}
+.shack-scene{--zig-lift:360px}
 .shack-scene .haven-layer .haven-zig.marker-oz{width:170px;height:276px}
 .shack-scene .haven-layer .haven-zig.marker-oz .sprite-stage{width:170px!important;height:262px!important}
+.shack-scene .haven-layer .haven-zig.marker-brix{width:234px;height:352px}
+.shack-scene .haven-layer .haven-zig.marker-brix .sprite-stage{width:234px!important;height:342px!important}
+.shack-scene .haven-layer .haven-zig.marker-lowkey{width:194px;height:306px}
+.shack-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:194px!important;height:296px!important}
 }
