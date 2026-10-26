@@ -27,7 +27,7 @@ import firePitImg from "@/assets/fire-pit.png";
 import { FieldCodex } from "@/components/FieldCodex";
 import { SanctuaryTV } from "@/components/SanctuaryTV";
 import { TV_CODEX, TV_ESCAPED, TV_KEY, TV_NIGHT_MS } from "@/lib/tv-mission";
-import { EMPTY_STORY, MOXI_SCENE, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
+import { EMPTY_STORY, MOXI_SCENE, SANCTUARY_SIGNAL, SANCTUARY_TIME_KEY, STORY_KEY, cavesUnlocked, chapterDone, lastBeat, lockedZones, nextBeat, type StoryBeat, type StoryState } from "@/lib/story";
 const MP3_AFTER = 120;
 const PET_AFTER = 60;
 const PET_KEY = "zygoria-boulder-pot-v1";
@@ -1705,7 +1705,7 @@ function CommandCentre() {
             {zone.id !== "sanctuary" && zone.tags.map(t => <div key={t.label} className="location-tag zone-tag" style={{ left: `${t.x}%`, top: `${t.y}%` }}><span className="location-line"/> {t.label}</div>)}
             <div className="world-stage" ref={stageRef}>
             {clickMark && <span key={clickMark.id} className="click-mark" style={{ left: `${clickMark.x}%`, top: `${clickMark.y}%` }} aria-hidden="true"/>}
-            {zone.id === "sanctuary" && prologue === "off" && (editor || story.beats.includes("thoth")) && <button type="button" className="workshop-door-hit sanctuary-exit" style={{ left: "85%", top: "47%", width: "auto", height: "auto", minWidth: 48, minHeight: 48 }} aria-label="Walk down to the caves" title="To the caves" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (!canClick()) return; setDescent(true); }}><span>CAVES ›</span></button>}
+            {zone.id === "sanctuary" && prologue === "off" && cavesUnlocked(story) && <button type="button" className="workshop-door-hit sanctuary-exit" style={{ left: "85%", top: "47%", width: "auto", height: "auto", minWidth: 48, minHeight: 48 }} aria-label="Walk down to the caves" title="To the caves" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (!canClick()) return; setDescent(true); }}><span>CAVES ›</span></button>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: "74.5%", top: "44%" }} aria-label="Enter Brix's workshop" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("brix"); }}/>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: "18%", top: "56%" }} aria-label="Enter Oz's shack" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("oz"); }}/>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: `${BED.Lowkey.door.x}%`, top: `${BED.Lowkey.door.y}%` }} aria-label="Enter Lowkey's mountain home" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("lowkey"); }}/>}

@@ -136,3 +136,6 @@ export function nextBeat(zone: ZoneId, s: StoryState, directive: string): { chap
 /** Zones locked behind an unfinished chapter. */
 // Players who finished the old signal chapter keep the caves they already unlocked.
 export const lockedZones = (s: StoryState) => STORY_CHAPTERS.filter(c => !chapterDone(c, s) && !s.beats.includes("fixed")).map(c => c.unlocks);
+
+/** The way down to the caves only opens once Thoth has told Lowkey about the people under the mountains. */
+export const cavesUnlocked = (s: StoryState) => s.beats.includes("thoth");
