@@ -8,9 +8,9 @@ import ozDance from "@/assets/oz-dance-v2.webp.asset.json";
 
 type Zig = "Oz" | "Brix" | "Lowkey";
 
-/** The shack dance strip holds 16 moves; the shack track runs 174 BPM, so a move lands every two beats. */
+/** The shack dance strip holds 16 moves; the shack track runs 174 BPM, so Oz changes move on every beat. */
 const DANCE_MOVES = 16;
-const DANCE_MS = 689.7;
+const DANCE_MS = 344.85;
 
 /** A fresh run of moves in random order, so Oz never repeats the same routine twice. */
 function shuffledMoves() {
