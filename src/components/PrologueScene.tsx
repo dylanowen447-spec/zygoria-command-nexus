@@ -9,6 +9,7 @@ import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } f
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playHatch, playSfx } from "@/lib/atmosphere";
+import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn } from "@/lib/voice";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
@@ -46,6 +47,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   // Hatch state: which Zigs have stepped out yet. Pods play sounds only — no on-screen overlays.
   const [emerged, setEmerged] = useState<Record<Agent, boolean>>({ Oz: true, Brix: true, Lowkey: true });
   const [hatching, setHatching] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(true);
+  useEffect(() => setVoiceOn(voicesOn()), []);
   const skipHatch = useRef<(() => void) | null>(null);
   const [walking, setWalking] = useState<Agent[]>([]);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "right", Lowkey: "left" });
@@ -738,6 +741,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       ALL.forEach(paint);
       await wait(900);
       if (!alive) return;
+      preloadVoices(scene.opening);
       setShown(true);
       if (hatchOn) {
         // Cinematic hatch: the pods start sealed; each door folds out with steam and hatch sound before its Zig steps into the crater. Skippable.
@@ -763,11 +767,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       else if (scene.startStill) await wait(600);
       else await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
       if (!alive) return;
-      for (const [who, text] of scene.opening) { if (inCombat()) break; say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP); }
+      for (const [who, text] of scene.opening) { if (inCombat()) break; say(who, text); await Promise.all([wait(voicesOn() ? 1200 : hold(text)), speak(who, text)]); if (!alive) return; say(who, null); await wait(voicesOn() ? 400 : GAP); }
       setLookAway(false);
       ALL.forEach(a => void explore(a));
     })();
-    return () => { alive = false; autoFinish.current = () => {}; afterCityFight.current = () => {}; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); skipHatch.current = null; };
+    return () => { stopVoice(); alive = false; autoFinish.current = () => {}; afterCityFight.current = () => {}; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); skipHatch.current = null; };
   }, [scene]);
 
   // Space: tap = quick attack, hold ~0.6s then release = heavy. Key auto-repeat is ignored.
@@ -841,6 +845,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{combat ? ctrl : steered ?? ctrl}</small>
     </button>}
+    <button type="button" className="voice-toggle" aria-pressed={voiceOn} onClick={() => { setVoicesOn(!voiceOn); setVoiceOn(!voiceOn); }}>{voiceOn ? "Voices on" : "Voices off"}</button>
     {hatchOn && hatching && <button type="button" className="hatch-skip" onClick={() => skipHatch.current?.()}>Skip ›</button>}
     {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
     {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · click ground to move · Space attacks where the mouse points (hold = heavy)</div>}
