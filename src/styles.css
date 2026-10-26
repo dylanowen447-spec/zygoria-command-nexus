@@ -1123,9 +1123,9 @@
   75%  { transform: translateY(-7%) rotate(2deg) scaleY(1.03); }
   100% { transform: translateY(0) rotate(-6deg) scaleY(0.94); }
 }
-/* Oz's 16-frame headphone dance (one strip), stepped at the shack's 174 BPM: two frames per beat. */
-.oz-dance-sheet{position:absolute;inset:0;display:block;background-repeat:no-repeat;background-size:1600% 100%;background-position:0 100%;animation:ozDance 2.759s steps(16) infinite}
-@keyframes ozDance{from{background-position-x:0%}to{background-position-x:106.6667%}}
+/* Oz's 16-frame headphone dance (one strip). The shack track runs 174 BPM, so a move lands every two beats;
+   WorkshopScene picks which move shows, so Oz freestyles instead of looping the same routine. */
+.oz-dance-sheet{position:absolute;inset:0;display:block;background-repeat:no-repeat;background-size:1600% 100%;background-position-y:100%;background-position-x:0%}
 /* PC: Oz stands larger in his own shack only. */
 @media(min-width:601px){
 .shack-scene{--zig-lift:300px}
