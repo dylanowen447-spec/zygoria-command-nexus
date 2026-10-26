@@ -30,6 +30,7 @@ export async function speak(who: string, text: string, maxWaitMs = 4000): Promis
   if (!url || !voicesOn()) return;
   stopVoice();
   const a = new Audio(url); current = a;
+  a.playbackRate = 1.15; a.preservesPitch = true; // slightly brisker delivery, same voice pitch
   await new Promise<void>(res => { a.onended = () => res(); a.onerror = () => res(); a.play().catch(() => res()); });
   if (current === a) current = null;
 }
