@@ -2,8 +2,8 @@ import { voiceLine } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { INTERIORS, type InteriorId } from "@/lib/interiors";
-import { startShackMusic, stopShackMusic, cycleShackTrack, shackTrackName } from "@/lib/atmosphere";
-import { Disc3 } from "lucide-react";
+import { startShackMusic, stopShackMusic, cycleShackTrack, shackTrackName, nudgeShackTempo } from "@/lib/atmosphere";
+import { Disc3, Minus, Plus } from "lucide-react";
 import { WorkshopTV } from "@/components/WorkshopTV";
 import ozDance from "@/assets/oz-dance-v2.webp.asset.json";
 
@@ -92,6 +92,10 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }
       {place === "oz" && <button type="button" className="workshop-spot deck-spot" style={{ left: "66%", top: "40%" }}
         aria-label={`Change the tune on Oz's decks — now playing ${track}`}
         onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); changeTrack(); }}><Disc3 size={16}/><span>DECKS · {track}</span></button>}
+      {place === "oz" && <button type="button" className="workshop-spot tempo-spot" style={{ left: "61%", top: "40%" }} aria-label="Tempo down"
+        onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); nudgeShackTempo(-6); }}><Minus size={14}/></button>}
+      {place === "oz" && <button type="button" className="workshop-spot tempo-spot" style={{ left: "71%", top: "40%" }} aria-label="Tempo up"
+        onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); nudgeShackTempo(6); }}><Plus size={14}/></button>}
       {bubble && <div key={bubble} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, x))}%`, bottom: "calc(16% + var(--zig-lift))" }}><b>{character.toUpperCase()}</b>{bubble}</div>}
     </div>
     <div className="map-coordinate top-right">{room.label}</div>

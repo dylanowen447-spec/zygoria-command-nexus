@@ -279,6 +279,12 @@ const SHACK_TRACKS: ShackTrack[] = [
   { name: "FIREFLY DANCE", roots: [38, 40, 45, 41], kick: [0, 11], snare: [4, 12], ghost: [6], pad: [24, 28, 32], bass: "square", hat: "swing", bassSteps: [0, 8], kickHz: 180, snareHz: 2200, mel: [24, 19, 16, 12, 24, 19, 16, 12, 26, 21, 17, 14, 26, 21, 17, 14], melWave: "triangle", melOct: 24 },
 ];
 let shackTrack = 0;
+let shackBpm = 174;
+/** Deck tempo buttons: nudge the shack tune's tempo by `delta` BPM (kept between 140 and 200). */
+export function nudgeShackTempo(delta: number): number {
+  shackBpm = Math.min(200, Math.max(140, shackBpm + delta));
+  return shackBpm;
+}
 /** The tune currently cued up on Oz's decks. */
 export const shackTrackName = () => SHACK_TRACKS[shackTrack]!.name;
 /** Deck button: cue the next tune. If the decks are spinning, drop it in with a spinback flick. */
@@ -298,7 +304,7 @@ export function cycleShackTrack(): string {
 }
 function dnbTick() {
   if (!ctx || !dnb) return;
-  const d = dnb, track = SHACK_TRACKS[shackTrack]!; const s16 = 60 / 174 / 4;
+  const d = dnb, track = SHACK_TRACKS[shackTrack]!; const s16 = 60 / shackBpm / 4;
   while (d.next < ctx.currentTime + 0.25) {
     const t = d.next, sub = d.step % 16, bar = Math.floor(d.step / 16) % 4;
     if (track.kick.includes(sub)) { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(track.kickHz, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g).connect(d.bus); o.start(t); o.stop(t + 0.25); }

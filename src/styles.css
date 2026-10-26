@@ -862,6 +862,7 @@
 .deck-spot{width:40px;height:40px;background:color-mix(in oklch, var(--primary) 32%, transparent);animation:none}
 .deck-spot svg{animation:deckSpin 1.8s linear infinite}
 .deck-spot span{min-width:150px;text-align:center}
+.tempo-spot{width:30px;height:30px;display:grid;place-items:center;color:var(--foreground);background:color-mix(in oklch, var(--primary) 24%, transparent);animation:none}
 @keyframes deckSpin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){.deck-spot svg{animation:none}}
 .workshop-door{border-radius:8px;width:60px;height:90px;border-color:transparent;background:transparent;animation:none;box-shadow:none}
