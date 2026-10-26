@@ -36,7 +36,7 @@ import { CHRONICLES } from "@/lib/chronicles";
 import { CreatorCredit } from "@/components/CreatorCredit";
 import { SITE_IDENTITY, SITE_STRUCTURED_DATA } from "@/lib/site-identity";
 import { PrologueScene } from "@/components/PrologueScene";
-import { PROLOGUE_KEY, PROLOGUE_SCENES, CLEARED_KEY, EDITOR_KEY, RETURN_OPENINGS } from "@/lib/prologue";
+import { PROLOGUE_KEY, PROLOGUE_SCENES, CLEARED_KEY, EDITOR_KEY } from "@/lib/prologue";
 import { HavenScene } from "@/components/HavenScene";
 import { DescentScene } from "@/components/DescentScene";
 import { WorkshopScene } from "@/components/WorkshopScene";
@@ -274,7 +274,8 @@ function CommandCentre() {
     setEditor(on => { const v = !on; try { localStorage.setItem(EDITOR_KEY, v ? "1" : "0"); } catch { /* optional */ } return v; });
   }
   const baseScene = PROLOGUE_SCENES[prologueStep]!;
-  const scene = cleared.includes(baseScene.id) && RETURN_OPENINGS[baseScene.id] ? { ...baseScene, opening: RETURN_OPENINGS[baseScene.id]! } : baseScene;
+  // Returning to any scene plays it from the beginning again — the original opening, never the return variant.
+  const scene = baseScene;
   useEffect(() => {
     
     // Every visit opens at Three Eggs; the skip button still jumps to the Sanctuary.
