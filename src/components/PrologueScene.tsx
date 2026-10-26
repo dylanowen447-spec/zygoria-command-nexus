@@ -33,13 +33,13 @@ const swingKind = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? "atk-pun
 const swingMs = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? 620 : 460) : a === "Lowkey" ? (heavy ? 560 : 420) : heavy ? 420 : 240;
 const HOLD_MS = 600;
 
-type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void; canSkip?: boolean; returning?: boolean };
+type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void; canSkip?: boolean };
 
 /** One prologue area: the Zigs explore its walkable graph on their own and only notice objectives after looking around. */
-export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip = false, returning = false }: Props) {
+export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip = false }: Props) {
   const handler = useRef<(text: string) => void>(() => undefined);
-  /** Three Eggs on a first visit: the pods play their fold-out hatch sequence before the crew steps out. */
-  const hatchOn = scene.id === "landing" && !returning;
+  // Three Eggs always plays the full pod hatch sequence — every entry starts the scene from the beginning.
+  const hatchOn = scene.id === "landing";
   useEffect(() => { if (command) handler.current(command.text); }, [command]);
   const coords = useRef<Record<Agent, Point>>(Object.fromEntries(ALL.map(a => [a, { ...scene.spawn[a].from }])) as Record<Agent, Point>);
   const markers = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
