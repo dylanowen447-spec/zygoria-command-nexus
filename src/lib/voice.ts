@@ -30,7 +30,7 @@ export async function speak(who: string, text: string, maxWaitMs = 4000): Promis
   if (!url || !voicesOn()) return;
   stopVoice();
   const a = new Audio(url); current = a;
-  a.playbackRate = 1.15; a.preservesPitch = true; // slightly brisker delivery, same voice pitch
+  a.playbackRate = 1.3; a.preservesPitch = true; // brisker delivery, same voice pitch
   await new Promise<void>(res => { a.onended = () => res(); a.onerror = () => res(); a.play().catch(() => res()); });
   if (current === a) current = null;
 }
@@ -41,7 +41,7 @@ let playing = false;
 export function voiceLine(who: string, text: string) {
   const t = text.replace(/\*[^*]*\*/g, "").trim();
   if (!voicesOn() || !/[a-z]/i.test(t)) return;
-  if (queue.length > 2) queue.shift(); // drop stale chatter rather than lag behind
+  if (queue.length > 5) queue.shift(); // only drop lines if far behind
   queue.push([who, t]); void load(who, t);
   if (playing) return;
   playing = true;

@@ -1,3 +1,4 @@
+import { voiceLine } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import tvNormal from "@/assets/tv-normal.png.asset.json";
@@ -18,6 +19,7 @@ const clampArena = (p: P): P => ({ x: Math.min(TV_ARENA.maxX, Math.max(TV_ARENA.
 export function SanctuaryTV({ escaped, controlled, onLog, onDone, onFightStart }: { escaped: boolean; controlled?: string | null; onLog: (who: string, text: string) => void; onDone: () => void; onFightStart?: () => void }) {
   const [stage, setStage] = useState<Stage>("dormant");
   const [line, setLine] = useState<TvLine | null>(null);
+  useEffect(() => { if (line) voiceLine(line[0] || "Narrator", line[1]); }, [line]);
   const [pos, setPos] = useState<P>(TV_EXIT_PATH[0]!);
   const [face, setFace] = useState<"left" | "right" | "up" | "down">("down");
   const [moving, setMoving] = useState(false);
