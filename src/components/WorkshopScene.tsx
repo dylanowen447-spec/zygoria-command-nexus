@@ -8,6 +8,20 @@ import ozDance from "@/assets/oz-dance.webp.asset.json";
 
 type Zig = "Oz" | "Brix" | "Lowkey";
 
+/** The shack dance strip holds 16 moves; the shack track runs 174 BPM, so a move lands every two beats. */
+const DANCE_MOVES = 16;
+const DANCE_MS = 689.7;
+
+/** A fresh run of moves in random order, so Oz never repeats the same routine twice. */
+function shuffledMoves() {
+  const moves = Array.from({ length: DANCE_MOVES }, (_, i) => i);
+  for (let i = moves.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [moves[i], moves[j]] = [moves[j]!, moves[i]!];
+  }
+  return moves;
+}
+
 /** A walk-in interior (Brix's workshop, Oz's shack) entered from a Sanctuary door. */
 export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }: { onExit: () => void; character?: Zig; place?: InteriorId; tv?: { wake: boolean; editor: boolean; onEscape: () => void } | undefined }) {
   const room = INTERIORS[place];
@@ -18,11 +32,27 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }
   const low = character.toLowerCase();
   const posRef = useRef(55);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Oz chooses his own next shack dance move; the queue holds the rest of the current run. */
+  const [move, setMove] = useState(0);
+  const queueRef = useRef<number[]>([]);
+  const dancing = place === "oz" && character === "Oz" && !moving;
 
   useEffect(() => { if (bubble) voiceLine(character, bubble); }, [bubble, character]);
   useEffect(() => { const t = setTimeout(() => setBubble(""), 4200); return () => clearTimeout(t); }, [bubble]);
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
   useEffect(() => { if (place !== "oz") return; startShackMusic(); return () => stopShackMusic(); }, [place]);
+
+  useEffect(() => {
+    if (!dancing) return;
+    const id = setInterval(() => {
+      const queue = queueRef.current;
+      if (queue.length < 4) queue.push(...shuffledMoves());
+      // Keep a favourite going now and then, the way a real dancer holds a move a beat longer.
+      if (Math.random() < 0.12) return;
+      setMove(queue.shift() ?? 0);
+    }, DANCE_MS);
+    return () => clearInterval(id);
+  }, [dancing]);
 
   const walkTo = (tx: number, then?: () => void) => {
     tx = Math.min(80, Math.max(12, tx));
@@ -41,8 +71,8 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }
     <img className="world-image" src={room.img} alt={room.alt} />
     <div className="haven-layer">
       <span className={`haven-zig marker-${low} ${moving ? `is-walking ${low}-facing-${moving.dir} facing-${moving.dir}` : ""}`} style={{ left: `${x}%`, bottom: "16%", transitionDuration: moving ? `${moving.ms}ms` : "0ms" }}>
-        <span className="sprite-stage">{place === "oz" && character === "Oz" && !moving
-          ? <span className="oz-dance-sheet" style={{ backgroundImage: `url(${ozDance.url})` }} aria-label="Oz dancing" />
+        <span className="sprite-stage">{dancing
+          ? <span className="oz-dance-sheet" style={{ backgroundImage: `url(${ozDance.url})`, backgroundPositionX: `${move * (100 / (DANCE_MOVES - 1))}%` }} aria-label="Oz dancing" />
           : <span className="shack-still"><CharacterSprite character={character}/></span>}</span>
       </span>
       {place === "brix" && tv && <WorkshopTV wake={tv.wake} editor={tv.editor} exitX={exitX} onEscape={tv.onEscape}/>}
