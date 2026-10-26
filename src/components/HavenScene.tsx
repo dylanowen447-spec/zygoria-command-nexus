@@ -1,4 +1,4 @@
-import { voiceLine } from "@/lib/voice";
+import { voiceLine, speak, voicesOn } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import bg from "@/assets/haven-bg.webp";
 import orinImg from "@/assets/haven-orin.webp";
@@ -72,15 +72,21 @@ export function HavenScene() {
     setPos(p => ({ ...p, [a]: { x, b } }));
     setTimeout(() => setMoving(m => (m && m.a === a && m.ms === ms ? null : m)), ms);
   };
-  useEffect(() => { if (bubble) voiceLine(bubble.who, bubble.text); }, [bubble]);
+  // Intro lines appear when their voice starts and move on when it ends.
+  useEffect(() => { if (bubble && introDone) voiceLine(bubble.who, bubble.text); }, [bubble, introDone]);
   const xOf = (w: Speaker) => (w === "Oz" || w === "Brix" || w === "Lowkey" ? pos[w].x : X[w]);
 
   useEffect(() => {
     if (introDone) return;
     const line = INTRO[step]!;
-    setBubble(line);
-    const t = setTimeout(() => setStep(s => s + 1), 3600);
-    return () => clearTimeout(t);
+    let live = true, t: ReturnType<typeof setTimeout> | undefined;
+    const started = performance.now();
+    void speak(line.who, line.text, () => { if (live) setBubble(line); }).then(() => {
+      if (!live) return;
+      const rest = voicesOn() ? 350 : Math.max(0, 3600 - (performance.now() - started));
+      t = setTimeout(() => setStep(s => s + 1), rest);
+    });
+    return () => { live = false; if (t) clearTimeout(t); };
   }, [step, introDone]);
 
   async function send(e: React.FormEvent) {

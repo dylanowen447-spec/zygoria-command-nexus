@@ -769,7 +769,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       else await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
       if (!alive) return;
       openingNow = true;
-      for (const [who, text] of scene.opening) { if (inCombat()) break; say(who, text); await Promise.all([wait(1200), speak(who, text)]); await wait(voicesOn() ? 0 : hold(text) - 1200); if (!alive) return; say(who, null); await wait(voicesOn() ? 400 : GAP); }
+      for (const [who, text] of scene.opening) { if (inCombat()) break; await speak(who, text, () => { if (alive) say(who, text); }); await wait(voicesOn() ? 250 : hold(text)); if (!alive) return; say(who, null); await wait(voicesOn() ? 300 : GAP); }
       openingNow = false;
       setLookAway(false);
       ALL.forEach(a => void explore(a));
