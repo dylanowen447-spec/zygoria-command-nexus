@@ -263,14 +263,18 @@ export function playDefeatSting() {
   }
 }
 
-// ---------- Oz's shack: procedural drum & bass (174 BPM). Four deck tunes; the decks button changes them. ----------
+// ---------- Oz's shack: procedural drum & bass (174 BPM). Eight deck tunes; the decks button changes them. ----------
 let dnb: { timer: number; step: number; next: number; bus: GainNode } | null = null;
-type ShackTrack = { name: string; roots: number[]; kick: number[]; snare: number[]; ghost: number[]; pad: number[]; bass: "reese" | "square" | "wobble" };
+type ShackTrack = { name: string; roots: number[]; kick: number[]; snare: number[]; ghost: number[]; pad: number[]; bass: "reese" | "square" | "wobble" | "acid"; hat: "straight" | "swing" | "sparse"; lead?: boolean };
 const SHACK_TRACKS: ShackTrack[] = [
-  { name: "RIVERSIDE ROLL", roots: [38, 38, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [7, 2], pad: [24, 27, 31], bass: "reese" },
-  { name: "NEON STEP", roots: [36, 36, 39, 34], kick: [0, 11], snare: [4, 14], ghost: [7, 9], pad: [23, 27, 30], bass: "square" },
-  { name: "JUNGLE STOMP", roots: [40, 40, 38, 43], kick: [0, 7, 10], snare: [4, 12], ghost: [5, 9, 14], pad: [24, 28, 31], bass: "reese" },
-  { name: "SUNSET DUB", roots: [38, 41, 36, 38], kick: [0, 8], snare: [8], ghost: [12, 3], pad: [19, 26, 27], bass: "wobble" },
+  { name: "RIVERSIDE ROLL", roots: [38, 38, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [7, 2], pad: [24, 27, 31], bass: "reese", hat: "straight" },
+  { name: "NEON STEP", roots: [36, 36, 39, 34], kick: [0, 11], snare: [4, 14], ghost: [7, 9], pad: [23, 27, 30], bass: "square", hat: "swing" },
+  { name: "JUNGLE STOMP", roots: [40, 40, 38, 43], kick: [0, 7, 10], snare: [4, 12], ghost: [5, 9, 14], pad: [24, 28, 31], bass: "reese", hat: "straight" },
+  { name: "SUNSET DUB", roots: [38, 41, 36, 38], kick: [0, 8], snare: [8], ghost: [12, 3], pad: [19, 26, 27], bass: "wobble", hat: "sparse" },
+  { name: "MIDNIGHT ACID", roots: [36, 36, 34, 41], kick: [0, 4, 10], snare: [4, 12], ghost: [7, 11], pad: [24, 27, 30], bass: "acid", hat: "straight" },
+  { name: "COPPER WIRE", roots: [38, 43, 41, 36], kick: [0, 10], snare: [4, 12], ghost: [6, 14], pad: [24, 28, 31], bass: "reese", hat: "swing", lead: true },
+  { name: "THUNDER ROLL", roots: [36, 34, 39, 36], kick: [0, 8, 10], snare: [4, 12], ghost: [7, 9, 15], pad: [22, 26, 29], bass: "wobble", hat: "straight" },
+  { name: "FIREFLY DANCE", roots: [38, 40, 45, 41], kick: [0, 11], snare: [4, 12], ghost: [6, 9], pad: [24, 28, 32], bass: "square", hat: "swing", lead: true },
 ];
 let shackTrack = 0;
 /** The tune currently cued up on Oz's decks. */
