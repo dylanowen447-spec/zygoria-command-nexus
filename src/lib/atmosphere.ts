@@ -185,6 +185,31 @@ export function playSfx(kind: Sfx) {
   }
 }
 
+/** Egg-hatch SFX for the Three Eggs opening: heavy clunk, electric pop, slow mist (shares the atmosphere context). */
+export function playHatch(kind: "heavy" | "pop" | "mist") {
+  if (typeof window === "undefined") return;
+  if (!ctx) boot();
+  if (!ctx || ctx.state !== "running") return;
+  const t = ctx.currentTime + 0.02;
+  if (kind === "heavy") { // Brix: deep mechanical clunk, metal groan, long hydraulic hiss
+    blip(t, 120, 45, 0.4, 0.5, "square");
+    burst(t + 0.05, 300, 0.3, 0.25, "lowpass");
+    blip(t + 0.1, 90, 60, 1.1, 0.12, "sawtooth", true);
+    burst(t + 0.15, 600, 1.4, 0.3, "bandpass");
+    burst(t + 0.3, 2400, 1.2, 0.14, "highpass");
+  } else if (kind === "pop") { // Oz: pressurised pop followed by an electric spark burst
+    blip(t, 500, 80, 0.4, 0.4, "square");
+    burst(t, 1800, 0.2, 0.3, "bandpass");
+    for (let i = 0; i < 9; i++) burst(t + 0.1 + i * 0.05 + Math.random() * 0.03, 5200, 0.04, 0.14, "highpass");
+    blip(t + 0.12, 2400, 500, 0.15, 0.1, "square");
+    burst(t + 0.2, 900, 0.7, 0.16, "bandpass");
+  } else { // Lowkey: slow whispering mist with a low hum
+    burst(t, 400, 2.2, 0.14, "lowpass");
+    burst(t + 0.2, 1300, 1.6, 0.06, "bandpass");
+    blip(t + 0.4, 220, 90, 1.4, 0.05, "sine", true);
+  }
+}
+
 /** Retro defeat sting (~4s): tumbling minor arpeggio into a long hollow detuned low tone. */
 export function playDefeatSting() {
   if (!ctx) boot();
