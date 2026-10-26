@@ -50,7 +50,13 @@ async function play(who: string, text: string, maxWaitMs: number) {
 /** Every line goes through one queue so lines never cut each other off or get skipped. */
 const queue: { who: string; text: string; done: () => void }[] = [];
 let playing = false;
+/** Same speaker + same line within this window is an echo (e.g. a scene re-mounting), not a new line. */
+const recent = new Map<string, number>();
+const ECHO_MS = 8000;
 function enqueue(who: string, text: string) {
+  const k = `${who}|${text}`, now = Date.now();
+  if (now - (recent.get(k) ?? 0) < ECHO_MS) return Promise.resolve();
+  recent.set(k, now);
   return new Promise<void>(done => {
     queue.push({ who, text, done }); void load(who, text);
     if (playing) return;

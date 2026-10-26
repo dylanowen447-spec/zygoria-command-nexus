@@ -37,7 +37,8 @@ export function WorkshopScene({ onExit, character = "Brix", place = "brix", tv }
   const queueRef = useRef<number[]>([]);
   const dancing = place === "oz" && character === "Oz" && !moving;
 
-  useEffect(() => { if (bubble) voiceLine(character, bubble); }, [bubble, character]);
+  const voiced = useRef("");
+  useEffect(() => { if (bubble && voiced.current !== bubble) { voiced.current = bubble; voiceLine(character, bubble); } }, [bubble, character]);
   useEffect(() => { const t = setTimeout(() => setBubble(""), 4200); return () => clearTimeout(t); }, [bubble]);
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
   useEffect(() => { if (place !== "oz") return; startShackMusic(); return () => stopShackMusic(); }, [place]);
