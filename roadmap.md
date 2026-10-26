@@ -34,3 +34,4 @@
 - Voice the Zygs + Page 1 narrator with natural, expressive (non-robotic) AI speech; mute toggle.
 - [x] Oz dance sheet + bigger Oz in shack on PC
 - [x] Oz freestyles in the shack: he picks his next dance move himself on the beat, and the strip was rebuilt from each pose's true edges so nothing is clipped
+- [x] Caves exit stays hidden until Thoth tells Lowkey about the people under the mountains (dev jump kept in DEV · SCENES)
