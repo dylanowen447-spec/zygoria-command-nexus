@@ -35,5 +35,5 @@
 - [x] Oz dance sheet + bigger Oz in shack on PC
 - [x] Oz freestyles in the shack: he picks his next dance move himself on the beat, and the strip was rebuilt from each pose's true edges so nothing is clipped
 - [x] Caves exit stays hidden until Thoth tells Lowkey about the people under the mountains (dev jump kept in DEV · SCENES)
-- [ ] Oz's decks: CHANGE TRACK button cycles four procedural DnB tunes in his shack; soften the track-change sound (user: harsh high pitch).
-- [ ] More deck tunes with real variation (breaks, bass styles, moods) for Oz's decks.
+- [x] Oz's decks: CHANGE TRACK button cycles eight varied procedural DnB tunes; softened track-change to a vinyl-stop glide (verified: all eight cycle, no console errors).
+- [x] More deck tunes with real variation (breaks, bass styles, moods) for Oz's decks.
