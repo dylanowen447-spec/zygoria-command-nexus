@@ -282,7 +282,10 @@ export function cycleShackTrack(): string {
     clearInterval(dnb.timer);
     dnb.step = 0; dnb.next = ctx.currentTime + 0.05;
     dnb.timer = window.setInterval(dnbTick, 50);
-    chip(dnb.bus, ctx.currentTime, 480, 0.28, 0.2, "sawtooth");
+    // soft vinyl-stop: a low tone gliding down as the deck drops the new tune
+    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(340, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.35);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.1, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+    o.connect(g).connect(dnb.bus); o.start(); o.stop(ctx.currentTime + 0.4);
     dnbTick();
   }
   return shackTrackName();
