@@ -627,7 +627,7 @@ function CommandCentre() {
       setBubble({ agent: st.agent, text: line });
       await wait(Math.min(7000, Math.max(3200, 1800 + line.length * 45)));
       if (run !== runId.current) return;
-      setBubble(null); await wait(1000);
+      setBubble(null); await wait(350);
     }
     if (beat && done.length) await playBeat(beat, run);
     if (run !== runId.current) return;
@@ -728,7 +728,7 @@ function CommandCentre() {
     };
     const paths = Object.fromEntries(all.map(a => [a, direct[a] ?? [...toMeet(z, a), seat[a]]])) as Record<Agent, Point[]>;
     outing.current = all;
-    const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(Math.min(6000, Math.max(ms, 3200, 1800 + text.length * 45))); setBubble(null); await wait(1000); return run === runId.current; };
+    const say = async (agent: Agent, text: string, ms = 1800) => { setBubble({ agent, text }); log(agent, text); await wait(Math.min(6000, Math.max(ms, 3200, 1800 + text.length * 45))); setBubble(null); await wait(350); return run === runId.current; };
     const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]!;
     const r = Math.random();
     const size: "small" | "medium" | "large" = r < 0.5 ? "small" : r < 0.85 ? "medium" : "large";
@@ -1051,9 +1051,9 @@ function CommandCentre() {
         if (run !== runId.current) return;
         previous.push({ agent: z, result: reply });
         setBubble({ agent: z, text: reply }); log(z, reply);
-        await wait(Math.min(7000, Math.max(3200, 1800 + reply.length * 45)));
+        await wait(Math.min(5000, Math.max(2000, 1000 + reply.length * 35)));
         if (run !== runId.current) return;
-        setBubble(null); await wait(1000);
+        setBubble(null); await wait(350);
       }
       if (run === runId.current) setPhase("idle");
       return;
