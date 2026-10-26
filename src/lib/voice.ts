@@ -23,6 +23,16 @@ export function preloadVoices(lines: [string, string][]) { if (voicesOn()) lines
 
 export function stopVoice() { if (current) { current.pause(); current = null; } }
 
+/** Silence everything now: stop the speaking line, drop queued lines, and mute new lines for `muteMs`. */
+let mutedUntil = 0;
+export function silenceAllVoices(muteMs = 6000) {
+  mutedUntil = Date.now() + muteMs;
+  queue.splice(0).forEach(q => { q.onStart?.(); q.done(); });
+  if (current) { current.onended?.(new Event("ended")); current.pause(); current = null; }
+}
+export function unmuteVoices() { mutedUntil = 0; }
+const muted = () => Date.now() < mutedUntil;
+
 /** One shared audio element, unlocked on the player's first tap/key anywhere — browsers block
  *  speech started later (after a fetch or timer) unless that same element was unlocked by a gesture. */
 const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";

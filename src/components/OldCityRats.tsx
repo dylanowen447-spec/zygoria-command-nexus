@@ -1,5 +1,5 @@
 import { playSfx, playDefeatSting } from "@/lib/atmosphere";
-import { preloadVoices } from "@/lib/voice";
+import { preloadVoices, silenceAllVoices, unmuteVoices } from "@/lib/voice";
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
 import { GameOverScreen } from "@/components/GameOverScreen";
@@ -99,13 +99,13 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         sayRef.current(who, DOWN_LINES[who]);
         window.dispatchEvent(new CustomEvent("zig-downed", { detail: who }));
         if (allDown(s)) {
-          over = true; setDefeatState("falling"); stopBattleMusic(); playDefeatSting();
+          over = true; setDefeatState("falling"); stopBattleMusic(); silenceAllVoices(); playDefeatSting();
           later(800, () => setDefeatState("over"));
         }
       }
     };
 
-    rats.current = []; setSq(fullSquad()); setWave(0); setCleared(false); setDefeatState("");
+    unmuteVoices(); rats.current = []; setSq(fullSquad()); setWave(0); setCleared(false); setDefeatState("");
 
     // During Brix's swarm his blows also send a shockwave through the rats around the impact.
     hitRef.current = (p: Point) => {
