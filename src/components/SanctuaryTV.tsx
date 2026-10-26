@@ -1,3 +1,4 @@
+import { voiceLine } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import tvNormal from "@/assets/tv-normal.png.asset.json";

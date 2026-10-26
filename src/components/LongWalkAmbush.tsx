@@ -100,7 +100,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
     let alive = true, raf = 0, last = performance.now(), nextId = 1;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
-    const shelLine = (t: string, ms = 2400) => { setShelSay(t); later(ms, () => setShelSay(s => (s === t ? null : s))); };
+    const shelLine = (t: string, ms = 2400) => { setShelSay(t); voiceLine("Shelton", t); later(ms, () => setShelSay(s => (s === t ? null : s))); };
 
     const startWave = (n: number) => {
       wave.current = n; startBattleMusic();
