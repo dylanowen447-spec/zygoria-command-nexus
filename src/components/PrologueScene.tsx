@@ -8,7 +8,7 @@ import { liveSquad } from "@/lib/squad-health";
 import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } from "@/lib/prologue";
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
-import { playSfx } from "@/lib/atmosphere";
+import { playHatch, playSfx } from "@/lib/atmosphere";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
@@ -32,15 +32,22 @@ const swingKind = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? "atk-pun
 const swingMs = (a: Agent, heavy: boolean) => a === "Brix" ? (heavy ? 620 : 460) : a === "Lowkey" ? (heavy ? 560 : 420) : heavy ? 420 : 240;
 const HOLD_MS = 600;
 
-type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void; canSkip?: boolean };
+type Props = { scene: Scene; command: { id: number; text: string } | null; onLog: (agent: Agent, text: string) => void; onNext: () => void; onSkip: () => void; canSkip?: boolean; returning?: boolean };
 
 /** One prologue area: the Zigs explore its walkable graph on their own and only notice objectives after looking around. */
-export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip = false }: Props) {
+export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip = false, returning = false }: Props) {
   const handler = useRef<(text: string) => void>(() => undefined);
+  /** Three Eggs on a first visit: the pods play their fold-out hatch sequence before the crew steps out. */
+  const hatchOn = scene.id === "landing" && !returning;
   useEffect(() => { if (command) handler.current(command.text); }, [command]);
   const coords = useRef<Record<Agent, Point>>(Object.fromEntries(ALL.map(a => [a, { ...scene.spawn[a].from }])) as Record<Agent, Point>);
   const markers = useRef<Partial<Record<Agent, HTMLButtonElement | null>>>({});
   const [shown, setShown] = useState(false);
+  // Hatch state: which pod doors have folded open, and which Zigs have stepped out yet.
+  const [podsOpen, setPodsOpen] = useState<Partial<Record<Agent, boolean>>>({});
+  const [emerged, setEmerged] = useState<Record<Agent, boolean>>({ Oz: true, Brix: true, Lowkey: true });
+  const [hatching, setHatching] = useState(false);
+  const skipHatch = useRef<(() => void) | null>(null);
   const [walking, setWalking] = useState<Agent[]>([]);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "right", Lowkey: "left" });
   const [ozDir, setOzDir] = useState<"down" | "left" | "right" | "up">("down");
@@ -733,14 +740,35 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       await wait(900);
       if (!alive) return;
       setShown(true);
-      if (scene.startStill) await wait(600);
+      if (hatchOn) {
+        // Cinematic hatch: the pods start sealed; each door folds out with steam and hatch sound before its Zig steps into the crater. Skippable.
+        setEmerged({ Oz: false, Brix: false, Lowkey: false });
+        setHatching(true);
+        let skipped = false;
+        const hatched = new Set<Agent>();
+        let openGate = () => {};
+        const emerge = (a: Agent) => { if (hatched.has(a)) return; hatched.add(a); if (alive) { setEmerged(e => ({ ...e, [a]: true })); void walk(a, [scene.spots[scene.spawn[a].out]!.at]); } };
+        const open = (a: Agent, kind: "heavy" | "pop" | "mist") => { if (skipped) return; playHatch(kind); setPodsOpen(p => ({ ...p, [a]: true })); };
+        skipHatch.current = () => { skipped = true; ALL.forEach(a => { setPodsOpen(p => ({ ...p, [a]: true })); emerge(a); }); setHatching(false); openGate(); };
+        const hwait = (ms: number) => skipped ? Promise.resolve() : Promise.race([wait(ms), new Promise<void>(r => { openGate = r; })]);
+        await hwait(1400); if (!alive) return;
+        open("Brix", "heavy"); await hwait(1500); if (!alive) return; emerge("Brix");
+        await hwait(1600); if (!alive) return;
+        open("Oz", "pop"); await hwait(650); if (!alive) return; emerge("Oz");
+        await hwait(1500); if (!alive) return;
+        open("Lowkey", "mist"); await hwait(1300); if (!alive) return; emerge("Lowkey");
+        await hwait(1000); if (!alive) return;
+        skipHatch.current = null;
+        setHatching(false);
+      }
+      else if (scene.startStill) await wait(600);
       else await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
       if (!alive) return;
       for (const [who, text] of scene.opening) { if (inCombat()) break; say(who, text); await wait(hold(text)); if (!alive) return; say(who, null); await wait(GAP); }
       setLookAway(false);
       ALL.forEach(a => void explore(a));
     })();
-    return () => { alive = false; autoFinish.current = () => {}; afterCityFight.current = () => {}; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
+    return () => { alive = false; autoFinish.current = () => {}; afterCityFight.current = () => {}; clearInterval(combatTimer); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); skipHatch.current = null; };
   }, [scene]);
 
   // Space: tap = quick attack, hold ~0.6s then release = heavy. Key auto-repeat is ignored.
@@ -800,7 +828,16 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined} onDefeatChange={setCityDefeat}/>}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""}`}>
+      {scene.id === "landing" && <div className="egg-pods" aria-hidden="true">
+        {(["Brix", "Oz", "Lowkey"] as Agent[]).map(a => <span key={a} className={`egg-pod egg-${a.toLowerCase()} ${podsOpen[a] ? "is-open" : ""}`}>
+          <span className="egg-glow"/>
+          <span className="egg-shell"/>
+          <span className="egg-door"/>
+          <span className="egg-steam"><i/><i/><i/></span>
+          {a === "Oz" && <span className="egg-spark"><i/><i/><i/></span>}
+        </span>)}
+      </div>}
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown && (!hatchOn || emerged[a]) ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
@@ -814,6 +851,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{combat ? ctrl : steered ?? ctrl}</small>
     </button>}
+    {hatchOn && hatching && <button type="button" className="hatch-skip" onClick={() => skipHatch.current?.()}>Skip ›</button>}
     {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
     {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · click ground to move · Space attacks where the mouse points (hold = heavy)</div>}
     <div className="map-coordinate bottom-left"><MapPin size={12}/> {scene.bottom}</div>
