@@ -580,7 +580,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         if (!alive) return;
         previous.push({ agent: z, result: reply });
         say(z, reply, true);
-        await wait(Math.min(7000, Math.max(3200, 1800 + reply.length * 45)));
+        await wait(Math.min(5000, Math.max(2000, 1000 + reply.length * 35)));
         if (!alive) return;
         say(z, null, true); await wait(GAP);
       }
