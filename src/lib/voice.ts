@@ -49,7 +49,7 @@ if (typeof window !== "undefined") {
 async function play(who: string, text: string, maxWaitMs: number, onStart?: () => void) {
   let url = await Promise.race([load(who, text), new Promise<null>(r => setTimeout(() => r(null), maxWaitMs))]);
   if (!url) { await new Promise(r => setTimeout(r, 1200)); url = await load(who, text); } // one retry for slow/busy voice server
-  if (!url || !voicesOn()) return;
+  if (!url || !voicesOn() || muted()) return;
   const a = player(); current = a;
   a.src = url;
   a.playbackRate = 1.3; a.preservesPitch = true; // brisker delivery, same voice pitch
@@ -80,7 +80,7 @@ const clean = (s: string) => s.replace(/\*[^*]*\*/g, "").trim().slice(0, 400);
  *  onStart fires the moment the voice actually starts (or right away if it can't play), so text can appear in sync. */
 export async function speak(who: string, text: string, onStart?: () => void): Promise<void> {
   const t = clean(text);
-  if (!voicesOn() || !/[a-z]/i.test(t)) { onStart?.(); return; }
+  if (!voicesOn() || muted() || !/[a-z]/i.test(t)) { onStart?.(); return; }
   await enqueue(who, t, onStart);
 }
 
