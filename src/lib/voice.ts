@@ -23,11 +23,25 @@ export function preloadVoices(lines: [string, string][]) { if (voicesOn()) lines
 
 export function stopVoice() { if (current) { current.pause(); current = null; } }
 
+/** One shared audio element, unlocked on the player's first tap/key anywhere — browsers block
+ *  speech started later (after a fetch or timer) unless that same element was unlocked by a gesture. */
+const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+let el: HTMLAudioElement | null = null;
+const player = () => (el ??= new Audio());
+if (typeof window !== "undefined") {
+  const unlock = () => {
+    const a = player(); if (!a.src || a.src === SILENT) { a.src = SILENT; void a.play().catch(() => {}); }
+    window.removeEventListener("pointerdown", unlock, true); window.removeEventListener("keydown", unlock, true);
+  };
+  window.addEventListener("pointerdown", unlock, true); window.addEventListener("keydown", unlock, true);
+}
+
 async function play(who: string, text: string, maxWaitMs: number) {
   let url = await Promise.race([load(who, text), new Promise<null>(r => setTimeout(() => r(null), maxWaitMs))]);
   if (!url) { await new Promise(r => setTimeout(r, 1200)); url = await load(who, text); } // one retry for slow/busy voice server
   if (!url || !voicesOn()) return;
-  const a = new Audio(url); current = a;
+  const a = player(); current = a;
+  a.src = url;
   a.playbackRate = 1.3; a.preservesPitch = true; // brisker delivery, same voice pitch
   await new Promise<void>(res => { a.onended = () => res(); a.onerror = () => res(); a.play().catch(() => res()); });
   if (current === a) current = null;
