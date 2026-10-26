@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import page from "@/assets/chapter-1-page.webp.asset.json";
+import { unlockAtmosphere } from "@/lib/atmosphere";
 
 /** Page 01 of the storybook: shown before the Three Eggs crater scene, turned by tap, Space or Enter. */
 export function StorybookOpening({ onTurn }: { onTurn: () => void }) {
   const [turning, setTurning] = useState(false);
   const [ready, setReady] = useState(false);
-  const turn = () => { if (turning) return; setTurning(true); setTimeout(onTurn, 900); };
+  const turn = () => { if (turning) return; unlockAtmosphere(); setTurning(true); setTimeout(onTurn, 900); };
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); turn(); } };
     window.addEventListener("keydown", k);
