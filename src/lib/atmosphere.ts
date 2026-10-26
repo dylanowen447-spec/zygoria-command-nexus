@@ -315,8 +315,10 @@ function dnbTick() {
       const isAcid = track.bass === "acid";
       const o = ctx.createOscillator(); o.type = track.bass === "square" ? "square" : "sawtooth"; o.frequency.value = hz(root);
       const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = isAcid ? 12 : 1; f.frequency.setValueAtTime(isAcid ? (sub % 4 === 0 ? 1100 : 700) : track.bass === "wobble" ? (sub % 8 === 0 ? 620 : 300) : 500, t); f.frequency.exponentialRampToValueAtTime(isAcid ? 220 : 140, t + s16 * 3);
-      const g = ctx.createGain(); g.gain.setValueAtTime(track.bass === "square" ? 0.11 : 0.16, t); g.gain.linearRampToValueAtTime(0, t + s16 * 3.6);
+      const g = ctx.createGain(); g.gain.setValueAtTime(track.bass === "square" ? 0.2 : 0.3, t); g.gain.linearRampToValueAtTime(0, t + s16 * 3.6);
       o.connect(f).connect(g).connect(d.bus); o.start(t); o.stop(t + s16 * 4);
+      // clean sine sub an octave down for weight
+      const so = ctx.createOscillator(); so.type = "sine"; so.frequency.value = hz(track.roots[bar]! - 12); const sg = ctx.createGain(); sg.gain.setValueAtTime(0.32, t); sg.gain.linearRampToValueAtTime(0, t + s16 * 3.6); so.connect(sg).connect(d.bus); so.start(t); so.stop(t + s16 * 4);
     }
     // per-track melody
     const note = track.mel[sub];
