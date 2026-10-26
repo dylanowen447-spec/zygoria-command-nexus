@@ -31,3 +31,4 @@
 - [x] Taking the Sanctuary caves exit walks all three Zigs down the waterfall road together into the caves
 - [x] Game Over screen speed-up: 2.5MB PNG → 337KB WebP, preloaded when Old City mounts, defeat fade 1.8s → 0.8s
 - Cinematic Three Eggs hatch: DONE — sealed pod doors fold out with steam, hatch sounds and Oz's electric spark burst; skippable, ~9s, first visit only (verified desktop + phone).
+- Voice the Zygs + Page 1 narrator with natural, expressive (non-robotic) AI speech; mute toggle.
