@@ -46,10 +46,10 @@ if (typeof window !== "undefined") {
   window.addEventListener("pointerdown", unlock, true); window.addEventListener("keydown", unlock, true);
 }
 
-async function play(who: string, text: string, maxWaitMs: number, onStart?: () => void) {
+async function play(who: string, text: string, maxWaitMs: number, until: number, onStart?: () => void) {
   let url = await Promise.race([load(who, text), new Promise<null>(r => setTimeout(() => r(null), maxWaitMs))]);
-  if (!url) { await new Promise(r => setTimeout(r, 1200)); url = await load(who, text); } // one retry for slow/busy voice server
-  if (!url || !voicesOn() || muted()) return;
+  if (!url && maxWaitMs >= 10000) { await new Promise(r => setTimeout(r, 1200)); url = await load(who, text); } // one retry for slow/busy voice server
+  if (!url || !voicesOn() || muted() || Date.now() > until + 200) return; // too late: the words would no longer match the bubble
   const a = player(); current = a;
   a.src = url;
   a.playbackRate = 1.3; a.preservesPitch = true; // brisker delivery, same voice pitch
@@ -58,31 +58,32 @@ async function play(who: string, text: string, maxWaitMs: number, onStart?: () =
 }
 
 /** Every line goes through one queue so lines never cut each other off or get skipped. */
-const queue: { who: string; text: string; done: () => void; onStart?: (() => void) | undefined }[] = [];
+const queue: { who: string; text: string; done: () => void; onStart?: (() => void) | undefined; until: number }[] = [];
 let playing = false;
 /** Same speaker + same line within this window is an echo (e.g. a scene re-mounting), not a new line. */
 const recent = new Map<string, number>();
 const ECHO_MS = 8000;
-function enqueue(who: string, text: string, onStart?: () => void) {
+function enqueue(who: string, text: string, onStart?: () => void, staleMs = 15000) {
   const k = `${who}|${text}`, now = Date.now();
   if (now - (recent.get(k) ?? 0) < ECHO_MS) { onStart?.(); return Promise.resolve(); }
   recent.set(k, now);
   return new Promise<void>(done => {
-    queue.push({ who, text, done, onStart }); void load(who, text);
+    queue.push({ who, text, done, onStart, until: now + staleMs }); void load(who, text);
     if (playing) return;
     playing = true;
-    void (async () => { while (queue.length) { const q = queue.shift()!; let started = false; try { await play(q.who, q.text, 15000, () => { started = true; q.onStart?.(); }); } finally { if (!started) q.onStart?.(); q.done(); } } playing = false; })();
+    void (async () => { while (queue.length) { const q = queue.shift()!; let started = false; try { const left = q.until - Date.now(); if (left > 150) await play(q.who, q.text, left, q.until, () => { started = true; q.onStart?.(); }); } finally { if (!started) q.onStart?.(); q.done(); } } playing = false; })();
   });
 }
 const clean = (s: string) => s.replace(/\*[^*]*\*/g, "").trim().slice(0, 400);
 
 /** Speak a line; resolves when it finishes (or immediately if voices are off/unavailable).
  *  onStart fires the moment the voice actually starts (or right away if it can't play), so text can appear in sync. */
-export async function speak(who: string, text: string, onStart?: () => void): Promise<void> {
+export async function speak(who: string, text: string, onStart?: () => void, staleMs?: number): Promise<void> {
   const t = clean(text);
   if (!voicesOn() || muted() || !/[a-z]/i.test(t)) { onStart?.(); return; }
-  await enqueue(who, t, onStart);
+  await enqueue(who, t, onStart, staleMs);
 }
 
 /** Fire-and-forget: queue any on-screen line so every bubble is spoken, in order. */
-export function voiceLine(who: string, text: string) { void speak(who, text); }
+/** The bubble is already on screen, so a line that can't start within ~2s is dropped rather than heard late. */
+export function voiceLine(who: string, text: string) { void speak(who, text, undefined, 2200); }
