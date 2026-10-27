@@ -58,20 +58,20 @@ async function play(who: string, text: string, maxWaitMs: number, onStart?: () =
 }
 
 /** Every line goes through one queue so lines never cut each other off or get skipped. */
-const queue: { who: string; text: string; done: () => void; onStart?: (() => void) | undefined }[] = [];
+const queue: { who: string; text: string; done: () => void; onStart?: (() => void) | undefined; until: number }[] = [];
 let playing = false;
 /** Same speaker + same line within this window is an echo (e.g. a scene re-mounting), not a new line. */
 const recent = new Map<string, number>();
 const ECHO_MS = 8000;
-function enqueue(who: string, text: string, onStart?: () => void) {
+function enqueue(who: string, text: string, onStart?: () => void, staleMs = 15000) {
   const k = `${who}|${text}`, now = Date.now();
   if (now - (recent.get(k) ?? 0) < ECHO_MS) { onStart?.(); return Promise.resolve(); }
   recent.set(k, now);
   return new Promise<void>(done => {
-    queue.push({ who, text, done, onStart }); void load(who, text);
+    queue.push({ who, text, done, onStart, until: now + staleMs }); void load(who, text);
     if (playing) return;
     playing = true;
-    void (async () => { while (queue.length) { const q = queue.shift()!; let started = false; try { await play(q.who, q.text, 15000, () => { started = true; q.onStart?.(); }); } finally { if (!started) q.onStart?.(); q.done(); } } playing = false; })();
+    void (async () => { while (queue.length) { const q = queue.shift()!; let started = false; try { const left = q.until - Date.now(); if (left > 150) await play(q.who, q.text, left, q.until - now0(), () => { started = true; q.onStart?.(); }); } finally { if (!started) q.onStart?.(); q.done(); } } playing = false; })();
   });
 }
 const clean = (s: string) => s.replace(/\*[^*]*\*/g, "").trim().slice(0, 400);
