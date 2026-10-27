@@ -1,4 +1,4 @@
-import { voiceLine } from "@/lib/voice";
+import { speak, preloadVoices } from "@/lib/voice";
 import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS } from "@/lib/fight-lines";
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
@@ -101,7 +101,8 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
     let alive = true, raf = 0, last = performance.now(), nextId = 1;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
-    const shelLine = (t: string, ms = 2400) => { setShelSay(t); voiceLine("Shelton", t); later(ms, () => setShelSay(s => (s === t ? null : s))); };
+    const shelLine = (t: string, ms = 2400) => { let shown = 0; void speak("Shelton", t, () => { if (!alive) return; shown = Date.now(); setShelSay(t); }).then(() => later(Math.max(300, ms - (Date.now() - shown)), () => setShelSay(s => (s === t ? null : s)))); };
+    preloadVoices([SHEL_LINES.enter, SHEL_LINES.beaten, ...SHEL_LINES.retreat, ...SHEL_LINES.hit, ...SHEL_LINES.block, ...SHEL_LINES.stage].map(t => ["Shelton", t] as [string, string]));
 
     const startWave = (n: number) => {
       wave.current = n; startBattleMusic();
