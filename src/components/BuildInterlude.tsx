@@ -43,11 +43,21 @@ export function BuildInterlude({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     let ctx: AudioContext | null = null;
     try { ctx = new (window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)(); void ctx.resume(); } catch { /* silent fallback */ }
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    BEATS.forEach((b, i) => timers.push(setTimeout(() => { setStep(i); if (b.who) voiceLine(b.who, b.text); if (b.sound && ctx) playSound(ctx, b.sound); if (i === BEATS.length - 1) setFade(true); }, i * 2800)));
-    timers.push(setTimeout(() => { if (ctx) playSound(ctx, "hammer"); }, BEATS.length * 2800 - 1200));
-    timers.push(setTimeout(onDone, BEATS.length * 2800 + 2200));
-    return () => { timers.forEach(clearTimeout); void ctx?.close(); };
+    let alive = true;
+    const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+    void (async () => {
+      for (let i = 0; i < BEATS.length && alive; i++) {
+        const b = BEATS[i]!; const t0 = Date.now();
+        const show = () => { if (!alive) return; setStep(i); if (b.sound && ctx) playSound(ctx, b.sound); if (i === BEATS.length - 1) setFade(true); };
+        if (b.who) await speak(b.who, b.text, show, 6000); else show();
+        await wait(Math.max(400, 2800 - (Date.now() - t0)));
+      }
+      if (!alive) return;
+      if (ctx) playSound(ctx, "hammer");
+      await wait(1600);
+      if (alive) onDone();
+    })();
+    return () => { alive = false; void ctx?.close(); };
   }, [onDone]);
   const beat = BEATS[step]!;
   return <div className="world-image-wrap prologue-scene build-interlude">

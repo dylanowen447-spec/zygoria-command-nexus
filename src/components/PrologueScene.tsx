@@ -9,7 +9,7 @@ import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } f
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playHatch, playSfx } from "@/lib/atmosphere";
-import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine } from "@/lib/voice";
+import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine, sayInSync } from "@/lib/voice";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
