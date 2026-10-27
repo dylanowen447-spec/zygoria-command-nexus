@@ -104,3 +104,10 @@ export async function speak(who: string, text: string, onStart?: () => void, sta
 /** Fire-and-forget: queue any on-screen line so every bubble is spoken, in order. */
 /** The bubble is already on screen, so a line that can't start within ~2s is dropped rather than heard late. */
 export function voiceLine(who: string, text: string) { void speak(who, text, undefined, 2200); }
+
+/** Synced bubble: show() fires when the voice starts, hide() after it ends (min holdMs on screen). */
+export function sayInSync(who: string, text: string, show: () => void, hide: () => void, holdMs = 1800, staleMs = 2200) {
+  let shown = 0;
+  void speak(who, text, () => { shown = Date.now(); show(); }, staleMs)
+    .then(() => setTimeout(hide, Math.max(300, holdMs - (Date.now() - shown))));
+}
