@@ -6,12 +6,29 @@ const KEY = "zyg-voices-off";
 export const voicesOn = () => typeof window !== "undefined" && localStorage.getItem(KEY) !== "1";
 export function setVoicesOn(on: boolean) { localStorage.setItem(KEY, on ? "0" : "1"); if (!on) stopVoice(); }
 
+/** On-device clip store: lines heard once play instantly on every later visit, no network. */
+const DISK = "zyg-voice-v1";
+const diskKey = (who: string, text: string) => `/__voice/${encodeURIComponent(who)}/${encodeURIComponent(text)}`;
+async function fromDisk(who: string, text: string): Promise<Blob | null> {
+  try { const r = await (await caches.open(DISK)).match(diskKey(who, text)); return r ? await r.blob() : null; } catch { return null; }
+}
+function toDisk(who: string, text: string, blob: Blob) {
+  void caches.open(DISK).then(c => c.put(diskKey(who, text), new Response(blob, { headers: { "Content-Type": blob.type || "audio/wav" } }))).catch(() => {});
+}
+
 function load(who: string, text: string) {
   const k = `${who}|${text}`;
   let p = cache.get(k);
   if (!p) {
-    p = fetch("/api/voice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ who, text }) })
-      .then(async r => r.ok ? URL.createObjectURL(await r.blob()) : null).catch(() => null);
+    p = (async () => {
+      const saved = await fromDisk(who, text);
+      if (saved && saved.size > 44) return URL.createObjectURL(saved);
+      const r = await fetch("/api/voice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ who, text }) });
+      if (!r.ok) return null;
+      const blob = await r.blob();
+      toDisk(who, text, blob);
+      return URL.createObjectURL(blob);
+    })().catch(() => null);
     cache.set(k, p);
     p.then(u => { if (!u) cache.delete(k); });
   }
