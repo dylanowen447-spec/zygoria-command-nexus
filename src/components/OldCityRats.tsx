@@ -182,10 +182,10 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => { alive = false; stopBattleMusic(); cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
+    return () => { alive = false; unmuteVoices(); stopBattleMusic(); cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
   }, [crew, hitRef, onAlarm, attempt]);
 
-  const retry = (from: number) => { startWave.current = from; rats.current = []; setAttempt(a => a + 1); };
+  const retry = (from: number) => { unmuteVoices(); startWave.current = from; rats.current = []; setAttempt(a => a + 1); };
   const now = performance.now();
   const ratH = ozH * 0.95 / 0.78, ratW = ratH * 340 / 250;
 
