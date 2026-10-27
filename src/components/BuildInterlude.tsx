@@ -1,4 +1,4 @@
-import { voiceLine } from "@/lib/voice";
+import { speak } from "@/lib/voice";
 import { useEffect, useState } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import walkImg from "@/assets/zone-long-walk.jpg";
