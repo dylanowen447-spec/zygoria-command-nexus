@@ -15,6 +15,46 @@ const CAST: Record<string, { voice: string; instructions: string }> = {
   Narrator: { voice: "Sulafat", instructions: "You are a warm storybook narrator. Gentle, inviting, natural pacing, like reading a bedtime story." },
 };
 
+const BUCKET = "voice-cache";
+
+async function sha(s: string) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Cut the dead air the voice model leaves before/after a line (16-bit PCM WAV only), so reactions start the instant they play. */
+function trimWav(buf: ArrayBuffer): ArrayBuffer {
+  const v = new DataView(buf);
+  if (buf.byteLength < 44 || v.getUint32(0) !== 0x52494646 || v.getUint32(8) !== 0x57415645) return buf; // not RIFF/WAVE
+  let off = 12, fmt = -1, data = -1, dataLen = 0;
+  while (off + 8 <= buf.byteLength) {
+    const id = v.getUint32(off), len = v.getUint32(off + 4, true);
+    if (id === 0x666d7420) fmt = off + 8;
+    if (id === 0x64617461) { data = off + 8; dataLen = Math.min(len, buf.byteLength - data); break; }
+    off += 8 + len + (len & 1);
+  }
+  if (fmt < 0 || data < 0 || v.getUint16(fmt, true) !== 1 || v.getUint16(fmt + 14, true) !== 16) return buf;
+  const ch = v.getUint16(fmt + 2, true), rate = v.getUint32(fmt + 4, true), frame = 2 * ch;
+  const frames = Math.floor(dataLen / frame), TH = 500;
+  const loud = (i: number) => Math.abs(v.getInt16(data + i * frame, true)) > TH;
+  let s = 0; while (s < frames && !loud(s)) s++;
+  let e = frames - 1; while (e > s && !loud(e)) e--;
+  if (s >= e) return buf;
+  s = Math.max(0, s - Math.round(rate * 0.03)); e = Math.min(frames - 1, e + Math.round(rate * 0.08));
+  const pcm = new Uint8Array(buf, data + s * frame, (e - s + 1) * frame);
+  const out = new ArrayBuffer(44 + pcm.byteLength), o = new DataView(out);
+  const str = (p: number, t: string) => [...t].forEach((c, i) => o.setUint8(p + i, c.charCodeAt(0)));
+  str(0, "RIFF"); o.setUint32(4, 36 + pcm.byteLength, true); str(8, "WAVE");
+  str(12, "fmt "); o.setUint32(16, 16, true); o.setUint16(20, 1, true); o.setUint16(22, ch, true);
+  o.setUint32(24, rate, true); o.setUint32(28, rate * frame, true); o.setUint16(32, frame, true); o.setUint16(34, 16, true);
+  str(36, "data"); o.setUint32(40, pcm.byteLength, true);
+  new Uint8Array(out, 44).set(pcm);
+  return out;
+}
+
+const audio = (body: ArrayBuffer | Blob, type: string) =>
+  new Response(body, { status: 200, headers: { "Content-Type": type, "Cache-Control": "public, max-age=31536000, immutable" } });
+
 export const Route = createFileRoute("/api/voice")({
   server: {
     handlers: {
@@ -25,6 +65,16 @@ export const Route = createFileRoute("/api/voice")({
         if (!cast || !text || text.length > 400) return new Response("Bad request", { status: 400 });
         const key = process.env["LOVABLE_API_KEY"];
         if (!key) return new Response("Voice unavailable", { status: 500 });
+
+        // Shared clip store: once any player has heard a line, everyone gets it instantly.
+        const path = `v1/${await sha(`${cast.voice}|${cast.instructions}|${text}`)}.wav`;
+        let store: Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"] | null = null;
+        try {
+          store = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+          const { data } = await store.storage.from(BUCKET).download(path);
+          if (data) return audio(data, "audio/wav");
+        } catch { /* store unavailable: fall through and generate */ }
+
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
@@ -34,7 +84,13 @@ export const Route = createFileRoute("/api/voice")({
           console.error("voice error", upstream.status, await upstream.text().catch(() => ""));
           return new Response("Voice failed", { status: upstream.status });
         }
-        return new Response(upstream.body, { status: 200, headers: { "Content-Type": upstream.headers.get("Content-Type") ?? "audio/wav", "Cache-Control": "no-cache" } });
+        const type = upstream.headers.get("Content-Type") ?? "audio/wav";
+        const clip = trimWav(await upstream.arrayBuffer());
+        if (store) {
+          const save = store.storage.from(BUCKET).upload(path, clip, { contentType: "audio/wav", upsert: true }).then(() => {}, () => {});
+          await save;
+        }
+        return audio(clip, type.includes("wav") ? "audio/wav" : type);
       },
     },
   },
