@@ -101,8 +101,8 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
     let alive = true, raf = 0, last = performance.now(), nextId = 1;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
-    const shelLine = (t: string, ms = 2400) => { let shown = 0; void speak("Shelton", t, () => { if (!alive) return; shown = Date.now(); setShelSay(t); }).then(() => later(Math.max(300, ms - (Date.now() - shown)), () => setShelSay(s => (s === t ? null : s)))); };
-    preloadVoices([SHEL_LINES.enter, SHEL_LINES.beaten, ...SHEL_LINES.retreat, ...SHEL_LINES.hit, ...SHEL_LINES.block, ...SHEL_LINES.stage].map(t => ["Shelton", t] as [string, string]));
+    const shelLine = (t: string, ms = 2400) => { let shown = 0; void speak("Shelton", t, () => { if (!alive) return; shown = Date.now(); setShelSay(t); }, 2500).then(() => later(Math.max(300, ms - (Date.now() - shown)), () => setShelSay(s => (s === t ? null : s)))); };
+    preloadVoices([SHEL_LINES.enter, SHEL_LINES.beaten, ...SHEL_LINES.retreat, ...SHEL_LINES.hit, ...SHEL_LINES.block, ...SHEL_LINES.stage].map(t => ["Shelton", t] as [string, string]).concat(SHELTON_FIRST_SIGHT, LONG_WALK_RAT_RECALL, FIGHT_LINES.map(l => [l.who, l.text] as [string, string]), [["Brix", "Something bigger's coming."], ["Oz", "OH HELLLL NAW! Who's this spiky tortoise with the gold chain?!"]]));
 
     const startWave = (n: number) => {
       wave.current = n; startBattleMusic();
