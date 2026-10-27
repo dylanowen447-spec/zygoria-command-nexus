@@ -1,5 +1,5 @@
 import { speak, preloadVoices } from "@/lib/voice";
-import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS } from "@/lib/fight-lines";
+import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS, FIGHT_LINES } from "@/lib/fight-lines";
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
