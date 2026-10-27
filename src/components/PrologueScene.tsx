@@ -9,7 +9,7 @@ import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } f
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playHatch, playSfx } from "@/lib/atmosphere";
-import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine } from "@/lib/voice";
+import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine, sayInSync } from "@/lib/voice";
 import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
@@ -92,8 +92,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const fightQuietUntil = useRef(0);
   const ambushSay = useCallback((a: Agent, text: string) => {
     fightQuietUntil.current = performance.now() + 3200;
-    setBubbles(b => ({ ...b, [a]: text })); voiceLine(a, text);
-    setTimeout(() => setBubbles(b => (b[a] === text ? { ...b, [a]: undefined } : b)), 2600);
+    sayInSync(a, text, () => setBubbles(b => ({ ...b, [a]: text })), () => setBubbles(b => (b[a] === text ? { ...b, [a]: undefined } : b)));
   }, []);
   const bubblesRef = useRef(bubbles);
   bubblesRef.current = bubbles;
@@ -395,8 +394,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (!pool.length) return;
       const l = pool[Math.floor(Math.random() * pool.length)]!;
       lastFightLine = l.text;
-      setBubbles(b => ({ ...b, [l.who]: l.text })); voiceLine(l.who, l.text);
-      timers.push(setTimeout(() => setBubbles(b => (b[l.who] === l.text ? { ...b, [l.who]: undefined } : b)), 2600));
+      sayInSync(l.who, l.text, () => { if (enemies.current.targets().length) setBubbles(b => ({ ...b, [l.who]: l.text })); }, () => setBubbles(b => (b[l.who] === l.text ? { ...b, [l.who]: undefined } : b)));
       // Hide it the instant the fight ends.
       const watch = setInterval(() => { if (!enemies.current.targets().length) { setBubbles(b => (b[l.who] === l.text ? { ...b, [l.who]: undefined } : b)); clearInterval(watch); } }, 150);
       timers.push(setTimeout(() => clearInterval(watch), 2700));
