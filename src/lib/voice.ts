@@ -75,20 +75,23 @@ async function play(who: string, text: string, maxWaitMs: number, until: number,
 }
 
 /** Every line goes through one queue so lines never cut each other off or get skipped. */
-const queue: { who: string; text: string; done: () => void; onStart?: (() => void) | undefined; until: number }[] = [];
+const queue: { who: string; text: string; done: () => void; onStart?: (() => void) | undefined; staleMs: number }[] = [];
 let playing = false;
 /** Same speaker + same line within this window is an echo (e.g. a scene re-mounting), not a new line. */
 const recent = new Map<string, number>();
-const ECHO_MS = 8000;
+const ECHO_MS = 2500;
+/** First-time lines need generating (~2–3s), so allow at least this long before giving up. */
+const MIN_WAIT_MS = 3500;
 function enqueue(who: string, text: string, onStart?: () => void, staleMs = 15000) {
   const k = `${who}|${text}`, now = Date.now();
   if (now - (recent.get(k) ?? 0) < ECHO_MS) { onStart?.(); return Promise.resolve(); }
   recent.set(k, now);
   return new Promise<void>(done => {
-    queue.push({ who, text, done, onStart, until: now + staleMs }); void load(who, text);
+    queue.push({ who, text, done, onStart, staleMs }); void load(who, text);
     if (playing) return;
     playing = true;
-    void (async () => { while (queue.length) { const q = queue.shift()!; let started = false; try { const left = q.until - Date.now(); if (left > 150) await play(q.who, q.text, left, q.until, () => { started = true; q.onStart?.(); }); } finally { if (!started) q.onStart?.(); q.done(); } } playing = false; })();
+    // The wait window starts when a line reaches the front, so lines waiting behind another speaker are never skipped.
+    void (async () => { while (queue.length) { const q = queue.shift()!; let started = false; try { const wait = Math.max(q.staleMs, MIN_WAIT_MS); await play(q.who, q.text, wait, Date.now() + wait, () => { started = true; q.onStart?.(); }); } finally { if (!started) q.onStart?.(); q.done(); } } playing = false; })();
   });
 }
 const clean = (s: string) => s.replace(/\*[^*]*\*/g, "").trim().slice(0, 400);
