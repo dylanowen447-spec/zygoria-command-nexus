@@ -31,6 +31,6 @@
 - Post-fight prologue discoveries use objective data gated by the encounter's completion callback, keeping movement and dialogue in the existing exploration flow and preventing early chapter exits.
 - Melee targeting prefers cursor-adjacent reachable foes, then nearest reachable foe, so stale cursor positions cannot cancel punches.
 - Journey scenes move the whole crew: one arc-length chain drives the steered Zig while the brothers trail at fixed lags with a sideways nudge, and each Zig's feet come from a per-frame custom property so the shared haven floor-line rule can never flatten the road back to a straight walk.
-- Character speech is generated server-side via /api/voice (cast directions live there) and cached client-side in src/lib/voice.ts — so the key stays on the server and each line is fetched once.
+- Character speech is generated server-side via /api/voice (cast directions live there), trimmed of dead air, stored in the private voice-cache bucket keyed by a hash of voice+direction+text, and cached on-device (Cache Storage) by src/lib/voice.ts — so the key stays on the server and each line is generated once for everyone.
 
 - Subdirectories have their own AGENTS.md (e.g. src/lib/ai/) — read it before changing files there.
