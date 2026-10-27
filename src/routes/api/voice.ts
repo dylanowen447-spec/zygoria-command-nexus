@@ -10,7 +10,7 @@ const CAST: Record<string, { voice: string; instructions: string }> = {
   Vale: { voice: "Zephyr", instructions: "You are Vale, an excitable, frightened young person. Breathless, quick and natural." },
   Moxi: { voice: "Leda", instructions: "You are Moxi, a wary, sharp young girl. Quiet, guarded, natural and human — never robotic." },
   TV: { voice: "Fenrir", instructions: "You are a possessed, glitching old television creature. Menacing, crackly, sinister and theatrical, with eerie emphasis." },
-  Shelton: { voice: "Charon", instructions: "You are Shelton, a huge, slow, grumpy armoured beast. Deep, rumbling, threatening and gruff." },
+  Shelton: { voice: "Charon", instructions: "You are Shelton, a huge grumpy armoured beast. Deep, rumbling and gruff, but snappy, impatient and quick — short punchy delivery, no drawn-out words, same brisk pace as the others." },
   Thoth: { voice: "Iapetus", instructions: "You are Thoth, an ancient, mysterious observer. Calm, low, wise and enigmatic, with measured pauses." },
   Narrator: { voice: "Sulafat", instructions: "You are a warm storybook narrator. Gentle, inviting, natural pacing, like reading a bedtime story." },
 };
