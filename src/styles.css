@@ -1156,3 +1156,8 @@
 .shack-scene .haven-layer .haven-zig.marker-lowkey .sprite-stage{width:194px!important;height:296px!important}
 }
 .hunger-meter.is-tappable{cursor:pointer}.hunger-meter.is-tappable:hover{filter:brightness(1.25)}
+
+/* Art supplies link: always-visible glowing HUD chip */
+.art-supplies-chip{text-decoration:none;color:var(--background)!important;background:var(--gold)!important;border-color:var(--gold)!important;font-weight:700;box-shadow:0 0 16px var(--workshop-glow);animation:artChipPulse 2.2s ease-in-out infinite}.art-supplies-chip .zone-dot{background:var(--background)!important;box-shadow:none!important}.art-supplies-chip:hover{filter:brightness(1.12)}
+@keyframes artChipPulse{50%{box-shadow:0 0 28px var(--gold)}}
+@media(prefers-reduced-motion:reduce){.art-supplies-chip{animation:none}}
