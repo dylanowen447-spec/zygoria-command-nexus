@@ -68,23 +68,28 @@ export function KronkApproachScene() {
     const line = INTRO[step]!;
     let live = true, t: ReturnType<typeof setTimeout> | undefined;
     const started = performance.now();
-    void speak(line.who, line.text, () => { if (live) setBubble(line); }).then(() => {
+    let advanced = false;
+    const next = () => { if (!live || advanced) return; advanced = true; setStep(s => s + 1); };
+    // Safety net: if a voice stalls, show the line anyway and move on instead of freezing the scene.
+    const guard = setTimeout(() => { if (live) { setBubble(line); t = setTimeout(next, 3400); } }, 6000);
+    void speak(line.who, line.text, () => { if (live) setBubble(line); }, 6000).then(() => {
       if (!live) return;
-      t = setTimeout(() => setStep(s => s + 1), voicesOn() ? 350 : Math.max(0, 3400 - (performance.now() - started)));
+      clearTimeout(guard);
+      t = setTimeout(next, voicesOn() ? 350 : Math.max(0, 3400 - (performance.now() - started)));
     });
-    return () => { live = false; if (t) clearTimeout(t); };
+    return () => { live = false; clearTimeout(guard); if (t) clearTimeout(t); };
   }, [step]);
 
-  // Like the Three Eggs scene: unsteered Zigs drift along the road on their own, glancing at the tank.
+  // Unsteered Zigs mostly stand and stare at the tank, taking an occasional short stroll (~every 30s each).
   const posRef = useRef(pos); posRef.current = pos;
   const steerRef = useRef(steer); steerRef.current = steer;
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const wander = (a: Zig) => {
+    const wander = (a: Zig, first = false) => {
       timers.push(setTimeout(() => {
         if (steerRef.current !== a) walkTo(a, randomGround());
         wander(a);
-      }, 2500 + Math.random() * 4000));
+      }, first ? 8000 + Math.random() * 22000 : 26000 + Math.random() * 8000));
     };
     (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(wander);
     return () => timers.forEach(clearTimeout);
