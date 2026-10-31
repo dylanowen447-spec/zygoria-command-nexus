@@ -34,8 +34,11 @@ function randomGround(): P {
   return { x: 30, y: 68 };
 }
 const INTRO: Line[] = [
-  { who: "Oz", text: "Look at that tank up there… tell me that's just a really ugly shadow." },
-  { who: "Lowkey", text: "Kronk. Shelton said that name like it was a curse." },
+  { who: "Oz", text: "WHOA. Whoa whoa whoa. Guys. GUYS. Look at that tank up there." },
+  { who: "Lowkey", text: "That's him, that's the crocodile the humans spoke of. Kronk." },
+  { who: "Brix", text: "I hoped he was a story. He's not a story. He's right there." },
+  { who: "Oz", text: "He's HUGE. Why is nobody saying how huge he is?!" },
+  { who: "Lowkey", text: "Kronk. Now we've seen him, that name feels even worse." },
   { who: "Oz", text: "Okay. I'm scared. I'm saying it out loud. I'm properly scared." },
   { who: "Brix", text: "Me too. But look at the water. He's pumping that green straight into the land." },
   { who: "Lowkey", text: "Everything downstream dies. That's our river next." },
