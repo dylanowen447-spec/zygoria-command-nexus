@@ -7,7 +7,32 @@ import { speak, voicesOn } from "@/lib/voice";
 type Zig = "Oz" | "Brix" | "Lowkey";
 type Line = { who: Zig; text: string };
 
-const FLOOR = 34; // the dirt road between the pipeline and the sludge pool (% from bottom)
+/** Walkable dirt road traced from the creator's ground guide, in artwork % (x from left, y from top). */
+const GROUND: [number, number][] = [[1,66],[17,61],[37,61],[40,57],[80,53],[97,51.5],[97,54],[76,61.5],[88,66],[68,71.5],[36,72.5],[20,81],[1,81]];
+type P = { x: number; y: number };
+function inside(x: number, y: number) {
+  let c = false;
+  for (let i = 0, j = GROUND.length - 1; i < GROUND.length; j = i++) {
+    const [xi, yi] = GROUND[i]!, [xj, yj] = GROUND[j]!;
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+/** Nearest walkable point to a tap (keeps a small margin from the road edge). */
+function clampToGround(t: P): P {
+  if (inside(t.x, t.y) && inside(t.x, t.y - 1.5) && inside(t.x, t.y + 1.5)) return t;
+  let best = t, bd = Infinity;
+  for (let x = 2; x <= 96; x += 1) for (let y = 50; y <= 82; y += 0.5) {
+    if (!inside(x, y) || !inside(x, y - 1.5) || !inside(x, y + 1.5)) continue;
+    const d = (x - t.x) ** 2 + (y - t.y) ** 2;
+    if (d < bd) { bd = d; best = { x, y }; }
+  }
+  return best;
+}
+function randomGround(): P {
+  for (let i = 0; i < 60; i++) { const p = { x: 12 + Math.random() * 76, y: 54 + Math.random() * 26 }; if (inside(p.x, p.y) && inside(p.x, p.y - 1.5) && inside(p.x, p.y + 1.5)) return p; }
+  return { x: 30, y: 68 };
+}
 const INTRO: Line[] = [
   { who: "Oz", text: "Look at that tank up there… tell me that's just a really ugly shadow." },
   { who: "Lowkey", text: "Kronk. Shelton said that name like it was a curse." },
@@ -24,13 +49,14 @@ const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[
 ];
 
 export function KronkApproachScene() {
-  const [pos, setPos] = useState<Record<Zig, number>>({ Brix: 22, Oz: 30, Lowkey: 38 });
+  const [pos, setPos] = useState<Record<Zig, P>>({ Brix: { x: 24, y: 70 }, Oz: { x: 34, y: 67 }, Lowkey: { x: 44, y: 69 } });
   const [moving, setMoving] = useState<Partial<Record<Zig, { dir: "left" | "right"; ms: number }>>>({});
   const [steer, setSteer] = useState<Zig | null>(null);
   const [bubble, setBubble] = useState<Line | null>(null);
   const [step, setStep] = useState(0);
   const lastTap = useRef<{ a: Zig; t: number } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const groundRef = useRef<HTMLDivElement>(null);
   const busy = useRef(false);
 
   useEffect(() => {
@@ -52,17 +78,17 @@ export function KronkApproachScene() {
     const timers: ReturnType<typeof setTimeout>[] = [];
     const wander = (a: Zig) => {
       timers.push(setTimeout(() => {
-        if (steerRef.current !== a) walkTo(a, 10 + Math.random() * 75);
+        if (steerRef.current !== a) walkTo(a, randomGround());
         wander(a);
       }, 2500 + Math.random() * 4000));
     };
     (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(wander);
     return () => timers.forEach(clearTimeout);
   }, []);
-  function walkTo(a: Zig, x: number) {
-    const dx = x - posRef.current[a], ms = Math.max(300, Math.abs(dx) * 90);
+  function walkTo(a: Zig, to: P) {
+    const from = posRef.current[a], dx = to.x - from.x, ms = Math.max(300, Math.hypot(dx, (to.y - from.y) * 1.4) * 90);
     setMoving(m => ({ ...m, [a]: { dir: dx < 0 ? "left" : "right", ms } }));
-    setPos(p => ({ ...p, [a]: x }));
+    setPos(p => ({ ...p, [a]: to }));
     setTimeout(() => setMoving(m => (m[a]?.ms === ms ? { ...m, [a]: undefined } : m)), ms);
   }
 
@@ -84,18 +110,19 @@ export function KronkApproachScene() {
   };
   const onGround = (e: React.PointerEvent<HTMLDivElement>) => {
     const tg = e.target as Element | null;
-    if (!steer || !wrapRef.current || tg?.closest?.("button,.haven-zig")) return;
-    const r = wrapRef.current.getBoundingClientRect();
-    const x = Math.min(92, Math.max(6, ((e.clientX - r.left) / r.width) * 100));
-    walkTo(steer, x);
+    if (!steer || !groundRef.current || tg?.closest?.("button,.haven-zig")) return;
+    const r = groundRef.current.getBoundingClientRect();
+    walkTo(steer, clampToGround({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 }));
   };
 
   return <div ref={wrapRef} className="world-image-wrap prologue-scene haven-scene kronk-approach" onPointerDown={onGround}>
     <img className="world-image" src={bg.url} alt="Kronk's toxic works: rusted pipes spill green sludge beneath a smoking factory fortress, Kronk's silhouette glowing in a giant tank" />
     <div className="haven-layer">
-      {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""}`} style={{ left: `${pos[z]}%`, bottom: `${FLOOR}%`, transitionDuration: m ? `${m.ms}ms` : "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
+      <div ref={groundRef} className="kronk-ground">
+        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: m ? `${m.ms}ms` : "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
+        {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${Math.min(78, Math.max(22, pos[bubble.who].x))}%`, top: "auto", bottom: `calc(${100 - pos[bubble.who].y}% + 70px)` }}><b>{bubble.who.toUpperCase()}</b>{bubble.text}</div>}
+      </div>
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
-      {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, pos[bubble.who]))}%`, top: "auto", bottom: `calc(${FLOOR}% + 70px)` }}><b>{bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
     <div className="map-coordinate top-right">KRONK APPROACH</div>
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the road to walk · double-tap {steer} to let go</div>}

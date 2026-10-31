@@ -1166,3 +1166,6 @@
 .kronk-spot span{font-size:9px;letter-spacing:.14em;padding:3px 7px;border-radius:999px;background:var(--background);color:var(--primary);border:1px solid color-mix(in oklab,var(--primary) 70%,transparent);box-shadow:0 0 12px color-mix(in oklab,var(--primary) 50%,transparent);animation:kronk-spot-pulse 2.4s ease-in-out infinite}
 @keyframes kronk-spot-pulse{50%{box-shadow:0 0 22px color-mix(in oklab,var(--primary) 80%,transparent)}}
 .kronk-approach .haven-zig{transform:translateX(-50%) scale(.55)}
+/* Kronk Approach: crew walks on the traced road, in a layer locked to the square artwork's cover box. */
+.kronk-approach .kronk-ground{position:absolute;left:50%;top:50%;width:max(100cqw,100cqh);height:max(100cqw,100cqh);transform:translate(-50%,-50%);pointer-events:none}
+.kronk-approach .haven-layer .kronk-ground .haven-zig{bottom:var(--fy)!important}
