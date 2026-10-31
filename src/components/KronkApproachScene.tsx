@@ -7,7 +7,7 @@ import { speak, voicesOn } from "@/lib/voice";
 type Zig = "Oz" | "Brix" | "Lowkey";
 type Line = { who: Zig; text: string };
 
-const FLOOR = 33; // the dirt road between the pipeline and the sludge pool (% from bottom)
+const FLOOR = 34; // the dirt road between the pipeline and the sludge pool (% from bottom)
 const INTRO: Line[] = [
   { who: "Oz", text: "Look at that tank up there… tell me that's just a really ugly shadow." },
   { who: "Lowkey", text: "Kronk. Shelton said that name like it was a curse." },
@@ -17,10 +17,10 @@ const INTRO: Line[] = [
   { who: "Brix", text: "Then we don't run. We learn how he works, and we stop him." },
 ];
 const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[] = [
-  { id: "tank", label: "THE TANK", x: 88, y: 24, lines: [{ who: "Oz", text: "It moved. The shadow moved. I'm not imagining that." }, { who: "Lowkey", text: "He's watching the road." }] },
-  { id: "banner", label: "RAT BANNER", x: 8, y: 45, lines: [{ who: "Brix", text: "A rat with a crown. Somebody thinks a lot of himself." }] },
-  { id: "pipe", label: "DRAIN PIPE", x: 7, y: 70, lines: [{ who: "Lowkey", text: "Don't touch the green. Whatever it is, it's killing the water." }] },
-  { id: "gate", label: "BUNKER GATE", x: 90, y: 55, lines: [{ who: "Brix", text: "Reinforced. Not today, lads. We need a plan first." }, { who: "Oz", text: "Agreed. A big, sensible plan. Far away from here." }] },
+  { id: "tank", label: "THE TANK", x: 86, y: 20, lines: [{ who: "Oz", text: "It moved. The shadow moved. I'm not imagining that." }, { who: "Lowkey", text: "He's watching the road." }] },
+  { id: "banner", label: "RAT BANNER", x: 7, y: 47, lines: [{ who: "Brix", text: "A rat with a crown. Somebody thinks a lot of himself." }] },
+  { id: "pipe", label: "DRAIN PIPE", x: 43, y: 50, lines: [{ who: "Lowkey", text: "Don't touch the green. Whatever it is, it's killing the water." }] },
+  { id: "gate", label: "BUNKER GATE", x: 88, y: 43, lines: [{ who: "Brix", text: "Reinforced. Not today, lads. We need a plan first." }, { who: "Oz", text: "Agreed. A big, sensible plan. Far away from here." }] },
 ];
 
 export function KronkApproachScene() {
