@@ -7,7 +7,7 @@ import { speak, voicesOn } from "@/lib/voice";
 type Zig = "Oz" | "Brix" | "Lowkey";
 type Line = { who: Zig; text: string };
 
-const FLOOR = 30; // the dirt road between the pipeline and the sludge pool (% from bottom)
+const FLOOR = 33; // the dirt road between the pipeline and the sludge pool (% from bottom)
 const INTRO: Line[] = [
   { who: "Oz", text: "Look at that tank up there… tell me that's just a really ugly shadow." },
   { who: "Lowkey", text: "Kronk. Shelton said that name like it was a curse." },
