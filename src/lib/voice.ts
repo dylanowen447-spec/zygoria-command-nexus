@@ -38,7 +38,8 @@ function load(who: string, text: string) {
 /** Warm the cache so lines start instantly. */
 export function preloadVoices(lines: [string, string][]) { if (voicesOn()) lines.forEach(([w, t]) => void load(w, t)); }
 
-export function stopVoice() { if (current) { current.pause(); current = null; } }
+/** Pausing never fires "ended", so finish the line by hand — otherwise the queue waits forever and every later line goes silent. */
+export function stopVoice() { if (current) { const a = current; current = null; a.onended?.(new Event("ended")); a.pause(); } }
 
 /** Silence everything now: stop the speaking line, drop queued lines, and mute new lines for `muteMs`. */
 let mutedUntil = 0;
