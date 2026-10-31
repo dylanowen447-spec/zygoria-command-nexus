@@ -37,3 +37,5 @@
 - [x] Caves exit stays hidden until Thoth tells Lowkey about the people under the mountains (dev jump kept in DEV · SCENES)
 - [x] Oz's decks: CHANGE TRACK button cycles eight varied procedural DnB tunes; softened track-change to a vinyl-stop glide (verified: all eight cycle, no console errors).
 - [x] More deck tunes with real variation (breaks, bass styles, moods) for Oz's decks.
+- [ ] Kronk Approach: smaller crew sprites, autonomous wandering (like Three Eggs), scared-but-aware-of-pollution banter
+- [ ] Vale: sprite movement (later — needs sprite sheet), then Orin lets Vale visit Sanctuary

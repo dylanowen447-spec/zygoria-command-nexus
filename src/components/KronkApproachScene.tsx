@@ -10,8 +10,11 @@ type Line = { who: Zig; text: string };
 const FLOOR = 30; // the dirt road between the pipeline and the sludge pool (% from bottom)
 const INTRO: Line[] = [
   { who: "Oz", text: "Look at that tank up there… tell me that's just a really ugly shadow." },
-  { who: "Lowkey", text: "Kronk. He's bigger than the stories." },
-  { who: "Brix", text: "Look at those banners. The rats aren't running wild out here. They're organised." },
+  { who: "Lowkey", text: "Kronk. Shelton said that name like it was a curse." },
+  { who: "Oz", text: "Okay. I'm scared. I'm saying it out loud. I'm properly scared." },
+  { who: "Brix", text: "Me too. But look at the water. He's pumping that green straight into the land." },
+  { who: "Lowkey", text: "Everything downstream dies. That's our river next." },
+  { who: "Brix", text: "Then we don't run. We learn how he works, and we stop him." },
 ];
 const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[] = [
   { id: "tank", label: "THE TANK", x: 88, y: 24, lines: [{ who: "Oz", text: "It moved. The shadow moved. I'm not imagining that." }, { who: "Lowkey", text: "He's watching the road." }] },
@@ -42,6 +45,27 @@ export function KronkApproachScene() {
     return () => { live = false; if (t) clearTimeout(t); };
   }, [step]);
 
+  // Like the Three Eggs scene: unsteered Zigs drift along the road on their own, glancing at the tank.
+  const posRef = useRef(pos); posRef.current = pos;
+  const steerRef = useRef(steer); steerRef.current = steer;
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const wander = (a: Zig) => {
+      timers.push(setTimeout(() => {
+        if (steerRef.current !== a) walkTo(a, 10 + Math.random() * 75);
+        wander(a);
+      }, 2500 + Math.random() * 4000));
+    };
+    (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(wander);
+    return () => timers.forEach(clearTimeout);
+  }, []);
+  function walkTo(a: Zig, x: number) {
+    const dx = x - posRef.current[a], ms = Math.max(300, Math.abs(dx) * 90);
+    setMoving(m => (m && m.a !== a && performance.now() < 0 ? m : { a, dir: dx < 0 ? "left" : "right", ms }));
+    setPos(p => ({ ...p, [a]: x }));
+    setTimeout(() => setMoving(m => (m && m.a === a && m.ms === ms ? null : m)), ms);
+  }
+
   async function inspect(lines: Line[]) {
     if (busy.current || step < INTRO.length) return;
     busy.current = true;
@@ -63,10 +87,7 @@ export function KronkApproachScene() {
     if (!steer || !wrapRef.current || tg?.closest?.("button,.haven-zig")) return;
     const r = wrapRef.current.getBoundingClientRect();
     const x = Math.min(92, Math.max(6, ((e.clientX - r.left) / r.width) * 100));
-    const a = steer, dx = x - pos[a], ms = Math.max(300, Math.abs(dx) * 90);
-    setMoving({ a, dir: dx < 0 ? "left" : "right", ms });
-    setPos(p => ({ ...p, [a]: x }));
-    setTimeout(() => setMoving(m => (m && m.a === a && m.ms === ms ? null : m)), ms);
+    walkTo(steer, x);
   };
 
   return <div ref={wrapRef} className="world-image-wrap prologue-scene haven-scene kronk-approach" onPointerDown={onGround}>
