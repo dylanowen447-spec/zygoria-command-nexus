@@ -1090,7 +1090,8 @@ function CommandCentre() {
   }
   /** Ambient idle life: every so often one Zig strolls along the trails to another's resting spot for a quick chat. */
   const [bubble, setBubble] = useState<{ agent: Agent; text: string } | null>(null);
-  useEffect(() => { if (bubble && bubble.text !== "…") voiceLine(bubble.agent, bubble.text); }, [bubble]);
+  // Sanctuary chatter stays silent while the crew are in another scene (e.g. Kronk Approach, Haven, descent).
+  useEffect(() => { if (bubble && bubble.text !== "…" && !kronk && !haven && !descent) voiceLine(bubble.agent, bubble.text); }, [bubble]);
   const visiting = useRef<Agent | null>(null);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
