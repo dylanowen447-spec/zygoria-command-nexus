@@ -25,7 +25,7 @@ const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[
 
 export function KronkApproachScene() {
   const [pos, setPos] = useState<Record<Zig, number>>({ Brix: 22, Oz: 30, Lowkey: 38 });
-  const [moving, setMoving] = useState<{ a: Zig; dir: "left" | "right"; ms: number } | null>(null);
+  const [moving, setMoving] = useState<Partial<Record<Zig, { dir: "left" | "right"; ms: number }>>>({});
   const [steer, setSteer] = useState<Zig | null>(null);
   const [bubble, setBubble] = useState<Line | null>(null);
   const [step, setStep] = useState(0);
@@ -61,9 +61,9 @@ export function KronkApproachScene() {
   }, []);
   function walkTo(a: Zig, x: number) {
     const dx = x - posRef.current[a], ms = Math.max(300, Math.abs(dx) * 90);
-    setMoving(m => (m && m.a !== a && performance.now() < 0 ? m : { a, dir: dx < 0 ? "left" : "right", ms }));
+    setMoving(m => ({ ...m, [a]: { dir: dx < 0 ? "left" : "right", ms } }));
     setPos(p => ({ ...p, [a]: x }));
-    setTimeout(() => setMoving(m => (m && m.a === a && m.ms === ms ? null : m)), ms);
+    setTimeout(() => setMoving(m => (m[a]?.ms === ms ? { ...m, [a]: undefined } : m)), ms);
   }
 
   async function inspect(lines: Line[]) {
@@ -93,7 +93,7 @@ export function KronkApproachScene() {
   return <div ref={wrapRef} className="world-image-wrap prologue-scene haven-scene kronk-approach" onPointerDown={onGround}>
     <img className="world-image" src={bg.url} alt="Kronk's toxic works: rusted pipes spill green sludge beneath a smoking factory fortress, Kronk's silhouette glowing in a giant tank" />
     <div className="haven-layer">
-      {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving?.a === z ? moving : null; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""}`} style={{ left: `${pos[z]}%`, bottom: `${FLOOR}%`, transitionDuration: m ? `${m.ms}ms` : "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
+      {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""}`} style={{ left: `${pos[z]}%`, bottom: `${FLOOR}%`, transitionDuration: m ? `${m.ms}ms` : "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
       {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, pos[bubble.who]))}%`, top: "auto", bottom: `calc(${FLOOR}% + 70px)` }}><b>{bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>

@@ -1165,3 +1165,4 @@
 .kronk-spot{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;min-width:44px;min-height:44px;display:grid;place-items:center;background:transparent;border:0;cursor:pointer;z-index:6}
 .kronk-spot span{font-size:9px;letter-spacing:.14em;padding:3px 7px;border-radius:999px;background:var(--background);color:var(--primary);border:1px solid color-mix(in oklab,var(--primary) 70%,transparent);box-shadow:0 0 12px color-mix(in oklab,var(--primary) 50%,transparent);animation:kronk-spot-pulse 2.4s ease-in-out infinite}
 @keyframes kronk-spot-pulse{50%{box-shadow:0 0 22px color-mix(in oklab,var(--primary) 80%,transparent)}}
+.kronk-approach .haven-zig{transform:translateX(-50%) scale(.7)}
