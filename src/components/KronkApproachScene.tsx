@@ -91,7 +91,7 @@ export function KronkApproachScene() {
         wander(a);
       }, first ? 8000 + Math.random() * 22000 : 26000 + Math.random() * 8000));
     };
-    (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(wander);
+    (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => wander(a, true));
     return () => timers.forEach(clearTimeout);
   }, []);
   function walkTo(a: Zig, to: P) {
