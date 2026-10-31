@@ -39,3 +39,4 @@
 - [x] More deck tunes with real variation (breaks, bass styles, moods) for Oz's decks.
 - [ ] Kronk Approach: smaller crew sprites, autonomous wandering (like Three Eggs), scared-but-aware-of-pollution banter
 - [ ] Vale: sprite movement (later — needs sprite sheet), then Orin lets Vale visit Sanctuary
+- [ ] Kronk Approach: no Sanctuary chatter (Boulder Pot etc.) during the scene
