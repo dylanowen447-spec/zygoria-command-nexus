@@ -944,7 +944,7 @@ function CommandCentre() {
   // Real time in the Sanctuary (after the opening) counts toward the Chapter 5 MP3 scene; saved so reloads don't reset it.
   useEffect(() => {
     const b = storyRef.current.beats;
-    if (prologue !== "off" || zoneId !== "sanctuary" || b.includes("spotted")) return;
+    if (prologue !== "off" || zoneId !== "sanctuary" || b.includes("spotted") || kronk || haven || descent) return;
     const id = setInterval(() => {
       const beats = storyRef.current.beats;
       if (document.hidden || beats.includes("spotted") || sleepRef.current) return;
