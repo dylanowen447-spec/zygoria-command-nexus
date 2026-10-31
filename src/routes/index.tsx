@@ -962,7 +962,7 @@ function CommandCentre() {
       }
     }, 5000);
     return () => clearInterval(id);
-  }, [prologue, zoneId, story]);
+  }, [prologue, zoneId, story, kronk, haven, descent]);
   function log(agent: Agent, text: string) {
     setLogs(prev => [{ id: Date.now() + Math.random(), agent, text, time: now() }, ...prev].slice(0, 12));
   }
