@@ -144,6 +144,7 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
       ts.push(setTimeout(() => { setScript(s => [...s, ...HUNGER]); setQuest(advanceQuest("hungry")); }, DISTRUST_MS));
       return () => { ts.forEach(clearTimeout); distrustStarted.current = false; };
     }
+    return undefined;
   }, [introDone, quest]);
   const objective = QUEST_OBJECTIVE[quest];
 
