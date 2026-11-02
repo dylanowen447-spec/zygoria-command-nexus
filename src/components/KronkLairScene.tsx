@@ -38,11 +38,18 @@ const INTRO: Line[] = [
   { who: "Brix", text: "Gate's shut behind us. No going back now, lads." },
   { who: "Oz", text: "Oh no. Oh no no no. He's not in the tank anymore." },
   { who: "Lowkey", text: "Kronk. Standing right there at the stairs." },
+  { who: "Kronk", text: "Well, well... little things, crawling into my house." },
+  { who: "Oz", text: "Who let that overgrown handbag in here?!" },
+  { who: "Kronk", text: "Handbag? Ssssay it again, small one. I dare you." },
+  { who: "Oz", text: "Nope. Taking it back. Fully taking it back." },
   { who: "Oz", text: "Those tanks... are those RATS in the green stuff?!" },
+  { who: "Kronk", text: "My children. Fed on the sludge. Hungry. Always hungry." },
   { who: "Brix", text: "That's where the sludge comes from. He's brewing it." },
   { who: "Lowkey", text: "And that N on the screen. I've seen that mark before. Somewhere I shouldn't remember." },
+  { who: "Kronk", text: "The Network sees everything. And now... it sees you." },
   { who: "Oz", text: "Nobody move. Maybe he can't see us if we don't move." },
   { who: "Brix", text: "He can see us, Oz. Stay together. Stay behind me." },
+  { who: "Kronk", text: "Run home to your little river. I will drink it dry." },
 ];
 const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[] = [];
 
