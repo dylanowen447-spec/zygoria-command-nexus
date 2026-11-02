@@ -4,6 +4,7 @@ import kronkIdle from "@/assets/kronk-idle.png.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { speak, voicesOn } from "@/lib/voice";
 import { startKronkMusic, stopKronkMusic } from "@/lib/atmosphere";
+import { MAX_HP as SQUAD_HP, allDown, damage, fullSquad, type Squad } from "@/lib/squad-health";
 
 /** Kronk's Lair: inside the bunker gate, the crew face Kronk himself. Editor-only — no story road yet; Kronk fires laser eyes at the crew. */
 type Zig = "Oz" | "Brix" | "Lowkey";
@@ -73,6 +74,8 @@ export function KronkLairScene() {
   }, []);
   const [laser, setLaser] = useState<{ to: P; z: Zig; id: number } | null>(null);
   const [hit, setHit] = useState<Zig | null>(null);
+  const [squad, setSquad] = useState<Squad>(fullSquad);
+  const squadRef = useRef<Squad>(squad);
 
   useEffect(() => {
     if (step >= INTRO.length) return;
@@ -111,14 +114,19 @@ export function KronkLairScene() {
     let live = true; const timers: ReturnType<typeof setTimeout>[] = [];
     const fire = () => {
       if (!live) return;
-      const zs: Zig[] = ["Brix", "Oz", "Lowkey"], z = zs[Math.floor(Math.random() * 3)]!, p = posRef.current[z];
+      const zs = (["Brix", "Oz", "Lowkey"] as Zig[]).filter(a => squadRef.current[a] > 0);
+      if (!zs.length) return;
+      const z = zs[Math.floor(Math.random() * zs.length)]!, p = posRef.current[z];
       setLaser({ to: { x: p.x, y: p.y - 7 }, z, id: Date.now() });
       timers.push(setTimeout(() => {
         setHit(z);
+        const q = damage(squadRef.current, z, 1); squadRef.current = q; setSquad(q);
+        if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; const f = fullSquad(); squadRef.current = f; setSquad(f); fire(); }, 4000));
         const away = p.x < 50 ? -6 : 6;
         walkTo(z, clampToGround({ x: p.x + away, y: p.y + 3 }));
       }, 450));
-      timers.push(setTimeout(() => { setLaser(null); setHit(null); }, 1000));
+      timers.push(setTimeout(() => { setLaser(null); setHit(null); }, 1100));
+      if (allDown(squadRef.current)) return;
       timers.push(setTimeout(fire, 5500 + Math.random() * 4000));
     };
     timers.push(setTimeout(fire, 2500));
