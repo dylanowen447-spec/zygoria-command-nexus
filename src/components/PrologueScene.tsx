@@ -20,7 +20,9 @@ import lowkeyWordmark from "@/assets/lowkey-wordmark.png.asset.json";
 const ALL: Agent[] = ["Oz", "Brix", "Lowkey"];
 const SPEED = 4.2; // a little slower than home: they are cautious here
 const WORDMARK: Record<Agent, { url: string; cls: string }> = { Oz: { url: ozWordmark.url, cls: "oz-wordmark" }, Brix: { url: brixWordmark.url, cls: "brix-wordmark" }, Lowkey: { url: lowkeyWordmark.url, cls: "lowkey-wordmark" } };
-const depthFor = (y: number) => (1 - Math.min(Math.max((64 - y) / 30, 0), 1) * 0.22).toFixed(3);
+const depthFor = (y: number, city = false) => city
+  ? (0.78 + Math.min(Math.max((y - 40) / 55, 0), 1) * 0.37).toFixed(3) // Old City: smooth ~0.78 far up the plaza to ~1.15 at the front
+  : (1 - Math.min(Math.max((64 - y) / 30, 0), 1) * 0.22).toFixed(3);
 const dist = (a: Point, b: Point) => Math.hypot(b.x - a.x, (b.y - a.y) / ASPECT);
 /** On phones the map is short, so bubbles drop below the Zig much sooner. */
 const topLine = () => (typeof window !== "undefined" && window.innerWidth <= 600 ? 55 : 34);
@@ -160,7 +162,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (!el) return;
       el.style.left = `${p.x}%`; el.style.top = `${p.y}%`;
       el.classList.toggle("near-top", p.y < topLine()); el.classList.toggle("near-right", p.x > 62); el.classList.toggle("near-left", p.x < 38);
-      el.style.setProperty("--depth", depthFor(p.y));
+      el.style.setProperty("--depth", depthFor(p.y, scene.id === "city"));
       el.style.setProperty("--z", String(10 + Math.round(p.y * 10)));
     };
     const talking = new Set<Agent>();
@@ -832,7 +834,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined} onDefeatChange={setCityDefeat}/>}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y), "--z": 10 + Math.round(p.y * 10), opacity: shown && (!hatchOn || emerged[a]) ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""}`}>
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y, scene.id === "city"), "--z": 10 + Math.round(p.y * 10), opacity: shown && (!hatchOn || emerged[a]) ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>

@@ -118,6 +118,12 @@ const OLD_CITY: Scene = {
   label: "OLD EARTH / OLD CITY",
   bottom: "OLD CITY — CENTRAL PLAZA",
   spawn: { Oz: { from: { x: 46, y: 99 }, out: "entry" }, Brix: { from: { x: 54, y: 99 }, out: "front" }, Lowkey: { from: { x: 50, y: 99 }, out: "crossing" } },
+  // Cobblestone plaza, avenue and the library lane; the far ruins and building fronts are off limits.
+  ground: [
+    { x: 3, y: 99 }, { x: 10, y: 80 }, { x: 20, y: 68 }, { x: 26, y: 52 }, { x: 32, y: 39 }, { x: 50, y: 37 },
+    { x: 64, y: 42 }, { x: 76, y: 44 }, { x: 82, y: 32 }, { x: 89, y: 26 }, { x: 94, y: 31 }, { x: 90, y: 52 },
+    { x: 86, y: 64 }, { x: 93, y: 80 }, { x: 97, y: 99 },
+  ],
   edges: [
     ["entry", "front"], ["front", "crossing"], ["front", "bus"], ["bus", "lights"], ["lights", "crossing"],
     ["lights", "markings"], ["markings", "statue"], ["crossing", "statue"], ["statue", "fountain"],
