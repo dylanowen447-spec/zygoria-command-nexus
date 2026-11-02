@@ -111,6 +111,12 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     return () => { live = false; if (t) clearTimeout(t); };
   }, [step, introDone, script]);
 
+  // The exit opens the moment Vale's volunteering settles (Orin's blessing), not after the rest of the chatter.
+  const departAt = script.findIndex(l => l.depart);
+  useEffect(() => {
+    if (quest === "fish" && departAt >= 0 && step > departAt) setValeReady(true);
+  }, [quest, step, departAt]);
+
   // Quest beats once the current script runs out.
   const distrustStarted = useRef(false);
   const distrustTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -154,7 +160,7 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     </div>
     <div className="map-coordinate top-right">UNDERGROUND HAVEN</div>
     {objective && quest !== "fish" && introDone && <div className="quest-objective">◆ {quest === "hungry" ? "Catch fish at the Sanctuary and bring it down" : objective}</div>}
-    {valeReady && onAscend && <button type="button" className="workshop-spot workshop-door quest-go" onPointerDown={e => e.stopPropagation()} onClick={() => { setQuest(advanceQuest("vale-up")); onAscend(); }}><span>Climb to the Sanctuary with Vale ›</span></button>}
+    {valeReady && onAscend && <button type="button" className="workshop-spot workshop-door quest-go" onPointerDown={e => e.stopPropagation()} onClick={() => { setQuest(advanceQuest("vale-up")); stopVoice(); onAscend(); }}><span>Climb to the Sanctuary with Vale ›</span></button>}
     {introDone && onDescend && <button type="button" className="workshop-spot workshop-door quest-go cave-go" onPointerDown={e => e.stopPropagation()} onClick={onDescend}><span>Climb the Waterfall Path to Sanctuary ›</span></button>}
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the floor to walk · double-tap {steer} to let go</div>}
     {introDone && <form className="haven-talk" onSubmit={send}>
