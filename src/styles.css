@@ -699,14 +699,6 @@
 .scene-jump-menu button{all:unset;cursor:pointer;padding:8px 10px;border-radius:6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--foreground)}
 .scene-jump-menu button:hover,.scene-jump-menu button.is-active{background:var(--accent);color:var(--accent-foreground)}
 
-/* Long Walk battle splash — the crew faces Shelton's pack; shown as the ambush begins. */
-.battle-splash{position:absolute;inset:0;z-index:2400;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;background:oklch(0.12 0.03 260 / 95%);border:0;cursor:pointer;font:inherit;color:inherit;text-align:center}
-.battle-splash img{display:block;width:min(92%,860px);height:auto;max-height:72vh;object-fit:contain;border:1px solid var(--electric);box-shadow:0 0 0 1px oklch(0.22 0.02 260),0 20px 60px oklch(0 0 0 / 65%);animation:battle-splash-in .5s ease-out}
-.battle-splash-hint{font:700 11px/1 var(--font-mono,monospace);letter-spacing:.28em;color:var(--electric);animation:battle-splash-pulse 1.2s steps(2) infinite}
-@keyframes battle-splash-in{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
-@keyframes battle-splash-pulse{50%{opacity:.3}}
-@media(max-width:600px){.battle-splash img{width:96%;max-height:58vh}.battle-splash-hint{font-size:9px;letter-spacing:.18em}}
-@media (prefers-reduced-motion: reduce){.battle-splash img,.battle-splash-hint{animation:none}}
 
 /* Underground Haven */
 .haven-layer{position:absolute;inset:0;pointer-events:none}
