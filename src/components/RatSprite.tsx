@@ -11,5 +11,6 @@ export function RatSprite({ r, w, h, now }: { r: Rat; w: number; h: number; now:
       style={{ width: w, height: h, transform: `scaleX(${r.flip ? -1 : 1})`, backgroundImage: `url(${ratSheet.url})`, backgroundSize: `${FRAMES * 100}% 100%`, backgroundPosition: `${(f / (FRAMES - 1)) * 100}% 0` }}/>
     {hurt && (r.hitBy === "Brix" ? <span className="rat-punch-burst"/> : r.hitBy === "Oz" ? <span className="rat-zap-arcs"/> : r.hitBy === "Lowkey" ? <span className="rat-slash-burst"/> : <span className="ambush-impact rat-impact"/>)}
     {!!r.dead && now - r.dead < 400 && r.hitBy === "Oz" && <span className="rat-zap-arcs"/>}
+    {!!r.kv && !r.dead && <span className="rat-dust"/>}
   </span>;
 }
