@@ -3,6 +3,7 @@ import bg from "@/assets/kronk-lair.png.asset.json";
 import kronkIdle from "@/assets/kronk-idle.png.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { speak, voicesOn } from "@/lib/voice";
+import { startKronkMusic, stopKronkMusic } from "@/lib/atmosphere";
 
 /** Kronk's Lair: inside the bunker gate, the crew face Kronk himself. Editor-only — no story road yet; Kronk fires laser eyes at the crew. */
 type Zig = "Oz" | "Brix" | "Lowkey";
@@ -64,6 +65,12 @@ export function KronkLairScene() {
   const groundRef = useRef<HTMLDivElement>(null);
   const walkId = useRef<Partial<Record<Zig, number>>>({});
   const busy = useRef(false);
+  useEffect(() => {
+    startKronkMusic();
+    const go = () => startKronkMusic(); // mobile: start on first tap if audio wasn't unlocked yet
+    window.addEventListener("pointerdown", go, { once: true });
+    return () => { window.removeEventListener("pointerdown", go); stopKronkMusic(); };
+  }, []);
   const [laser, setLaser] = useState<{ to: P; z: Zig; id: number } | null>(null);
   const [hit, setHit] = useState<Zig | null>(null);
 
