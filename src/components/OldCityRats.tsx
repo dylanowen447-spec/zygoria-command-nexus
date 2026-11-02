@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type MutableRefObject, type RefObject } fr
 import { RatSprite } from "@/components/RatSprite";
 import { GameOverScreen } from "@/components/GameOverScreen";
 import gameOverArt from "@/assets/game-over.webp.asset.json";
-import { DEFAULT_BOUNDS, brixShockwave, hitCtx, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat, type StagePlan } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, brixShockwave, hitCtx, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat, type StagePlan , dodgeUntil } from "@/lib/rat-ai";
 import { cityWaveSpawns, CITY_WAVES, isNorthSpawn } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";

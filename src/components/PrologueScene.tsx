@@ -10,7 +10,7 @@ import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playHatch, playSfx } from "@/lib/atmosphere";
 import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine, sayInSync } from "@/lib/voice";
-import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, dodgeUntil, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
@@ -812,7 +812,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     let down = 0, timer: ReturnType<typeof setTimeout> | undefined;
     const typing = (e: KeyboardEvent) => { const t = e.target as HTMLElement | null; return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable); };
     const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (!canAttackRef.current || e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); clearTimeout(windTimer.current); windTimer.current = setTimeout(() => setHolding(true), 160); };
-    const kd2 = (e: KeyboardEvent) => { if ((e.code === "ShiftLeft" || e.code === "ShiftRight") && !typing(e)) dodge.current(); }; window.addEventListener("keydown", kd2); cleanups.push(() => window.removeEventListener("keydown", kd2));
+    const kd2 = (e: KeyboardEvent) => { if ((e.code === "ShiftLeft" || e.code === "ShiftRight") && !typing(e)) dodge.current(); };
     const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); const held = performance.now() - down; down = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); };
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
     return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); };

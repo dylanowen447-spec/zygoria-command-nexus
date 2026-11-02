@@ -1186,3 +1186,8 @@
 .city-rats .rat-dust{position:absolute;left:50%;bottom:-4px;width:90%;height:14px;translate:-50% 0;border-radius:50%;background:radial-gradient(ellipse at center,hsl(35 25% 70% / .55),hsl(35 25% 60% / 0) 70%);animation:ratDust .45s ease-out forwards;pointer-events:none}
 @keyframes ratDust{from{opacity:.9;scale:.5 .6}to{opacity:0;scale:1.6 1.2}}
 @media (prefers-reduced-motion: reduce){.city-shake,.city-shake-heavy{animation:none}}
+
+.combat-dodge{position:absolute;right:calc(3% + 92px);bottom:calc(16% + 6px);z-index:3000;width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:oklch(0.24 0.05 160);color:oklch(0.95 0.03 160);border:2px solid oklch(0.78 0.15 160);font-weight:800;letter-spacing:.06em;font-size:11px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.combat-dodge:active{transform:scale(.92)}
+.agent-marker.is-rolling .sprite-stage{animation:zig-roll .3s ease-out;opacity:.75}
+@keyframes zig-roll{0%{transform:translateY(0) scaleY(1)}35%{transform:translateY(4px) scaleY(.7) rotate(-14deg)}100%{transform:none}}
