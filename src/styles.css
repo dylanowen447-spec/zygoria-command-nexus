@@ -1222,3 +1222,12 @@ body > .combat-dodge{position:fixed}
 @keyframes kronk-burst{0%,45%{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.3)}60%{opacity:1;transform:scale(1.6)}100%{opacity:0;transform:scale(2.4)}}
 .kronk-lair .haven-zig.is-lasered .sprite-stage{animation:kronk-zapped .5s steps(2) 1;filter:brightness(1.8) sepia(1) hue-rotate(-40deg) saturate(4)}
 @keyframes kronk-zapped{50%{opacity:.4}}
+
+.kronk-boss.is-struck{animation:kronk-idle 1.2s steps(1) infinite,kronk-struck .28s ease-out}
+@keyframes kronk-struck{0%{filter:brightness(2.4) drop-shadow(0 0 10px oklch(0.95 0.1 90))}100%{filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55))}}
+.kronk-boss.is-defeated{animation:none;filter:grayscale(.8) brightness(.55);transform:translateX(-50%) rotate(-6deg) translateY(6%);transition:all .8s}
+.zig-strike .strike-bolt{fill:none;stroke:oklch(0.92 0.15 220);stroke-width:.7;filter:drop-shadow(0 0 1px oklch(0.85 0.2 220))}
+.zig-strike .strike-burst{fill:none;stroke-width:.8;animation:strike-pop .35s ease-out forwards}
+.strike-brix{stroke:oklch(0.85 0.17 70)}.strike-oz{stroke:oklch(0.9 0.15 220)}.strike-lowkey{stroke:oklch(0.7 0.2 310)}
+@keyframes strike-pop{from{opacity:1;transform-box:fill-box;transform-origin:center;transform:scale(.3)}to{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(1.4)}}
+.kronk-down{left:50%;top:40%;transform:translateX(-50%);font-size:22px;color:oklch(0.85 0.17 80)}
