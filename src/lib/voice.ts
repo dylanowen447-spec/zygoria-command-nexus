@@ -64,7 +64,7 @@ if (typeof window !== "undefined") {
   window.addEventListener("pointerdown", unlock, true); window.addEventListener("keydown", unlock, true);
 }
 
-/** Bigger characters speak louder — Kronk is a monster, so his voice carries over the Zigs. */
+/** Bigger characters speak louder. Browser volume caps at 1, so the crew steps down and the monster fills the room. */
 const VOLUME: Record<string, number> = { Kronk: 1 };
 
 async function play(who: string, text: string, maxWaitMs: number, until: number, onStart?: () => void) {
