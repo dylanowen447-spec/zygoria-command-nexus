@@ -216,7 +216,7 @@ export function stopKronkMusic() {
 }
 
 // ---------- Combat SFX: crunchy 8-bit hits (shares the atmosphere context) ----------
-export type Sfx = "swing" | "punch" | "punch-heavy" | "zap" | "zap-heavy" | "zap-hit" | "slash" | "slash-hit" | "hurt" | "miss";
+export type Sfx = "swing" | "punch" | "punch-heavy" | "zap" | "zap-heavy" | "zap-hit" | "slash" | "slash-hit" | "hurt" | "miss" | "slam";
 export function playSfx(kind: Sfx) {
   if (!ctx) boot();
   if (!ctx || ctx.state !== "running") return;
@@ -226,6 +226,7 @@ export function playSfx(kind: Sfx) {
     case "miss": burst(t, 900, 0.07, 0.05); break;
     case "punch": blip(t, 180, 60, 0.12, 0.35, "square"); burst(t, 700, 0.08, 0.35, "lowpass"); break;
     case "punch-heavy": blip(t, 140, 40, 0.25, 0.45, "square"); burst(t, 500, 0.2, 0.5, "lowpass"); burst(t + 0.03, 2500, 0.08, 0.2); break;
+    case "slam": blip(t, 110, 28, 0.5, 0.55, "square"); burst(t, 320, 0.35, 0.5, "lowpass"); burst(t + 0.05, 1600, 0.1, 0.25, "bandpass"); break;
     case "zap": for (let i = 0; i < 5; i++) blip(t + i * 0.02, 1800 + r() * 1400, 400, 0.04, 0.06, "square"); burst(t, 5000, 0.12, 0.12, "highpass"); break;
     case "zap-heavy": for (let i = 0; i < 9; i++) blip(t + i * 0.025, 2200 + r() * 1800, 200, 0.05, 0.07, "sawtooth"); burst(t, 4000, 0.3, 0.2, "highpass"); break;
     case "zap-hit": blip(t, 900, 1600, 0.06, 0.12, "square"); blip(t + 0.06, 1600, 300, 0.1, 0.1, "square"); break;
