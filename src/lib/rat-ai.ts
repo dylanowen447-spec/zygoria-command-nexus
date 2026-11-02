@@ -131,3 +131,6 @@ export function brixShockwave(rats: Rat[], p: Point, brix: Point, radius = 9): n
 
 /** Choreography hold-spots a scene can ask the crew to keep (null = normal companion AI). */
 export type StagePlan = Partial<Record<Agent, Point>> | null;
+
+/** Dodge-roll invulnerability window per Zig (performance.now() ms). Bites during a roll miss. */
+export const dodgeUntil: Record<string, number> = {};

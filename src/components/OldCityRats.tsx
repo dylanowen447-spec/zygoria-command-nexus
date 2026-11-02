@@ -90,7 +90,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
     winds.current = { Brix: 0, Oz: 0, Lowkey: 0 };
     const hurt = (_n: number, who?: Agent) => {
       if (!who || over || squadRef.current[who] <= 0) return;
-      const t = performance.now(); if (t - lastBite[who] < IFRAME_MS) return; lastBite[who] = t;
+      const t = performance.now(); if ((dodgeUntil[who] ?? 0) > t) return; if (t - lastBite[who] < IFRAME_MS) return; lastBite[who] = t;
       playSfx("hurt");
       const s = damage(squadRef.current, who);
       setSq(s);
