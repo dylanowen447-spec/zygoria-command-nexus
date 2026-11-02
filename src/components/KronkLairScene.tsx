@@ -62,6 +62,8 @@ const INTRO: Line[] = [
 const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[] = [];
 
 const KRONK_HP = 100;
+// Kronk's single red eye in ground %: sprite box is 26% wide, feet at 59%, eye sits 73.7% across / 16.3% down the frame.
+const EYE = { x: 50 - 13 + 0.737 * 26, y: 59 - 26 * (230 / 380) * (4 / 3) * (1 - 0.163) };
 
 export function KronkLairScene() {
   const [pos, setPos] = useState<Record<Zig, P>>({ Brix: { x: 42, y: 84 }, Oz: { x: 52, y: 87 }, Lowkey: { x: 62, y: 85 } });
@@ -226,12 +228,12 @@ export function KronkLairScene() {
       <div ref={groundRef} className="kronk-ground">
         <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {laser && <svg key={laser.id} className="kronk-laser" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          {[-1.2, 1.2].map(o => <g key={o}>
-            <line className="beam-halo" x1={50 + o} y1={47} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
-            <line className="beam-red" x1={50 + o} y1={47} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
-            <line className="beam-core" x1={50 + o} y1={47} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
+          {[-0.25, 0.25].map(o => <g key={o}>
+            <line className="beam-halo" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
+            <line className="beam-red" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
+            <line className="beam-core" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
           </g>)}
-          <circle className="kronk-eye" cx={50 - 1.2} cy={47} r={0.9}/><circle className="kronk-eye" cx={50 + 1.2} cy={47} r={0.9}/>
+          <circle className="kronk-eye" cx={EYE.x} cy={EYE.y} r={0.9}/>
           <circle className="kronk-laser-burst" cx={laser.to.x} cy={laser.to.y} r={2.4}/>
         </svg>}
         {fx && <svg key={fx.id} className="kronk-laser zig-strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
