@@ -48,3 +48,4 @@
 - Investigate user report: lair music gone (likely HMR remount; verify startKronkMusic after reload)
 - [ ] Kronk's Lair: Zigs can attack Kronk (button shows once fight starts) — verify on phone
 - [ ] Kronk's laser fires from his single red eye, not his body
+- [ ] Thicker Kronk laser beam
