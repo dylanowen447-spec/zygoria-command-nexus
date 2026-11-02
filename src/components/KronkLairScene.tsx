@@ -60,6 +60,8 @@ const INTRO: Line[] = [
 ];
 const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[] = [];
 
+const KRONK_HP = 100;
+
 export function KronkLairScene() {
   const [pos, setPos] = useState<Record<Zig, P>>({ Brix: { x: 42, y: 84 }, Oz: { x: 52, y: 87 }, Lowkey: { x: 62, y: 85 } });
   const [moving, setMoving] = useState<Partial<Record<Zig, { dir: "left" | "right"; ms: number }>>>({});
@@ -71,21 +73,28 @@ export function KronkLairScene() {
   const groundRef = useRef<HTMLDivElement>(null);
   const walkId = useRef<Partial<Record<Zig, number>>>({});
   const busy = useRef(false);
+  // Boss theme kicks in when the doors slam; every tap/key re-wakes audio in case the browser kept it locked.
+  const musicOn = useRef(false);
   useEffect(() => {
-    startKronkMusic();
-    const go = () => startKronkMusic(); // mobile: start on first tap if audio wasn't unlocked yet
-    window.addEventListener("pointerdown", go, { once: true });
-    return () => { window.removeEventListener("pointerdown", go); stopKronkMusic(); };
+    const go = () => { if (musicOn.current) startKronkMusic(); };
+    window.addEventListener("pointerdown", go); window.addEventListener("keydown", go);
+    return () => { window.removeEventListener("pointerdown", go); window.removeEventListener("keydown", go); stopKronkMusic(); };
   }, []);
   const [laser, setLaser] = useState<{ to: P; z: Zig; id: number } | null>(null);
   const [hit, setHit] = useState<Zig | null>(null);
   const [squad, setSquad] = useState<Squad>(fullSquad);
   const squadRef = useRef<Squad>(squad);
+  const [kronkHp, setKronkHp] = useState(KRONK_HP);
+  const kronkHpRef = useRef(KRONK_HP);
+  const [kronkHit, setKronkHit] = useState(0);
+  const [fx, setFx] = useState<{ from: P; kind: Zig; id: number } | null>(null);
+  const cooldown = useRef<Partial<Record<Zig, number>>>({});
+  const fighting = step >= INTRO.length && kronkHp > 0;
 
   useEffect(() => {
     if (step >= INTRO.length) return;
     const line = INTRO[step]!;
-    if (line.slam) playSfx("slam");
+    if (line.slam) { playSfx("slam"); musicOn.current = true; startKronkMusic(); }
     let live = true, t: ReturnType<typeof setTimeout> | undefined;
     const started = performance.now();
     let advanced = false;
@@ -119,7 +128,7 @@ export function KronkLairScene() {
     if (step < 4) return;
     let live = true; const timers: ReturnType<typeof setTimeout>[] = [];
     const fire = () => {
-      if (!live) return;
+      if (!live || kronkHpRef.current <= 0) return;
       const zs = (["Brix", "Oz", "Lowkey"] as Zig[]).filter(a => squadRef.current[a] > 0);
       if (!zs.length) return;
       const z = zs[Math.floor(Math.random() * zs.length)]!, p = posRef.current[z];
@@ -133,7 +142,7 @@ export function KronkLairScene() {
       }, 450));
       timers.push(setTimeout(() => { setLaser(null); setHit(null); }, 1100));
       if (allDown(squadRef.current)) return;
-      timers.push(setTimeout(fire, 5500 + Math.random() * 4000));
+      timers.push(setTimeout(fire, kronkHpRef.current < KRONK_HP / 2 ? 3200 + Math.random() * 2500 : 5500 + Math.random() * 4000));
     };
     timers.push(setTimeout(fire, 2500));
     return () => { live = false; timers.forEach(clearTimeout); };
@@ -164,6 +173,39 @@ export function KronkLairScene() {
     busy.current = false;
   }
 
+  // Zigs strike back: Brix charges in for a ground-pound, Lowkey shadow-dashes to his side, Oz throws lightning from range.
+  function attack(a: Zig) {
+    if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
+    const now = performance.now();
+    if ((cooldown.current[a] ?? 0) > now) return;
+    cooldown.current[a] = now + (a === "Brix" ? 1100 : a === "Lowkey" ? 750 : 900);
+    const p = posRef.current[a];
+    if (a !== "Oz") walkTo(a, clampToGround({ x: 50 + (p.x < 50 ? -7 : 7) * (a === "Lowkey" ? 1.3 : 1), y: 64 }));
+    playSfx(a === "Brix" ? "swing" : a === "Oz" ? "zap" : "slash");
+    const from = a === "Oz" ? { x: p.x, y: p.y - 7 } : p;
+    setTimeout(() => {
+      if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
+      setFx({ from, kind: a, id: Date.now() }); setTimeout(() => setFx(null), 350);
+      playSfx(a === "Brix" ? "punch-heavy" : a === "Oz" ? "zap-hit" : "slash-hit");
+      const hp = Math.max(0, kronkHpRef.current - (a === "Brix" ? 5 : a === "Lowkey" ? 3 : 2));
+      const halfway = kronkHpRef.current >= KRONK_HP / 2 && hp < KRONK_HP / 2;
+      kronkHpRef.current = hp; setKronkHp(hp); setKronkHit(h => h + 1);
+      if (halfway) void speak("Kronk", "ENOUGH! You will BURN!", () => {});
+      if (hp <= 0) { setLaser(null); void speak("Kronk", "This... is not... over...", () => {}).then(() => speak("Oz", "Did we just... beat the handbag?!", () => {})); }
+    }, a === "Oz" ? 200 : 520);
+  }
+  const attackRef = useRef(attack); attackRef.current = attack;
+  // Space attacks with the steered Zig (Brix if nobody is steered); the others fight on their own.
+  useEffect(() => {
+    if (!fighting) return;
+    const key = (e: KeyboardEvent) => { if (e.code === "Space") { e.preventDefault(); attackRef.current(steerRef.current ?? "Brix"); } };
+    window.addEventListener("keydown", key);
+    const auto = setInterval(() => {
+      (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => { if (a !== steerRef.current && Math.random() < 0.45) attackRef.current(a); });
+    }, 2600);
+    return () => { window.removeEventListener("keydown", key); clearInterval(auto); };
+  }, [fighting]);
+
   const tapZig = (a: Zig) => {
     const now = performance.now(), l = lastTap.current;
     if (l && l.a === a && now - l.t < 380) { lastTap.current = null; setSteer(s => (s === a ? null : a)); }
@@ -180,7 +222,7 @@ export function KronkLairScene() {
     <img className="world-image" src={bg.url} alt="Inside Kronk's bunker: red lamps, rat banners and glowing green tanks around a control console above a hazard-striped floor" />
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
-        <span className="kronk-boss" role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
+        <span key={kronkHit} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {laser && <svg key={laser.id} className="kronk-laser" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {[-1.2, 1.2].map(o => <g key={o}>
             <line className="beam-halo" x1={50 + o} y1={47} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
@@ -190,15 +232,21 @@ export function KronkLairScene() {
           <circle className="kronk-eye" cx={50 - 1.2} cy={47} r={0.9}/><circle className="kronk-eye" cx={50 + 1.2} cy={47} r={0.9}/>
           <circle className="kronk-laser-burst" cx={laser.to.x} cy={laser.to.y} r={2.4}/>
         </svg>}
+        {fx && <svg key={fx.id} className="kronk-laser zig-strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {fx.kind === "Oz" && <polyline className="strike-bolt" points={`${fx.from.x},${fx.from.y} ${(fx.from.x + 50) / 2 + 2},${(fx.from.y + 52) / 2 - 3} ${(fx.from.x + 50) / 2 - 2},${(fx.from.y + 52) / 2 + 2} 50,52`} />}
+          <circle className={`strike-burst strike-${fx.kind.toLowerCase()}`} cx={50} cy={53} r={fx.kind === "Brix" ? 5 : 3.5}/>
+        </svg>}
         {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
       </div>
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
     </div>
     <div className="map-coordinate top-right">KRONK'S LAIR</div>
+    {fighting && <button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); attack(steer ?? "Brix"); }} aria-label="Attack Kronk">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>}
+    {kronkHp <= 0 && <div className="map-coordinate kronk-down" role="status">KRONK DOWN</div>}
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the road to walk · double-tap {steer} to let go</div>}
     {step >= 4 && <div className="boss-hud" role="status" aria-label="Fight status">
       <div className="boss-hud-row"><span className="boss-name">KRONK <small>WARLORD</small></span></div>
-      <div className="boss-bar"><span className="boss-bar-fill" style={{ width: "100%" }}/></div>
+      <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(kronkHp / KRONK_HP) * 100}%` }}/></div>
       <div className="boss-hud-row crew squad-row">
         {(["Brix", "Oz", "Lowkey"] as Zig[]).map(a => <span key={a} className={`squad-pips ${squad[a] <= 0 ? "is-down" : ""}`} aria-label={`${a} ${squad[a]} of ${SQUAD_HP[a]}`}>
           <span className="boss-name">{a.toUpperCase()}</span>

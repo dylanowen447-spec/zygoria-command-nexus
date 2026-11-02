@@ -202,8 +202,10 @@ function kronkTick() {
 }
 /** Start Kronk's dramatic organ theme. Needs a prior user gesture; silently no-ops otherwise. */
 export function startKronkMusic() {
-  if (!ctx) boot();
-  if (!ctx || kronkT) return;
+  if (!ctx) boot(); else void ctx.resume();
+  if (!ctx) return;
+  // Already running (maybe started while audio was locked): re-anchor so it plays from now instead of racing to catch up.
+  if (kronkT) { if (kronkT.next < ctx.currentTime) kronkT.next = ctx.currentTime + 0.05; return; }
   const bus = ctx.createGain(); bus.gain.value = 0.9; bus.connect(master);
   kronkT = { timer: window.setInterval(kronkTick, 50), step: 0, next: ctx.currentTime + 0.05, bus };
   kronkTick();
