@@ -3,7 +3,7 @@ import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS, F
 import { playSfx } from "@/lib/atmosphere";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
-import { DEFAULT_BOUNDS, farSpawns, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, farSpawns, makeRat, separateRats, stepRat, zapRats, hitCtx, dodgeUntil, type CombatApi, type Rat } from "@/lib/rat-ai";
 import sheltonSheet from "@/assets/shelton.webp.asset.json";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import battleArt from "@/assets/long-walk-battle.webp";
@@ -21,7 +21,7 @@ const STAGES = [
   { windup: 0.45, lunge: 50, open: 1.4, taunt: 1.4, rats: 3, name: "ENRAGED" },
 ];
 const RETREAT_AT = [7, 14], MAX_HP = 20, CREW_FLOOR = 15; // each zap = 10% of Shelton's health; retreats after hits 3 and 6
-type Shel = { x: number; y: number; state: ShelState; t: number; hits: number; flip: boolean; target: Point; blocked: number; stage: number; hurt: number; path: Point[] };
+type Shel = { prey: Agent; combo: number; x: number; y: number; state: ShelState; t: number; hits: number; flip: boolean; target: Point; blocked: number; stage: number; hurt: number; path: Point[] };
 /** Winding road from the far distance down onto the rocky plateau (artwork %); retreats walk it in reverse. */
 const ROAD_IN: Point[] = [{ x: 22, y: 49 }, { x: 25, y: 55 }, { x: 28, y: 61 }, { x: 38, y: 65 }, { x: 50, y: 67 }, { x: 62, y: 68 }];
 const ROAD_OUT: Point[] = [...ROAD_IN].reverse().slice(1);
@@ -119,7 +119,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       wave.current = 3; startBattleMusic(true);
       fight.current = { start: performance.now(), end: 0 };
       const p0 = ROAD_IN[0]!;
-      shel.current = { x: p0.x, y: p0.y, state: "enter", t: 0, hits: 0, flip: false, target: ROAD_IN[ROAD_IN.length - 1]!, blocked: 0, stage: 0, hurt: 0, path: ROAD_IN.slice(1) };
+      shel.current = { x: p0.x, y: p0.y, prey: "Oz", combo: 0, state: "enter", t: 0, hits: 0, flip: false, target: ROAD_IN[ROAD_IN.length - 1]!, blocked: 0, stage: 0, hurt: 0, path: ROAD_IN.slice(1) };
       // Six rats march in with him; they join the fight (existing rat behaviour) once he reaches the plateau.
       escorts.current = ESCORT.map(o => { const r = makeRat(nextId++, { x: p0.x + o.x * persp(p0.y), y: p0.y + o.y * persp(p0.y) }); rats.current.push(r); return { r, o }; });
       later(400, () => onSay("Brix", "Something bigger's coming."));
@@ -146,7 +146,9 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       if (!hit && s && !["beaten", "flee", "gone", "retreat", "enter"].includes(s.state) && inShel(s, p)) {
         hit = true;
         const sid = performance.now(); const spot = { id: sid, x: p.x, y: p.y };
-        if (s.state !== "shell" && performance.now() - s.hurt > 350) {
+        const guardBreak = hitCtx.by === "Brix" && !!hitCtx.heavy && s.state !== "shell";
+        if ((s.state === "open" || s.state === "hit" || guardBreak) && performance.now() - s.hurt > 350) {
+          if (guardBreak && s.state !== "open" && s.state !== "hit") setBanner("GUARD BREAK!"), later(900, () => setBanner(null));
           s.hits += 1; s.state = "hit"; s.t = 0; s.hurt = performance.now();
           { const oz = crew.current.Oz; s.x = clampPlat({ x: s.x + (s.x >= oz.x ? 3 : -3), y: s.y }).x; }
           sparks.current.push({ ...spot, kind: "hit" });
@@ -155,6 +157,8 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
           else shelLine(SHEL_LINES.hit[(s.hits - 1) % SHEL_LINES.hit.length]!, 1500);
         } else {
           sparks.current.push({ ...spot, kind: "block" });
+          // The shell shoves the attacker back off him.
+          { const z = crew.current[hitCtx.by]; if (z) { const dx = z.x - s.x || 1, d = Math.hypot(dx, z.y - s.y) || 1; const c = clampPlat({ x: z.x + dx / d * 3, y: z.y + (z.y - s.y) / d * 1.5 }); z.x = c.x; z.y = c.y; } }
           
           if (performance.now() - s.blocked > 4000) { s.blocked = performance.now(); shelLine(SHEL_LINES.block[Math.floor(Math.random() * 3)]!, 1400); }
         }
@@ -192,9 +196,22 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
           for (const e of escorts.current) { if (e.r.dead) continue; e.r.x = s.x + e.o.x * k; e.r.y = s.y + e.o.y * k; e.r.flip = s.flip; e.r.mode = "charge"; }
         }
         if (s.state === "enter" && follow(s.stage ? 16 : 9)) { s.state = "taunt"; s.t = 0; escorts.current = []; if (s.stage) return void (raf = requestAnimationFrame(tick)); shelLine(SHEL_LINES.enter, 3000); later(1200, () => onSay("Oz", "OH HELLLL NAW! Who's this spiky tortoise with the gold chain?!")); }
-        else if (s.state === "taunt" && s.t > st.taunt) { s.state = "windup"; s.t = 0; s.flip = oz.x < s.x; }
-        else if (s.state === "windup" && s.t > st.windup) { s.state = "lunge"; s.t = 0; s.target = clampPlat({ x: oz.x + (oz.x < s.x ? 5 : -5), y: oz.y }); }
-        else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) { s.state = "open"; s.t = 0; if (Math.hypot(oz.x - s.x, oz.y - s.y) < 7) hurt(3); if (s.hits === 0) later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!")); }
+        else if (s.state === "taunt" && s.t > st.taunt) {
+          // Lock onto whichever Zig is closest.
+          s.prey = (Object.keys(crew.current) as Agent[]).reduce((b, a) => Math.hypot(crew.current[a].x - s.x, crew.current[a].y - s.y) < Math.hypot(crew.current[b].x - s.x, crew.current[b].y - s.y) ? a : b, "Oz" as Agent);
+          s.state = "windup"; s.t = 0; s.flip = crew.current[s.prey].x < s.x; s.combo = s.stage >= 2 ? 1 : 0;
+        }
+        else if (s.state === "windup" && s.t > st.windup) { const z = crew.current[s.prey]; s.state = "lunge"; s.t = 0; s.target = clampPlat({ x: z.x + (z.x < s.x ? -6 : 6), y: z.y }); }
+        else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) {
+          const z = crew.current[s.prey], dodged = (dodgeUntil[s.prey] ?? 0) > performance.now();
+          const hit = !dodged && Math.hypot(z.x - s.x, z.y - s.y) < 8;
+          if (hit) { hurt(12); const dx = z.x - s.x || (s.flip ? -1 : 1), d = Math.abs(dx) || 1; const c = clampPlat({ x: z.x + dx / d * 7, y: z.y }); z.x = c.x; z.y = c.y; }
+          // Spike Rush and Enraged: he slams the ground where he lands.
+          if (s.stage >= 1) { playSfx("hurt"); for (const a of Object.keys(crew.current) as Agent[]) if (a !== s.prey || !hit) { const q = crew.current[a]; if (Math.hypot(q.x - s.x, q.y - s.y) < 12 && (dodgeUntil[a] ?? 0) < performance.now()) hurt(6); } stageRef.current?.classList.remove("city-shake-heavy"); void stageRef.current?.offsetWidth; stageRef.current?.classList.add("city-shake-heavy"); }
+          if (s.combo > 0 && !dodged) { s.combo -= 1; s.state = "windup"; s.t = st.windup * 0.5; }
+          else { s.state = "open"; s.t = dodged ? -st.open * 0.6 : 0; if (dodged) setBanner("HE MISSED — HIT HIM!"), later(1000, () => setBanner(null)); }
+          if (s.hits === 0 && s.state === "open") later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!"));
+        }
         else if (s.state === "open" && s.t > st.open) { s.state = "shell"; s.t = 0; }
         else if (s.state === "hit" && s.t > 0.6) { s.state = "taunt"; s.t = 0; }
         else if (s.state === "shell" && s.t > 0.9) { s.state = "taunt"; s.t = 0; }
