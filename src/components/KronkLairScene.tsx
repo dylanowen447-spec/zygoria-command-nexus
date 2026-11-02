@@ -73,9 +73,10 @@ export function KronkLairScene() {
   const groundRef = useRef<HTMLDivElement>(null);
   const walkId = useRef<Partial<Record<Zig, number>>>({});
   const busy = useRef(false);
-  // Boss theme kicks in when the doors slam; every tap/key re-wakes audio in case the browser kept it locked.
-  const musicOn = useRef(false);
+  // Boss theme plays from the moment the lair opens; every tap/key re-wakes audio in case the browser kept it locked.
+  const musicOn = useRef(true);
   useEffect(() => {
+    startKronkMusic();
     const go = () => { if (musicOn.current) startKronkMusic(); };
     window.addEventListener("pointerdown", go); window.addEventListener("keydown", go);
     return () => { window.removeEventListener("pointerdown", go); window.removeEventListener("keydown", go); stopKronkMusic(); };
