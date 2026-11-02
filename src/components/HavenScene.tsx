@@ -133,6 +133,7 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
 
   // Quest beats once the current script runs out.
   const distrustStarted = useRef(false);
+  const distrustTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => {
     if (!introDone) return;
     if (quest === "fish") setValeReady(true);
@@ -142,10 +143,10 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
       const gap = DISTRUST_MS / (DISTRUST.length + 1);
       const ts = DISTRUST.map((l, i) => setTimeout(() => setScript(s => [...s, l]), gap * (i + 1)));
       ts.push(setTimeout(() => { setScript(s => [...s, ...HUNGER]); setQuest(advanceQuest("hungry")); }, DISTRUST_MS));
-      return () => { ts.forEach(clearTimeout); distrustStarted.current = false; };
+      distrustTimers.current = ts;
     }
-    return undefined;
   }, [introDone, quest]);
+  useEffect(() => () => distrustTimers.current.forEach(clearTimeout), []);
   const objective = QUEST_OBJECTIVE[quest];
 
   async function send(e: React.FormEvent) {
