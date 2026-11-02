@@ -80,6 +80,8 @@ function boot() {
   if (ctx) { void ctx.resume(); return; }
   const AC: typeof AudioContext | undefined = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AC) return;
+  // iPhone: let Web Audio play even with the silent switch on (voices already do via <audio>).
+  try { const n = navigator as unknown as { audioSession?: { type: string } }; if (n.audioSession) n.audioSession.type = "playback"; } catch { /* older Safari */ }
   ctx = new AC(); void ctx.resume();
   const u = ctx.createBufferSource(); u.buffer = ctx.createBuffer(1, 1, 22050); u.connect(ctx.destination); u.start(0);
   noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -205,8 +207,10 @@ export function startKronkMusic() {
   if (!ctx) boot(); else void ctx.resume();
   if (!ctx) return;
   // Already running (maybe started while audio was locked): re-anchor so it plays from now instead of racing to catch up.
+  if (kronkT && kronkT.bus.context !== ctx) { clearInterval(kronkT.timer); kronkT = null; } // stale from a closed context
   if (kronkT) { if (kronkT.next < ctx.currentTime) kronkT.next = ctx.currentTime + 0.05; return; }
-  const bus = ctx.createGain(); bus.gain.value = 0.9; bus.connect(master);
+  // Own path to the speakers so ambience ducking can never bury Kronk's theme.
+  const bus = ctx.createGain(); bus.gain.value = 0.5; bus.connect(ctx.destination);
   kronkT = { timer: window.setInterval(kronkTick, 50), step: 0, next: ctx.currentTime + 0.05, bus };
   kronkTick();
 }
