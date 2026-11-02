@@ -40,4 +40,4 @@
 - [x] Kronk Approach: smaller crew sprites, autonomous wandering (like Three Eggs), scared-but-aware-of-pollution banter
 - [ ] Vale: sprite movement (later — needs sprite sheet), then Orin lets Vale visit Sanctuary
 - [x] Kronk Approach: no Sanctuary chatter (Boulder Pot etc.) during the scene
-- [ ] Mobile dodge roll / quick dash in combat (i-frames vs rat lunges)
+- [x] Mobile dodge roll / quick dash in combat (i-frames vs rat lunges)

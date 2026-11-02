@@ -814,8 +814,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (!canAttackRef.current || e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); clearTimeout(windTimer.current); windTimer.current = setTimeout(() => setHolding(true), 160); };
     const kd2 = (e: KeyboardEvent) => { if ((e.code === "ShiftLeft" || e.code === "ShiftRight") && !typing(e)) dodge.current(); };
     const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); const held = performance.now() - down; down = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); };
-    window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
-    return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); };
+    window.addEventListener("keydown", kd); window.addEventListener("keydown", kd2); window.addEventListener("keyup", ku);
+    return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keydown", kd2); window.removeEventListener("keyup", ku); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); };
   }, []);
   const chargeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
