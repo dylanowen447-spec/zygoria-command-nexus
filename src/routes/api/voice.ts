@@ -59,6 +59,15 @@ export const Route = createFileRoute("/api/voice")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        try { return await speakLine(request); }
+        // The player left or reloaded mid-request: end quietly instead of a server error.
+        catch { return new Response("Voice cancelled", { status: 503 }); }
+      },
+    },
+  },
+});
+
+async function speakLine(request: Request): Promise<Response> {
         const body = (await request.json().catch(() => null)) as { who?: string; text?: string } | null;
         const cast = body?.who ? CAST[body.who] : undefined;
         const text = typeof body?.text === "string" ? body.text.trim() : "";
@@ -91,7 +100,4 @@ export const Route = createFileRoute("/api/voice")({
           await save;
         }
         return audio(clip, type.includes("wav") ? "audio/wav" : type);
-      },
-    },
-  },
-});
+}
