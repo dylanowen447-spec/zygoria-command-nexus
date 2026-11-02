@@ -346,7 +346,18 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         // Downed crewmates recover on their own; companions keep fighting. Prefer rats within reach, then rats closing on a brother.
         const inReach = ts.filter(u => cdist(u, me) <= REACH[z] * 0.9).sort((u, v) => cdist(u, me) - cdist(v, me));
         const near = (u: Point) => Math.min(...ALL.filter(o => liveSquad.hp[o] > 0).map(o => cdist(u, coords.current[o])));
-        const sorted = inReach.length ? inReach : ts.slice().sort((u, v) => (cdist(u, me) + near(u) * 0.8) - (cdist(v, me) + near(v) * 0.8));
+        let sorted = inReach.length ? inReach : ts.slice().sort((u, v) => (cdist(u, me) + near(u) * 0.8) - (cdist(v, me) + near(v) * 0.8));
+        if (scene.id === "city") {
+          // Teamwork: a brother who is down or swarmed gets help first — companions peel rats off him.
+          const pressure = (o: Agent) => ts.filter(u => cdist(u, coords.current[o]) < 7).length + (liveSquad.hp[o] <= 0 ? 3 : 0);
+          const mate = ALL.filter(o => o !== z).sort((u, v) => pressure(v) - pressure(u))[0]!;
+          if (pressure(mate) >= 2 && !inReach.length) {
+            const mp = coords.current[mate];
+            sorted = ts.slice().sort((u, v) => cdist(u, mp) - cdist(v, mp));
+            const t0 = sorted[0]!;
+            if (cdist(me, t0) > REACH[z] * 0.9) { const side = me.x < mp.x ? -1 : 1; void walk(z, [clampB(z === "Oz" ? { x: mp.x + side * 12, y: mp.y + 2 } : { x: t0.x + side * 4, y: t0.y + 1 })]); if (z !== "Oz") return; }
+          }
+        }
         const t = sorted.find(u => !taken.some(k => k === u)) ?? sorted[0]!;
         taken.push(t);
         const now = performance.now();

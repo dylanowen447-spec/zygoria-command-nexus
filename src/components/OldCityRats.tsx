@@ -176,7 +176,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       const b = crew.current.Brix;
       const targets = waveIndex === 0 && squadRef.current.Brix > 0 ? { Brix: b } as Record<Agent, Point> : pool;
       const canAttack = () => rats.current.filter(x => !x.dead && (x.mode === "windup" || x.mode === "bite")).length < MAX_BITERS;
-      if (up.length) for (const r of rats.current) stepRat(r, dt, targets, hurt, canAttack);
+      if (up.length) for (const r of rats.current) stepRat(r, dt, targets, hurt, canAttack, waveIndex > 0);
       separateRats(rats.current, dt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (waveIndex >= 0 && rats.current.length === 0 && !nextWaveAt) {
