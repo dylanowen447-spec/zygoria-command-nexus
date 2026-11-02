@@ -199,7 +199,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         </span>)}
       </div>
     </div>}
-    {rats.current.map(r => <RatSprite key={r.id} r={r} w={ratW} h={ratH} now={now}/>)}
+    <span className="city-rats" style={{ display: "contents" }}>{rats.current.map(r => <RatSprite key={r.id} r={r} w={ratW} h={ratH} now={now}/>)}</span>
     {defeat && <div className={`defeat-fade ${defeat === "over" ? "is-over" : ""}`} aria-hidden="true"/>}
     {defeat === "over" && <GameOverScreen onRetry={() => retry(Math.max(0, curWave.current))} onRestart={() => retry(0)} onSanctuary={onSanctuary}/>}
   </>;
