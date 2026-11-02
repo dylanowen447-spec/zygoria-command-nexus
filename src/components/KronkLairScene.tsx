@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import bg from "@/assets/kronk-lair.png.asset.json";
 import kronkIdle from "@/assets/kronk-idle.png.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
@@ -61,6 +62,8 @@ const INTRO: Line[] = [
 const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[] = [];
 
 const KRONK_HP = 100;
+// Kronk's single red eye in ground %: sprite box is 26% wide, feet at 59%, eye sits 73.7% across / 16.3% down the frame.
+const EYE = { x: 50 - 13 + 0.737 * 26, y: 59 - 26 * (230 / 380) * (4 / 3) * (1 - 0.163) };
 
 export function KronkLairScene() {
   const [pos, setPos] = useState<Record<Zig, P>>({ Brix: { x: 42, y: 84 }, Oz: { x: 52, y: 87 }, Lowkey: { x: 62, y: 85 } });
@@ -90,7 +93,7 @@ export function KronkLairScene() {
   const [kronkHit, setKronkHit] = useState(0);
   const [fx, setFx] = useState<{ from: P; kind: Zig; id: number } | null>(null);
   const cooldown = useRef<Partial<Record<Zig, number>>>({});
-  const fighting = step >= INTRO.length && kronkHp > 0;
+  const fighting = step >= 4 && kronkHp > 0; // fight is on as soon as Kronk first speaks and the lasers start
 
   useEffect(() => {
     if (step >= INTRO.length) return;
@@ -223,14 +226,14 @@ export function KronkLairScene() {
     <img className="world-image" src={bg.url} alt="Inside Kronk's bunker: red lamps, rat banners and glowing green tanks around a control console above a hazard-striped floor" />
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
-        <span key={kronkHit} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
+        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {laser && <svg key={laser.id} className="kronk-laser" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          {[-1.2, 1.2].map(o => <g key={o}>
-            <line className="beam-halo" x1={50 + o} y1={47} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
-            <line className="beam-red" x1={50 + o} y1={47} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
-            <line className="beam-core" x1={50 + o} y1={47} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
+          {[-0.25, 0.25].map(o => <g key={o}>
+            <line className="beam-halo" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
+            <line className="beam-red" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
+            <line className="beam-core" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
           </g>)}
-          <circle className="kronk-eye" cx={50 - 1.2} cy={47} r={0.9}/><circle className="kronk-eye" cx={50 + 1.2} cy={47} r={0.9}/>
+          <circle className="kronk-eye" cx={EYE.x} cy={EYE.y} r={0.9}/>
           <circle className="kronk-laser-burst" cx={laser.to.x} cy={laser.to.y} r={2.4}/>
         </svg>}
         {fx && <svg key={fx.id} className="kronk-laser zig-strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -242,7 +245,7 @@ export function KronkLairScene() {
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
     </div>
     <div className="map-coordinate top-right">KRONK'S LAIR</div>
-    {fighting && <button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); attack(steer ?? "Brix"); }} aria-label="Attack Kronk">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>}
+    {fighting && typeof document !== "undefined" && createPortal(<button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); attack(steer ?? "Brix"); }} aria-label="Attack Kronk">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>, document.body)}
     {kronkHp <= 0 && <div className="map-coordinate kronk-down" role="status">KRONK DOWN</div>}
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the road to walk · double-tap {steer} to let go</div>}
     {step >= 4 && <div className="boss-hud" role="status" aria-label="Fight status">
