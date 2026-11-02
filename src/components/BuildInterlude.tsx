@@ -69,7 +69,7 @@ export function BuildInterlude({ onDone }: { onDone: () => void }) {
     <div className="world-vignette"/>
     <div className="map-coordinate top-right">FINDING HOME</div>
     <div className="build-crew">
-      {(["Lowkey", "Brix", "Oz"] as Agent[]).map(a => <div key={a} className={`build-zig build-${a.toLowerCase()} ${beat.who === a ? "is-speaking" : ""} ${a !== "Lowkey" && step > 0 && !fade ? "is-working" : ""}`}>
+      {(["Lowkey", "Brix", "Oz"] as Agent[]).map(a => <div key={a} className={`build-zig build-${a.toLowerCase()} ${beat.who === a ? "is-speaking" : ""} ${a !== "Lowkey" && step > 0 && step < FADE_AT && !fade ? "is-working" : ""}`}>
         {beat.who === a && <span className="idle-bubble">{beat.text}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
       </div>)}
