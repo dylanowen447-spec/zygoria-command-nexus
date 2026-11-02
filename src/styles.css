@@ -1203,3 +1203,7 @@ body > .combat-dodge{position:fixed}
 .descent-vale img{height:100%;width:auto;filter:drop-shadow(0 4px 4px hsl(0 0% 0%/.6))}
 .descent-vale.is-gone{opacity:0}
 .haven-scene .haven-layer .haven-zig,.haven-scene .haven-human{bottom:13%!important}.haven-scene .haven-bubble{bottom:calc(13% + 62px)}
+/* Kronk's Lair — 4:3 artwork cover box; Kronk idles at the foot of the stairs */
+.kronk-lair .kronk-ground{width:max(100cqw,133.34cqh);height:max(75cqw,100cqh)}
+.kronk-boss{position:absolute;left:50%;bottom:41%;width:26%;aspect-ratio:380/230;transform:translateX(-50%);background-size:300% 100%;background-repeat:no-repeat;animation:kronk-idle 1.2s steps(1) infinite;z-index:62;filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55))}
+@keyframes kronk-idle{0%{background-position:0 0}33%{background-position:50% 0}66%{background-position:100% 0}}
