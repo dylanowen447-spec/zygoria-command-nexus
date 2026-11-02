@@ -1,0 +1,208 @@
+/** "First Signs of Life" scripted dialogue (Dylan's expanded banter brief). `pause` = extra silence after the line, for emotional beats. */
+export type Speaker = "Oz" | "Brix" | "Lowkey" | "Vale" | "Orin" | "Mara";
+export type DLine = { who: Speaker; text: string; pause?: number | undefined };
+const L = (who: Speaker, text: string, pause?: number): DLine => ({ who, text, pause });
+
+/** Scene 1 — first impressions of the Underground Haven. */
+export const FIRST_IMPRESSIONS: DLine[] = [
+  L("Oz", "Blimey. There's a whole town down here!"),
+  L("Brix", "Underground town. That's clever. No weather problems."),
+  L("Lowkey", "No sunlight either."),
+  L("Brix", "Well, you can't have everything."),
+  L("Oz", "How long have you lot been living down here?"),
+  L("Vale", "Long enough to know better than asking strangers questions."),
+  L("Oz", "Right. Friendly bunch, then."),
+  L("Mara", "Who exactly are you three supposed to be?"),
+  L("Brix", "I'm Brix. That's Oz. And the miserable-looking one is Lowkey."),
+  L("Lowkey", "I'm standing right here."),
+  L("Brix", "See? Miserable."),
+  L("Oz", "We're not dangerous, you know."),
+  L("Mara", "You've got electricity coming out of your head."),
+  L("Oz", "Yeah, but only when I'm excited."),
+  L("Lowkey", "Which is unfortunately most of the time."),
+];
+
+/** Scene 2 — meeting Elder Orin. */
+export const MEETING_ORIN: DLine[] = [
+  L("Orin", "I've never seen creatures like you before."),
+  L("Oz", "That's funny. We've never seen creatures like us before either."),
+  L("Orin", "Is that supposed to be amusing?"),
+  L("Brix", "He thinks so."),
+  L("Orin", "Where did you come from?"),
+  L("Lowkey", "We're still working that out."),
+  L("Orin", "And you expect me to trust you?"),
+  L("Oz", "Well, we haven't stolen anything."),
+  L("Mara", "Yet."),
+  L("Oz", "Oh, come on!"),
+  L("Brix", "Actually, Oz did find an old music player."),
+  L("Oz", "That's not stealing! Nobody was using it!"),
+  L("Lowkey", "Can we concentrate?"),
+  L("Orin", "You claim the surface is changing?"),
+  L("Brix", "Changing? It's practically having a makeover!"),
+  L("Orin", "The surface is dead."),
+  L("Oz", "Not where we live."),
+  L("Orin", "You expect me to believe that trees are growing again?"),
+  L("Oz", "Yep."),
+  L("Orin", "And the rivers?"),
+  L("Brix", "Running beautifully."),
+  L("Orin", "Impossible."),
+  L("Lowkey", "That's what we thought when we found this place.", 900),
+];
+
+/** Scene 3 — Vale volunteers (after the fish handover). */
+export const VALE_VOLUNTEERS: DLine[] = [
+  L("Vale", "I'll go with them."),
+  L("Orin", "Absolutely not."),
+  L("Vale", "I've been scouting those tunnels for years."),
+  L("Orin", "And you've seen what happens to people who wander too far."),
+  L("Vale", "I have. That's why I'm the best person to go."),
+  L("Oz", "See? He gets it."),
+  L("Orin", "You, yellow one. Be quiet."),
+  L("Oz", "Right. Sorry."),
+  L("Brix", "He doesn't do quiet very well."),
+  L("Lowkey", "Neither do you."),
+  L("Vale", "Look, Elder. If there's even a chance they're telling the truth, we need to know."),
+  L("Orin", "And if it's a trap?"),
+  L("Lowkey", "Then we wouldn't be offering to bring him back."),
+  L("Orin", "You will return before nightfall."),
+  L("Oz", "Promise!"),
+  L("Orin", "And you will keep him away from Kronk's patrols."),
+  L("Brix", "Who's Kronk?"),
+  L("Vale", "Someone you really don't want to meet."),
+  L("Oz", "Oh. Sounds lovely."),
+];
+
+/** Scene 4 — short chats on the climb, spaced out so walking isn't interrupted. Each inner array plays as one exchange. */
+export const CLIMB_CHATS: DLine[][] = [
+  [L("Oz", "So, Vale. What's it like being a scout?"), L("Vale", "Cold. Dangerous. Usually miserable."), L("Oz", "Sounds brilliant."), L("Vale", "You're a strange little creature."), L("Oz", "I get that a lot.")],
+  [L("Brix", "How many rats have you seen out here?"), L("Vale", "Hundreds."), L("Brix", "Hundreds?"), L("Vale", "Sometimes thousands."), L("Brix", "Right. That's a lot of rats."), L("Lowkey", "Good counting, Brix."), L("Brix", "Thank you.")],
+  [L("Oz", "I don't like the sound of thousands."), L("Vale", "Then don't make too much noise."), L("Oz", "Why?"), L("Vale", "Because they listen.", 700), L("Oz", "…Right. Quiet walking it is.")],
+];
+
+/** Scene 5 — the waterfall reveal. */
+export const WATERFALL_REVEAL: DLine[] = [
+  L("Vale", "Wait.", 600),
+  L("Oz", "What?"),
+  L("Vale", "What's that sound?"),
+  L("Brix", "What sound?"),
+  L("Vale", "That rushing noise."),
+  L("Oz", "Oh! The waterfalls!"),
+  L("Vale", "The… what?", 900),
+  L("Vale", "No…", 900),
+  L("Lowkey", "There it is."),
+  L("Vale", "That's impossible."),
+  L("Oz", "You keep saying that."),
+  L("Vale", "It's clean."),
+  L("Brix", "Course it is."),
+  L("Vale", "You don't understand."),
+  L("Vale", "Every river I've seen for years has been black."),
+  L("Vale", "Thick with chemicals. Dead."),
+  L("Oz", "Well, this one's definitely not dead."),
+  L("Vale", "Look at it…", 2200),
+  L("Vale", "I remember water like this. When I was little.", 900),
+  L("Lowkey", "You haven't seen it since?"),
+  L("Vale", "Not like this.", 900),
+  L("Brix", "You can even see the rocks at the bottom."),
+  L("Vale", "I never thought I'd see that again.", 900),
+  L("Oz", "Well, come on! Wait till you see the rest!"),
+];
+
+/** Scene 6 — exploring the Sanctuary. */
+export const EXPLORING: DLine[] = [
+  L("Vale", "You three actually live here?"),
+  L("Brix", "Built most of it ourselves."),
+  L("Oz", "He means I watched him build most of it."),
+  L("Lowkey", "And I watched Oz get in the way."),
+  L("Oz", "I helped!"),
+  L("Brix", "You electrocuted my workbench."),
+  L("Oz", "It needed more power!"),
+  L("Vale", "And you've got trees growing?"),
+  L("Lowkey", "More every day."),
+  L("Vale", "This shouldn't be happening."),
+  L("Oz", "You say that quite a lot."),
+  L("Vale", "Because none of this should exist."),
+  L("Brix", "Well, it does. And you're standing in it."),
+  L("Vale", "Orin is never going to believe me."),
+  L("Oz", "Tell him about the waterfalls!"),
+  L("Vale", "He'll think I've lost my mind."),
+  L("Lowkey", "Bring him here one day."),
+  L("Vale", "Maybe.", 900),
+];
+
+/** Scene 7 — the threat of Kronk. */
+export const KRONK_THREAT: DLine[] = [
+  L("Vale", "You need to keep this place hidden."),
+  L("Brix", "Why?"),
+  L("Vale", "Because if Kronk discovers it, he'll take everything."),
+  L("Oz", "Who's this Kronk bloke anyway?"),
+  L("Vale", "He controls the refinery beyond the ruined lands."),
+  L("Lowkey", "The black water?"),
+  L("Vale", "His doing. His machines pump poison into the rivers."),
+  L("Brix", "What for?"),
+  L("Vale", "Fuel. Experiments. Building more of those horrible things."),
+  L("Oz", "What horrible things?"),
+  L("Vale", "Rats. Mutated rats. Some bigger than a man."),
+  L("Oz", "Bigger than Brix?"),
+  L("Brix", "Oi!"),
+  L("Vale", "Some of them, yes."),
+  L("Oz", "Right. That's officially too much rat."),
+  L("Lowkey", "And Kronk controls them?"),
+  L("Vale", "Every last one. He sends them searching for survivors."),
+  L("Brix", "Well, he won't be getting this place."),
+  L("Vale", "You say that now."),
+  L("Oz", "Yeah, but you haven't seen Brix punch something."),
+  L("Brix", "Exactly."),
+  L("Lowkey", "Or miss."),
+  L("Brix", "I missed once!"),
+  L("Oz", "Twice."),
+  L("Brix", "Nobody asked you!"),
+  L("Vale", "You three really have no idea what you're up against."),
+  L("Lowkey", "Then perhaps it's time we found out.", 1200),
+];
+
+/** Scene 8 — heading back underground. */
+export const HEADING_BACK: DLine[] = [
+  L("Vale", "I suppose we'd better get back."),
+  L("Oz", "Already?"),
+  L("Vale", "Orin will be worried."),
+  L("Brix", "Tell him we've got plenty of room."),
+  L("Vale", "It's not that simple."),
+  L("Lowkey", "We know."),
+  L("Vale", "People down there have spent years being afraid."),
+  L("Oz", "Well, maybe they don't have to be anymore."),
+  L("Vale", "I'd like to believe that."),
+];
+
+/** Scene 9 — Vale reports back to Orin and Mara. */
+export const VALE_REPORTS: DLine[] = [
+  L("Orin", "Vale! You're alive!"),
+  L("Vale", "Of course I'm alive."),
+  L("Orin", "What did you find?"),
+  L("Vale", "Elder… there's something you need to know.", 700),
+  L("Mara", "Spit it out, Vale."),
+  L("Vale", "They were telling the truth."),
+  L("Orin", "About the trees?"),
+  L("Vale", "The trees. The grass. The water. All of it."),
+  L("Mara", "Clean water?"),
+  L("Vale", "Water so clear you can see the stones underneath.", 900),
+  L("Orin", "I haven't seen that since…", 1200),
+  L("Vale", "Neither had I."),
+  L("Oz", "Told you!"),
+  L("Brix", "We did."),
+  L("Lowkey", "Try not to ruin the moment."),
+  L("Orin", "And this Sanctuary… it's safe?"),
+  L("Vale", "For now. But Kronk is still out there."),
+  L("Mara", "Then we can't risk moving everyone."),
+  L("Vale", "Not yet. But we should start thinking about it."),
+  L("Orin", "Perhaps we've spent so long hiding from death…", 500),
+  L("Orin", "…that we've forgotten what life looks like.", 1500),
+  L("Oz", "Well, it's pretty green, actually."),
+  L("Brix", "And wet."),
+  L("Lowkey", "Beautifully put, both of you."),
+  L("Orin", "You three are quite unusual."),
+  L("Oz", "We get that a lot."),
+  L("Orin", "Perhaps I was wrong about you."),
+  L("Brix", "Don't worry. Happens all the time."),
+  L("Lowkey", "Mostly to Brix."),
+  L("Brix", "Oh, give it a rest!"),
+];

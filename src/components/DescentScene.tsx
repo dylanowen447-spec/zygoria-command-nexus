@@ -3,6 +3,8 @@ import type { CSSProperties } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import bg from "@/assets/waterfall-descent.webp.asset.json";
 import valeImg from "@/assets/haven-vale.webp";
+import { speak, voicesOn, stopVoice } from "@/lib/voice";
+import { CLIMB_CHATS, type DLine } from "@/lib/vale-dialogue";
 
 type Zig = "Oz" | "Brix" | "Lowkey";
 type Pt = { x: number; y: number };
@@ -51,7 +53,7 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave, vale = f
   const s = useRef(up ? ARRIVE : 0), target = useRef(0), then = useRef<(() => void) | null>(null), raf = useRef(0);
 
   // Arrive from the Sanctuary and walk the painted road down to the cave terrace.
-  useEffect(() => { const t = setTimeout(() => { if (up) { target.current = 0; then.current = () => setTimeout(() => onArriveTop?.(), 400); } else target.current = ARRIVE; }, 300); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => { if (up) { target.current = 0; then.current = () => { arrived.current = true; if (chatsDone.current) setTimeout(() => onArriveTop?.(), 400); }; } else target.current = ARRIVE; }, 300); return () => clearTimeout(t); }, []);
   const [valeAt, setValeAt] = useState<Pt>(DESCENT_PATH[0]!);
 
   useEffect(() => {
@@ -80,6 +82,32 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave, vale = f
     return () => cancelAnimationFrame(raf.current);
   }, [crew]);
 
+  const arrived = useRef(false), chatsDone = useRef(!(vale && up));
+  // Scene 4: short, spaced chats with Vale on the climb — bubbles only, never stopping the walk.
+  const [say, setSay] = useState<DLine | null>(null);
+  useEffect(() => {
+    if (!vale || !up) return;
+    let live = true;
+    const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+    (async () => {
+      for (const chat of CLIMB_CHATS) {
+        await wait(800); if (!live) return;
+        for (const line of chat) {
+          const t0 = performance.now();
+          await speak(line.who, line.text, () => { if (live) setSay(line); });
+          if (!live) return; setSay(line);
+          await wait((voicesOn() ? 350 : Math.max(0, 3200 - (performance.now() - t0))) + (line.pause ?? 0));
+          if (!live) return;
+        }
+        setSay(null);
+      }
+      chatsDone.current = true;
+      if (arrived.current) setTimeout(() => onArriveTop?.(), 400);
+    })();
+    return () => { live = false; };
+  }, []);
+  const sayAt = (w: DLine["who"]): Pt => w === "Vale" ? valeAt : walkers[crew.indexOf(w as Zig)] ?? valeAt;
+
   const onGround = (e: React.PointerEvent<HTMLDivElement>) => {
     if (gone || up) return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -105,6 +133,7 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave, vale = f
           onPointerDown={e => e.stopPropagation()} onClick={enterCave}><span>Enter caves ›</span></button>
         <button type="button" className="workshop-spot workshop-door descent-back" style={{ left: "22%", top: "21%" }} aria-label="Back to the Sanctuary"
           onPointerDown={e => e.stopPropagation()} onClick={back}><span>‹ Sanctuary</span></button></>}
+        {say && <div key={say.text} className="haven-bubble descent-bubble" role="button" onPointerDown={e => { e.stopPropagation(); stopVoice(); }} style={{ left: `${Math.min(80, Math.max(20, sayAt(say.who).x))}%`, top: `calc(${sayAt(say.who).y}% - 70px)`, bottom: "auto" }}><b>{say.who.toUpperCase()}</b>{say.text}</div>}
       </div>
     </div>
     <div className="map-coordinate top-right">WATERFALL DESCENT</div>

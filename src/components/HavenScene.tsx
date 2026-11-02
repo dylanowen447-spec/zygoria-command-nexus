@@ -1,4 +1,4 @@
-import { voiceLine, speak, voicesOn } from "@/lib/voice";
+import { voiceLine, speak, voicesOn, stopVoice } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import bg from "@/assets/haven-bg.png.asset.json";
 import orinImg from "@/assets/haven-orin.webp";
@@ -7,10 +7,10 @@ import valeImg from "@/assets/haven-vale.webp";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { talkToSurvivor } from "@/lib/job-planning.functions";
 import { DISTRUST_MS, QUEST_OBJECTIVE, advanceQuest, loadQuest, type QuestStage } from "@/lib/quest-first-signs";
+import { FIRST_IMPRESSIONS, MEETING_ORIN, VALE_VOLUNTEERS, VALE_REPORTS, type Speaker, type DLine } from "@/lib/vale-dialogue";
 
 type Survivor = "Orin" | "Mara" | "Vale";
-type Speaker = Survivor | "Oz" | "Brix" | "Lowkey";
-type Line = { who: Speaker; text: string };
+type Line = DLine;
 
 const FLOOR = 20; // shared flat ground line (% from bottom)
 const SURVIVORS: { id: Survivor; name: string; img: string; x: number; h: number }[] = [
@@ -21,17 +21,8 @@ const SURVIVORS: { id: Survivor; name: string; img: string; x: number; h: number
 const CREW: { id: "Oz" | "Brix" | "Lowkey"; x: number }[] = [{ id: "Brix", x: 14 }, { id: "Oz", x: 24 }, { id: "Lowkey", x: 34 }];
 const X: Record<Speaker, number> = { Vale: 62, Mara: 74, Orin: 86, Brix: 14, Oz: 24, Lowkey: 34 };
 
-/** First contact, one voice at a time: neither side has ever seen anyone else. */
-const INTRO: Line[] = [
-  { who: "Vale", text: "Mara. Mara! Something just walked out of the dark tunnel." },
-  { who: "Oz", text: "…Are those PEOPLE? Actual people? Down here?" },
-  { who: "Mara", text: "Stay behind me, Vale. We don't know what they are." },
-  { who: "Lowkey", text: "Easy. They're more scared of us than we are of them." },
-  { who: "Brix", text: "That waterwheel's hand-built. Somebody here knows what they're doing." },
-  { who: "Vale", text: "They came from above. Nothing comes from above. Nothing alive." },
-  { who: "Orin", text: "Lower your hands, Mara. If they meant harm, they'd not have stopped to stare." },
-  { who: "Orin", text: "Come closer, strangers. Slowly. Tell us what you are." },
-];
+/** First contact, one voice at a time: first impressions, then meeting Elder Orin. */
+const INTRO: Line[] = [...FIRST_IMPRESSIONS, ...MEETING_ORIN];
 
 /** Orin's wall of distrust: spread across the first minutes after contact. */
 const DISTRUST: Line[] = [
@@ -39,7 +30,7 @@ const DISTRUST: Line[] = [
   { who: "Lowkey", text: "We don't want anything. We just found you." },
   { who: "Orin", text: "Everything from above wants something. That's how we ended up down here." },
   { who: "Brix", text: "Fair. I wouldn't trust us either." },
-  { who: "Orin", text: "Mara, keep the children by the wheel. Don't let them near these… things." },
+  { who: "Orin", text: "Mara, keep the children by the lamps. Don't let them near these… things." },
   { who: "Oz", text: "Things?! I've got a NAME. It's Oz. It's a great name." },
   { who: "Orin", text: "Names are cheap, Oz. Sealed doors are what keep us breathing." },
   { who: "Orin", text: "You say there's clean water up there. Kronk's poison is up there. I've seen it." },
@@ -55,21 +46,10 @@ const HUNGER: Line[] = [
 const HANDOVER: Line[] = [
   { who: "Oz", text: "Special delivery! Two fish, fresh from the river." },
   { who: "Mara", text: "They're… clean. No green in the gills. Orin, look." },
-  { who: "Vale", text: "It smells like… I don't even know what it smells like!" },
-  { who: "Orin", text: "…You fed my people when you had no reason to." },
-  { who: "Orin", text: "One journey, Vale. You stay by their side. If this is real… our people have a future." },
-  { who: "Vale", text: "I'm going UP? Up-up? Where the sky is?!" },
-  { who: "Brix", text: "Not a hair on his head harmed. You've got my word." },
+  { who: "Orin", text: "…You fed my people when you had no reason to.", pause: 900 },
+  ...VALE_VOLUNTEERS,
 ];
-const RETURN: Line[] = [
-  { who: "Vale", text: "Elder! Mara! There's a SKY! It's enormous and it doesn't drip!" },
-  { who: "Mara", text: "You're back. You're whole. Oh, Vale." },
-  { who: "Vale", text: "The water's clear all the way down. You can see the stones!" },
-  { who: "Vale", text: "But Kronk's smoke is up there too. Green. Right across the hills." },
-  { who: "Orin", text: "Then the surface is hope and danger both. We're not ready to leave. Not yet." },
-  { who: "Orin", text: "But we are ready to believe. Thank you, Zigs." },
-  { who: "Lowkey", text: "Whenever you're ready. We'll be up there." },
-];
+const RETURN: Line[] = VALE_REPORTS;
 
 export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
   const [quest, setQuest] = useState<QuestStage>(() => loadQuest());
@@ -125,7 +105,7 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
     const started = performance.now();
     void speak(line.who, line.text, () => { if (live) setBubble(line); }).then(() => {
       if (!live) return;
-      const rest = voicesOn() ? 350 : Math.max(0, 3600 - (performance.now() - started));
+      const rest = (voicesOn() ? 350 : Math.max(0, 3600 - (performance.now() - started))) + (line.pause ?? 0);
       t = setTimeout(() => setStep(s => s + 1), rest);
     });
     return () => { live = false; if (t) clearTimeout(t); };
@@ -170,7 +150,7 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
       {SURVIVORS.filter(s => !(s.id === "Vale" && quest === "vale-up")).map(s => <button key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
         <img src={s.img} alt="" draggable={false}/><span className="haven-name">{s.name}</span>
       </button>)}
-      {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(20% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? "var(--zig-lift)" : "var(--human-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
+      {bubble && <div key={bubble.text} className="haven-bubble" role="button" title="Tap to continue" onPointerDown={e => { e.stopPropagation(); if (!introDone) stopVoice(); }} style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(20% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? "var(--zig-lift)" : "var(--human-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
     <div className="map-coordinate top-right">UNDERGROUND HAVEN</div>
     {objective && quest !== "fish" && introDone && <div className="quest-objective">◆ {quest === "hungry" ? "Catch fish at the Sanctuary and bring it down" : objective}</div>}
