@@ -1,6 +1,6 @@
 /** "First Signs of Life" scripted dialogue (Dylan's expanded banter brief). `pause` = extra silence after the line, for emotional beats. */
 export type Speaker = "Oz" | "Brix" | "Lowkey" | "Vale" | "Orin" | "Mara";
-export type DLine = { who: Speaker; text: string; pause?: number };
+export type DLine = { who: Speaker; text: string; pause?: number | undefined };
 const L = (who: Speaker, text: string, pause?: number): DLine => ({ who, text, pause });
 
 /** Scene 1 — first impressions of the Underground Haven. */

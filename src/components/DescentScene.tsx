@@ -53,7 +53,7 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave, vale = f
   const s = useRef(up ? ARRIVE : 0), target = useRef(0), then = useRef<(() => void) | null>(null), raf = useRef(0);
 
   // Arrive from the Sanctuary and walk the painted road down to the cave terrace.
-  useEffect(() => { const t = setTimeout(() => { if (up) { target.current = 0; then.current = () => setTimeout(() => onArriveTop?.(), 400); } else target.current = ARRIVE; }, 300); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => { if (up) { target.current = 0; then.current = () => { arrived.current = true; if (chatsDone.current) setTimeout(() => onArriveTop?.(), 400); }; } else target.current = ARRIVE; }, 300); return () => clearTimeout(t); }, []);
   const [valeAt, setValeAt] = useState<Pt>(DESCENT_PATH[0]!);
 
   useEffect(() => {
@@ -82,6 +82,7 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave, vale = f
     return () => cancelAnimationFrame(raf.current);
   }, [crew]);
 
+  const arrived = useRef(false), chatsDone = useRef(!(vale && up));
   // Scene 4: short, spaced chats with Vale on the climb — bubbles only, never stopping the walk.
   const [say, setSay] = useState<DLine | null>(null);
   useEffect(() => {
@@ -90,7 +91,7 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave, vale = f
     const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
     (async () => {
       for (const chat of CLIMB_CHATS) {
-        await wait(2500); if (!live) return;
+        await wait(800); if (!live) return;
         for (const line of chat) {
           const t0 = performance.now();
           await speak(line.who, line.text, () => { if (live) setSay(line); });
@@ -100,6 +101,8 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave, vale = f
         }
         setSay(null);
       }
+      chatsDone.current = true;
+      if (arrived.current) setTimeout(() => onArriveTop?.(), 400);
     })();
     return () => { live = false; };
   }, []);
