@@ -46,3 +46,5 @@
 - [x] Quest "The First Signs of Life": Orin distrust ~2.5 min → hunger → fish from Sanctuary cookout → Vale climbs waterfall, visits Sanctuary, walks back down (not yet played end-to-end)
 - Kronk battle dialogue added (Oz sofa line, Brix/Lowkey, door slam sfx, Kronk's head line) — verify in browser
 - Investigate user report: lair music gone (likely HMR remount; verify startKronkMusic after reload)
+- [ ] Kronk's Lair: Zigs can attack Kronk (button shows once fight starts) — verify on phone
+- [ ] Kronk's laser fires from his single red eye, not his body
