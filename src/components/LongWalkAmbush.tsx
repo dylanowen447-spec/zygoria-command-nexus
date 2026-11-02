@@ -1,6 +1,7 @@
 import { speak, preloadVoices } from "@/lib/voice";
 import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS, FIGHT_LINES } from "@/lib/fight-lines";
 import { playSfx, playDefeatSting } from "@/lib/atmosphere";
+import { getDifficulty, SHELTON_TUNING } from "@/lib/difficulty";
 import { GameOverScreen } from "@/components/GameOverScreen";
 import { IFRAME_MS, KNEEL_MS, MAX_HP as SQUAD_HP, allDown, damage, fullSquad, liveSquad, mayBounceBack, revive, type Squad } from "@/lib/squad-health";
 import { silenceAllVoices, unmuteVoices } from "@/lib/voice";
@@ -101,6 +102,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
 
     try { if (localStorage.getItem(KEY) === "done") return; } catch { /* play anyway */ }
     let alive = true, raf = 0, last = performance.now(), nextId = 1, over = false;
+    const tune = SHELTON_TUNING[getDifficulty()];
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const shelLine = (t: string, ms = 2400) => { let shown = 0; void speak("Shelton", t, () => { if (!alive) return; shown = Date.now(); setShelSay(t); }, 2500).then(() => later(Math.max(300, ms - (Date.now() - shown)), () => setShelSay(s => (s === t ? null : s)))); };
@@ -212,7 +214,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       if (s) {
         s.t += dt;
         const oz = crew.current.Oz;
-        const st = STAGES[s.stage]!;
+        const base = STAGES[s.stage]!; const st = { ...base, windup: base.windup / tune.speed, lunge: base.lunge * tune.speed, open: base.open * tune.open, taunt: base.taunt / tune.speed };
         const follow = (sp: number) => { const p = s.path[0]; if (!p) return true; const k = persp(s.y); if (moveTo(p, sp * k)) s.path.shift(); return s.path.length === 0; };
         const moveTo = (p: Point, sp: number) => { const dx = p.x - s.x, dy = p.y - s.y, d = Math.hypot(dx, dy); if (d < sp * dt) { s.x = p.x; s.y = p.y; return true; } s.x += dx / d * sp * dt; s.y += dy / d * sp * dt; s.flip = dx < 0; return false; };
         if (s.state === "enter") {
@@ -229,9 +231,9 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
         else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) {
           const z = crew.current[s.prey], dodged = (dodgeUntil[s.prey] ?? 0) > performance.now();
           const hit = !dodged && Math.hypot(z.x - s.x, z.y - s.y) < 8;
-          if (hit) { hurtZig(s.prey, 2, true); stageRef.current?.classList.remove("city-shake-heavy"); void stageRef.current?.offsetWidth; stageRef.current?.classList.add("city-shake-heavy"); const dx = z.x - s.x || (s.flip ? -1 : 1), d = Math.abs(dx) || 1; const c = clampPlat({ x: z.x + dx / d * 7, y: z.y }); z.x = c.x; z.y = c.y; }
+          if (hit) { hurtZig(s.prey, tune.charge, true); stageRef.current?.classList.remove("city-shake-heavy"); void stageRef.current?.offsetWidth; stageRef.current?.classList.add("city-shake-heavy"); const dx = z.x - s.x || (s.flip ? -1 : 1), d = Math.abs(dx) || 1; const c = clampPlat({ x: z.x + dx / d * 7, y: z.y }); z.x = c.x; z.y = c.y; }
           // Spike Rush and Enraged: he slams the ground where he lands.
-          if (s.stage >= 1) { playSfx("hurt"); for (const a of Object.keys(crew.current) as Agent[]) if (a !== s.prey || !hit) { const q = crew.current[a]; if (Math.hypot(q.x - s.x, q.y - s.y) < 13) hurtZig(a, 1); } stageRef.current?.classList.remove("city-shake-heavy"); void stageRef.current?.offsetWidth; stageRef.current?.classList.add("city-shake-heavy"); }
+          if (s.stage >= 1) { playSfx("hurt"); for (const a of Object.keys(crew.current) as Agent[]) if (a !== s.prey || !hit) { const q = crew.current[a]; if (Math.hypot(q.x - s.x, q.y - s.y) < 13 && tune.slam) hurtZig(a, tune.slam); } stageRef.current?.classList.remove("city-shake-heavy"); void stageRef.current?.offsetWidth; stageRef.current?.classList.add("city-shake-heavy"); }
           if (s.combo > 0 && !dodged) { s.combo -= 1; s.state = "windup"; s.t = st.windup * 0.5; }
           else { s.state = "open"; s.t = dodged ? -st.open * 0.6 : 0; if (dodged) setBanner("HE MISSED — HIT HIM!"), later(1000, () => setBanner(null)); }
           if (s.hits === 0 && s.state === "open") later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!"));
@@ -243,7 +245,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
         else if (s.state === "retreat" && follow(26)) {
           s.stage += 1; s.state = "enter"; s.t = 0; s.path = ROAD_IN.slice(1);
           setBanner(`SHELTON · ${STAGES[s.stage]!.name}`); later(1800, () => setBanner(null));
-          spawnRats(STAGES[s.stage]!.rats);
+          spawnRats(Math.max(0, STAGES[s.stage]!.rats + tune.extraRats));
           later(300, () => shelLine(SHEL_LINES.stage[s.stage - 1]!, 2000));
         }
         else if (s.state === "beaten" && s.t > 3.2) { stopBattleMusic(); s.state = "flee"; s.t = 0; s.path = [...ROAD_OUT]; }
