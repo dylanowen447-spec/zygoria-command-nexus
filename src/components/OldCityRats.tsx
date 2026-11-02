@@ -5,7 +5,7 @@ import { RatSprite } from "@/components/RatSprite";
 import { GameOverScreen } from "@/components/GameOverScreen";
 import gameOverArt from "@/assets/game-over.webp.asset.json";
 import { DEFAULT_BOUNDS, brixShockwave, hitCtx, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat, type StagePlan } from "@/lib/rat-ai";
-import { cityWaveSpawns, CITY_WAVES } from "@/lib/city-waves";
+import { cityWaveSpawns, CITY_WAVES, isNorthSpawn } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
 import { CITY_RAT_ARRIVAL, ARRIVAL_GAP_MS, BRIX_SWARM_CALL, SWARM_CLEARED } from "@/lib/fight-lines";
@@ -132,10 +132,13 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         startBattleMusic();
         rats.current = cityWaveSpawns(waveIndex).map(p => makeRat(nextId++, p));
         setWave(waveIndex + 1);
+        // North rats leave the alleyway one after another, like a continuous stream.
+        const streamNorth = () => { let k = 0; for (const r of rats.current) if (isNorthSpawn(r)) { r.mode = "pause"; r.t = -k++ * 0.55 - (r.id % 3) * 0.08; } };
         if (waveIndex === 0) {
           // Brix takes centre stage; Oz and Lowkey stand back on opposite sides of the street.
           stage.current = { Brix: { x: 50, y: 66 }, Oz: { x: 16, y: 72 }, Lowkey: { x: 84, y: 72 } };
           rats.current.forEach((r, i) => { r.mode = "pause"; r.t = -(i % 6) * 0.35; }); // staggered charges
+          streamNorth();
           if (!attempt) {
             const lines: [Agent, string][] = [CITY_RAT_ARRIVAL[0]!, ["Brix", BRIX_SWARM_CALL], ...CITY_RAT_ARRIVAL.slice(1)];
             lines.forEach(([who, t], i) => later(i * ARRIVAL_GAP_MS, () => sayRef.current(who, t)));
