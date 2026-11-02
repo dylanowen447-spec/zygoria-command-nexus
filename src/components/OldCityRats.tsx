@@ -86,7 +86,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const setSq = (s: Squad) => { squadRef.current = s; liveSquad.hp = s; setSquad(s); };
     const lastBite: Record<Agent, number> = { Brix: -1e9, Oz: -1e9, Lowkey: -1e9 };
-    let kills = 0;
+    let kills = 0, freezeUntil = 0;
     winds.current = { Brix: 0, Oz: 0, Lowkey: 0 };
     const hurt = (_n: number, who?: Agent) => {
       if (!who || over || squadRef.current[who] <= 0) return;
@@ -118,13 +118,29 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       const killed = rats.current.filter(r => r.dead).length - before;
       // Charged kills count towards the same recovery threshold as every other kill, without bonus healing.
       if (killed > 0) { kills += killed; while (kills >= KILLS_PER_HEAL) { kills -= KILLS_PER_HEAL; setSq(heal(squadRef.current)); } }
+      if (hit) {
+        // Impact weight: a brief freeze-frame, a screen jolt, and nearby rats flinch away from a kill.
+        const big = heavy || killed > 0;
+        freezeUntil = performance.now() + (heavy ? 110 : big ? 70 : 45);
+        const st = stageRef.current;
+        if (st && (big || by === "Brix")) {
+          const cls = heavy ? "city-shake-heavy" : "city-shake";
+          st.classList.remove("city-shake", "city-shake-heavy"); void st.offsetWidth; st.classList.add(cls);
+          later(heavy ? 320 : 200, () => st.classList.remove(cls));
+        }
+        if (killed > 0) for (const r of rats.current) {
+          if (r.dead || r.kv) continue;
+          const ex = r.x - p.x, ey = r.y - p.y, e = Math.hypot(ex, ey) || 1;
+          if (e < 11) { r.kv = { x: ex / e * 26, y: ey / e * 14 }; r.mode = "pause"; r.t = -0.25; r.flip = ex < 0; }
+        }
+      }
       return hit;
     };
 
     const tick = (now: number) => {
       if (!alive) return;
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      if (over) { force(f => (f + 1) % 1e6); raf = requestAnimationFrame(tick); return; }
+      if (over || now < freezeUntil) { force(f => (f + 1) % 1e6); raf = requestAnimationFrame(tick); return; }
       if (nextWaveAt && now >= nextWaveAt) {
         waveIndex += 1; nextWaveAt = 0; curWave.current = waveIndex;
         winds.current = { Brix: 0, Oz: 0, Lowkey: 0 };
