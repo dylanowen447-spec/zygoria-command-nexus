@@ -118,11 +118,14 @@ const OLD_CITY: Scene = {
   label: "OLD EARTH / OLD CITY",
   bottom: "OLD CITY — CENTRAL PLAZA",
   spawn: { Oz: { from: { x: 46, y: 99 }, out: "entry" }, Brix: { from: { x: 54, y: 99 }, out: "front" }, Lowkey: { from: { x: 50, y: 99 }, out: "crossing" } },
-  // Cobblestone plaza, avenue and the library lane; the far ruins and building fronts are off limits.
+  // Walkable cobblestones traced from the floor guide: plaza, north alley mouth and the library lane.
+  // Blocked: overturned bus + traffic light (left), statue mound (centre), banner wall (right), corner rubble.
   ground: [
-    { x: 3, y: 99 }, { x: 10, y: 80 }, { x: 20, y: 68 }, { x: 26, y: 52 }, { x: 32, y: 39 }, { x: 50, y: 37 },
-    { x: 64, y: 42 }, { x: 76, y: 44 }, { x: 82, y: 32 }, { x: 89, y: 26 }, { x: 94, y: 31 }, { x: 90, y: 52 },
-    { x: 86, y: 64 }, { x: 93, y: 80 }, { x: 97, y: 99 },
+    { x: 22, y: 100 }, { x: 15, y: 90 }, { x: 5, y: 84 }, { x: 2, y: 77 }, { x: 25, y: 73 }, { x: 31, y: 67 },
+    { x: 29, y: 57 }, { x: 27, y: 50 }, { x: 29, y: 45 }, { x: 30, y: 42 }, { x: 33.5, y: 42 }, { x: 36, y: 46 },
+    { x: 44, y: 48.5 }, { x: 56, y: 49.5 }, { x: 67, y: 48.5 }, { x: 73, y: 49 }, { x: 77, y: 46 }, { x: 81, y: 38 },
+    { x: 85, y: 29 }, { x: 91, y: 29 }, { x: 94, y: 38 }, { x: 89, y: 51 }, { x: 80, y: 58 }, { x: 78, y: 68 },
+    { x: 76, y: 82 }, { x: 72, y: 93 }, { x: 70, y: 100 },
   ],
   edges: [
     ["entry", "front"], ["front", "crossing"], ["front", "bus"], ["bus", "lights"], ["lights", "crossing"],
