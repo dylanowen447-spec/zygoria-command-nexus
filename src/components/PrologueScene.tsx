@@ -166,6 +166,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       el.classList.toggle("near-top", p.y < topLine()); el.classList.toggle("near-right", p.x > 62); el.classList.toggle("near-left", p.x < 38);
       el.style.setProperty("--depth", depthFor(p.y, scene.id === "city"));
       el.style.setProperty("--z", String(10 + Math.round(p.y * 10)));
+      if (scene.id === "city") {
+        // Parallax: the haze and dust layers drift against the crew's average position.
+        const wrap = el.closest(".prologue-scene") as HTMLElement | null;
+        if (wrap) { const cs = ALL.map(z => coords.current[z]); wrap.style.setProperty("--px", ((cs.reduce((s, c) => s + c.x, 0) / 3 - 50) / 50).toFixed(3)); wrap.style.setProperty("--py", ((cs.reduce((s, c) => s + c.y, 0) / 3 - 70) / 30).toFixed(3)); }
+      }
     };
     const talking = new Set<Agent>();
     const orders: Partial<Record<Agent, string>> = {};
@@ -820,7 +825,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const chargeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   return <>
-  <div className="world-image-wrap prologue-scene" style={{ "--zone-aspect": String(ASPECT) } as CSSProperties} onPointerMove={e => {
+  <div className={`world-image-wrap prologue-scene ${scene.id === "city" ? "city-diorama" : ""}`} style={{ "--zone-aspect": String(ASPECT) } as CSSProperties} onPointerMove={e => {
       if (e.pointerType !== "mouse" || !stageRef.current) return;
       const r = stageRef.current.getBoundingClientRect();
       aimRef.current = { x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 };
