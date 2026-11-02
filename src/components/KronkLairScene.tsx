@@ -3,12 +3,12 @@ import bg from "@/assets/kronk-lair.png.asset.json";
 import kronkIdle from "@/assets/kronk-idle.png.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { speak, voicesOn } from "@/lib/voice";
-import { startKronkMusic, stopKronkMusic } from "@/lib/atmosphere";
+import { startKronkMusic, stopKronkMusic, playSfx } from "@/lib/atmosphere";
 import { MAX_HP as SQUAD_HP, allDown, damage, fullSquad, type Squad } from "@/lib/squad-health";
 
 /** Kronk's Lair: inside the bunker gate, the crew face Kronk himself. Editor-only — no story road yet; Kronk fires laser eyes at the crew. */
 type Zig = "Oz" | "Brix" | "Lowkey";
-type Line = { who: Zig | "Kronk"; text: string };
+type Line = { who: Zig | "Kronk"; text: string; slam?: boolean };
 
 /** Walkable dirt road traced from the creator's ground guide, in artwork % (x from left, y from top). */
 const GROUND: [number, number][] = [[4,62],[96,62],[99,92],[1,92]];
@@ -52,6 +52,11 @@ const INTRO: Line[] = [
   { who: "Oz", text: "Nobody move. Maybe he can't see us if we don't move." },
   { who: "Brix", text: "He can see us, Oz. Stay together. Stay behind me." },
   { who: "Kronk", text: "Run home to your little river. I will drink it dry." },
+  { who: "Kronk", text: "I have crushed entire civilizations." },
+  { who: "Oz", text: "Yeah? Well, you look like you came free with a sofa." },
+  { who: "Brix", text: "Oz... I really think you should stop talking." },
+  { who: "Lowkey", text: "Too late. He's angry.", slam: true },
+  { who: "Kronk", text: "THEN LET'S SEE HOW FUNNY YOU ARE WITHOUT YOUR HEAD!" },
 ];
 const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[] = [];
 
@@ -80,6 +85,7 @@ export function KronkLairScene() {
   useEffect(() => {
     if (step >= INTRO.length) return;
     const line = INTRO[step]!;
+    if (line.slam) playSfx("slam");
     let live = true, t: ReturnType<typeof setTimeout> | undefined;
     const started = performance.now();
     let advanced = false;
