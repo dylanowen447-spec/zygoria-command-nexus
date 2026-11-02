@@ -1,6 +1,6 @@
 /** "First Signs of Life" scripted dialogue (Dylan's expanded banter brief). `pause` = extra silence after the line, for emotional beats. */
 export type Speaker = "Oz" | "Brix" | "Lowkey" | "Vale" | "Orin" | "Mara";
-export type DLine = { who: Speaker; text: string; pause?: number | undefined };
+export type DLine = { who: Speaker; text: string; pause?: number | undefined; depart?: boolean | undefined };
 const L = (who: Speaker, text: string, pause?: number): DLine => ({ who, text, pause });
 
 /** Scene 1 — first impressions of the Underground Haven. */
@@ -65,7 +65,7 @@ export const VALE_VOLUNTEERS: DLine[] = [
   L("Orin", "And if it's a trap?"),
   L("Lowkey", "Then we wouldn't be offering to bring him back."),
   L("Orin", "You will return before nightfall."),
-  L("Oz", "Promise!"),
+  { ...L("Oz", "Promise!"), depart: true },
   L("Orin", "And you will keep him away from Kronk's patrols."),
   L("Brix", "Who's Kronk?"),
   L("Vale", "Someone you really don't want to meet."),
