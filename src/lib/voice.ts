@@ -64,6 +64,9 @@ if (typeof window !== "undefined") {
   window.addEventListener("pointerdown", unlock, true); window.addEventListener("keydown", unlock, true);
 }
 
+/** Bigger characters speak louder — Kronk is a monster, so his voice carries over the Zigs. */
+const VOLUME: Record<string, number> = { Kronk: 1 };
+
 async function play(who: string, text: string, maxWaitMs: number, until: number, onStart?: () => void) {
   let url = await Promise.race([load(who, text), new Promise<null>(r => setTimeout(() => r(null), maxWaitMs))]);
   if (!url && maxWaitMs >= 10000) { await new Promise(r => setTimeout(r, 1200)); url = await load(who, text); } // one retry for slow/busy voice server
