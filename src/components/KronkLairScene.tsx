@@ -63,7 +63,7 @@ const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[
 
 const KRONK_HP = 100;
 // Kronk's single red eye in ground %: sprite box is 26% wide, feet at 59%, eye sits 73.7% across / 16.3% down the frame.
-const EYE = { x: 50 - 13 + 0.737 * 26, y: 59 - 26 * (230 / 380) * (4 / 3) * (1 - 0.163) };
+const EYE = { x: 50 - 13 + 0.737 * 26 + 2.5, y: 1.5 + 59 - 26 * (230 / 380) * (4 / 3) * (1 - 0.163) };
 
 export function KronkLairScene() {
   const [pos, setPos] = useState<Record<Zig, P>>({ Brix: { x: 42, y: 84 }, Oz: { x: 52, y: 87 }, Lowkey: { x: 62, y: 85 } });
