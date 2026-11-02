@@ -44,7 +44,7 @@ describe("Old City reinforcements", () => {
     const spawns = Array.from({ length: CITY_WAVES }, (_, i) => cityWaveSpawns(i)).flat();
     expect(spawns.some(p => p.x < 10)).toBe(true);
     expect(spawns.some(p => p.x > 90)).toBe(true);
-    expect(spawns.some(p => p.x > 40 && p.x < 60)).toBe(true);
+    expect(spawns.some(p => p.x > 30 && p.x < 42 && p.y <= 46)).toBe(true);
     for (const p of spawns) { expect(p.x).toBeGreaterThanOrEqual(4); expect(p.x).toBeLessThanOrEqual(96); expect(p.y).toBeGreaterThanOrEqual(44); expect(p.y).toBeLessThanOrEqual(95); }
   });
 });

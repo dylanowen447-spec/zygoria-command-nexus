@@ -132,10 +132,13 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
         startBattleMusic();
         rats.current = cityWaveSpawns(waveIndex).map(p => makeRat(nextId++, p));
         setWave(waveIndex + 1);
+        // North rats leave the alleyway one after another, like a continuous stream.
+        const streamNorth = () => { let k = 0; for (const r of rats.current) if (isNorthSpawn(r)) { r.mode = "pause"; r.t = -k++ * 0.55 - (r.id % 3) * 0.08; } };
         if (waveIndex === 0) {
           // Brix takes centre stage; Oz and Lowkey stand back on opposite sides of the street.
           stage.current = { Brix: { x: 50, y: 66 }, Oz: { x: 16, y: 72 }, Lowkey: { x: 84, y: 72 } };
           rats.current.forEach((r, i) => { r.mode = "pause"; r.t = -(i % 6) * 0.35; }); // staggered charges
+          streamNorth();
           if (!attempt) {
             const lines: [Agent, string][] = [CITY_RAT_ARRIVAL[0]!, ["Brix", BRIX_SWARM_CALL], ...CITY_RAT_ARRIVAL.slice(1)];
             lines.forEach(([who, t], i) => later(i * ARRIVAL_GAP_MS, () => sayRef.current(who, t)));
