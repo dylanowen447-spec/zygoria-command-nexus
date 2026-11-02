@@ -2,7 +2,7 @@ import type { Point } from "@/lib/zones";
 
 // Avenue, bus flank and temple steps; later waves mix the three approaches.
 // North rats stream out of the deep alleyway left of the ruined statue.
-export const NORTH_ALLEY: Point[] = [{ x: 31.5, y: 43 }, { x: 30.5, y: 43.5 }, { x: 32.5, y: 44 }];
+export const NORTH_ALLEY: Point[] = [{ x: 31.5, y: 44 }, { x: 30.5, y: 44.5 }, { x: 32.5, y: 45 }];
 const ENTRANCES: Point[][] = [
   NORTH_ALLEY,
   [{ x: 4, y: 62 }, { x: 6, y: 68 }, { x: 4, y: 74 }],
@@ -19,7 +19,7 @@ export const SWARM_SIZE = 18;
 function swarmSpawns(): Point[] {
   return Array.from({ length: SWARM_SIZE }, (_, i) => {
     const lane = i % 3, row = Math.floor(i / 3);
-    if (lane === 0) return { x: 31.5 + [0, -1, 1, -0.5, 0.7, -0.8][row]!, y: 43 + (row % 2) * 0.8 };
+    if (lane === 0) return { x: 31.5 + [0, -1, 1, -0.5, 0.7, -0.8][row]!, y: 44 + (row % 2) * 0.8 };
     if (lane === 1) return { x: 4 + (row % 2) * 3, y: 58 + row * 6 };
     return { x: 96 - (row % 2) * 3, y: 48 + row * 7 };
   });
