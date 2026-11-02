@@ -12,7 +12,12 @@ const BEATS: { who: Agent | null; text: string; sound?: "hammer" | "saw" | "thud
   { who: "Brix", text: "Wood here. Salvage there. Mind your fingers.", sound: "saw" },
   { who: "Oz", text: "Little Spark for the stubborn bits…", sound: "spark" },
   { who: null, text: "Day by day, plank by plank…", sound: "hammer" },
+  // Home at last: the crew take in what they've built.
+  { who: "Oz", text: "Lads, this is lovely. Running water, shelter… we got it all!" },
+  { who: "Brix", text: "Roof over our heads and a river on the doorstep. Not bad for three eggs." },
+  { who: "Lowkey", text: "Quiet. Safe. Feels like home." },
 ];
+const FADE_AT = 5;
 
 function playSound(ctx: AudioContext, kind: string) {
   const t0 = ctx.currentTime;
@@ -48,13 +53,12 @@ export function BuildInterlude({ onDone }: { onDone: () => void }) {
     void (async () => {
       for (let i = 0; i < BEATS.length && alive; i++) {
         const b = BEATS[i]!; const t0 = Date.now();
-        const show = () => { if (!alive) return; setStep(i); if (b.sound && ctx) playSound(ctx, b.sound); if (i === BEATS.length - 1) setFade(true); };
+        const show = () => { if (!alive) return; setStep(i); if (b.sound && ctx) playSound(ctx, b.sound); setFade(i === FADE_AT); };
         if (b.who) await speak(b.who, b.text, show, 6000); else show();
         await wait(Math.max(400, 2800 - (Date.now() - t0)));
       }
       if (!alive) return;
-      if (ctx) playSound(ctx, "hammer");
-      await wait(1600);
+      await wait(800);
       if (alive) onDone();
     })();
     return () => { alive = false; void ctx?.close(); };
