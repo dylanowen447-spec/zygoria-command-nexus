@@ -1189,6 +1189,9 @@
 
 .combat-dodge{position:absolute;right:calc(100px + env(safe-area-inset-right,0px));bottom:calc(21px + env(safe-area-inset-bottom,0px));z-index:3000;width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:oklch(0.24 0.05 160);color:oklch(0.95 0.03 160);border:2px solid oklch(0.78 0.15 160);font-weight:800;letter-spacing:.06em;font-size:11px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .combat-dodge:active{transform:scale(.92)}
+/* Phone: tuck both buttons into the bottom-right corner, dodge tight to the left of attack. */
+@media (max-width:600px){.combat-dodge{right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:44px;height:44px;font-size:9px;letter-spacing:.04em}}
+@media (hover:hover) and (pointer:fine){.combat-dodge{display:none}}
 .agent-marker.is-rolling .sprite-stage{animation:zig-roll .3s ease-out;opacity:.75}
 @keyframes zig-roll{0%{transform:translateY(0) scaleY(1)}35%{transform:translateY(4px) scaleY(.7) rotate(-14deg)}100%{transform:none}}
 
