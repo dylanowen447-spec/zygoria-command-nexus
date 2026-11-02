@@ -1,6 +1,6 @@
 import { voiceLine, speak, voicesOn } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
-import bg from "@/assets/haven-bg.webp";
+import bg from "@/assets/haven-bg.png.asset.json";
 import orinImg from "@/assets/haven-orin.webp";
 import maraImg from "@/assets/haven-mara.webp";
 import valeImg from "@/assets/haven-vale.webp";
@@ -164,7 +164,7 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
   }
 
   return <div ref={wrapRef} className="world-image-wrap prologue-scene haven-scene" onPointerDown={onGround}>
-    <img className="world-image" src={bg} alt="The Underground Haven: a lantern-lit human refuge deep in a cavern" />
+    <img className="world-image" src={bg.url} alt="The Underground Haven: a lantern-lit human refuge deep in a cavern" />
     <div className="haven-layer">
       {CREW.map(c => { const m = moving?.a === c.id ? moving : null; return <span key={c.id} className={`haven-zig marker-${c.id.toLowerCase()} ${m ? `is-walking ${c.id.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === c.id ? "is-controlled" : ""}`} style={{ left: `${pos[c.id].x}%`, bottom: `${pos[c.id].b}%`, transitionDuration: m ? `${m.ms}ms` : "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(c.id); }} role="button" aria-label={`${c.id} — double-tap to steer`}>{steer === c.id && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={c.id}/></span></span>; })}
       {SURVIVORS.filter(s => !(s.id === "Vale" && quest === "vale-up")).map(s => <button key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
