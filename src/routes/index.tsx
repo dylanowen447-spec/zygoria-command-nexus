@@ -52,6 +52,7 @@ import { WATER_FLOOR, WATER_DRAIN_MS, BOTTLE_MAX, DRINK_WORDS, WATER_LINES, clam
 import { REST_START, REST_FLOOR, REST_DRAIN_MS, REST_WORDS, clampRest, loadRest, saveRest, REST_LINES } from "@/lib/sleep";
 import * as B from "@/lib/banter";
 import rockHatch from "@/assets/rock-hatch.png";
+import { DIFFICULTIES, getDifficulty, setDifficulty, type Difficulty } from "@/lib/difficulty";
 
 /** In this file "Agent" means the full Sanctuary crew, including Moxi once she joins. */
 type Agent = CrewAgent;
@@ -197,6 +198,8 @@ function CommandCentre() {
   const canon = Route.useLoaderData();
   const [draft, setDraft] = useState("");
   const [voiceOn, setVoiceOn] = useState(true);
+  const [difficulty, setDiff] = useState<Difficulty>("normal");
+  useEffect(() => { setDiff(getDifficulty()); }, []);
   useEffect(() => setVoiceOn(voicesOn()), []);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [logs, setLogs] = useState<Log[]>(startLogs);
