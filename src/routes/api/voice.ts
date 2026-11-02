@@ -7,7 +7,7 @@ const CAST: Record<string, { voice: string; instructions: string }> = {
   Lowkey: { voice: "Enceladus", instructions: "You are Lowkey, a quiet, thoughtful, mysterious brother with a light British accent. Soft, smooth, unhurried, slightly hushed and wondering. Natural pauses and breath, intimate and human — never robotic." },
   Orin: { voice: "Gacrux", instructions: "You are Elder Orin, an old, wise, weathered human elder. Slow, gentle, calm authority, natural and human." },
   Mara: { voice: "Kore", instructions: "You are Mara, a protective, wary woman. Firm, alert, tense but human and natural." },
-  Vale: { voice: "Umbriel", instructions: "You are Vale, an excitable, frightened young man. Breathless, quick and natural." },
+  Vale: { voice: "Algieba", instructions: "You are Vale, an excitable, frightened young man in his early twenties. Breathless, quick and natural." },
   Moxi: { voice: "Leda", instructions: "You are Moxi, a wary, sharp young girl. Quiet, guarded, natural and human — never robotic." },
   TV: { voice: "Fenrir", instructions: "You are a possessed, glitching old television creature. Menacing, crackly, sinister and theatrical, with eerie emphasis." },
   Shelton: { voice: "Charon", instructions: "You are Shelton, a huge grumpy armoured beast. Deep, rumbling and gruff, but snappy, impatient and quick — short punchy delivery, no drawn-out words, same brisk pace as the others." },
