@@ -169,6 +169,52 @@ export function stopBattleMusic() {
   setTimeout(() => b.bus.disconnect(), 2500);
 }
 
+// ---------- Kronk's theme: dramatic 8-bit pipe organ in D minor (Bach Toccata-style mordent, public domain) ----------
+let kronkT: { timer: number; step: number; next: number; bus: GainNode } | null = null;
+// 8th notes, 0 = rest, -1 = hold. Organ blast intro then a pounding descending riff.
+const K_INTRO = [81,79,81,-1,-1,-1,0,0, 79,77,76,74,73,-1,74,-1, -1,-1,-1,-1,0,0,0,0];
+const K_LEAD = [
+  74,0,77,0,81,-1,80,81, 82,-1,81,-1,77,-1,74,0, 73,0,76,0,79,-1,77,76, 77,-1,76,-1,73,-1,69,0,
+  74,0,77,0,81,-1,82,84, 86,-1,84,82,81,-1,79,77, 76,77,79,76,73,-1,76,-1, 74,-1,-1,-1,0,0,0,0,
+];
+const K_BASS = [38,38,34,34,33,33,38,38];
+const K_CHORD: number[][] = [[62,65,69],[62,65,69],[58,62,65],[58,62,65],[57,61,64],[57,61,64],[62,65,69],[57,61,64]];
+function organ(bus: GainNode, t: number, m: number, dur: number, vol: number) {
+  chip(bus, t, hz(m), dur, vol, "square"); chip(bus, t, hz(m - 12), dur, vol * 0.7, "square"); chip(bus, t, hz(m + 12), dur, vol * 0.25, "triangle");
+}
+function noteLen(arr: number[], i: number) { let n = 1; while (arr[(i + n) % arr.length] === -1) n++; return n; }
+function kronkTick() {
+  if (!ctx || !kronkT) return;
+  const k = kronkT, eighth = 60 / 92 / 2;
+  while (k.next < ctx.currentTime + 0.3) {
+    const t = k.next, s = k.step;
+    if (s < K_INTRO.length) { const m = K_INTRO[s]!; if (m > 0) organ(k.bus, t, m, eighth * noteLen(K_INTRO, s) * 0.95, 0.06); if (s === 12) { organ(k.bus, t, 50, eighth * 10, 0.05); organ(k.bus, t, 57, eighth * 10, 0.04); } }
+    else {
+      const i = s - K_INTRO.length, bar = Math.floor(i / 8) % K_BASS.length, sub = i % 8;
+      const m = K_LEAD[i % K_LEAD.length]!; if (m > 0) organ(k.bus, t, m, eighth * noteLen(K_LEAD, i % K_LEAD.length) * 0.9, 0.05);
+      if (sub === 0) for (const c of K_CHORD[bar]!) chip(k.bus, t, hz(c), eighth * 7.5, 0.018, "square");
+      const root = K_BASS[bar]!; chip(k.bus, t, hz(sub % 2 ? root + 12 : root), eighth * 0.9, 0.17, "triangle");
+      if (sub === 0 || sub === 4) { chip(k.bus, t, 70, 0.18, 0.2, "triangle"); hit(k.bus, t, 200, 0.25, 0.08); }
+      if (sub === 6) hit(k.bus, t, 1500, 0.12, 0.08);
+    }
+    k.step++; k.next += eighth;
+  }
+}
+/** Start Kronk's dramatic organ theme. Needs a prior user gesture; silently no-ops otherwise. */
+export function startKronkMusic() {
+  if (!ctx) boot();
+  if (!ctx || kronkT) return;
+  const bus = ctx.createGain(); bus.gain.value = 0.9; bus.connect(master);
+  kronkT = { timer: window.setInterval(kronkTick, 50), step: 0, next: ctx.currentTime + 0.05, bus };
+  kronkTick();
+}
+export function stopKronkMusic() {
+  if (!kronkT || !ctx) { kronkT = null; return; }
+  const k = kronkT; kronkT = null; clearInterval(k.timer);
+  k.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.5);
+  setTimeout(() => k.bus.disconnect(), 3000);
+}
+
 // ---------- Combat SFX: crunchy 8-bit hits (shares the atmosphere context) ----------
 export type Sfx = "swing" | "punch" | "punch-heavy" | "zap" | "zap-heavy" | "zap-hit" | "slash" | "slash-hit" | "hurt" | "miss";
 export function playSfx(kind: Sfx) {
