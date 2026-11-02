@@ -73,6 +73,7 @@ async function play(who: string, text: string, maxWaitMs: number, until: number,
   if (!url || !voicesOn() || muted() || Date.now() > until + 200) return; // too late: the words would no longer match the bubble
   const a = player(); current = a;
   a.src = url;
+  a.volume = VOLUME[who] ?? 0.72;
   a.playbackRate = 1.3; a.preservesPitch = true; // brisker delivery, same voice pitch
   await new Promise<void>(res => { a.onended = () => res(); a.onerror = () => res(); a.onplaying = () => { a.onplaying = null; onStart?.(); }; a.play().catch(() => res()); });
   if (current === a) current = null;
