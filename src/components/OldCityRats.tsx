@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type MutableRefObject, type RefObject } fr
 import { RatSprite } from "@/components/RatSprite";
 import { GameOverScreen } from "@/components/GameOverScreen";
 import gameOverArt from "@/assets/game-over.webp.asset.json";
-import { DEFAULT_BOUNDS, brixShockwave, hitCtx, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat, type StagePlan } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, brixShockwave, hitCtx, makeRat, separateRats, stepRat, zapRats, type CombatApi, type Rat, type StagePlan , dodgeUntil } from "@/lib/rat-ai";
 import { cityWaveSpawns, CITY_WAVES, isNorthSpawn } from "@/lib/city-waves";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
 import type { Agent, Point } from "@/lib/zones";
@@ -90,7 +90,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
     winds.current = { Brix: 0, Oz: 0, Lowkey: 0 };
     const hurt = (_n: number, who?: Agent) => {
       if (!who || over || squadRef.current[who] <= 0) return;
-      const t = performance.now(); if (t - lastBite[who] < IFRAME_MS) return; lastBite[who] = t;
+      const t = performance.now(); if ((dodgeUntil[who] ?? 0) > t) return; if (t - lastBite[who] < IFRAME_MS) return; lastBite[who] = t;
       playSfx("hurt");
       const s = damage(squadRef.current, who);
       setSq(s);
@@ -176,7 +176,7 @@ export function OldCityRats({ stageRef, hitRef, combatRef, crew, onAlarm, onSay,
       const b = crew.current.Brix;
       const targets = waveIndex === 0 && squadRef.current.Brix > 0 ? { Brix: b } as Record<Agent, Point> : pool;
       const canAttack = () => rats.current.filter(x => !x.dead && (x.mode === "windup" || x.mode === "bite")).length < MAX_BITERS;
-      if (up.length) for (const r of rats.current) stepRat(r, dt, targets, hurt, canAttack);
+      if (up.length) for (const r of rats.current) stepRat(r, dt, targets, hurt, canAttack, waveIndex > 0);
       separateRats(rats.current, dt);
       rats.current = rats.current.filter(r => !r.dead || now - r.dead < 900);
       if (waveIndex >= 0 && rats.current.length === 0 && !nextWaveAt) {

@@ -10,7 +10,7 @@ import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playHatch, playSfx } from "@/lib/atmosphere";
 import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine, sayInSync } from "@/lib/voice";
-import { DEFAULT_BOUNDS, hitCtx, type CombatApi } from "@/lib/rat-ai";
+import { DEFAULT_BOUNDS, dodgeUntil, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
 import ozWordmark from "@/assets/oz-wordmark.png.asset.json";
@@ -116,6 +116,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const moveCtrl = useRef<(p: Point) => void>(() => undefined);
   const attack = useRef<(heavy: boolean) => void>(() => undefined);
   const resetAtk = useRef<() => void>(() => undefined);
+  const dodge = useRef<() => void>(() => undefined);
+  const [rolling, setRolling] = useState<Agent | null>(null);
   const lastMarkerTap = useRef<{ a: Agent; t: number } | null>(null);
   const [swing, setSwing] = useState<Partial<Record<Agent, string>>>({});
   // Hurt flinch: rats announce which Zig they bit; that Zig plays its hurt frames briefly.
@@ -322,6 +324,19 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     moveCtrl.current = (p: Point) => { if (!inCombat() || liveSquad.hp[ctrlRef.current] <= 0) return; void walk(ctrlRef.current, [clampB({ x: p.x, y: p.y })]); };
     steerMove.current = (a: Agent, p: Point) => { if (heading[a]) cancel[a] = true; void walk(a, [onGround(scene, { x: Math.min(96, Math.max(4, p.x)), y: Math.min(95, Math.max(40, p.y)) })]); };
     attack.current = (heavy: boolean) => { void strike(inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current, heavy); };
+    let lastDodge = 0;
+    dodge.current = () => {
+      const a = inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current;
+      const now = performance.now(); if (liveSquad.hp[a] <= 0 || now - lastDodge < 650) return; lastDodge = now;
+      // Roll away from the closest rat (or toward the facing side when clear), with a short bite-proof window.
+      const me = coords.current[a], t = nearestTo(me);
+      let dx = t ? me.x - t.x : (Math.random() < 0.5 ? -1 : 1), dy = t ? (me.y - t.y) * 1.4 : 0;
+      const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m;
+      const to = onGround(scene, clampB({ x: me.x + dx * 13, y: me.y + dy * 8 }));
+      dodgeUntil[a] = now + 380; playSfx("miss"); setRolling(a);
+      timers.push(setTimeout(() => alive && setRolling(r => (r === a ? null : r)), 300));
+      void dash(a, to);
+    };
     resetAtk.current = () => { lastAtk[inCombat() ? ctrlRef.current : steerRef.current ?? ctrlRef.current] = 0; };
     // Companions: each picks a different enemy where possible, keeps its own spacing and style, and stays on safe ground.
     const companionTick = () => {
@@ -346,7 +361,18 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         // Downed crewmates recover on their own; companions keep fighting. Prefer rats within reach, then rats closing on a brother.
         const inReach = ts.filter(u => cdist(u, me) <= REACH[z] * 0.9).sort((u, v) => cdist(u, me) - cdist(v, me));
         const near = (u: Point) => Math.min(...ALL.filter(o => liveSquad.hp[o] > 0).map(o => cdist(u, coords.current[o])));
-        const sorted = inReach.length ? inReach : ts.slice().sort((u, v) => (cdist(u, me) + near(u) * 0.8) - (cdist(v, me) + near(v) * 0.8));
+        let sorted = inReach.length ? inReach : ts.slice().sort((u, v) => (cdist(u, me) + near(u) * 0.8) - (cdist(v, me) + near(v) * 0.8));
+        if (scene.id === "city") {
+          // Teamwork: a brother who is down or swarmed gets help first — companions peel rats off him.
+          const pressure = (o: Agent) => ts.filter(u => cdist(u, coords.current[o]) < 7).length + (liveSquad.hp[o] <= 0 ? 3 : 0);
+          const mate = ALL.filter(o => o !== z).sort((u, v) => pressure(v) - pressure(u))[0]!;
+          if (pressure(mate) >= 2 && !inReach.length) {
+            const mp = coords.current[mate];
+            sorted = ts.slice().sort((u, v) => cdist(u, mp) - cdist(v, mp));
+            const t0 = sorted[0]!;
+            if (cdist(me, t0) > REACH[z] * 0.9) { const side = me.x < mp.x ? -1 : 1; void walk(z, [clampB(z === "Oz" ? { x: mp.x + side * 12, y: mp.y + 2 } : { x: t0.x + side * 4, y: t0.y + 1 })]); if (z !== "Oz") return; }
+          }
+        }
         const t = sorted.find(u => !taken.some(k => k === u)) ?? sorted[0]!;
         taken.push(t);
         const now = performance.now();
@@ -786,9 +812,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     let down = 0, timer: ReturnType<typeof setTimeout> | undefined;
     const typing = (e: KeyboardEvent) => { const t = e.target as HTMLElement | null; return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable); };
     const kd = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e)) return; e.preventDefault(); if (!canAttackRef.current || e.repeat || down) return; down = performance.now(); timer = setTimeout(() => setCharging(true), HOLD_MS); clearTimeout(windTimer.current); windTimer.current = setTimeout(() => setHolding(true), 160); };
+    const kd2 = (e: KeyboardEvent) => { if ((e.code === "ShiftLeft" || e.code === "ShiftRight") && !typing(e)) dodge.current(); };
     const ku = (e: KeyboardEvent) => { if (e.code !== "Space" || typing(e) || !down) return; e.preventDefault(); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); const held = performance.now() - down; down = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); };
-    window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
-    return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); };
+    window.addEventListener("keydown", kd); window.addEventListener("keydown", kd2); window.addEventListener("keyup", ku);
+    return () => { window.removeEventListener("keydown", kd); window.removeEventListener("keydown", kd2); window.removeEventListener("keyup", ku); clearTimeout(timer); clearTimeout(windTimer.current); setCharging(false); setHolding(false); };
   }, []);
   const chargeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -834,7 +861,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined} onDefeatChange={setCityDefeat}/>}
-      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y, scene.id === "city"), "--z": 10 + Math.round(p.y * 10), opacity: shown && (!hatchOn || emerged[a]) ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""}`}>
+      {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y, scene.id === "city"), "--z": 10 + Math.round(p.y * 10), opacity: shown && (!hatchOn || emerged[a]) ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""} ${rolling === a ? "is-rolling" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
         <span className="sprite-stage"><CharacterSprite character={a}/></span>
@@ -848,6 +875,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       onContextMenu={e => e.preventDefault()}>
       <span>ATTACK</span><small>{combat ? ctrl : steered ?? ctrl}</small>
     </button>}
+    {!cityDefeat && combat && <button type="button" className="combat-dodge" aria-label={`Dodge roll with ${ctrl}`} onPointerDown={e => { e.preventDefault(); e.stopPropagation(); dodge.current(); }} onContextMenu={e => e.preventDefault()}><span>DODGE</span></button>}
     <button type="button" className="voice-toggle" aria-pressed={voiceOn} onClick={() => { setVoicesOn(!voiceOn); setVoiceOn(!voiceOn); }}>{voiceOn ? "Voices on" : "Voices off"}</button>
     {hatchOn && hatching && <button type="button" className="hatch-skip" onClick={() => skipHatch.current?.()}>Skip ›</button>}
     {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
