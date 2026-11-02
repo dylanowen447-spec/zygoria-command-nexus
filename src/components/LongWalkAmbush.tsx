@@ -282,11 +282,11 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       <span ref={artRef} className={`ambush-shelton-art ${s.state === "open" ? "is-open" : ""} ${now - s.hurt < 380 ? "is-hurt" : ""}`} style={{ width: shelH * persp(s.y), height: shelH * persp(s.y), transform: `scaleX(${s.flip ? -1 : 1})`, ...bg(sheltonSheet.url, SHEL_FRAMES, shelFrame) }}/>
     </span>}
     {sparks.current.map(k => <span key={k.id} className={`ambush-spark is-${k.kind}`} style={{ left: `${k.x}%`, top: `${k.y}%` }} aria-hidden="true">{k.kind === "hit" && <span className="ambush-impact"/>}<span className="ambush-spark-text">{k.kind === "block" ? "BLOCKED" : "HIT! −5%"}</span></span>)}
-    {s && fight.current && <div className="boss-hud" role="status" aria-label="Boss fight">
+    {wave.current >= 0 && !defeat && <div className="boss-hud" role="status" aria-label="Fight status">
+      {s && fight.current && <>
       <div className="boss-hud-row"><span className="boss-name">SHELTON <small>{STAGES[s.stage]?.name}</small></span><span className="boss-timer">{(() => { const t = Math.floor(((fight.current.end || now) - fight.current.start) / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; })()}</span></div>
       <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(1 - s.hits / MAX_HP) * 100}%` }}/>{STAGES.slice(1).map((_, i) => <span key={i} className="boss-bar-notch" style={{ left: `${((i + 1) / STAGES.length) * 100}%` }}/>)}</div>
-    </div>}
-    {wave.current >= 0 && !defeat && <div className="boss-hud" role="status" aria-label="Crew health" style={s && fight.current ? { top: "auto" } : undefined}>
+      </>}
       <div className="boss-hud-row crew squad-row">
         {AG.map(a => <span key={a} className={`squad-pips ${squad[a] <= 0 ? "is-down" : ""}`} aria-label={`${a} ${squad[a]} of ${SQUAD_HP[a]}`}>
           <span className="boss-name">{a.toUpperCase()}</span>
