@@ -1208,3 +1208,12 @@ body > .combat-dodge{position:fixed}
 .kronk-boss{position:absolute;left:50%;bottom:41%;width:26%;aspect-ratio:380/230;transform:translateX(-50%);background-size:300% 100%;background-repeat:no-repeat;animation:kronk-idle 1.2s steps(1) infinite;z-index:62;filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55))}
 @keyframes kronk-idle{0%{background-position:0 0}33%{background-position:50% 0}66%{background-position:100% 0}}
 .kronk-bubble{border-color:hsl(var(--destructive));box-shadow:0 0 14px hsl(var(--destructive) / .6)}.kronk-bubble b{color:hsl(var(--destructive))}
+.kronk-laser{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:200;overflow:visible}
+.kronk-laser line{stroke:hsl(var(--destructive));stroke-width:.7;vector-effect:non-scaling-stroke;stroke-width:4px;stroke-linecap:round;filter:drop-shadow(0 0 4px hsl(var(--destructive))) drop-shadow(0 0 10px hsl(var(--destructive)));stroke-dasharray:200;stroke-dashoffset:200;animation:kronk-beam 1s ease-out forwards}
+.kronk-laser circle{fill:hsl(var(--destructive));filter:drop-shadow(0 0 6px hsl(var(--destructive)));animation:kronk-eye-charge 1s ease-out forwards}
+.kronk-laser .kronk-laser-burst{opacity:0;animation:kronk-burst 1s ease-out forwards}
+@keyframes kronk-beam{0%,35%{stroke-dashoffset:200;opacity:1}55%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+@keyframes kronk-eye-charge{0%{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.3)}40%{opacity:1;transform:scale(1.8)}100%{opacity:0}}
+@keyframes kronk-burst{0%,45%{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.3)}60%{opacity:1;transform:scale(1.6)}100%{opacity:0;transform:scale(2.4)}}
+.kronk-lair .haven-zig.is-lasered .sprite-stage{animation:kronk-zapped .5s steps(2) 1;filter:brightness(1.8) sepia(1) hue-rotate(-40deg) saturate(4)}
+@keyframes kronk-zapped{50%{opacity:.4}}

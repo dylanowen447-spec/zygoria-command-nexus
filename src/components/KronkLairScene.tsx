@@ -4,7 +4,7 @@ import kronkIdle from "@/assets/kronk-idle.png.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { speak, voicesOn } from "@/lib/voice";
 
-/** Kronk's Lair: inside the bunker gate, the crew face Kronk himself. Editor-only — no story road or fight yet. */
+/** Kronk's Lair: inside the bunker gate, the crew face Kronk himself. Editor-only — no story road yet; Kronk fires laser eyes at the crew. */
 type Zig = "Oz" | "Brix" | "Lowkey";
 type Line = { who: Zig | "Kronk"; text: string };
 
@@ -64,6 +64,8 @@ export function KronkLairScene() {
   const groundRef = useRef<HTMLDivElement>(null);
   const walkId = useRef<Partial<Record<Zig, number>>>({});
   const busy = useRef(false);
+  const [laser, setLaser] = useState<{ to: P; z: Zig; id: number } | null>(null);
+  const [hit, setHit] = useState<Zig | null>(null);
 
   useEffect(() => {
     if (step >= INTRO.length) return;
@@ -96,6 +98,25 @@ export function KronkLairScene() {
     (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => wander(a, true));
     return () => timers.forEach(clearTimeout);
   }, []);
+  // Laser eyes: once Kronk has spoken, he charges and fires twin red beams at a random Zig, who gets knocked back.
+  useEffect(() => {
+    if (step < 4) return;
+    let live = true; const timers: ReturnType<typeof setTimeout>[] = [];
+    const fire = () => {
+      if (!live) return;
+      const zs: Zig[] = ["Brix", "Oz", "Lowkey"], z = zs[Math.floor(Math.random() * 3)]!, p = posRef.current[z];
+      setLaser({ to: { x: p.x, y: p.y - 7 }, z, id: Date.now() });
+      timers.push(setTimeout(() => {
+        setHit(z);
+        const away = p.x < 50 ? -6 : 6;
+        walkTo(z, clampToGround({ x: p.x + away, y: p.y + 3 }));
+      }, 450));
+      timers.push(setTimeout(() => { setLaser(null); setHit(null); }, 1000));
+      timers.push(setTimeout(fire, 5500 + Math.random() * 4000));
+    };
+    timers.push(setTimeout(fire, 2500));
+    return () => { live = false; timers.forEach(clearTimeout); };
+  }, [step >= 4]);
   function walkTo(a: Zig, to: P) {
     const from = posRef.current[a], dx = to.x - from.x, ms = Math.max(300, Math.hypot(dx, (to.y - from.y) * 1.4) * 90);
     const id = (walkId.current[a] = (walkId.current[a] ?? 0) + 1), start = performance.now();
@@ -139,7 +160,12 @@ export function KronkLairScene() {
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
         <span className="kronk-boss" role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
-        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
+        {laser && <svg key={laser.id} className="kronk-laser" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {[-1.2, 1.2].map(o => <line key={o} x1={50 + o} y1={47} x2={laser.to.x + o * 0.4} y2={laser.to.y} />)}
+          <circle cx={50 - 1.2} cy={47} r={0.9}/><circle cx={50 + 1.2} cy={47} r={0.9}/>
+          <circle className="kronk-laser-burst" cx={laser.to.x} cy={laser.to.y} r={2.4}/>
+        </svg>}
+        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
       </div>
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
     </div>
