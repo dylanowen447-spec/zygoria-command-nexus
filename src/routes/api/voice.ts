@@ -73,7 +73,7 @@ async function speakLine(request: Request): Promise<Response> {
         const text = typeof body?.text === "string" ? body.text.trim() : "";
         if (!cast || !text || text.length > 400) return new Response("Bad request", { status: 400 });
         const key = process.env["LOVABLE_API_KEY"];
-        if (!key) return new Response("Voice unavailable", { status: 500 });
+        if (!key) { console.error("voice: LOVABLE_API_KEY missing on server"); return new Response("Voice unavailable", { status: 503 }); }
 
         // Shared clip store: once any player has heard a line, everyone gets it instantly.
         const path = `v1/${await sha(`${cast.voice}|${cast.instructions}|${text}`)}.wav`;
