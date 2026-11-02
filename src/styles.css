@@ -702,8 +702,8 @@
 
 /* Underground Haven */
 .haven-layer{position:absolute;inset:0;pointer-events:none}
-.haven-zig{position:absolute;bottom:20%;transform:translateX(-50%) scale(1);transform-origin:bottom center;width:30px;height:52px}
-.haven-human{position:absolute;bottom:20%;transform:translateX(-50%);background:none;border:0;padding:0;pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;align-items:center}
+.haven-zig{position:absolute;bottom:13%;transform:translateX(-50%) scale(1);transform-origin:bottom center;width:30px;height:52px}
+.haven-human{position:absolute;bottom:13%;transform:translateX(-50%);background:none;border:0;padding:0;pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;align-items:center}
 .haven-human img{height:100%;width:auto;filter:drop-shadow(0 6px 6px hsl(0 0% 0%/.6))}
 .haven-human.is-target img{filter:drop-shadow(0 0 6px color-mix(in oklab, var(--primary) 90%, transparent)) drop-shadow(0 6px 6px hsl(0 0% 0%/.6))}
 .haven-name{display:none}
@@ -1201,3 +1201,4 @@ body > .combat-dodge{position:fixed}
 .descent-vale{position:absolute;height:9%;transform:translate(-50%,-100%);pointer-events:none;z-index:5;transition:opacity .35s}
 .descent-vale img{height:100%;width:auto;filter:drop-shadow(0 4px 4px hsl(0 0% 0%/.6))}
 .descent-vale.is-gone{opacity:0}
+.haven-scene .haven-layer .haven-zig,.haven-scene .haven-human{bottom:13%!important}.haven-scene .haven-bubble{bottom:calc(13% + 62px)}

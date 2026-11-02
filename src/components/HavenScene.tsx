@@ -12,7 +12,7 @@ import { FIRST_IMPRESSIONS, MEETING_ORIN, VALE_VOLUNTEERS, VALE_REPORTS, type Sp
 type Survivor = "Orin" | "Mara" | "Vale";
 type Line = DLine;
 
-const FLOOR = 20; // shared flat ground line (% from bottom)
+const FLOOR = 13; // shared flat ground line (% from bottom)
 const SURVIVORS: { id: Survivor; name: string; img: string; x: number; h: number }[] = [
   { id: "Vale", name: "VALE", img: valeImg, x: 62, h: 18 },
   { id: "Mara", name: "MARA", img: maraImg, x: 74, h: 19 },
@@ -150,7 +150,7 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
       {SURVIVORS.filter(s => !(s.id === "Vale" && quest === "vale-up")).map(s => <button key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
         <img src={s.img} alt="" draggable={false}/><span className="haven-name">{s.name}</span>
       </button>)}
-      {bubble && <div key={bubble.text} className="haven-bubble" role="button" title="Tap to continue" onPointerDown={e => { e.stopPropagation(); if (!introDone) stopVoice(); }} style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(20% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? "var(--zig-lift)" : "var(--human-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
+      {bubble && <div key={bubble.text} className="haven-bubble" role="button" title="Tap to continue" onPointerDown={e => { e.stopPropagation(); if (!introDone) stopVoice(); }} style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(13% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? "var(--zig-lift)" : "var(--human-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
     <div className="map-coordinate top-right">UNDERGROUND HAVEN</div>
     {objective && quest !== "fish" && introDone && <div className="quest-objective">◆ {quest === "hungry" ? "Catch fish at the Sanctuary and bring it down" : objective}</div>}
