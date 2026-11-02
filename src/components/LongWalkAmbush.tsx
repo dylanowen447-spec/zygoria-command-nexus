@@ -1,6 +1,9 @@
 import { speak, preloadVoices } from "@/lib/voice";
 import { RAT_ALARM, LONG_WALK_RAT_RECALL, SHELTON_FIRST_SIGHT, ARRIVAL_GAP_MS, FIGHT_LINES } from "@/lib/fight-lines";
-import { playSfx } from "@/lib/atmosphere";
+import { playSfx, playDefeatSting } from "@/lib/atmosphere";
+import { GameOverScreen } from "@/components/GameOverScreen";
+import { IFRAME_MS, KNEEL_MS, MAX_HP as SQUAD_HP, allDown, damage, fullSquad, liveSquad, mayBounceBack, revive, type Squad } from "@/lib/squad-health";
+import { silenceAllVoices, unmuteVoices } from "@/lib/voice";
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import { RatSprite } from "@/components/RatSprite";
 import { DEFAULT_BOUNDS, farSpawns, makeRat, separateRats, stepRat, zapRats, hitCtx, dodgeUntil, type CombatApi, type Rat } from "@/lib/rat-ai";
@@ -15,11 +18,11 @@ const SHEL_FRAMES = 18;
 const EDGES: Point[] = [{ x: 3, y: 70 }, { x: 6, y: 94 }, { x: 30, y: 98 }, { x: 40, y: 42 }, { x: 3, y: 52 }, { x: 60, y: 97 }, { x: 62, y: 44 }, { x: 96, y: 66 }];
 type ShelState = "enter" | "taunt" | "windup" | "lunge" | "open" | "hit" | "shell" | "retreat" | "beaten" | "flee" | "gone";
 const STAGES = [
-  { windup: 0.8, lunge: 34, open: 2.3, taunt: 2.6, rats: 0, name: "SHELL GUARD" },
-  { windup: 0.6, lunge: 42, open: 1.8, taunt: 2.0, rats: 2, name: "SPIKE RUSH" },
-  { windup: 0.45, lunge: 50, open: 1.4, taunt: 1.4, rats: 3, name: "ENRAGED" },
+  { windup: 0.65, lunge: 40, open: 1.7, taunt: 2.0, rats: 2, name: "SHELL GUARD" },
+  { windup: 0.5, lunge: 50, open: 1.35, taunt: 1.5, rats: 3, name: "SPIKE RUSH" },
+  { windup: 0.38, lunge: 58, open: 1.05, taunt: 1.0, rats: 4, name: "ENRAGED" },
 ];
-const RETREAT_AT = [7, 14], MAX_HP = 20, CREW_FLOOR = 15; // each zap = 10% of Shelton's health; retreats after hits 3 and 6
+const RETREAT_AT = [7, 14], MAX_HP = 20; // each zap = 10% of Shelton's health; retreats after hits 3 and 6
 type Shel = { prey: Agent; combo: number; x: number; y: number; state: ShelState; t: number; hits: number; flip: boolean; target: Point; blocked: number; stage: number; hurt: number; path: Point[] };
 /** Winding road from the far distance down onto the rocky plateau (artwork %); retreats walk it in reverse. */
 const ROAD_IN: Point[] = [{ x: 22, y: 49 }, { x: 25, y: 55 }, { x: 28, y: 61 }, { x: 38, y: 65 }, { x: 50, y: 67 }, { x: 62, y: 68 }];
@@ -57,8 +60,12 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
   const [shelSay, setShelSay] = useState<string | null>(null);
   const [size, setSize] = useState({ lowkey: 50, oz: 40 });
   const wave = useRef(-1);
-  const [crewHp, setCrewHp] = useState(100);
-  const crewHpRef = useRef(100);
+  const AG: Agent[] = ["Brix", "Oz", "Lowkey"];
+  const [squad, setSquad] = useState<Squad>(fullSquad);
+  const squadRef = useRef<Squad>(fullSquad());
+  const [defeat, setDefeat] = useState<"" | "falling" | "over">("");
+  const [attempt, setAttempt] = useState(0);
+  const resumeShelton = useRef(false);
   const fight = useRef<{ start: number; end: number } | null>(null);
   const artRef = useRef<HTMLSpanElement | null>(null);
   const escorts = useRef<{ r: Rat; o: Point }[]>([]);
@@ -93,7 +100,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
   useEffect(() => {
 
     try { if (localStorage.getItem(KEY) === "done") return; } catch { /* play anyway */ }
-    let alive = true, raf = 0, last = performance.now(), nextId = 1;
+    let alive = true, raf = 0, last = performance.now(), nextId = 1, over = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
     const shelLine = (t: string, ms = 2400) => { let shown = 0; void speak("Shelton", t, () => { if (!alive) return; shown = Date.now(); setShelSay(t); }, 2500).then(() => later(Math.max(300, ms - (Date.now() - shown)), () => setShelSay(s => (s === t ? null : s)))); };
@@ -108,10 +115,26 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
         LONG_WALK_RAT_RECALL.forEach(([who, t], i) => later(i * ARRIVAL_GAP_MS, () => onSay(who, t)));
       }
     };
-    const hurt = (n: number) => { playSfx("hurt"); crewHpRef.current = Math.max(CREW_FLOOR, crewHpRef.current - n); setCrewHp(crewHpRef.current); };
+    // Same squad health as Old City: pips per Zig, a knee + one second wind, Game Over when all three fall.
+    const setSq = (q: Squad) => { squadRef.current = q; liveSquad.hp = q; setSquad(q); };
+    const lastBite: Record<Agent, number> = { Brix: -1e9, Oz: -1e9, Lowkey: -1e9 };
+    const downAt: Record<Agent, number> = { Brix: 0, Oz: 0, Lowkey: 0 };
+    const winds: Record<Agent, number> = { Brix: 0, Oz: 0, Lowkey: 0 };
+    const hurtZig = (who: Agent, n = 1, force = false) => {
+      if (over || squadRef.current[who] <= 0) return;
+      const t = performance.now(); if (!force && (dodgeUntil[who] ?? 0) > t) return; if (t - lastBite[who] < IFRAME_MS) return; lastBite[who] = t;
+      playSfx("hurt"); window.dispatchEvent(new CustomEvent("zig-bitten", { detail: who }));
+      const q = damage(squadRef.current, who, n); setSq(q);
+      if (q[who] <= 0) {
+        downAt[who] = t; window.dispatchEvent(new CustomEvent("zig-downed", { detail: who }));
+        if (allDown(q)) { over = true; setDefeat("falling"); stopBattleMusic(); silenceAllVoices(); playDefeatSting(); later(800, () => setDefeat("over")); }
+      }
+    };
+    const hurt = (_n: number, who?: Agent) => { if (who) hurtZig(who); };
+    unmuteVoices(); setSq(fullSquad()); setDefeat(""); rats.current = []; shel.current = null; escorts.current = []; fight.current = null;
     const spawnRats = (n: number) => { for (const p of farSpawns(EDGES, crew.current, n)) rats.current.push(makeRat(nextId++, p)); };
     const startShelton = () => {
-      wave.current = 3; startBattleMusic(true);
+      wave.current = 3; resumeShelton.current = true; startBattleMusic(true);
       fight.current = { start: performance.now(), end: 0 };
       const p0 = ROAD_IN[0]!;
       shel.current = { x: p0.x, y: p0.y, prey: "Oz", combo: 0, state: "enter", t: 0, hits: 0, flip: false, target: ROAD_IN[ROAD_IN.length - 1]!, blocked: 0, stage: 0, hurt: 0, path: ROAD_IN.slice(1) };
@@ -120,7 +143,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       later(400, () => onSay("Brix", "Something bigger's coming."));
       SHELTON_FIRST_SIGHT.forEach(([who, t], i) => later(3200 + i * 2800, () => onSay(who, t)));
     };
-    later(2500, () => startWave(0));
+    if (resumeShelton.current) later(1200, startShelton); else later(attempt ? 1200 : 2500, () => startWave(0));
 
     // Hit test against Shelton's real on-screen artwork (plus a little leeway), so tall/scaled sprites register.
     const inShel = (s: Shel, p: Point) => {
@@ -165,11 +188,17 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
     const tick = (now: number) => {
       if (!alive) return;
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (over) { force(f => (f + 1) % 1e6); raf = requestAnimationFrame(tick); return; }
+      for (const a of AG) {
+        if (squadRef.current[a] > 0 || !mayBounceBack(winds[a]) || now - downAt[a] < KNEEL_MS) continue;
+        winds[a] += 1; lastBite[a] = now; setSq(revive(squadRef.current, a));
+      }
       // Rats scurry at the nearest Zig, nip, then hop back and try again.
       const marching = new Set(escorts.current.map(e => e.r));
       for (const r of rats.current) {
         if (marching.has(r)) continue;
-        stepRat(r, dt, crew.current, hurt);
+        const pool = Object.fromEntries(AG.filter(a => squadRef.current[a] > 0).map(a => [a, crew.current[a]])) as Record<Agent, Point>;
+        stepRat(r, dt, pool, hurt);
         if (wave.current === 3 && !r.dead) { const c = clampPlat(r); r.x = c.x; r.y = c.y; }
       }
       separateRats(rats.current.filter(r => !marching.has(r)), dt);
@@ -193,16 +222,16 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
         if (s.state === "enter" && follow(s.stage ? 16 : 9)) { s.state = "taunt"; s.t = 0; escorts.current = []; if (s.stage) return void (raf = requestAnimationFrame(tick)); shelLine(SHEL_LINES.enter, 3000); later(1200, () => onSay("Oz", "OH HELLLL NAW! Who's this spiky tortoise with the gold chain?!")); }
         else if (s.state === "taunt" && s.t > st.taunt) {
           // Lock onto whichever Zig is closest.
-          s.prey = (Object.keys(crew.current) as Agent[]).reduce((b, a) => Math.hypot(crew.current[a].x - s.x, crew.current[a].y - s.y) < Math.hypot(crew.current[b].x - s.x, crew.current[b].y - s.y) ? a : b, "Oz" as Agent);
+          s.prey = AG.filter(a => squadRef.current[a] > 0).reduce((b, a) => Math.hypot(crew.current[a].x - s.x, crew.current[a].y - s.y) < Math.hypot(crew.current[b].x - s.x, crew.current[b].y - s.y) ? a : b, "Oz" as Agent);
           s.state = "windup"; s.t = 0; s.flip = crew.current[s.prey].x < s.x; s.combo = s.stage >= 2 ? 1 : 0;
         }
         else if (s.state === "windup" && s.t > st.windup) { const z = crew.current[s.prey]; s.state = "lunge"; s.t = 0; s.target = clampPlat({ x: z.x + (z.x < s.x ? -6 : 6), y: z.y }); }
         else if (s.state === "lunge" && (moveTo(s.target, st.lunge) || s.t > 0.9)) {
           const z = crew.current[s.prey], dodged = (dodgeUntil[s.prey] ?? 0) > performance.now();
           const hit = !dodged && Math.hypot(z.x - s.x, z.y - s.y) < 8;
-          if (hit) { hurt(12); const dx = z.x - s.x || (s.flip ? -1 : 1), d = Math.abs(dx) || 1; const c = clampPlat({ x: z.x + dx / d * 7, y: z.y }); z.x = c.x; z.y = c.y; }
+          if (hit) { hurtZig(s.prey, 2, true); stageRef.current?.classList.remove("city-shake-heavy"); void stageRef.current?.offsetWidth; stageRef.current?.classList.add("city-shake-heavy"); const dx = z.x - s.x || (s.flip ? -1 : 1), d = Math.abs(dx) || 1; const c = clampPlat({ x: z.x + dx / d * 7, y: z.y }); z.x = c.x; z.y = c.y; }
           // Spike Rush and Enraged: he slams the ground where he lands.
-          if (s.stage >= 1) { playSfx("hurt"); for (const a of Object.keys(crew.current) as Agent[]) if (a !== s.prey || !hit) { const q = crew.current[a]; if (Math.hypot(q.x - s.x, q.y - s.y) < 12 && (dodgeUntil[a] ?? 0) < performance.now()) hurt(6); } stageRef.current?.classList.remove("city-shake-heavy"); void stageRef.current?.offsetWidth; stageRef.current?.classList.add("city-shake-heavy"); }
+          if (s.stage >= 1) { playSfx("hurt"); for (const a of Object.keys(crew.current) as Agent[]) if (a !== s.prey || !hit) { const q = crew.current[a]; if (Math.hypot(q.x - s.x, q.y - s.y) < 13) hurtZig(a, 1); } stageRef.current?.classList.remove("city-shake-heavy"); void stageRef.current?.offsetWidth; stageRef.current?.classList.add("city-shake-heavy"); }
           if (s.combo > 0 && !dodged) { s.combo -= 1; s.state = "windup"; s.t = st.windup * 0.5; }
           else { s.state = "open"; s.t = dodged ? -st.open * 0.6 : 0; if (dodged) setBanner("HE MISSED — HIT HIM!"), later(1000, () => setBanner(null)); }
           if (s.hits === 0 && s.state === "open") later(200, () => onSay("Brix", "He's open after he charges — NOW, Oz!"));
@@ -220,6 +249,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
         else if (s.state === "beaten" && s.t > 3.2) { stopBattleMusic(); s.state = "flee"; s.t = 0; s.path = [...ROAD_OUT]; }
         else if (s.state === "flee" && follow(22)) {
           s.state = "gone"; shel.current = null; fight.current = null;
+          resumeShelton.current = false;
           try { localStorage.setItem(KEY, "done"); } catch { /* fine */ }
           onDefeat?.();
           later(500, () => onSay("Lowkey", "Kronk. Remember that name."));
@@ -229,8 +259,11 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => { alive = false; stopBattleMusic(); cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
-  }, [crew, hitRef, onSay]);
+    return () => { alive = false; liveSquad.hp = fullSquad(); stageRef.current?.querySelectorAll(".is-downed").forEach(el => el.classList.remove("is-downed")); unmuteVoices(); stopBattleMusic(); cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
+  }, [crew, hitRef, onSay, attempt]);
+
+  // Downed Zigs take a knee, same as Old City.
+  useEffect(() => { const st = stageRef.current; if (!st) return; for (const a of AG) st.querySelector(`.marker-${a.toLowerCase()}`)?.classList.toggle("is-downed", squad[a] <= 0); });
 
   const now = performance.now();
   const ratH = size.oz * 0.95 / 0.78, ratW = ratH * 340 / 250;
@@ -252,8 +285,17 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
     {s && fight.current && <div className="boss-hud" role="status" aria-label="Boss fight">
       <div className="boss-hud-row"><span className="boss-name">SHELTON <small>{STAGES[s.stage]?.name}</small></span><span className="boss-timer">{(() => { const t = Math.floor(((fight.current.end || now) - fight.current.start) / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; })()}</span></div>
       <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(1 - s.hits / MAX_HP) * 100}%` }}/>{STAGES.slice(1).map((_, i) => <span key={i} className="boss-bar-notch" style={{ left: `${((i + 1) / STAGES.length) * 100}%` }}/>)}</div>
-      <div className="boss-hud-row crew"><span className="boss-name">CREW</span><span className="boss-bar crew-bar"><span className="boss-bar-fill" style={{ width: `${crewHp}%` }}/></span></div>
     </div>}
+    {wave.current >= 0 && !defeat && <div className="boss-hud" role="status" aria-label="Crew health" style={s && fight.current ? { top: "auto" } : undefined}>
+      <div className="boss-hud-row crew squad-row">
+        {AG.map(a => <span key={a} className={`squad-pips ${squad[a] <= 0 ? "is-down" : ""}`} aria-label={`${a} ${squad[a]} of ${SQUAD_HP[a]}`}>
+          <span className="boss-name">{a.toUpperCase()}</span>
+          {Array.from({ length: SQUAD_HP[a] }, (_, i) => <span key={i} className={`pip ${i < squad[a] ? "on" : ""}`}/>)}
+        </span>)}
+      </div>
+    </div>}
+    {defeat && <div className={`defeat-fade ${defeat === "over" ? "is-over" : ""}`} aria-hidden="true"/>}
+    {defeat === "over" && <GameOverScreen onRetry={() => setAttempt(n => n + 1)} onRestart={() => { resumeShelton.current = false; setAttempt(n => n + 1); }}/>}
     {banner && <div className="ambush-banner" role="status">{banner}</div>}
   </>;
 }
