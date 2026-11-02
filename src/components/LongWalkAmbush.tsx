@@ -6,7 +6,6 @@ import { RatSprite } from "@/components/RatSprite";
 import { DEFAULT_BOUNDS, farSpawns, makeRat, separateRats, stepRat, zapRats, hitCtx, dodgeUntil, type CombatApi, type Rat } from "@/lib/rat-ai";
 import sheltonSheet from "@/assets/shelton.webp.asset.json";
 import { startBattleMusic, stopBattleMusic } from "@/lib/atmosphere";
-import battleArt from "@/assets/long-walk-battle.webp";
 import type { Agent, Point } from "@/lib/zones";
 
 /** Long Walk ambush: three waves of three rats, then Shelton (shell blocks, open after his lunge, retreats alive). Self-contained so the scene's own exploration is untouched. */
@@ -55,7 +54,6 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
   const rats = useRef<Rat[]>([]);
   const shel = useRef<Shel | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
-  const [splash, setSplash] = useState(true);
   const [shelSay, setShelSay] = useState<string | null>(null);
   const [size, setSize] = useState({ lowkey: 50, oz: 40 });
   const wave = useRef(-1);
@@ -92,11 +90,8 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
     return () => { combatRef.current = { targets: () => [], bounds: () => DEFAULT_BOUNDS }; };
   }, [combatRef]);
 
-  // The splash holds the fight until the player taps through (or it steps aside on its own).
-  useEffect(() => { if (!splash) return; const t = setTimeout(() => setSplash(false), 6000); return () => clearTimeout(t); }, [splash]);
-
   useEffect(() => {
-    if (splash) return;
+
     try { if (localStorage.getItem(KEY) === "done") return; } catch { /* play anyway */ }
     let alive = true, raf = 0, last = performance.now(), nextId = 1;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -235,7 +230,7 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
     };
     raf = requestAnimationFrame(tick);
     return () => { alive = false; stopBattleMusic(); cancelAnimationFrame(raf); timers.forEach(clearTimeout); hitRef.current = () => false; };
-  }, [splash, crew, hitRef, onSay]);
+  }, [crew, hitRef, onSay]);
 
   const now = performance.now();
   const ratH = size.oz * 0.95 / 0.78, ratW = ratH * 340 / 250;
@@ -247,10 +242,6 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
   const bg = (url: string, frames: number, i: number): CSSProperties => ({ backgroundImage: `url(${url})`, backgroundSize: `${frames * 100}% 100%`, backgroundPosition: `${(i / (frames - 1)) * 100}% 0` });
 
   return <>
-    {splash && <button type="button" className="battle-splash" onClick={() => setSplash(false)} aria-label="The Long Walk ambush — tap to fight">
-      <img src={battleArt} alt="Oz, Brix and Lowkey face Shelton and his rats on the broken highway" draggable={false}/>
-      <span className="battle-splash-hint">TAP TO FIGHT</span>
-    </button>}
     {rats.current.map(r => { const k = escorts.current.some(e => e.r === r) ? persp(r.y) : 1; return <RatSprite key={r.id} r={r} w={ratW * k} h={ratH * k} now={now}/>; })}
     {s && <span className="ambush-shelton" aria-label="Shelton" style={{ left: `${s.x}%`, top: `${s.y}%`, zIndex: 10 + Math.round(s.y * 10) }}>
       {shelSay && <span className="idle-bubble ambush-bubble">{shelSay}</span>}

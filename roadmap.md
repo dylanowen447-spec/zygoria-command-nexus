@@ -41,3 +41,5 @@
 - [ ] Vale: sprite movement (later — needs sprite sheet), then Orin lets Vale visit Sanctuary
 - [x] Kronk Approach: no Sanctuary chatter (Boulder Pot etc.) during the scene
 - [x] Mobile dodge roll / quick dash in combat (i-frames vs rat lunges)
+
+- [x] Remove the Long Walk "TAP TO FIGHT" card so the Shelton ambush starts straight away
