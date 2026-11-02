@@ -64,12 +64,16 @@ if (typeof window !== "undefined") {
   window.addEventListener("pointerdown", unlock, true); window.addEventListener("keydown", unlock, true);
 }
 
+/** Bigger characters speak louder. Browser volume caps at 1, so the crew steps down and the monster fills the room. */
+const VOLUME: Record<string, number> = { Kronk: 1 };
+
 async function play(who: string, text: string, maxWaitMs: number, until: number, onStart?: () => void) {
   let url = await Promise.race([load(who, text), new Promise<null>(r => setTimeout(() => r(null), maxWaitMs))]);
   if (!url && maxWaitMs >= 10000) { await new Promise(r => setTimeout(r, 1200)); url = await load(who, text); } // one retry for slow/busy voice server
   if (!url || !voicesOn() || muted() || Date.now() > until + 200) return; // too late: the words would no longer match the bubble
   const a = player(); current = a;
   a.src = url;
+  a.volume = VOLUME[who] ?? 0.72;
   a.playbackRate = 1.3; a.preservesPitch = true; // brisker delivery, same voice pitch
   await new Promise<void>(res => { a.onended = () => res(); a.onerror = () => res(); a.onplaying = () => { a.onplaying = null; onStart?.(); }; a.play().catch(() => res()); });
   if (current === a) current = null;
