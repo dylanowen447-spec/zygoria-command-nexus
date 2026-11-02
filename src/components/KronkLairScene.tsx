@@ -6,7 +6,7 @@ import { speak, voicesOn } from "@/lib/voice";
 
 /** Kronk's Lair: inside the bunker gate, the crew face Kronk himself. Editor-only — no story road or fight yet. */
 type Zig = "Oz" | "Brix" | "Lowkey";
-type Line = { who: Zig; text: string };
+type Line = { who: Zig | "Kronk"; text: string };
 
 /** Walkable dirt road traced from the creator's ground guide, in artwork % (x from left, y from top). */
 const GROUND: [number, number][] = [[4,62],[96,62],[99,92],[1,92]];
@@ -140,7 +140,7 @@ export function KronkLairScene() {
       <div ref={groundRef} className="kronk-ground">
         <span className="kronk-boss" role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
-        {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${Math.min(78, Math.max(22, pos[bubble.who].x))}%`, top: "auto", bottom: `calc(${100 - pos[bubble.who].y}% + 70px)` }}><b>{bubble.who.toUpperCase()}</b>{bubble.text}</div>}
+        {bubble && <div key={bubble.text} className={`haven-bubble${bubble.who === "Kronk" ? " kronk-bubble" : ""}`} style={bubble.who === "Kronk" ? { left: "50%", top: "auto", bottom: "calc(41% + 22cqh)", zIndex: 90 } : { left: `${Math.min(78, Math.max(22, pos[bubble.who].x))}%`, top: "auto", bottom: `calc(${100 - pos[bubble.who].y}% + 70px)` }}><b>{bubble.who.toUpperCase()}</b>{bubble.text}</div>}
       </div>
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
     </div>
