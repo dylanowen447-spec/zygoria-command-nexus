@@ -1,6 +1,6 @@
 import { voiceLine, speak, voicesOn } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
-import bg from "@/assets/haven-bg.webp";
+import bg from "@/assets/haven-bg.png.asset.json";
 import orinImg from "@/assets/haven-orin.webp";
 import maraImg from "@/assets/haven-mara.webp";
 import valeImg from "@/assets/haven-vale.webp";
