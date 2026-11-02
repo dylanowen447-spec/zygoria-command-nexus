@@ -155,7 +155,7 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     <div className="map-coordinate top-right">UNDERGROUND HAVEN</div>
     {objective && quest !== "fish" && introDone && <div className="quest-objective">◆ {quest === "hungry" ? "Catch fish at the Sanctuary and bring it down" : objective}</div>}
     {valeReady && onAscend && <button type="button" className="workshop-spot workshop-door quest-go" onPointerDown={e => e.stopPropagation()} onClick={() => { setQuest(advanceQuest("vale-up")); onAscend(); }}><span>Climb to the Sanctuary with Vale ›</span></button>}
-    {introDone && onDescend && <button type="button" className="workshop-spot workshop-door quest-go cave-go" onPointerDown={e => e.stopPropagation()} onClick={onDescend}><span>Down the Waterfall Descent ›</span></button>}
+    {introDone && onDescend && <button type="button" className="workshop-spot workshop-door quest-go cave-go" onPointerDown={e => e.stopPropagation()} onClick={onDescend}><span>Climb the Waterfall Path to Sanctuary ›</span></button>}
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the floor to walk · double-tap {steer} to let go</div>}
     {introDone && <form className="haven-talk" onSubmit={send}>
       <span>Talking to {target === "Orin" ? "Elder Orin" : target} — tap someone to switch</span>
