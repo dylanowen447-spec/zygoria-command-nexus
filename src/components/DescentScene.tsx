@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import bg from "@/assets/waterfall-descent.webp.asset.json";
+import valeImg from "@/assets/haven-vale.webp";
 
 type Zig = "Oz" | "Brix" | "Lowkey";
 type Pt = { x: number; y: number };
@@ -43,14 +44,15 @@ function facing(dx: number, dy: number, back: boolean): Dir {
 }
 
 /** The waterfall descent between the Sanctuary and the Underground Haven. The whole crew walks the mapped road together. */
-export function DescentScene({ character = "Brix", onBack, onEnterCave }: { character?: Zig; onBack: () => void; onEnterCave: () => void }) {
+export function DescentScene({ character = "Brix", onBack, onEnterCave, vale = false, up = false, onArriveTop }: { character?: Zig; onBack: () => void; onEnterCave: () => void; vale?: boolean; up?: boolean; onArriveTop?: () => void }) {
   const crew = useRef<Zig[]>([character, ...REST.filter(c => c !== character)]).current;
   const [walkers, setWalkers] = useState<Walker[]>(() => crew.map(() => ({ ...DESCENT_PATH[0]!, dir: null, moving: false })));
   const [gone, setGone] = useState(false);
-  const s = useRef(0), target = useRef(0), then = useRef<(() => void) | null>(null), raf = useRef(0);
+  const s = useRef(up ? ARRIVE : 0), target = useRef(0), then = useRef<(() => void) | null>(null), raf = useRef(0);
 
   // Arrive from the Sanctuary and walk the painted road down to the cave terrace.
-  useEffect(() => { const t = setTimeout(() => { target.current = ARRIVE; }, 300); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => { if (up) { target.current = 0; then.current = () => setTimeout(() => onArriveTop?.(), 400); } else target.current = ARRIVE; }, 300); return () => clearTimeout(t); }, []);
+  const [valeAt, setValeAt] = useState<Pt>(DESCENT_PATH[0]!);
 
   useEffect(() => {
     let last = performance.now();
@@ -71,6 +73,7 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave }: { char
         const { p, dx, dy } = pointAt(s.current - LAGS[i]!), n = Math.hypot(dx, dy) || 1, off = SIDES[i]!;
         return { x: p.x + (-dy / n) * off, y: p.y + (dx / n) * off, dir: moving ? facing(dx, dy, back) : null, moving };
       }));
+      if (vale) setValeAt(pointAt(back ? s.current + 8 : s.current - 22).p);
       raf.current = requestAnimationFrame(step);
     };
     raf.current = requestAnimationFrame(step);
@@ -78,7 +81,7 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave }: { char
   }, [crew]);
 
   const onGround = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (gone) return;
+    if (gone || up) return;
     const r = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - r.left) / r.width) * 100, y = ((e.clientY - r.top) / r.height) * 100;
     let best = 0, bd = Infinity;
@@ -97,12 +100,14 @@ export function DescentScene({ character = "Brix", onBack, onEnterCave }: { char
           style={{ left: `${w.x}%`, ["--feet" as string]: `${100 - w.y}%`, transitionDuration: "0ms" } as CSSProperties}>
           <span className="sprite-stage"><CharacterSprite character={c}/></span>
         </span>; })}
-        <button type="button" className="workshop-spot workshop-door descent-cave" style={{ left: `${CAVE.x}%`, top: `${CAVE.y - 5}%` }} aria-label="Enter the caves"
+        {vale && <span className={`descent-vale ${gone ? "is-gone" : ""}`} style={{ left: `${valeAt.x}%`, top: `${valeAt.y}%` }} aria-label="Vale"><img src={valeImg} alt="" draggable={false}/></span>}
+        {!up && <><button type="button" className="workshop-spot workshop-door descent-cave" style={{ left: `${CAVE.x}%`, top: `${CAVE.y - 5}%` }} aria-label="Enter the caves"
           onPointerDown={e => e.stopPropagation()} onClick={enterCave}><span>Enter caves ›</span></button>
         <button type="button" className="workshop-spot workshop-door descent-back" style={{ left: "22%", top: "21%" }} aria-label="Back to the Sanctuary"
-          onPointerDown={e => e.stopPropagation()} onClick={back}><span>‹ Sanctuary</span></button>
+          onPointerDown={e => e.stopPropagation()} onClick={back}><span>‹ Sanctuary</span></button></>}
       </div>
     </div>
     <div className="map-coordinate top-right">WATERFALL DESCENT</div>
+    {vale && <div className="quest-objective">◆ {up ? "Vale's first climb to the surface" : "Bring Vale safely home to Elder Orin"}</div>}
   </div>;
 }
