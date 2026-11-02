@@ -1,4 +1,4 @@
-import { voiceLine, speak, voicesOn } from "@/lib/voice";
+import { voiceLine, speak, voicesOn, stopVoice } from "@/lib/voice";
 import { useEffect, useRef, useState } from "react";
 import bg from "@/assets/haven-bg.png.asset.json";
 import orinImg from "@/assets/haven-orin.webp";
@@ -105,7 +105,7 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
     const started = performance.now();
     void speak(line.who, line.text, () => { if (live) setBubble(line); }).then(() => {
       if (!live) return;
-      const rest = voicesOn() ? 350 : Math.max(0, 3600 - (performance.now() - started));
+      const rest = (voicesOn() ? 350 : Math.max(0, 3600 - (performance.now() - started))) + (line.pause ?? 0);
       t = setTimeout(() => setStep(s => s + 1), rest);
     });
     return () => { live = false; if (t) clearTimeout(t); };
@@ -150,7 +150,7 @@ export function HavenScene({ onAscend }: { onAscend?: () => void } = {}) {
       {SURVIVORS.filter(s => !(s.id === "Vale" && quest === "vale-up")).map(s => <button key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
         <img src={s.img} alt="" draggable={false}/><span className="haven-name">{s.name}</span>
       </button>)}
-      {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(20% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? "var(--zig-lift)" : "var(--human-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
+      {bubble && <div key={bubble.text} className="haven-bubble" role="button" title="Tap to continue" onPointerDown={e => { e.stopPropagation(); if (!introDone) stopVoice(); }} style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(20% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? "var(--zig-lift)" : "var(--human-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
     <div className="map-coordinate top-right">UNDERGROUND HAVEN</div>
     {objective && quest !== "fish" && introDone && <div className="quest-objective">◆ {quest === "hungry" ? "Catch fish at the Sanctuary and bring it down" : objective}</div>}
