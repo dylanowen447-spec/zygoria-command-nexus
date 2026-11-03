@@ -747,7 +747,7 @@ body > .combat-attack{position:fixed;right:calc(8px + env(safe-area-inset-right,
 .marker-brix.atk-punch .sheet-punch{visibility:visible;background-position-x:60%;animation:brixPunch .46s steps(1,end) forwards}
 /* Fists up while a fight is on and he's standing still. */
 .marker-brix.in-guard:not(.is-walking) .sheet-frames{visibility:hidden}
-.marker-brix.in-guard:not(.is-walking) .sheet-punch{visibility:hidden}.marker-brix.in-guard:not(.is-walking) .sheet-combat{visibility:visible;animation:none;background-position:0 0}
+.marker-brix.in-guard:not(.is-walking) .sheet-punch{visibility:visible;background-position-x:20%}.marker-brix.in-guard:not(.is-walking) .sheet-combat{visibility:hidden}
 .marker-brix.in-guard.brix-facing-left .sheet-punch{background-position-y:33.3333%}
 .marker-brix.in-guard.brix-facing-right .sheet-punch{background-position-y:66.6667%}
 .marker-brix.in-guard.brix-facing-up .sheet-punch{background-position-y:100%}
@@ -762,7 +762,7 @@ body > .combat-attack{position:fixed;right:calc(8px + env(safe-area-inset-right,
 @keyframes brixPunchHeavy{0%{background-position-x:60%}100%{background-position-x:60%}}
 /* Heavy hold: Brix sits in his wind-up and lights up gold; release snaps straight to the fully extended fist. */
 .marker-brix.brix-charging .sheet-frames{visibility:hidden}
-.marker-brix.brix-charging .sheet-punch{visibility:hidden}.marker-brix.brix-charging:not(.is-charged) .sheet-frames{visibility:visible}.marker-brix.brix-charging:not(.is-charged) .sheet-combat{visibility:hidden}.marker-brix.brix-charging.is-charged .sheet-combat{visibility:visible;animation:none;background-position:66.6667% 100%}
+.marker-brix.brix-charging .sheet-punch{visibility:hidden}.marker-brix.brix-charging:not(.is-charged) .sheet-frames{visibility:visible}.marker-brix.brix-charging:not(.is-charged) .sheet-combat{visibility:hidden}.marker-brix.brix-charging.is-charged .sheet-combat{visibility:hidden}.marker-brix.brix-charging.is-charged .sheet-punch{visibility:visible;background-position-x:40%}
 .agent-marker.marker-brix.brix-charging.facing-left .sheet-punch{background-position-y:33.3333%}
 .agent-marker.marker-brix.brix-charging.facing-right .sheet-punch{background-position-y:66.6667%}
 .world-image-wrap .marker-brix.brix-charging .sprite-stage{scale:1 1}
