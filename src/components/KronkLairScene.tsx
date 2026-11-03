@@ -89,6 +89,15 @@ export function KronkLairScene() {
   const [squad, setSquad] = useState<Squad>(fullSquad);
   const squadRef = useRef<Squad>(squad);
   const [kronkHp, setKronkHp] = useState(KRONK_HP);
+  // Hit feedback: floating numbers over Kronk, combo counts per Zig, and a short screen shake on big hits.
+  const [pops, setPops] = useState<{ id: number; text: string; kind: string; big?: boolean; x: number; y: number }[]>([]);
+  const [shake, setShake] = useState(0);
+  const combo = useRef<Partial<Record<Zig, { n: number; t: number }>>>({});
+  const pop = (text: string, kind: string, x = 50, y = 46, big = false) => {
+    const id = Date.now() + Math.random();
+    setPops(p => [...p, { id, text, kind, big, x: x + (Math.random() * 6 - 3), y }]);
+    setTimeout(() => setPops(p => p.filter(q => q.id !== id)), 900);
+  };
   const kronkHpRef = useRef(KRONK_HP);
   const [kronkHit, setKronkHit] = useState(0);
   const [fx, setFx] = useState<{ from: P; kind: Zig; id: number } | null>(null);
@@ -138,6 +147,8 @@ export function KronkLairScene() {
       const z = zs[Math.floor(Math.random() * zs.length)]!, p = posRef.current[z];
       setLaser({ to: { x: p.x, y: p.y - 7 }, z, id: Date.now() });
       timers.push(setTimeout(() => {
+        // A Zig that is on the move when the beam lands dodges it — keep moving to survive.
+        if (movingRef.current[z]) { pop("DODGE!", "dodge", posRef.current[z].x, posRef.current[z].y - 16); return; }
         setHit(z);
         const q = damage(squadRef.current, z, 1); squadRef.current = q; setSquad(q);
         if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; const f = fullSquad(); squadRef.current = f; setSquad(f); fire(); }, 4000));
