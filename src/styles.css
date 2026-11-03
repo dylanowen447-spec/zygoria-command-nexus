@@ -1254,3 +1254,15 @@ body > .combat-dodge{position:fixed}
 @keyframes rubble-pulse{50%{filter:brightness(1.25)}}
 .rubble-burst{position:absolute;width:120px;height:120px;transform:translate(-50%,-60%);border-radius:50%;background:radial-gradient(circle,oklch(0.75 0.05 60/.7),transparent 70%);animation:rubble-burst .9s ease-out forwards;pointer-events:none;z-index:901}
 @keyframes rubble-burst{from{transform:translate(-50%,-60%) scale(.3);opacity:1}to{transform:translate(-50%,-60%) scale(1.8);opacity:0}}
+/* Kronk fight hit feedback */
+.kronk-pop{position:absolute;transform:translate(-50%,-50%);z-index:90;pointer-events:none;font-family:var(--font-display,inherit);font-weight:900;font-size:clamp(12px,2.2vw,20px);letter-spacing:.04em;color:hsl(var(--foreground));text-shadow:0 2px 0 hsl(0 0% 0% / .8),0 0 8px currentColor;animation:kronk-pop-up .9s ease-out forwards}
+.kronk-pop.is-big{font-size:clamp(16px,3.2vw,30px)}
+.kronk-pop.pop-brix{color:hsl(210 95% 65%)}
+.kronk-pop.pop-oz{color:hsl(50 100% 60%)}
+.kronk-pop.pop-lowkey{color:hsl(0 90% 62%)}
+.kronk-pop.pop-dodge{color:hsl(150 80% 60%)}
+@keyframes kronk-pop-up{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+.lair-shake-a{animation:lair-shake-a .28s linear}
+.lair-shake-b{animation:lair-shake-b .28s linear}
+@keyframes lair-shake-a{0%,100%{transform:none}25%{transform:translate(-5px,3px)}50%{transform:translate(4px,-3px)}75%{transform:translate(-2px,2px)}}
+@keyframes lair-shake-b{0%,100%{transform:none}25%{transform:translate(5px,-3px)}50%{transform:translate(-4px,3px)}75%{transform:translate(2px,-2px)}}
