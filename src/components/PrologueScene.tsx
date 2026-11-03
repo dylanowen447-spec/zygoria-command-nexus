@@ -801,7 +801,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         knockRef.current = (a: Agent) => {
           if (skipped || count[a] >= 3) return;
           count[a]++; setKnocks(k => ({ ...k, [a]: count[a] })); setKnockFx(k => ({ ...k, [a]: k[a] + 1 }));
-          if (count[a] >= 3) crack(a); else playHatch("knock");
+          const tap = count[a] >= 3 ? 3 : count[a] === 2 ? 2 : 1;
+          playHatch("knock", tap);
+          if (tap === 3) crack(a);
         };
         // The prologue only begins once all three Zigs have stepped out — eggs never hatch on their own.
         await allHatched; if (!alive) return;
@@ -880,7 +882,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined} onDefeatChange={setCityDefeat}/>}
-      {hatchOn && hatching && ALL.map(a => knocks[a] < 3 && <button key={`egg-${a}-${knockFx[a]}`} type="button" aria-label={`Knock on ${a}'s egg`} className={`egg-knock egg-knock-${knocks[a]} ${knockFx[a] ? "is-knocked" : ""}`} style={{ left: `${scene.spawn[a].from.x}%`, top: `${scene.spawn[a].from.y}%` } as CSSProperties} onPointerDown={e => { e.stopPropagation(); knockRef.current?.(a); }}><span>{knocks[a] === 0 ? "TAP" : "!".repeat(knocks[a])}</span></button>)}
+      {hatchOn && hatching && ALL.map(a => knocks[a] < 3 && <button key={`egg-${a}-${knockFx[a]}`} data-agent={a} type="button" aria-label={`Knock on ${a}'s egg`} className={`egg-knock egg-knock-${knocks[a]} ${knockFx[a] ? "is-knocked" : ""}`} style={{ left: `${scene.spawn[a].from.x}%`, top: `${scene.spawn[a].from.y}%` } as CSSProperties} onPointerDown={e => { e.stopPropagation(); knockRef.current?.(a); }}><span>{knocks[a] === 0 ? "TAP" : "!".repeat(knocks[a])}</span></button>)}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y, scene.id === "city"), "--z": 10 + Math.round(p.y * 10), opacity: shown && (!hatchOn || emerged[a]) ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""} ${rolling === a ? "is-rolling" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}

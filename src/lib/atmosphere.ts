@@ -243,7 +243,7 @@ export function playSfx(kind: Sfx) {
 }
 
 /** Layered hatch cues have their own compressed mix; ambience and combat levels stay untouched. */
-export function playHatch(kind: "heavy" | "pop" | "mist" | "knock") {
+export function playHatch(kind: "heavy" | "pop" | "mist" | "knock", tap: 1 | 2 | 3 = 1) {
   if (typeof window === "undefined") return;
   if (!ctx) boot();
   if (!ctx || ctx.state !== "running") return;
@@ -272,17 +272,33 @@ export function playHatch(kind: "heavy" | "pop" | "mist" | "knock") {
     n.connect(f).connect(g).connect(bus); n.start(at, Math.random() * 0.2); n.stop(at + duration + 0.02);
     n.onended = () => { n.disconnect(); f.disconnect(); g.disconnect(); };
   };
-  if (kind === "knock") { // Knuckle on a metal shell that starts to give: dull thud, sharp crack snap, splintering clicks, short ring.
-    tone(0, 140, 70, 0.18, 0.6);
-    air(0, 1200, 0.04, 0.45, 0.002);
-    // The crack: a bright snap followed by a few quick splinter clicks.
-    air(0.012, 5200, 0.03, 0.5, 0.001, "highpass");
-    for (let i = 0; i < 4; i++) {
-      const at = 0.03 + i * 0.022 + Math.random() * 0.012;
-      air(at, 3800 + Math.random() * 2600, 0.018, 0.22 + Math.random() * 0.1, 0.001, "highpass");
+  if (kind === "knock") {
+    // Short, midrange fractures rather than electrical fizz or a long bright hiss.
+    const fracture = (at: number, weight: number, pitch: number) => {
+      air(at, pitch, 0.024, weight, 0.0008);
+      air(at + 0.002, 760, 0.045, weight * 0.6, 0.001, "lowpass");
+      tone(at, 245, 85, 0.035, weight * 0.32, "triangle", 0.001);
+    };
+    if (tap === 1) { // Solid shell knock, one small stress crack.
+      tone(0, 175, 78, 0.12, 0.65, "sine", 0.001);
+      fracture(0.008, 0.6, 1850);
+      for (const f of [430, 967, 1563]) tone(0.003, f, f * 0.998, 0.18, 0.07, "sine", 0.001);
+    } else if (tap === 2) { // The shell splits: two close, dry snaps and loose fragments.
+      tone(0, 130, 58, 0.15, 0.65, "sine", 0.001);
+      fracture(0, 0.9, 2300);
+      fracture(0.047, 0.75, 1650);
+      for (const [at, pitch] of [[0.09, 2900], [0.125, 2100], [0.18, 3200]] as const) fracture(at, 0.26, pitch);
+      tone(0.01, 345, 310, 0.14, 0.09, "triangle", 0.001);
+    } else { // Final rupture: deep break, tearing cracks, pieces clattering away.
+      tone(0, 110, 38, 0.28, 0.85, "sine", 0.001);
+      fracture(0, 1.1, 1900);
+      fracture(0.025, 0.95, 1250);
+      fracture(0.068, 0.7, 2500);
+      for (const [i, at] of [0.12, 0.16, 0.215, 0.29, 0.39, 0.51].entries()) {
+        fracture(at, 0.4 / (1 + i * 0.3), 1700 + (i % 3) * 650);
+        tone(at, 540 + i * 173, 520 + i * 173, 0.065, 0.045, "sine", 0.001);
+      }
     }
-    for (const [f, l, d] of [[523, 0.16, 0.5], [1190, 0.1, 0.38], [1870, 0.07, 0.28], [2730, 0.045, 0.2]] as const) tone(0.002, f, f * 0.985, d, l, "sine", 0.002);
-    air(0.01, 3400, 0.08, 0.12, 0.002, "highpass");
   } else if (kind === "heavy") { // Weighty latch, resonant metal, then pressure releasing.
     tone(0, 160, 48, 0.45, 0.65);
     air(0, 650, 0.12, 0.42);

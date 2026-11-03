@@ -1234,7 +1234,10 @@ body > .combat-dodge{position:fixed}
 
 /* Three Eggs: tap-to-knock egg hatch targets */
 .egg-knock { position: absolute; z-index: 2000; width: 13%; aspect-ratio: 1; transform: translate(-50%, -70%); border-radius: 50%; border: 0; background: transparent; cursor: pointer; display: grid; place-items: start center; -webkit-tap-highlight-color: transparent; }
-.egg-knock span { font-family: inherit; font-size: clamp(10px, 1.6vw, 15px); font-weight: 800; letter-spacing: .12em; color: var(--primary-foreground); background: var(--primary); padding: 2px 8px; border-radius: 999px; box-shadow: 0 0 14px var(--primary); animation: egg-knock-pulse 1.2s ease-in-out infinite; }
+.egg-knock { --egg-marker: var(--gold); --egg-label: var(--primary-foreground); }
+.egg-knock[data-agent="Brix"] { --egg-marker: var(--water); --egg-label: var(--foreground); }
+.egg-knock[data-agent="Lowkey"] { --egg-marker: var(--destructive); --egg-label: var(--destructive-foreground); }
+.egg-knock span { font-family: inherit; font-size: clamp(10px, 1.6vw, 15px); font-weight: 800; letter-spacing: .12em; color: var(--egg-label); background: var(--egg-marker); padding: 2px 8px; border-radius: 999px; box-shadow: 0 0 14px var(--egg-marker); animation: egg-knock-pulse 1.2s ease-in-out infinite; }
 .egg-knock.is-knocked { animation: egg-knock-shake .35s ease-out; }
 @keyframes egg-knock-pulse { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.08); } }
 @keyframes egg-knock-shake { 0% { transform: translate(-50%,-70%) rotate(0); } 25% { transform: translate(-54%,-70%) rotate(-6deg); } 50% { transform: translate(-46%,-70%) rotate(6deg); } 75% { transform: translate(-52%,-70%) rotate(-3deg); } 100% { transform: translate(-50%,-70%) rotate(0); } }
