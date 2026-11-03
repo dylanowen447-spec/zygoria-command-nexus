@@ -101,7 +101,7 @@ export function KronkLairScene() {
   };
   const kronkHpRef = useRef(KRONK_HP);
   const [kronkHit, setKronkHit] = useState(0);
-  const [fx, setFx] = useState<{ from: P; kind: Zig; id: number } | null>(null);
+  const [fx, setFx] = useState<{ from: P; kind: Zig; id: number }[]>([]);
   const cooldown = useRef<Partial<Record<Zig, number>>>({});
   const fighting = step >= 4 && kronkHp > 0; // fight is on as soon as Kronk first speaks and the lasers start
 
@@ -241,23 +241,42 @@ export function KronkLairScene() {
     busy.current = false;
   }
 
-  // Zigs strike back: Brix charges in for a ground-pound, Lowkey shadow-dashes to his side, Oz throws lightning from range.
+  // Zigs strike back: Oz stays back and throws sparks; Brix and Lowkey charge in, hit, then retreat to where they stood.
+  const [atk, setAtk] = useState<Partial<Record<Zig, { cls: string; id: number }>>>({});
+  const showAtk = (a: Zig, cls: string, ms: number) => { const id = Date.now() + Math.random(); setAtk(s => ({ ...s, [a]: { cls, id } })); setTimeout(() => setAtk(s => (s[a]?.id === id ? { ...s, [a]: undefined } : s)), ms); };
   function attack(a: Zig) {
     if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
     const now = performance.now();
     if ((cooldown.current[a] ?? 0) > now) return;
-    cooldown.current[a] = now + (a === "Brix" ? 1100 : a === "Lowkey" ? 750 : 900);
     const p = posRef.current[a];
-    if (a !== "Oz") walkTo(a, clampToGround({ x: 50 + (p.x < 50 ? -7 : 7) * (a === "Lowkey" ? 1.3 : 1), y: 64 }));
-    playSfx(a === "Brix" ? "swing" : a === "Oz" ? "zap" : "slash");
-    const from = a === "Oz" ? { x: p.x, y: p.y - 7 } : p;
+    const melee = a !== "Oz";
+    // Melee: charge to Kronk's side, then come back.
+    const side = p.x < 50 ? -1 : 1;
+    const target = clampToGround({ x: 50 + side * (a === "Lowkey" ? 9 : 7), y: 64 });
+    const travel = melee ? Math.max(300, Math.hypot(target.x - p.x, (target.y - p.y) * 1.4) * 90) : 0;
+    cooldown.current[a] = now + travel * 2 + (a === "Brix" ? 900 : a === "Lowkey" ? 650 : 750);
+    if (melee) walkTo(a, target);
+    const c0 = combo.current[a], heavyNext = (c0 && now - c0.t < 1800 + travel * 2 ? c0.n + 1 : 1) % (a === "Brix" ? 3 : 4) === 0;
     setTimeout(() => {
       if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
-      setFx({ from, kind: a, id: Date.now() }); setTimeout(() => setFx(null), 350);
+      // Strike pose
+      setMoving(m => ({ ...m, [a]: undefined }));
+      const cls = a === "Brix" ? `atk-punch ${heavyNext ? "is-heavy" : ""}` : a === "Lowkey" ? "atk-slash" : heavyNext ? "atk-heavy" : "atk-quick";
+      showAtk(a, `${cls} facing-${side < 0 ? "right" : "left"} ${a.toLowerCase()}-facing-${side < 0 ? "right" : "left"}`, a === "Brix" ? 650 : 520);
+      playSfx(a === "Brix" ? "swing" : a === "Oz" ? "zap" : "slash");
+      setTimeout(() => land(a, travel), a === "Oz" ? 220 : 260);
+      if (melee) setTimeout(() => { if (squadRef.current[a] > 0) walkTo(a, p); }, 620);
+    }, travel);
+  }
+  function land(a: Zig, travel: number) {
+      if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
+      const q = posRef.current[a];
+      const from = a === "Oz" ? { x: q.x, y: q.y - 7 } : q;
+      const fid = Date.now() + Math.random();
+      setFx(f => [...f, { from, kind: a, id: fid }]); setTimeout(() => setFx(f => f.filter(x => x.id !== fid)), 400);
       playSfx(a === "Brix" ? "punch-heavy" : a === "Oz" ? "zap-hit" : "slash-hit");
-      // Combos: hits landed within 1.8s chain. Brix's 3rd is a HAYMAKER, Oz's 4th a CHAIN BOLT, Lowkey can SHADOW CRIT.
       const c = combo.current[a], t = performance.now();
-      const n = c && t - c.t < 1800 ? c.n + 1 : 1;
+      const n = c && t - c.t < 1800 + travel * 2 ? c.n + 1 : 1;
       combo.current[a] = { n, t };
       let dmg = a === "Brix" ? 5 : a === "Lowkey" ? 3 : 2, label = "";
       if (a === "Brix" && n % 3 === 0) { dmg = 11; label = "HAYMAKER!"; }
@@ -278,7 +297,6 @@ export function KronkLairScene() {
       kronkHpRef.current = hp; setKronkHp(hp); setKronkHit(h => h + 1);
       if (halfway) void speak("Kronk", "ENOUGH! You will BURN!", () => {});
       if (hp <= 0) { setLaser(null); void speak("Kronk", "This... is not... over...", () => {}).then(() => speak("Oz", "Did we just... beat the handbag?!", () => {})); }
-    }, a === "Oz" ? 200 : 520);
   }
   const attackRef = useRef(attack); attackRef.current = attack;
   // Space attacks with the steered Zig (Brix if nobody is steered); the others fight on their own.
@@ -319,10 +337,10 @@ export function KronkLairScene() {
           <circle className="kronk-eye" cx={EYE.x} cy={EYE.y} r={0.9}/>
           <circle className="kronk-laser-burst" cx={laser.to.x} cy={laser.to.y} r={2.4}/>
         </svg>}
-        {fx && <svg key={fx.id} className="kronk-laser zig-strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        {fx.map(fx => <svg key={fx.id} className="kronk-laser zig-strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {fx.kind === "Oz" && <polyline className="strike-bolt" points={`${fx.from.x},${fx.from.y} ${(fx.from.x + 50) / 2 + 2},${(fx.from.y + 52) / 2 - 3} ${(fx.from.x + 50) / 2 - 2},${(fx.from.y + 52) / 2 + 2} 50,52`} />}
           <circle className={`strike-burst strike-${fx.kind.toLowerCase()}`} cx={50} cy={53} r={fx.kind === "Brix" ? 5 : 3.5}/>
-        </svg>}
+        </svg>)}
         {guard && <span className="kronk-guard" aria-hidden="true"/>}
         {stunned && <span className="kronk-stun" aria-hidden="true">★ ★ ★</span>}
         {rear && <span className="kronk-stomp" aria-hidden="true" style={{ backgroundImage: `url(${kronkStomp.url})` }}/>}
@@ -330,7 +348,7 @@ export function KronkLairScene() {
         {sludge.map(g => <span key={g.id} className="sludge-mark" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${g.r * 0.9}%` }} aria-hidden="true"><span className="sludge-glob"/></span>)}
         {quake > 0 && <span key={quake} className="kronk-quake" aria-hidden="true"/>}
         {pops.map(p => <span key={p.id} className={`kronk-pop pop-${p.kind} ${p.big ? "is-big" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-hidden="true">{p.text}</span>)}
-        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
+        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""} ${atk[z]?.cls ?? ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
       </div>
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
     </div>
