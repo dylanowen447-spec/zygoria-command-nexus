@@ -65,6 +65,18 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const [bubbles, setBubbles] = useState<Partial<Record<Agent, string>>>({});
   const [found, setFound] = useState<string[]>([]);
   const [done, setDone] = useState(false);
+  // Three Eggs: a rubble wall blocks the north road until Brix smashes through it.
+  const [blocked, setBlocked] = useState(false);
+  const [smash, setSmash] = useState(0);
+  const sayRef = useRef<(a: Agent, t: string | null, f?: boolean) => void>(() => undefined);
+  const smashRubble = () => {
+    if (smash >= 3) return;
+    const n = smash + 1; setSmash(n);
+    playHatch(n === 3 ? "heavy" : "knock", n as 1 | 2 | 3);
+    const lines = ["Oi! Rubble. Leave this to me.", "Nearly... one more!", "THROUGH! Road to the city's open, boys."];
+    sayRef.current("Brix", lines[n - 1], true);
+    if (n === 3) setTimeout(() => { sayRef.current("Brix", null, true); setBlocked(false); setDone(true); }, 2200);
+  };
   const cityRatsCleared = useRef(false);
   const [ratsCleared, setRatsCleared] = useState(false);
   const [cityDefeat, setCityDefeat] = useState<"" | "falling" | "over">("");
@@ -183,6 +195,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     // While a Zig is answering the visitor, their own exploring chatter stays quiet.
     let voiceBusy = false;
     const say = (a: Agent, text: string | null, force = false) => { if ((voiceBusy || talking.has(a)) && !force && text) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) { logRef.current(a, text); if (!openingNow) voiceLine(a, text); } };
+    sayRef.current = say;
     let openingNow = false;
     /** Reading time: short lines at least 3.2s, long lines up to 6s, then a 1s breath. */
     const hold = (text: string) => Math.min(6000, Math.max(3200, 1800 + text.length * 45));
@@ -751,7 +764,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
 
     async function gatherAll(finder: Agent) {
       // Safety net: whatever happens on the way over, the next-scene card always appears.
-      const safety = setTimeout(() => alive && setDone(true), 30000); timers.push(safety);
+      const safety = setTimeout(() => alive && (scene.id === "landing" ? setBlocked(true) : setDone(true)), 30000); timers.push(safety);
       await wait(1500);
       // Others finish their walk, then come over on the walkable trails.
       await Promise.all(ALL.map(async (z, i) => {
@@ -770,7 +783,9 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       for (const [who, text] of scene.finale) {
         say(who, text, true); await wait(hold(text)); if (!alive) return; say(who, null, true); await wait(GAP);
       }
-      clearTimeout(safety); setDone(true);
+      clearTimeout(safety);
+      if (scene.id === "landing") { setBlocked(true); say("Brix", "Road north's blocked. Tap the rubble — I'll smash it.", true); return; }
+      setDone(true);
     }
 
     (async () => {
@@ -882,6 +897,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined} onDefeatChange={setCityDefeat}/>}
+      {scene.id === "landing" && (blocked || (!done && found.length === 0)) && smash < 3 && <button type="button" aria-label="Rubble blocking the road to the Old City — tap to smash with Brix" className={`road-rubble smash-${smash} ${blocked ? "is-live" : ""}`} disabled={!blocked} style={{ left: "58%", top: "58%" }} onPointerDown={e => { e.stopPropagation(); smashRubble(); }}>
+        <svg viewBox="0 0 60 30" aria-hidden="true"><path className="rubble-rock" d="M2 28 L8 14 L18 10 L24 16 L32 6 L44 9 L50 16 L58 28 Z"/><path className="rubble-beam" d="M10 20 L50 12 L51 15 L11 23 Z"/><path className="rubble-crack" d="M30 8 L27 16 L33 19 L29 27"/></svg>
+        {blocked && <span>{smash === 0 ? "SMASH" : "!".repeat(smash)}</span>}
+      </button>}
+      {scene.id === "landing" && smash >= 3 && blocked && <div className="rubble-burst" style={{ left: "58%", top: "58%" }} aria-hidden="true"/>}
       {hatchOn && hatching && ALL.map(a => knocks[a] < 3 && <button key={`egg-${a}-${knockFx[a]}`} data-agent={a} type="button" aria-label={`Knock on ${a}'s egg`} className={`egg-knock egg-knock-${knocks[a]} ${knockFx[a] ? "is-knocked" : ""}`} style={{ left: `${scene.spawn[a].from.x}%`, top: `${scene.spawn[a].from.y}%` } as CSSProperties} onPointerDown={e => { e.stopPropagation(); knockRef.current?.(a); }}><span>{knocks[a] === 0 ? "TAP" : "!".repeat(knocks[a])}</span></button>)}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y, scene.id === "city"), "--z": 10 + Math.round(p.y * 10), opacity: shown && (!hatchOn || emerged[a]) ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""} ${rolling === a ? "is-rolling" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
