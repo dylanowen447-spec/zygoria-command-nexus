@@ -10,7 +10,7 @@ import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } f
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playHatch, playSfx } from "@/lib/atmosphere";
-import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine, sayInSync } from "@/lib/voice";
+import { preloadVoices, speak, stopVoice, voicesOn, voiceLine, sayInSync } from "@/lib/voice";
 import { DEFAULT_BOUNDS, dodgeUntil, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
@@ -50,8 +50,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   // Hatch state: which Zigs have stepped out yet. Pods play sounds only — no on-screen overlays.
   const [emerged, setEmerged] = useState<Record<Agent, boolean>>({ Oz: true, Brix: true, Lowkey: true });
   const [hatching, setHatching] = useState(false);
-  const [voiceOn, setVoiceOn] = useState(true);
-  useEffect(() => setVoiceOn(voicesOn()), []);
+  useEffect(() => { voicesOn(); }, []);
   const skipHatch = useRef<(() => void) | null>(null);
   // Interactive hatch: the player knocks each egg (3 taps) to crack it open.
   const [knocks, setKnocks] = useState<Record<Agent, number>>({ Oz: 0, Brix: 0, Lowkey: 0 });
