@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Give opening egg taps three distinct progressive metal cracking sounds
+- [ ] Colour egg TAP markers: Lowkey red, Brix blue, Oz yellow; verify opening taps
+
 - [x] Add and verify Oz finding the broken MP3 player after the Old City rats
 
 - [x] Identify Dylan Sion Owen as Zygoria's creator in page information and visible credits; verify rendered attribution
