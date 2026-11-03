@@ -52,3 +52,4 @@
 - [x] Kronk's Lair: Zigs can attack Kronk (button shows once fight starts) — verify on phone
 - [x] Kronk's laser fires from his single red eye, not his body
 - [x] Thicker Kronk laser beam
+- [x] Kronk fight: stop Kronk vanishing/jittering on stomp; remove blue guard circle

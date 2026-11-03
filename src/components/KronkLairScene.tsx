@@ -341,9 +341,9 @@ export function KronkLairScene() {
           {fx.kind === "Oz" && <polyline className="strike-bolt" points={`${fx.from.x},${fx.from.y} ${(fx.from.x + 50) / 2 + 2},${(fx.from.y + 52) / 2 - 3} ${(fx.from.x + 50) / 2 - 2},${(fx.from.y + 52) / 2 + 2} 50,52`} />}
           <circle className={`strike-burst strike-${fx.kind.toLowerCase()}`} cx={50} cy={53} r={fx.kind === "Brix" ? 5 : 3.5}/>
         </svg>)}
-        {guard && <span className="kronk-guard" aria-hidden="true"/>}
+        
         {stunned && <span className="kronk-stun" aria-hidden="true">★ ★ ★</span>}
-        {rear && <span className="kronk-stomp" aria-hidden="true" style={{ backgroundImage: `url(${kronkStomp.url})` }}/>}
+        <span key={rear ? "stomp-on" : "stomp-off"} className={`kronk-stomp ${rear ? "is-on" : ""}`} aria-hidden="true" style={{ backgroundImage: `url(${kronkStomp.url})` }}/>
         <span className="kronk-floor-shadow" aria-hidden="true"/>
         {sludge.map(g => <span key={g.id} className="sludge-mark" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${g.r * 0.9}%` }} aria-hidden="true"><span className="sludge-glob"/></span>)}
         {quake > 0 && <span key={quake} className="kronk-quake" aria-hidden="true"/>}
