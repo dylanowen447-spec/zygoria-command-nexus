@@ -272,9 +272,15 @@ export function playHatch(kind: "heavy" | "pop" | "mist" | "knock") {
     n.connect(f).connect(g).connect(bus); n.start(at, Math.random() * 0.2); n.stop(at + duration + 0.02);
     n.onended = () => { n.disconnect(); f.disconnect(); g.disconnect(); };
   };
-  if (kind === "knock") { // Solid knuckle on a metal shell: dull thud, inharmonic clang, short ring.
+  if (kind === "knock") { // Knuckle on a metal shell that starts to give: dull thud, sharp crack snap, splintering clicks, short ring.
     tone(0, 140, 70, 0.18, 0.6);
     air(0, 1200, 0.04, 0.45, 0.002);
+    // The crack: a bright snap followed by a few quick splinter clicks.
+    air(0.012, 5200, 0.03, 0.5, 0.001, "highpass");
+    for (let i = 0; i < 4; i++) {
+      const at = 0.03 + i * 0.022 + Math.random() * 0.012;
+      air(at, 3800 + Math.random() * 2600, 0.018, 0.22 + Math.random() * 0.1, 0.001, "highpass");
+    }
     for (const [f, l, d] of [[523, 0.16, 0.5], [1190, 0.1, 0.38], [1870, 0.07, 0.28], [2730, 0.045, 0.2]] as const) tone(0.002, f, f * 0.985, d, l, "sine", 0.002);
     air(0.01, 3400, 0.08, 0.12, 0.002, "highpass");
   } else if (kind === "heavy") { // Weighty latch, resonant metal, then pressure releasing.
