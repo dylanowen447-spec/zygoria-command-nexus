@@ -140,6 +140,26 @@ export function KronkLairScene() {
   const [sludge, setSludge] = useState<{ x: number; y: number; id: number; r: number }[]>([]);
   const [quake, setQuake] = useState(0);
   const [rear, setRear] = useState(false);
+  const [guard, setGuard] = useState(false);
+  const [stunned, setStunned] = useState(false);
+  const guardRef = useRef(false);
+  const stunUntil = useRef(0);
+  const setGuardState = (g: boolean) => { guardRef.current = g; setGuard(g); };
+  // Kronk raises his armoured guard every so often (more often when enraged), then drops it.
+  useEffect(() => {
+    if (step < 4) return;
+    let live = true; let t: ReturnType<typeof setTimeout>;
+    const cycle = () => {
+      t = setTimeout(() => {
+        if (!live || kronkHpRef.current <= 0) return;
+        if (performance.now() < stunUntil.current) return cycle();
+        setGuardState(true);
+        t = setTimeout(() => { if (!live) return; setGuardState(false); cycle(); }, kronkHpRef.current < KRONK_HP / 2 ? 3200 : 2400);
+      }, kronkHpRef.current < KRONK_HP / 2 ? 4000 + Math.random() * 2000 : 6000 + Math.random() * 3000);
+    };
+    cycle();
+    return () => { live = false; clearTimeout(t); setGuardState(false); };
+  }, [step >= 4]);
   // Kronk's attacks: laser eyes, sludge spit, tail-slam shockwave, and (enraged) sludge rain.
   useEffect(() => {
     if (step < 4) return;
@@ -242,9 +262,16 @@ export function KronkLairScene() {
       if (a === "Brix" && n % 3 === 0) { dmg = 11; label = "HAYMAKER!"; }
       else if (a === "Oz" && n % 4 === 0) { dmg = 8; label = "CHAIN BOLT!"; }
       else if (a === "Lowkey" && Math.random() < 0.25) { dmg = 7; label = "SHADOW CRIT!"; }
+      // Defence: armour soaks 1 damage always (more when enraged); while guarding he blocks almost everything.
+      // Only Brix's HAYMAKER smashes the guard, stunning him so all hits deal double for a few seconds.
+      if (guardRef.current) {
+        if (label === "HAYMAKER!") { setGuardState(false); stunUntil.current = performance.now() + 3500; setStunned(true); setTimeout(() => setStunned(false), 3500); label = "GUARD BROKEN!"; playSfx("slam"); }
+        else { dmg = 1; label = ""; pop("BLOCKED", "block", 50, 40); playSfx("miss"); }
+      } else if (performance.now() < stunUntil.current) dmg *= 2;
+      else dmg = Math.max(1, dmg - (kronkHpRef.current < KRONK_HP / 2 ? 2 : 1));
       pop(`-${dmg}`, a.toLowerCase(), 50, 46, !!label);
       if (label) { pop(label, a.toLowerCase(), 50, 36, true); setShake(s => s + 1); }
-      else if (n >= 2) pop(`${n} HIT`, a.toLowerCase(), 50, 40);
+      else if (n >= 2 && !guardRef.current) pop(`${n} HIT`, a.toLowerCase(), 50, 40);
       const hp = Math.max(0, kronkHpRef.current - dmg);
       const halfway = kronkHpRef.current >= KRONK_HP / 2 && hp < KRONK_HP / 2;
       kronkHpRef.current = hp; setKronkHp(hp); setKronkHit(h => h + 1);
@@ -281,7 +308,7 @@ export function KronkLairScene() {
     <img className="world-image" src={bg.url} alt="Inside Kronk's bunker: red lamps, rat banners and glowing green tanks around a control console above a hazard-striped floor" />
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
-        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-rearing" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
+        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-rearing" : ""} ${guard ? "is-guarding" : ""} ${stunned ? "is-stunned" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {laser && <svg key={laser.id} className="kronk-laser" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {[-0.25, 0.25].map(o => <g key={o}>
             <line className="beam-halo" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
@@ -295,6 +322,8 @@ export function KronkLairScene() {
           {fx.kind === "Oz" && <polyline className="strike-bolt" points={`${fx.from.x},${fx.from.y} ${(fx.from.x + 50) / 2 + 2},${(fx.from.y + 52) / 2 - 3} ${(fx.from.x + 50) / 2 - 2},${(fx.from.y + 52) / 2 + 2} 50,52`} />}
           <circle className={`strike-burst strike-${fx.kind.toLowerCase()}`} cx={50} cy={53} r={fx.kind === "Brix" ? 5 : 3.5}/>
         </svg>}
+        {guard && <span className="kronk-guard" aria-hidden="true"/>}
+        {stunned && <span className="kronk-stun" aria-hidden="true">★ ★ ★</span>}
         <span className="kronk-floor-shadow" aria-hidden="true"/>
         {sludge.map(g => <span key={g.id} className="sludge-mark" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${g.r * 2}%` }} aria-hidden="true"><span className="sludge-glob"/></span>)}
         {quake > 0 && <span key={quake} className="kronk-quake" aria-hidden="true"/>}

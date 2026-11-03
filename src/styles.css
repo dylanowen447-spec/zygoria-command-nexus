@@ -1280,3 +1280,11 @@ body > .combat-dodge{position:fixed}
 @keyframes sludge-drop{0%{transform:translate(-50%,-900%) scale(.5);opacity:0}20%{opacity:1}100%{transform:translate(-50%,50%) scale(1.6,.5);opacity:1}}
 .kronk-quake{position:absolute;left:50%;top:60%;width:10%;aspect-ratio:2.6/1;transform:translate(-50%,-50%);border-radius:50%;border:4px solid hsl(30 100% 60% / .9);box-shadow:0 0 18px hsl(20 100% 50% / .8),inset 0 0 12px hsl(40 100% 60% / .6);z-index:4;pointer-events:none;animation:kronk-quake .8s ease-out forwards}
 @keyframes kronk-quake{to{width:120%;opacity:0;border-width:1px}}
+/* Kronk defence */
+.kronk-boss.is-guarding{filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55)) brightness(.8) saturate(.6) drop-shadow(0 0 6px hsl(200 60% 70% / .8))}
+.kronk-guard{position:absolute;left:50%;top:46%;width:30%;aspect-ratio:1.6;transform:translate(-50%,-50%);border-radius:50%;border:3px solid hsl(200 70% 70% / .85);background:radial-gradient(ellipse,transparent 55%,hsl(200 80% 60% / .25));box-shadow:0 0 16px hsl(200 80% 60% / .6);z-index:63;pointer-events:none;animation:kronk-guard-pulse .6s ease-in-out infinite alternate}
+@keyframes kronk-guard-pulse{from{opacity:.6}to{opacity:1}}
+.kronk-stun{position:absolute;left:50%;top:30%;transform:translateX(-50%);z-index:64;pointer-events:none;color:hsl(50 100% 60%);font-weight:900;text-shadow:0 0 6px hsl(50 100% 50%);animation:kronk-stun-spin 1s linear infinite}
+@keyframes kronk-stun-spin{50%{transform:translateX(-50%) translateY(-4px) scale(1.1)}}
+.kronk-boss.is-stunned{filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55)) brightness(1.25)}
+.kronk-pop.pop-block{color:hsl(200 70% 75%)}
