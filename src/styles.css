@@ -1292,3 +1292,16 @@ body > .combat-dodge{position:fixed}
 .kronk-boss.is-stomping{visibility:hidden}
 .kronk-stomp{position:absolute;left:50%;bottom:41%;width:26%;aspect-ratio:384/405;transform:translateX(-50%);background-size:800% 100%;background-repeat:no-repeat;z-index:62;pointer-events:none;filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55));animation:kronk-stomp-frames 1.76s steps(8,jump-none) forwards}
 @keyframes kronk-stomp-frames{from{background-position:0 0}to{background-position:100% 0}}
+
+/* Sprite stability: walking uses only the stepped frame cycle (no extra bounce that jittered against it),
+   and Brix's attacks show his own punch sheet instead of the hidden combat overlay, so he never vanishes mid-fight. */
+.agent-marker.is-walking .sheet-frames,.haven-zig.is-walking .sheet-frames{translate:0 0}
+.marker-oz.is-walking .sheet-frames{animation:ozDirectionalWalk .6s step-end infinite!important}
+.marker-brix.is-walking .sheet-frames{animation:brixDirectionalWalk .8s step-end infinite!important}
+.marker-lowkey.is-walking .sheet-frames{animation:lowkeyDirectionalWalk .6s step-end infinite!important}
+.marker-brix.atk-punch .sheet-punch{visibility:visible!important;background-position-x:60%}
+.marker-brix.atk-punch.is-heavy .sheet-punch{background-position-x:100%}
+.marker-brix.atk-punch .sheet-combat{visibility:hidden!important}
+.marker-brix.atk-punch .sheet-frames{visibility:hidden!important}
+.marker-brix.atk-punch:not(.brix-facing-left):not(.brix-facing-right):not(.facing-left) .sheet-punch{background-position-y:66.6667%}
+.marker-brix.atk-punch.facing-left:not(.brix-facing-right) .sheet-punch{background-position-y:33.3333%}
