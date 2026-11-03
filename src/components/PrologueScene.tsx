@@ -53,6 +53,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const [voiceOn, setVoiceOn] = useState(true);
   useEffect(() => setVoiceOn(voicesOn()), []);
   const skipHatch = useRef<(() => void) | null>(null);
+  // Interactive hatch: the player knocks each egg (3 taps) to crack it open.
+  const [knocks, setKnocks] = useState<Record<Agent, number>>({ Oz: 0, Brix: 0, Lowkey: 0 });
+  const [knockFx, setKnockFx] = useState<Record<Agent, number>>({ Oz: 0, Brix: 0, Lowkey: 0 });
+  const knockRef = useRef<((a: Agent) => void) | null>(null);
   const [walking, setWalking] = useState<Agent[]>([]);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "right", Lowkey: "left" });
   const [ozDir, setOzDir] = useState<"down" | "left" | "right" | "up">("down");
@@ -787,13 +791,23 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         const open = (_a: Agent, kind: "heavy" | "pop" | "mist") => { if (skipped) return; playHatch(kind); };
         skipHatch.current = () => { skipped = true; ALL.forEach(a => emerge(a)); setHatching(false); openGate(); };
         const hwait = (ms: number) => skipped ? Promise.resolve() : Promise.race([wait(ms), new Promise<void>(r => { openGate = r; })]);
-        await hwait(1400); if (!alive) return;
-        open("Brix", "heavy"); await hwait(1500); if (!alive) return; emerge("Brix");
-        await hwait(1600); if (!alive) return;
-        open("Oz", "pop"); await hwait(650); if (!alive) return; emerge("Oz");
-        await hwait(1500); if (!alive) return;
-        open("Lowkey", "mist"); await hwait(1300); if (!alive) return; emerge("Lowkey");
+        // Player knocks each egg three times; it cracks, then its Zig steps out. Eggs left alone hatch themselves after a while.
+        setKnocks({ Oz: 0, Brix: 0, Lowkey: 0 });
+        const kind: Record<Agent, "heavy" | "pop" | "mist"> = { Brix: "heavy", Oz: "pop", Lowkey: "mist" };
+        const delay: Record<Agent, number> = { Brix: 1500, Oz: 650, Lowkey: 1300 };
+        const count: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
+        let allDone = () => {};
+        const allHatched = new Promise<void>(r => { allDone = r; });
+        const crack = (a: Agent) => { open(a, kind[a]); timers.push(setTimeout(() => { emerge(a); if (hatched.size === 3) allDone(); }, delay[a])); };
+        knockRef.current = (a: Agent) => {
+          if (skipped || count[a] >= 3) return;
+          count[a]++; setKnocks(k => ({ ...k, [a]: count[a] })); setKnockFx(k => ({ ...k, [a]: k[a] + 1 }));
+          if (count[a] >= 3) crack(a); else playHatch("pop");
+        };
+        timers.push(setTimeout(() => ALL.forEach(a => { while (count[a] < 3) knockRef.current?.(a); }), 25000));
+        await Promise.race([allHatched, hwait(60000)]); if (!alive) return;
         await hwait(1000); if (!alive) return;
+        knockRef.current = null;
         skipHatch.current = null;
         setHatching(false);
       }
