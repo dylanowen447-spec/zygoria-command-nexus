@@ -1241,3 +1241,16 @@ body > .combat-dodge{position:fixed}
 .egg-knock.is-knocked { animation: egg-knock-shake .35s ease-out; }
 @keyframes egg-knock-pulse { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.08); } }
 @keyframes egg-knock-shake { 0% { transform: translate(-50%,-70%) rotate(0); } 25% { transform: translate(-54%,-70%) rotate(-6deg); } 50% { transform: translate(-46%,-70%) rotate(6deg); } 75% { transform: translate(-52%,-70%) rotate(-3deg); } 100% { transform: translate(-50%,-70%) rotate(0); } }
+
+.road-rubble{position:absolute;transform:translate(-50%,-70%);width:clamp(70px,14%,150px);z-index:900;background:none;border:0;padding:0;cursor:default}
+.road-rubble svg{width:100%;display:block;filter:drop-shadow(0 4px 3px oklch(0 0 0/.6))}
+.rubble-rock{fill:oklch(0.42 0.04 50);stroke:oklch(0.22 0.03 40);stroke-width:1}
+.rubble-beam{fill:oklch(0.35 0.06 35)}
+.rubble-crack{fill:none;stroke:oklch(0.15 0.02 40);stroke-width:1.2;opacity:0}
+.road-rubble.smash-1 .rubble-crack,.road-rubble.smash-2 .rubble-crack{opacity:1}
+.road-rubble.smash-2 svg{transform:rotate(-3deg) translateY(2px)}
+.road-rubble.is-live{cursor:pointer;animation:rubble-pulse 1.4s ease-in-out infinite}
+.road-rubble span{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:999px;color:oklch(0.15 0.03 250);background:oklch(0.7 0.16 245);box-shadow:0 0 12px oklch(0.7 0.16 245/.8)}
+@keyframes rubble-pulse{50%{filter:brightness(1.25)}}
+.rubble-burst{position:absolute;width:120px;height:120px;transform:translate(-50%,-60%);border-radius:50%;background:radial-gradient(circle,oklch(0.75 0.05 60/.7),transparent 70%);animation:rubble-burst .9s ease-out forwards;pointer-events:none;z-index:901}
+@keyframes rubble-burst{from{transform:translate(-50%,-60%) scale(.3);opacity:1}to{transform:translate(-50%,-60%) scale(1.8);opacity:0}}
