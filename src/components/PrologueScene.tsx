@@ -53,6 +53,10 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   const [voiceOn, setVoiceOn] = useState(true);
   useEffect(() => setVoiceOn(voicesOn()), []);
   const skipHatch = useRef<(() => void) | null>(null);
+  // Interactive hatch: the player knocks each egg (3 taps) to crack it open.
+  const [knocks, setKnocks] = useState<Record<Agent, number>>({ Oz: 0, Brix: 0, Lowkey: 0 });
+  const [knockFx, setKnockFx] = useState<Record<Agent, number>>({ Oz: 0, Brix: 0, Lowkey: 0 });
+  const knockRef = useRef<((a: Agent) => void) | null>(null);
   const [walking, setWalking] = useState<Agent[]>([]);
   const [facing, setFacing] = useState<Record<Agent, "left" | "right">>({ Oz: "right", Brix: "right", Lowkey: "left" });
   const [ozDir, setOzDir] = useState<"down" | "left" | "right" | "up">("down");
@@ -787,13 +791,23 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         const open = (_a: Agent, kind: "heavy" | "pop" | "mist") => { if (skipped) return; playHatch(kind); };
         skipHatch.current = () => { skipped = true; ALL.forEach(a => emerge(a)); setHatching(false); openGate(); };
         const hwait = (ms: number) => skipped ? Promise.resolve() : Promise.race([wait(ms), new Promise<void>(r => { openGate = r; })]);
-        await hwait(1400); if (!alive) return;
-        open("Brix", "heavy"); await hwait(1500); if (!alive) return; emerge("Brix");
-        await hwait(1600); if (!alive) return;
-        open("Oz", "pop"); await hwait(650); if (!alive) return; emerge("Oz");
-        await hwait(1500); if (!alive) return;
-        open("Lowkey", "mist"); await hwait(1300); if (!alive) return; emerge("Lowkey");
+        // Player knocks each egg three times; it cracks, then its Zig steps out. Eggs left alone hatch themselves after a while.
+        setKnocks({ Oz: 0, Brix: 0, Lowkey: 0 });
+        const kind: Record<Agent, "heavy" | "pop" | "mist"> = { Brix: "heavy", Oz: "pop", Lowkey: "mist" };
+        const delay: Record<Agent, number> = { Brix: 1500, Oz: 650, Lowkey: 1300 };
+        const count: Record<Agent, number> = { Oz: 0, Brix: 0, Lowkey: 0 };
+        let allDone = () => {};
+        const allHatched = new Promise<void>(r => { allDone = r; });
+        const crack = (a: Agent) => { open(a, kind[a]); timers.push(setTimeout(() => { emerge(a); if (hatched.size === 3) allDone(); }, delay[a])); };
+        knockRef.current = (a: Agent) => {
+          if (skipped || count[a] >= 3) return;
+          count[a]++; setKnocks(k => ({ ...k, [a]: count[a] })); setKnockFx(k => ({ ...k, [a]: k[a] + 1 }));
+          if (count[a] >= 3) crack(a); else playHatch("pop");
+        };
+        timers.push(setTimeout(() => ALL.forEach(a => { while (count[a] < 3) knockRef.current?.(a); }), 25000));
+        await Promise.race([allHatched, hwait(60000)]); if (!alive) return;
         await hwait(1000); if (!alive) return;
+        knockRef.current = null;
         skipHatch.current = null;
         setHatching(false);
       }
@@ -867,6 +881,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined} onDefeatChange={setCityDefeat}/>}
+      {hatchOn && hatching && ALL.map(a => knocks[a] < 3 && <button key={`egg-${a}-${knockFx[a]}`} type="button" aria-label={`Knock on ${a}'s egg`} className={`egg-knock egg-knock-${knocks[a]} ${knockFx[a] ? "is-knocked" : ""}`} style={{ left: `${scene.spawn[a].from.x}%`, top: `${scene.spawn[a].from.y}%` } as CSSProperties} onPointerDown={e => { e.stopPropagation(); knockRef.current?.(a); }}><span>{knocks[a] === 0 ? "TAP" : "!".repeat(knocks[a])}</span></button>)}
       {ALL.map(a => { const p = coords.current[a]; return <Button key={a} ref={el => { markers.current[a] = el; }} type="button" variant="ghost" aria-label={`${a}${walking.includes(a) ? ", walking" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%`, "--depth": depthFor(p.y, scene.id === "city"), "--z": 10 + Math.round(p.y * 10), opacity: shown && (!hatchOn || emerged[a]) ? 1 : 0, transition: "opacity .8s ease" } as CSSProperties} className={`agent-marker ${p.y < topLine() ? "near-top" : ""} ${p.x > 62 ? "near-right" : ""} ${p.x < 38 ? "near-left" : ""} marker-${a.toLowerCase()} facing-${facing[a]} ${lookAway ? "look-away" : ""} ${a === "Oz" ? `oz-facing-${ozDir}` : ""} ${a === "Brix" ? `brix-facing-${brixDir}` : ""} ${a === "Lowkey" ? `lowkey-facing-${lowkeyDir}` : ""} ${walking.includes(a) ? "is-walking" : ""} ${a === "Oz" && bolts.some(b => b.id === jolt) ? "oz-jolt" : ""} ${(combat ? ctrl === a : steered === a) ? "is-controlled" : ""} ${a === "Brix" && combat ? "in-guard" : ""} ${a === "Brix" && holding && !swing[a] && (combat ? ctrl : steered ?? ctrl) === "Brix" ? `brix-charging ${charging ? "is-charged" : ""}` : ""} ${swing[a] ?? ""} ${hurtZig[a] ? "zig-bitten" : ""} ${rolling === a ? "is-rolling" : ""}`}>
         {(combat ? ctrl === a : steered === a) && <span className="ctrl-ring" aria-hidden="true"/>}
         {bubbles[a] && <span className="idle-bubble">{bubbles[a]}</span>}
