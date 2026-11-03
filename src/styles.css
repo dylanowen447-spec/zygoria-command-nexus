@@ -1231,3 +1231,10 @@ body > .combat-dodge{position:fixed}
 .strike-brix{stroke:oklch(0.85 0.17 70)}.strike-oz{stroke:oklch(0.9 0.15 220)}.strike-lowkey{stroke:oklch(0.7 0.2 310)}
 @keyframes strike-pop{from{opacity:1;transform-box:fill-box;transform-origin:center;transform:scale(.3)}to{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(1.4)}}
 .kronk-down{left:50%;top:40%;transform:translateX(-50%);font-size:22px;color:oklch(0.85 0.17 80)}
+
+/* Three Eggs: tap-to-knock egg hatch targets */
+.egg-knock { position: absolute; z-index: 2000; width: 13%; aspect-ratio: 1; transform: translate(-50%, -70%); border-radius: 50%; border: 0; background: transparent; cursor: pointer; display: grid; place-items: start center; -webkit-tap-highlight-color: transparent; }
+.egg-knock span { font-family: inherit; font-size: clamp(10px, 1.6vw, 15px); font-weight: 800; letter-spacing: .12em; color: var(--primary-foreground); background: var(--primary); padding: 2px 8px; border-radius: 999px; box-shadow: 0 0 14px var(--primary); animation: egg-knock-pulse 1.2s ease-in-out infinite; }
+.egg-knock.is-knocked { animation: egg-knock-shake .35s ease-out; }
+@keyframes egg-knock-pulse { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.08); } }
+@keyframes egg-knock-shake { 0% { transform: translate(-50%,-70%) rotate(0); } 25% { transform: translate(-54%,-70%) rotate(-6deg); } 50% { transform: translate(-46%,-70%) rotate(6deg); } 75% { transform: translate(-52%,-70%) rotate(-3deg); } 100% { transform: translate(-50%,-70%) rotate(0); } }
