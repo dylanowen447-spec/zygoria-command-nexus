@@ -137,28 +137,59 @@ export function KronkLairScene() {
     (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => wander(a, true));
     return () => timers.forEach(clearTimeout);
   }, []);
-  // Laser eyes: once Kronk has spoken, he charges and fires twin red beams at a random Zig, who gets knocked back.
+  const [sludge, setSludge] = useState<{ x: number; y: number; id: number; r: number }[]>([]);
+  const [quake, setQuake] = useState(0);
+  const [rear, setRear] = useState(false);
+  // Kronk's attacks: laser eyes, sludge spit, tail-slam shockwave, and (enraged) sludge rain.
   useEffect(() => {
     if (step < 4) return;
     let live = true; const timers: ReturnType<typeof setTimeout>[] = [];
+    // Shared hit: moving Zigs dodge; otherwise lose a pip and get knocked back from Kronk.
+    const hurt = (z: Zig, knock = 6) => {
+      const p = posRef.current[z];
+      if (squadRef.current[z] <= 0) return;
+      if (movingRef.current[z]) { pop("DODGE!", "dodge", p.x, p.y - 16); return; }
+      setHit(z); timers.push(setTimeout(() => setHit(h => (h === z ? null : h)), 500));
+      playSfx("hurt");
+      const q = damage(squadRef.current, z, 1); squadRef.current = q; setSquad(q);
+      if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; const f = fullSquad(); squadRef.current = f; setSquad(f); fire(); }, 4000));
+      walkTo(z, clampToGround({ x: p.x + (p.x < 50 ? -knock : knock), y: p.y + knock / 2 }));
+    };
+    let last = "";
     const fire = () => {
       if (!live || kronkHpRef.current <= 0) return;
       const zs = (["Brix", "Oz", "Lowkey"] as Zig[]).filter(a => squadRef.current[a] > 0);
       if (!zs.length) return;
       const z = zs[Math.floor(Math.random() * zs.length)]!, p = posRef.current[z];
-      setLaser({ to: { x: p.x, y: p.y - 7 }, z, id: Date.now() });
-      timers.push(setTimeout(() => {
-        // A Zig that is on the move when the beam lands dodges it — keep moving to survive.
-        if (movingRef.current[z]) { pop("DODGE!", "dodge", posRef.current[z].x, posRef.current[z].y - 16); return; }
-        setHit(z);
-        const q = damage(squadRef.current, z, 1); squadRef.current = q; setSquad(q);
-        if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; const f = fullSquad(); squadRef.current = f; setSquad(f); fire(); }, 4000));
-        const away = p.x < 50 ? -6 : 6;
-        walkTo(z, clampToGround({ x: p.x + away, y: p.y + 3 }));
-      }, 750));
-      timers.push(setTimeout(() => { setLaser(null); setHit(null); }, 1100));
+      const enraged = kronkHpRef.current < KRONK_HP / 2;
+      // Pick an attack, never the same twice in a row. Tail slam and sludge rain unlock once he's enraged.
+      const pool = ["laser", "spit", ...(enraged ? ["slam", "rain"] : ["slam"])].filter(k => k !== last);
+      const kind = pool[Math.floor(Math.random() * pool.length)]!; last = kind;
+      if (kind === "laser") {
+        setLaser({ to: { x: p.x, y: p.y - 7 }, z, id: Date.now() });
+        timers.push(setTimeout(() => hurt(z), 750));
+        timers.push(setTimeout(() => setLaser(null), 1100));
+      } else if (kind === "spit") {
+        // Sludge spit: a green target ring appears under one Zig, then a glob lands there. Walk out of it.
+        const at = { x: p.x, y: p.y };
+        const id = Date.now(); setSludge(s => [...s, { ...at, id, r: 7 }]);
+        timers.push(setTimeout(() => { playSfx("slash-hit"); zs.forEach(a => { const q = posRef.current[a]; if (Math.hypot(q.x - at.x, (q.y - at.y) * 1.6) < 7) hurt(a, 4); }); }, 1300));
+        timers.push(setTimeout(() => setSludge(s => s.filter(g => g.id !== id)), 1900));
+      } else if (kind === "rain") {
+        // Sludge rain: three globs at once.
+        zs.forEach((a, i) => { const q = posRef.current[a], at = { x: q.x + (Math.random() * 6 - 3), y: q.y }, id = Date.now() + i;
+          setSludge(s => [...s, { ...at, id, r: 6 }]);
+          timers.push(setTimeout(() => { zs.forEach(b => { const w = posRef.current[b]; if (Math.hypot(w.x - at.x, (w.y - at.y) * 1.6) < 6) hurt(b, 4); }); }, 1400 + i * 150));
+          timers.push(setTimeout(() => setSludge(s => s.filter(g => g.id !== id)), 2000 + i * 150)); });
+        void speak("Kronk", "DROWN IN IT!", () => {});
+      } else {
+        // Tail slam: he rears up, then a shockwave rolls across the floor. Anyone standing still gets hit.
+        setRear(true);
+        timers.push(setTimeout(() => { setRear(false); playSfx("slam"); setShake(s => s + 1); setQuake(Date.now()); zs.forEach(a => hurt(a, 8)); }, 1100));
+        timers.push(setTimeout(() => setQuake(0), 1900));
+      }
       if (allDown(squadRef.current)) return;
-      timers.push(setTimeout(fire, kronkHpRef.current < KRONK_HP / 2 ? 3200 + Math.random() * 2500 : 5500 + Math.random() * 4000));
+      timers.push(setTimeout(fire, enraged ? 3000 + Math.random() * 2200 : 4800 + Math.random() * 3200));
     };
     timers.push(setTimeout(fire, 2500));
     return () => { live = false; timers.forEach(clearTimeout); };
@@ -246,10 +277,11 @@ export function KronkLairScene() {
   };
 
   return <div ref={wrapRef} className={`world-image-wrap prologue-scene haven-scene kronk-approach kronk-lair ${shake ? (shake % 2 ? "lair-shake-a" : "lair-shake-b") : ""}`} onPointerDown={onGround}>
+    <div className="lair-haze" aria-hidden="true"/>
     <img className="world-image" src={bg.url} alt="Inside Kronk's bunker: red lamps, rat banners and glowing green tanks around a control console above a hazard-striped floor" />
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
-        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
+        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-rearing" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {laser && <svg key={laser.id} className="kronk-laser" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {[-0.25, 0.25].map(o => <g key={o}>
             <line className="beam-halo" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
@@ -263,6 +295,9 @@ export function KronkLairScene() {
           {fx.kind === "Oz" && <polyline className="strike-bolt" points={`${fx.from.x},${fx.from.y} ${(fx.from.x + 50) / 2 + 2},${(fx.from.y + 52) / 2 - 3} ${(fx.from.x + 50) / 2 - 2},${(fx.from.y + 52) / 2 + 2} 50,52`} />}
           <circle className={`strike-burst strike-${fx.kind.toLowerCase()}`} cx={50} cy={53} r={fx.kind === "Brix" ? 5 : 3.5}/>
         </svg>}
+        <span className="kronk-floor-shadow" aria-hidden="true"/>
+        {sludge.map(g => <span key={g.id} className="sludge-mark" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${g.r * 2}%` }} aria-hidden="true"><span className="sludge-glob"/></span>)}
+        {quake > 0 && <span key={quake} className="kronk-quake" aria-hidden="true"/>}
         {pops.map(p => <span key={p.id} className={`kronk-pop pop-${p.kind} ${p.big ? "is-big" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-hidden="true">{p.text}</span>)}
         {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
       </div>
