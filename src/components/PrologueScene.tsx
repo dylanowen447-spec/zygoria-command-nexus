@@ -804,8 +804,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
           count[a]++; setKnocks(k => ({ ...k, [a]: count[a] })); setKnockFx(k => ({ ...k, [a]: k[a] + 1 }));
           if (count[a] >= 3) crack(a); else playHatch("pop");
         };
-        timers.push(setTimeout(() => ALL.forEach(a => { while (count[a] < 3) knockRef.current?.(a); }), 25000));
-        await Promise.race([allHatched, hwait(60000)]); if (!alive) return;
+        // The prologue only begins once all three Zigs have stepped out — eggs never hatch on their own.
+        await allHatched; if (!alive) return;
         await hwait(1000); if (!alive) return;
         knockRef.current = null;
         skipHatch.current = null;
