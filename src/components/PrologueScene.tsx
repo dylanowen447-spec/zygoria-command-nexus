@@ -74,7 +74,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     const n = smash + 1; setSmash(n);
     playHatch(n === 3 ? "heavy" : "knock", n as 1 | 2 | 3);
     const lines = ["Oi! Rubble. Leave this to me.", "Nearly... one more!", "THROUGH! Road to the city's open, boys."];
-    sayRef.current("Brix", lines[n - 1], true);
+    sayRef.current("Brix", lines[n - 1] ?? null, true);
     if (n === 3) setTimeout(() => { sayRef.current("Brix", null, true); setBlocked(false); setDone(true); }, 2200);
   };
   const cityRatsCleared = useRef(false);
@@ -897,7 +897,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </div>}
       {scene.id === "long-walk" && <LongWalkAmbush stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onSay={ambushSay} onAlarm={onAlarm} onDefeat={onSheltonDefeat}/>}
       {scene.id === "city" && <OldCityRats stageRef={stageRef} hitRef={ambushHit} combatRef={enemies} crew={coords} onAlarm={onAlarm} onSay={ambushSay} onCleared={onCityCleared} onSanctuary={canSkip ? onSkip : undefined} onDefeatChange={setCityDefeat}/>}
-      {scene.id === "landing" && (blocked || (!done && found.length === 0)) && smash < 3 && <button type="button" aria-label="Rubble blocking the road to the Old City — tap to smash with Brix" className={`road-rubble smash-${smash} ${blocked ? "is-live" : ""}`} disabled={!blocked} style={{ left: "58%", top: "58%" }} onPointerDown={e => { e.stopPropagation(); smashRubble(); }}>
+      {scene.id === "landing" && !done && smash < 3 && <button type="button" aria-label="Rubble blocking the road to the Old City — tap to smash with Brix" className={`road-rubble smash-${smash} ${blocked ? "is-live" : ""}`} disabled={!blocked} style={{ left: "58%", top: "58%" }} onPointerDown={e => { e.stopPropagation(); smashRubble(); }}>
         <svg viewBox="0 0 60 30" aria-hidden="true"><path className="rubble-rock" d="M2 28 L8 14 L18 10 L24 16 L32 6 L44 9 L50 16 L58 28 Z"/><path className="rubble-beam" d="M10 20 L50 12 L51 15 L11 23 Z"/><path className="rubble-crack" d="M30 8 L27 16 L33 19 L29 27"/></svg>
         {blocked && <span>{smash === 0 ? "SMASH" : "!".repeat(smash)}</span>}
       </button>}
