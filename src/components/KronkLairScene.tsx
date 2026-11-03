@@ -205,8 +205,8 @@ export function KronkLairScene() {
         void speak("Kronk", "DROWN IN IT!", () => {});
       } else {
         // Tail slam: he rears up, then a shockwave rolls across the floor. Anyone standing still gets hit.
-        setRear(true);
-        timers.push(setTimeout(() => { playSfx("slam"); setShake(s => s + 1); setQuake(Date.now()); zs.forEach(a => hurt(a, 8)); }, 1100));
+        setRear(true); playSfx("roar");
+        timers.push(setTimeout(() => { playSfx("quake"); playSfx("slam"); setShake(s => s + 1); setQuake(Date.now()); zs.forEach(a => hurt(a, 8)); }, 1100));
         timers.push(setTimeout(() => { setQuake(0); setRear(false); }, 1800));
       }
       if (allDown(squadRef.current)) return;
