@@ -10,7 +10,7 @@ import { ACKS, ASPECT, REACTIONS, SHRUGS, onGround, routeBetween, type Scene } f
 import { runCrewStep } from "@/lib/job-planning.functions";
 import type { Agent, Point } from "@/lib/zones";
 import { playHatch, playSfx } from "@/lib/atmosphere";
-import { preloadVoices, speak, stopVoice, voicesOn, setVoicesOn, voiceLine, sayInSync } from "@/lib/voice";
+import { preloadVoices, speak, stopVoice, voicesOn, voiceLine, sayInSync } from "@/lib/voice";
 import { DEFAULT_BOUNDS, dodgeUntil, hitCtx, type CombatApi } from "@/lib/rat-ai";
 import { meleeTarget } from "@/lib/combat-targeting";
 import { FIGHT_LINES, FIGHT_GAP_MS, type FightLine } from "@/lib/fight-lines";
@@ -50,8 +50,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   // Hatch state: which Zigs have stepped out yet. Pods play sounds only — no on-screen overlays.
   const [emerged, setEmerged] = useState<Record<Agent, boolean>>({ Oz: true, Brix: true, Lowkey: true });
   const [hatching, setHatching] = useState(false);
-  const [voiceOn, setVoiceOn] = useState(true);
-  useEffect(() => setVoiceOn(voicesOn()), []);
+  useEffect(() => { voicesOn(); }, []);
   const skipHatch = useRef<(() => void) | null>(null);
   // Interactive hatch: the player knocks each egg (3 taps) to crack it open.
   const [knocks, setKnocks] = useState<Record<Agent, number>>({ Oz: 0, Brix: 0, Lowkey: 0 });
@@ -889,7 +888,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         <span className="marker-name"><img className={WORDMARK[a].cls} src={WORDMARK[a].url} alt={a} draggable={false}/></span>
       </Button>; })}
     </div>
-    {typeof document !== "undefined" && !cityDefeat && createPortal(<>
+    {scene.id !== "landing" && typeof document !== "undefined" && !cityDefeat && createPortal(<>
       <button type="button" className={`combat-attack ${combat ? "in-fight" : "is-idle"} ${charging ? "is-charged" : ""}`} aria-label={`Attack with ${combat ? ctrl : steered ?? ctrl} — tap for quick, hold for heavy`}
         onPointerDown={e => { e.preventDefault(); e.stopPropagation(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older Safari */ } holdStart.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharging(true), HOLD_MS); clearTimeout(windTimer.current); windTimer.current = setTimeout(() => setHolding(true), 160); }}
         onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; clearTimeout(chargeTimer.current); clearTimeout(windTimer.current); setCharging(false); setHolding(false); const held = performance.now() - holdStart.current; holdStart.current = 0; if (held >= HOLD_MS) { resetAtk.current(); attack.current(true); } else attack.current(false); }}
@@ -899,7 +898,6 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </button>
       {combat && <button type="button" className="combat-dodge" aria-label={`Dodge roll with ${ctrl}`} onPointerDown={e => { e.preventDefault(); e.stopPropagation(); dodge.current(); }} onContextMenu={e => e.preventDefault()}><span>DODGE</span></button>}
     </>, document.body)}
-    <button type="button" className="voice-toggle" aria-pressed={voiceOn} onClick={() => { setVoicesOn(!voiceOn); setVoiceOn(!voiceOn); }}>{voiceOn ? "Voices on" : "Voices off"}</button>
     {hatchOn && hatching && <button type="button" className="hatch-skip" onClick={() => skipHatch.current?.()}>Skip ›</button>}
     {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
     {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · click ground to move · Space attacks where the mouse points (hold = heavy)</div>}
