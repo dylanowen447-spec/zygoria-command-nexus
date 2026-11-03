@@ -1288,3 +1288,7 @@ body > .combat-dodge{position:fixed}
 @keyframes kronk-stun-spin{50%{transform:translateX(-50%) translateY(-4px) scale(1.1)}}
 .kronk-boss.is-stunned{filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55)) brightness(1.25)}
 .kronk-pop.pop-block{color:hsl(200 70% 75%)}
+
+.kronk-boss.is-stomping{visibility:hidden}
+.kronk-stomp{position:absolute;left:50%;bottom:41%;width:26%;aspect-ratio:384/405;transform:translateX(-50%);background-size:800% 100%;background-repeat:no-repeat;z-index:62;pointer-events:none;filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55));animation:kronk-stomp-frames 1.76s steps(8,jump-none) forwards}
+@keyframes kronk-stomp-frames{from{background-position:0 0}to{background-position:100% 0}}

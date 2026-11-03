@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import bg from "@/assets/kronk-lair.png.asset.json";
 import kronkIdle from "@/assets/kronk-idle.png.asset.json";
+import kronkStomp from "@/assets/kronk-stomp.webp.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { speak, voicesOn } from "@/lib/voice";
 import { startKronkMusic, stopKronkMusic, playSfx } from "@/lib/atmosphere";
@@ -205,8 +206,8 @@ export function KronkLairScene() {
       } else {
         // Tail slam: he rears up, then a shockwave rolls across the floor. Anyone standing still gets hit.
         setRear(true);
-        timers.push(setTimeout(() => { setRear(false); playSfx("slam"); setShake(s => s + 1); setQuake(Date.now()); zs.forEach(a => hurt(a, 8)); }, 1100));
-        timers.push(setTimeout(() => setQuake(0), 1900));
+        timers.push(setTimeout(() => { playSfx("slam"); setShake(s => s + 1); setQuake(Date.now()); zs.forEach(a => hurt(a, 8)); }, 1100));
+        timers.push(setTimeout(() => { setQuake(0); setRear(false); }, 1800));
       }
       if (allDown(squadRef.current)) return;
       timers.push(setTimeout(fire, enraged ? 3000 + Math.random() * 2200 : 4800 + Math.random() * 3200));
@@ -308,7 +309,7 @@ export function KronkLairScene() {
     <img className="world-image" src={bg.url} alt="Inside Kronk's bunker: red lamps, rat banners and glowing green tanks around a control console above a hazard-striped floor" />
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
-        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-rearing" : ""} ${guard ? "is-guarding" : ""} ${stunned ? "is-stunned" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
+        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-stomping" : ""} ${guard ? "is-guarding" : ""} ${stunned ? "is-stunned" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {laser && <svg key={laser.id} className="kronk-laser" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {[-0.25, 0.25].map(o => <g key={o}>
             <line className="beam-halo" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
@@ -324,6 +325,7 @@ export function KronkLairScene() {
         </svg>}
         {guard && <span className="kronk-guard" aria-hidden="true"/>}
         {stunned && <span className="kronk-stun" aria-hidden="true">★ ★ ★</span>}
+        {rear && <span className="kronk-stomp" aria-hidden="true" style={{ backgroundImage: `url(${kronkStomp.url})` }}/>}
         <span className="kronk-floor-shadow" aria-hidden="true"/>
         {sludge.map(g => <span key={g.id} className="sludge-mark" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${g.r * 0.9}%` }} aria-hidden="true"><span className="sludge-glob"/></span>)}
         {quake > 0 && <span key={quake} className="kronk-quake" aria-hidden="true"/>}
