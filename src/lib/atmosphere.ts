@@ -243,7 +243,7 @@ export function playSfx(kind: Sfx) {
 }
 
 /** Layered hatch cues have their own compressed mix; ambience and combat levels stay untouched. */
-export function playHatch(kind: "heavy" | "pop" | "mist") {
+export function playHatch(kind: "heavy" | "pop" | "mist" | "knock") {
   if (typeof window === "undefined") return;
   if (!ctx) boot();
   if (!ctx || ctx.state !== "running") return;
@@ -272,7 +272,12 @@ export function playHatch(kind: "heavy" | "pop" | "mist") {
     n.connect(f).connect(g).connect(bus); n.start(at, Math.random() * 0.2); n.stop(at + duration + 0.02);
     n.onended = () => { n.disconnect(); f.disconnect(); g.disconnect(); };
   };
-  if (kind === "heavy") { // Weighty latch, resonant metal, then pressure releasing.
+  if (kind === "knock") { // Solid knuckle on a metal shell: dull thud, inharmonic clang, short ring.
+    tone(0, 140, 70, 0.18, 0.6);
+    air(0, 1200, 0.04, 0.45, 0.002);
+    for (const [f, l, d] of [[523, 0.16, 0.5], [1190, 0.1, 0.38], [1870, 0.07, 0.28], [2730, 0.045, 0.2]] as const) tone(0.002, f, f * 0.985, d, l, "sine", 0.002);
+    air(0.01, 3400, 0.08, 0.12, 0.002, "highpass");
+  } else if (kind === "heavy") { // Weighty latch, resonant metal, then pressure releasing.
     tone(0, 160, 48, 0.45, 0.65);
     air(0, 650, 0.12, 0.42);
     for (const f of [310, 487, 731]) tone(0.025, f, f * 0.83, 0.65, 0.1, "triangle");
