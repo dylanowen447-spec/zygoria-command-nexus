@@ -122,6 +122,7 @@ export function KronkLairScene() {
     return () => { live = false; clearTimeout(guard); if (t) clearTimeout(t); };
   }, [step]);
 
+  const movingRef = useRef(moving); movingRef.current = moving;
   // Unsteered Zigs mostly stand and stare at the tank, taking an occasional short stroll (~every 30s each).
   const posRef = useRef(pos); posRef.current = pos;
   const steerRef = useRef(steer); steerRef.current = steer;
@@ -154,7 +155,7 @@ export function KronkLairScene() {
         if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; const f = fullSquad(); squadRef.current = f; setSquad(f); fire(); }, 4000));
         const away = p.x < 50 ? -6 : 6;
         walkTo(z, clampToGround({ x: p.x + away, y: p.y + 3 }));
-      }, 450));
+      }, 750));
       timers.push(setTimeout(() => { setLaser(null); setHit(null); }, 1100));
       if (allDown(squadRef.current)) return;
       timers.push(setTimeout(fire, kronkHpRef.current < KRONK_HP / 2 ? 3200 + Math.random() * 2500 : 5500 + Math.random() * 4000));
@@ -202,7 +203,18 @@ export function KronkLairScene() {
       if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
       setFx({ from, kind: a, id: Date.now() }); setTimeout(() => setFx(null), 350);
       playSfx(a === "Brix" ? "punch-heavy" : a === "Oz" ? "zap-hit" : "slash-hit");
-      const hp = Math.max(0, kronkHpRef.current - (a === "Brix" ? 5 : a === "Lowkey" ? 3 : 2));
+      // Combos: hits landed within 1.8s chain. Brix's 3rd is a HAYMAKER, Oz's 4th a CHAIN BOLT, Lowkey can SHADOW CRIT.
+      const c = combo.current[a], t = performance.now();
+      const n = c && t - c.t < 1800 ? c.n + 1 : 1;
+      combo.current[a] = { n, t };
+      let dmg = a === "Brix" ? 5 : a === "Lowkey" ? 3 : 2, label = "";
+      if (a === "Brix" && n % 3 === 0) { dmg = 11; label = "HAYMAKER!"; }
+      else if (a === "Oz" && n % 4 === 0) { dmg = 8; label = "CHAIN BOLT!"; }
+      else if (a === "Lowkey" && Math.random() < 0.25) { dmg = 7; label = "SHADOW CRIT!"; }
+      pop(`-${dmg}`, a.toLowerCase(), 50, 46, !!label);
+      if (label) { pop(label, a.toLowerCase(), 50, 36, true); setShake(s => s + 1); }
+      else if (n >= 2) pop(`${n} HIT`, a.toLowerCase(), 50, 40);
+      const hp = Math.max(0, kronkHpRef.current - dmg);
       const halfway = kronkHpRef.current >= KRONK_HP / 2 && hp < KRONK_HP / 2;
       kronkHpRef.current = hp; setKronkHp(hp); setKronkHit(h => h + 1);
       if (halfway) void speak("Kronk", "ENOUGH! You will BURN!", () => {});
