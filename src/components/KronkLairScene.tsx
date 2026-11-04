@@ -95,6 +95,8 @@ const KRONK_HP = 100;
 // Kronk's single red eye in ground %: sprite box is 26% wide, feet at 59%, eye sits 73.7% across / 16.3% down the frame.
 const EYE = { x: 50 - 13 + 0.737 * 26, y: 59 - 26 * (230 / 380) * (4 / 3) * (1 - 0.163) };
 
+/** Same hold threshold as every other fight: hold ATTACK/Space this long for the heavy attack. */
+const HOLD_MS = 600;
 export function KronkLairScene() {
   const [pos, setPos] = useState<Record<Zig, P>>({ Brix: { x: 42, y: 84 }, Oz: { x: 52, y: 87 }, Lowkey: { x: 62, y: 85 } });
   const [moving, setMoving] = useState<Partial<Record<Zig, { dir: "left" | "right"; ms: number }>>>({});
@@ -305,7 +307,8 @@ export function KronkLairScene() {
   // Zigs strike back: Oz stays back and throws sparks; Brix and Lowkey charge in, hit, then retreat to where they stood.
   const [atk, setAtk] = useState<Partial<Record<Zig, { cls: string; id: number }>>>({});
   const showAtk = (a: Zig, cls: string, ms: number) => { const id = Date.now() + Math.random(); setAtk(s => ({ ...s, [a]: { cls, id } })); setTimeout(() => setAtk(s => (s[a]?.id === id ? { ...s, [a]: undefined } : s)), ms); };
-  function attack(a: Zig) {
+  const holdStart = useRef(0);
+  function attack(a: Zig, heavy = false) {
     if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
     const now = performance.now();
     if ((cooldown.current[a] ?? 0) > now) return;
@@ -317,19 +320,19 @@ export function KronkLairScene() {
     const travel = melee ? Math.max(300, Math.hypot(target.x - p.x, (target.y - p.y) * 1.4) * 90) : 0;
     cooldown.current[a] = now + travel * 2 + (a === "Brix" ? 900 : a === "Lowkey" ? 650 : 750);
     if (melee) walkTo(a, target);
-    const c0 = combo.current[a], heavyNext = (c0 && now - c0.t < 1800 + travel * 2 ? c0.n + 1 : 1) % (a === "Brix" ? 3 : 4) === 0;
+    const c0 = combo.current[a], heavyNext = heavy || (c0 && now - c0.t < 1800 + travel * 2 ? c0.n + 1 : 1) % (a === "Brix" ? 3 : 4) === 0;
     setTimeout(() => {
       if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
       // Strike pose
       setMoving(m => ({ ...m, [a]: undefined }));
-      const cls = a === "Brix" ? `atk-punch ${heavyNext ? "is-heavy" : ""}` : a === "Lowkey" ? "atk-slash" : heavyNext ? "atk-heavy" : "atk-quick";
+      const cls = a === "Brix" ? `atk-punch ${heavyNext ? "is-heavy" : ""}` : a === "Lowkey" ? (heavy ? "atk-slash is-heavy" : "atk-slash") : heavyNext ? "atk-heavy" : "atk-quick";
       showAtk(a, `${cls} facing-${side < 0 ? "right" : "left"} ${a.toLowerCase()}-facing-${side < 0 ? "right" : "left"}`, a === "Brix" ? 650 : 520);
       playSfx(a === "Brix" ? "swing" : a === "Oz" ? "zap" : "slash");
-      setTimeout(() => land(a, travel), a === "Oz" ? 220 : 260);
+      setTimeout(() => land(a, travel, heavy), a === "Oz" ? 220 : 260);
       if (melee) setTimeout(() => { if (squadRef.current[a] > 0) walkTo(a, p); }, 620);
     }, travel);
   }
-  function land(a: Zig, travel: number) {
+  function land(a: Zig, travel: number, heavy = false) {
       if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
       const q = posRef.current[a];
       const from = a === "Oz" ? { x: q.x, y: q.y - 7 } : q;
@@ -340,9 +343,9 @@ export function KronkLairScene() {
       const n = c && t - c.t < 1800 + travel * 2 ? c.n + 1 : 1;
       combo.current[a] = { n, t };
       let dmg = a === "Brix" ? 5 : a === "Lowkey" ? 3 : 2, label = "";
-      if (a === "Brix" && n % 3 === 0) { dmg = 11; label = "HAYMAKER!"; }
-      else if (a === "Oz" && n % 4 === 0) { dmg = 8; label = "CHAIN BOLT!"; }
-      else if (a === "Lowkey" && Math.random() < 0.25) { dmg = 7; label = "SHADOW CRIT!"; }
+      if (a === "Brix" && (heavy || n % 3 === 0)) { dmg = 11; label = "HAYMAKER!"; }
+      else if (a === "Oz" && (heavy || n % 4 === 0)) { dmg = 8; label = "CHAIN BOLT!"; }
+      else if (a === "Lowkey" && (heavy || Math.random() < 0.25)) { dmg = 7; label = "SHADOW CRIT!"; }
       // Defence: armour soaks 1 damage always (more when enraged); while guarding he blocks almost everything.
       // Only Brix's HAYMAKER smashes the guard, stunning him so all hits deal double for a few seconds.
       if (guardRef.current) {
@@ -370,12 +373,14 @@ export function KronkLairScene() {
   // Space attacks with the steered Zig (Brix if nobody is steered); the others fight on their own.
   useEffect(() => {
     if (!fighting) return;
-    const key = (e: KeyboardEvent) => { if (e.code === "Space") { e.preventDefault(); attackRef.current(steerRef.current ?? "Brix"); } };
-    window.addEventListener("keydown", key);
+    let down = 0;
+    const key = (e: KeyboardEvent) => { if (e.code === "Space") { e.preventDefault(); if (!e.repeat && !down) down = performance.now(); } };
+    const keyUp = (e: KeyboardEvent) => { if (e.code === "Space" && down) { e.preventDefault(); const held = performance.now() - down; down = 0; attackRef.current(steerRef.current ?? "Brix", held >= HOLD_MS); } };
+    window.addEventListener("keydown", key); window.addEventListener("keyup", keyUp);
     const auto = setInterval(() => {
       (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => { if (a !== steerRef.current && Math.random() < 0.45) attackRef.current(a); });
     }, 2600);
-    return () => { window.removeEventListener("keydown", key); clearInterval(auto); };
+    return () => { window.removeEventListener("keydown", key); window.removeEventListener("keyup", keyUp); clearInterval(auto); };
   }, [fighting]);
 
   const tapZig = (a: Zig) => {
@@ -426,7 +431,7 @@ export function KronkLairScene() {
     </div>
     <div className="map-coordinate top-right">KRONK'S LAIR</div>
     {battleCry && <div className="kronk-title" role="status">KRONK<small>THE NETWORK'S BEAST</small></div>}
-    {fighting && typeof document !== "undefined" && createPortal(<button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); attack(steer ?? "Brix"); }} aria-label="Attack Kronk">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>, document.body)}
+    {fighting && typeof document !== "undefined" && createPortal(<button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older Safari */ } holdStart.current = performance.now(); }} onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; attack(steer ?? "Brix", held >= HOLD_MS); }} onPointerCancel={() => { holdStart.current = 0; }} aria-label="Attack Kronk — hold for heavy">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>, document.body)}
     {kronkHp <= 0 && <div className="map-coordinate kronk-down" role="status">KRONK DOWN</div>}
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the road to walk · double-tap {steer} to let go</div>}
     {fighting && <div className="boss-hud" role="status" aria-label="Fight status">

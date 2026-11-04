@@ -194,12 +194,19 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     const tokens: Partial<Record<Agent, number>> = {};
     // While a Zig is answering the visitor, their own exploring chatter stays quiet.
     let voiceBusy = false;
-    const say = (a: Agent, text: string | null, force = false) => { if ((voiceBusy || talking.has(a)) && !force && text) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) { logRef.current(a, text); if (!openingNow) voiceLine(a, text); } };
+    const say = (a: Agent, text: string | null, force = false) => { if ((voiceBusy || talking.has(a)) && !force && text) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) { logRef.current(a, text); if (!openingNow) { spokenLine = { text, done: voicesOn() ? speak(a, text, undefined, 2200) : null }; } } };
     sayRef.current = say;
     let openingNow = false;
     /** Reading time: short lines at least 3.2s, long lines up to 6s, then a 1s breath. */
     const hold = (text: string) => Math.min(6000, Math.max(3200, 1800 + text.length * 45));
-    const GAP = 1000;
+    const GAP = 250;
+    /** Next line follows as soon as the spoken one finishes (never overlapping); silent lines keep reading time. */
+    let spokenLine: { text: string; done: Promise<void> | null } | null = null;
+    const waitLine = async (text: string) => {
+      const l = spokenLine;
+      if (l && l.text === text && l.done) { const t0 = performance.now(); await Promise.race([l.done, wait(hold(text) + 4000)]); const left = 1200 - (performance.now() - t0); if (left > 0) await wait(left); }
+      else await waitLine(text);
+    };
     // Only one Zig chatters at a time while exploring.
     let floorUntil = 0;
     const floorFree = () => performance.now() > floorUntil;
@@ -557,20 +564,20 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
           // The valley stays out of reach until Shelton has been beaten off the road.
           claimed.delete(objective.spot);
           const warn = { Oz: "Not with that spiky tortoise still on the road!", Brix: "Can't head down yet. Shelton first.", Lowkey: "Road's not safe. Not yet." }[a];
-          takeFloor(warn); say(a, warn); await wait(hold(warn)); say(a, null); await wait(2500); continue;
+          takeFloor(warn); say(a, warn); await waitLine(warn); say(a, null); await wait(2500); continue;
         }
         if (objective && objective.needs && !objective.needs.every(n => found.has(n))) {
           // Still shut: they react, then go back to poking around for the missing pieces.
           claimed.delete(objective.spot);
           setFacing(f => ({ ...f, [a]: "right" }));
-          for (const text of objective.locked?.[a] ?? []) { takeFloor(text); say(a, text); await wait(hold(text)); say(a, null); await wait(GAP); if (!alive) return; }
+          for (const text of objective.locked?.[a] ?? []) { takeFloor(text); say(a, text); await waitLine(text); say(a, null); await wait(GAP); if (!alive) return; }
           say(a, null); await wait(1200); continue;
         }
         if (objective) {
           found.add(objective.spot);
           setFound(f => [...f, objective.spot]);
           setFacing(f => ({ ...f, [a]: "right" }));
-          for (const text of objective.found[a]) { takeFloor(text); say(a, text); await wait(hold(text)); say(a, null); await wait(GAP); if (!alive) return; }
+          for (const text of objective.found[a]) { takeFloor(text); say(a, text); await waitLine(text); say(a, null); await wait(GAP); if (!alive) return; }
           say(a, null);
           if (scene.objectives.every(o => found.has(o.spot)) && !finished) {
             // Wait for any other finder to finish reading before the group gathers.
@@ -591,7 +598,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
           await wait(GAP); if (!alive) return;
           setFacing(f => ({ ...f, [near]: coords.current[a].x < coords.current[near].x ? "left" : "right" }));
           const r = pick(REACTIONS[near]); takeFloor(r); say(near, r);
-          await wait(hold(r));
+          await waitLine(r);
           if (!alive) return;
           say(near, null);
         }
@@ -642,7 +649,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       try { localStorage.setItem("zygoria-voice-name", name); } catch { /* private mode */ }
       const lines: [Agent, string][] = [["Oz", `${name}? Nice. Sky's got a name.`], ["Brix", `Right, ${name}. Point us somewhere useful.`], ["Lowkey", `${name}. I'll remember that.`]];
       ALL.forEach(z => talking.add(z)); voiceBusy = true; floorUntil = Infinity; setBubbles({});
-      for (const [who, line] of lines) { say(who, line, true); await wait(hold(line)); if (!alive) return; say(who, null, true); await wait(GAP); }
+      for (const [who, line] of lines) { say(who, line, true); await waitLine(line); if (!alive) return; say(who, null, true); await wait(GAP); }
       ALL.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000;
     }
     async function firstContact() {
@@ -658,7 +665,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       ALL.forEach(z => talking.add(z)); voiceBusy = true; floorUntil = Infinity; setBubbles({});
       for (const [who, line] of lines) {
         say(who, line, true);
-        await wait(hold(line));
+        await waitLine(line);
         if (!alive) return;
         say(who, null, true); await wait(GAP);
       }
@@ -781,7 +788,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       const cx = ALL.reduce((t, z) => t + coords.current[z].x, 0) / 3;
       setFacing(Object.fromEntries(ALL.map(z => [z, coords.current[z].x <= cx ? "right" : "left"])) as Record<Agent, "left" | "right">);
       for (const [who, text] of scene.finale) {
-        say(who, text, true); await wait(hold(text)); if (!alive) return; say(who, null, true); await wait(GAP);
+        say(who, text, true); await waitLine(text); if (!alive) return; say(who, null, true); await wait(GAP);
       }
       clearTimeout(safety);
       if (scene.id === "landing") { setBlocked(true); say("Brix", "Road north's blocked. Tap the rubble — I'll smash it.", true); return; }
