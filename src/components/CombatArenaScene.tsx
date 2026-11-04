@@ -9,15 +9,13 @@ type Swing = { start: number; facing: Facing; struck: Set<number>; heavy: boolea
 const DUMMY = { x: 49.3, y: 56.5, crop: { l: 44, t: 37, w: 10.5, h: 21.5 } };
 /** Flat open ground: the whole clearing is walkable (artwork %); only props, trees and rocks block the feet. */
 const GROUND = { top: 50, bottom: 97 };
-const WALK = { left: 2, right: 98, top: 50, bottom: 99 };
+const WALK = { left: 1, right: 99, top: 48, bottom: 99.5 };
 /** Solid bases (artwork %): feet are pushed out so Zigs walk around, never through. */
 const SOLIDS = [
   { x: 16.8, y: 56.5, rx: 4.6, ry: 2.0 },  // crates + punching bag frame
   { x: 22.5, y: 56.5, rx: 1.6, ry: 1.0 },  // bag frame support
   { x: 28.3, y: 52.5, rx: 2.4, ry: 1.2 },  // boulder under the bag
-  { x: 33.5, y: 51.5, rx: 3.5, ry: 1.6 },  // boulder behind the target
   { x: 37.5, y: 53.4, rx: 2.8, ry: 1.4 },  // archery target stand
-  { x: 43.5, y: 52, rx: 2.5, ry: 1.2 },    // rock right of the target
   { x: 49.3, y: 56.5, rx: 3.2, ry: 1.5 },  // scarecrow dummy (interactive)
   { x: 61.5, y: 55.2, rx: 1.9, ry: 1.1 },  // wing chun dummy
   { x: 70.5, y: 55.2, rx: 1.8, ry: 1.1 },  // rope post 1
@@ -30,10 +28,7 @@ const SOLIDS = [
   { x: 84.5, y: 81.5, rx: 2.5, ry: 1.2 },  // small stump
   { x: 91, y: 81, rx: 3.5, ry: 1.7 },      // tall stump
   { x: 96.5, y: 74, rx: 2.5, ry: 1.2 },    // cut stump
-  { x: 7, y: 87, rx: 7.0, ry: 3.2 },       // boulder, bottom left
-  { x: 19, y: 94, rx: 4.0, ry: 1.9 },      // rock, front left
-  { x: 39, y: 92, rx: 4.0, ry: 1.9 },      // flat rock, front centre
-  { x: 92, y: 96, rx: 7.0, ry: 3.2 },      // boulder, bottom right
+  { x: 6, y: 88, rx: 5.0, ry: 2.6 },       // boulder, bottom left
 ];
 function inSolid(x: number, y: number) {
   return SOLIDS.some(s => ((x - s.x) / s.rx) ** 2 + ((y - s.y) / s.ry) ** 2 < 1);
