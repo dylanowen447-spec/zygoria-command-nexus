@@ -7,8 +7,30 @@ import { attackBox, attackPhase, hurtbox, resolveSwing, type Box, type Facing, t
 type Swing = { start: number; facing: Facing; struck: Set<number>; heavy: boolean };
 /** Dummy aligned to the painted one (artwork % space). Base = feet point; crop = visible art region. */
 const DUMMY = { x: 49.3, y: 56.5, crop: { l: 44, t: 37, w: 10.5, h: 21.5 }, solidR: 3.2 };
-const GROUND = { top: 57, bottom: 95, left: 4, right: 96 };
-const depthAt = (y: number) => 0.72 + 0.45 * ((y - GROUND.top) / (GROUND.bottom - GROUND.top));
+/** Walkable dirt clearing traced from the painting (artwork %): avoids grass, rocks, stumps and props. */
+const FLOOR: [number, number][] = [[17,55],[84,55],[92,62],[78,72],[72,80],[68,95],[32,95],[22,84],[14,74],[15,62]];
+const GROUND = { top: 55, bottom: 95 };
+function inside(x: number, y: number) {
+  let c = false;
+  for (let i = 0, j = FLOOR.length - 1; i < FLOOR.length; j = i++) {
+    const [xi, yi] = FLOOR[i]!, [xj, yj] = FLOOR[j]!;
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+/** Nearest walkable point (like Kronk's Lair), so taps on grass walk to the clearing's edge. */
+function clampToFloor(t: { x: number; y: number }) {
+  if (inside(t.x, t.y)) return t;
+  let best = t, bd = Infinity;
+  for (let x = 12; x <= 94; x += 0.5) for (let y = 54; y <= 96; y += 0.5) {
+    if (!inside(x, y)) continue;
+    const d = (x - t.x) ** 2 + (y - t.y) ** 2;
+    if (d < bd) { bd = d; best = { x, y }; }
+  }
+  return best;
+}
+/** 2.5D: far (top of clearing) is small, near (bottom) is big. */
+const depthAt = (y: number) => 0.6 + 0.6 * Math.max(0, Math.min(1, (y - GROUND.top) / (GROUND.bottom - GROUND.top)));
 const SPEED = 22; // % per second
 
 export function CombatArenaScene() {
@@ -50,7 +72,7 @@ export function CombatArenaScene() {
           facing.current = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up";
         }
       }
-      p.x = Math.max(GROUND.left, Math.min(GROUND.right, p.x)); p.y = Math.max(GROUND.top, Math.min(GROUND.bottom, p.y));
+      if (!inside(p.x, p.y)) { const q = clampToFloor(p); p.x = q.x; p.y = q.y; if (t) target.current = null; }
       // Solid dummy base: push feet out of a small ellipse (y squashed for depth) so Zigs walk around, never through.
       { const dx = p.x - DUMMY.x, dy = (p.y - DUMMY.y) * 2.2, d = Math.hypot(dx, dy);
         if (d < DUMMY.solidR) { const k = (DUMMY.solidR - d) / (d || 1); p.x += dx * k || DUMMY.solidR; p.y += (dy * k) / 2.2; } }
@@ -77,7 +99,7 @@ export function CombatArenaScene() {
 
   const tap = (e: React.PointerEvent) => {
     const r = stage.current!.getBoundingClientRect();
-    target.current = { x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 };
+    target.current = clampToFloor({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
   };
 
   const p = pos.current, dm = dummy.current, sw = swing.current;
@@ -97,7 +119,7 @@ export function CombatArenaScene() {
           backgroundPosition: `${(c.l / (100 - c.w)) * 100}% ${(c.t / (100 - c.h)) * 100}%`, ["--dir" as string]: dm.dir }}>
         {reacting && <span key={dm.hits} className="arena-hitmark">{dm.heavy ? "POW!" : "HIT"}</span>}
       </span>
-      <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${sw ? "is-attacking" : ""} ${sw?.heavy ? "is-heavy" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }}><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
+      <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${sw ? "is-attacking" : ""} ${sw?.heavy ? "is-heavy" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
       {debug && <>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 1.3))}/>
