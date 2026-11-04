@@ -1358,3 +1358,7 @@ body > .combat-dodge{position:fixed}
 .arena-box.is-attack-box.is-live { border-style: solid; border-color: hsl(0 85% 55%); background: hsl(0 85% 55% / .3); }
 .arena-controls { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
 .arena-log { font-size: .7rem; color: var(--muted-foreground); }
+
+/* DEV · SCENES menu: scroll inside itself on phones */
+.scene-jump-menu{max-height:calc(100dvh - var(--menu-top, 60px) - 12px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.scene-jump-menu button{flex-shrink:0}
