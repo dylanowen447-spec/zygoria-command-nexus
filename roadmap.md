@@ -67,3 +67,7 @@
 - [x] Smooth Training Grounds movement
 - [x] Remove invisible steps in Training Grounds (flat ground)
 - [x] Training Grounds: all 3 Zigs' full Old City attacks
+
+- [ ] Training Grounds: solid collisions on the big punch bag, lunch bag and dummies — Zigs stopped in front, never through, on top of or behind them
+- [ ] Big red punch bag: same mechanics as the dummy (hits, health, damage numbers, reset)
+- [ ] Read and action the uploaded "ZYGORIA FIRST GENESIS - TALK TO THE ZIGS" file
