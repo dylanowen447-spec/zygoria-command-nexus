@@ -15,7 +15,10 @@ export function FreeTalkBox({ who, scene, disabled = false, onBusy }: { who: Fig
   const alive = useRef(true);
   const busyCb = useRef(onBusy);
   busyCb.current = onBusy;
-  useEffect(() => () => { alive.current = false; busyCb.current(false); }, []);
+  useEffect(() => {
+    alive.current = true; // dev re-runs effects (mount → cleanup → mount); without this the box stays "dead" and replies never render
+    return () => { alive.current = false; busyCb.current(false); };
+  }, []);
 
   const send = async () => {
     const said = text.trim();
