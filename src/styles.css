@@ -1377,3 +1377,6 @@ body > .combat-dodge{position:fixed}
 @keyframes hitmark-rise { from { opacity: 1; translate: 0 0; } to { opacity: 0; translate: 0 -120%; } }
 /* Training Grounds: every Zig stands on the same feet line (no zone top offsets). */
 .arena-stage .haven-zig{top:auto!important;bottom:var(--fy)!important}
+/* Training Grounds dodge roll: uses rotate/translate so the inline depth scale stays intact. */
+.arena-stage .haven-zig.is-rolling .sprite-stage{animation:arena-roll .3s ease-out;opacity:.75}
+@keyframes arena-roll{35%{rotate:-14deg;translate:0 4px}100%{rotate:0deg;translate:0 0}}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import groundsArt from "@/assets/training-grounds.png.asset.json";
 import { attackBox, attackPhase, hurtbox, resolveSwing, type Box, type Facing, type Fighter } from "@/lib/combat-boxes";
@@ -72,16 +73,29 @@ export function CombatArenaScene() {
   const dummy = useRef({ hurt: 0, dir: 1, kind: "" as Fighter | "", hits: 0, heavy: false });
   const pressAt = useRef(0);
   const stuck = useRef({ dist: Infinity, at: 0 });
-  const [log, setLog] = useState("Tap the floor to walk · tap ATTACK to strike, hold for heavy");
+  const [log, setLog] = useState("Tap the floor to walk · tap ATTACK to strike, hold for heavy · DODGE to roll (Space / Shift on keyboard)");
   const stage = useRef<HTMLDivElement>(null);
 
   const attack = (heavy = false) => { if (!swing.current) swing.current = { start: performance.now(), facing: facing.current, struck: new Set(), heavy }; };
-  const press = () => { pressAt.current = performance.now(); };
-  const release = () => { const held = performance.now() - pressAt.current; if (pressAt.current) attack(held > 350); pressAt.current = 0; };
+    const [charged, setCharged] = useState(false);
+  const chargeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Same hold threshold as every other fight (600ms = heavy).
+  const press = () => { pressAt.current = performance.now(); clearTimeout(chargeTimer.current); chargeTimer.current = setTimeout(() => setCharged(true), 600); };
+  const release = () => { clearTimeout(chargeTimer.current); setCharged(false); const held = performance.now() - pressAt.current; if (pressAt.current) attack(held >= 600); pressAt.current = 0; };
+  // Dodge roll, same as the other fights: a quick burst away from the dummy with a short cooldown.
+  const roll = useRef<{ until: number; ux: number; uy: number } | null>(null);
+  const lastDodge = useRef(0);
+  const dodge = () => {
+    const now = performance.now(); if (now - lastDodge.current < 650 || swing.current) return;
+    lastDodge.current = now; target.current = null;
+    const p = pos.current; let dx = p.x - DUMMY.x, dy = (p.y - DUMMY.y) / ASPECT; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    roll.current = { until: now + 300, ux: dx, uy: dy }; setLog(`${zig} dodges!`);
+  };
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.code === "Space") { e.preventDefault(); if (!e.repeat) press(); }
+      if (e.key === "Shift" && !e.repeat) dodge();
       const f = ({ ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" } as Record<string, Facing>)[e.key];
       if (f) { facing.current = f; const d = 4; const p = pos.current; target.current = { x: p.x + (f === "left" ? -d : f === "right" ? d : 0), y: p.y + (f === "up" ? -d : f === "down" ? d : 0) }; }
     };
@@ -106,6 +120,8 @@ export function CombatArenaScene() {
       const nsp = want > sp ? Math.min(want, sp + ACCEL * dt) : Math.max(want, sp - DECEL * dt);
       if (want > 0) { v.x = ux * nsp; v.y = uy * nsp; } else if (sp > 0) { v.x = (v.x / sp) * nsp; v.y = (v.y / sp) * nsp; }
       if (swing.current) { v.x = 0; v.y = 0; } // attacks never move the Zig
+      const rl = roll.current;
+      if (rl) { if (now > rl.until) { roll.current = null; v.x = 0; v.y = 0; } else { v.x = rl.ux * SPEED * 2.4; v.y = rl.uy * SPEED * 2.4; } }
       const mx = v.x * dt, my = v.y * dt * ASPECT;
       const free = (x: number, y: number) => inWalk(x, y) && !inSolid(x, y);
       if (mx || my) {
@@ -114,7 +130,7 @@ export function CombatArenaScene() {
         else if (free(p.x, p.y + my)) { p.y += my; v.x = 0; }
         else { v.x = 0; v.y = 0; }
       }
-      const moving = Math.hypot(v.x, v.y) > 1.5;
+      const moving = Math.hypot(v.x, v.y) > 1.5 && !roll.current;
       walking.current = moving;
       if (moving) {
         // Facing only flips when the new axis clearly dominates, so diagonals never flicker between frames.
@@ -171,7 +187,7 @@ export function CombatArenaScene() {
         {reacting && <span key={dm.hits} className="arena-hitmark">{dm.heavy ? "POW!" : "HIT"}</span>}
       </span>
       {(["Brix", "Lowkey", "Oz"] as Fighter[]).filter(z => z !== zig).map(z => { const q = crewPos.current[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()}`} onPointerDown={e => { const l = lastTap.current, now = performance.now(); if (l && l.z === z && now - l.t < 380) { e.stopPropagation(); lastTap.current = null; target.current = null; setZig(z); } else lastTap.current = { z, t: now }; }} style={{ left: `${q.x}%`, ["--fy" as string]: `${100 - q.y}%`, zIndex: 5 + Math.round(q.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(q.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(q.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={z}/></span></span>; })}
-      <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${sw ? `is-attacking ${atkPose(zig, sw.heavy)} facing-${atkSide} ${zig.toLowerCase()}-facing-${atkSide}` : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
+      <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${roll.current ? "is-rolling" : ""} ${sw ? `is-attacking ${atkPose(zig, sw.heavy)} facing-${atkSide} ${zig.toLowerCase()}-facing-${atkSide}` : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
       {debug && <>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 1.3))}/>
@@ -181,8 +197,15 @@ export function CombatArenaScene() {
     <div className="arena-controls" onPointerDown={e => e.stopPropagation()}>
       {(["Brix", "Lowkey", "Oz"] as Fighter[]).map(z => <button key={z} type="button" className={`zone-chip ${z === zig ? "is-active" : ""}`} onClick={() => setZig(z)}>{z}</button>)}
       <button type="button" className={`zone-chip ${debug ? "is-active" : ""}`} onClick={() => setDebug(d => !d)}>BOXES {debug ? "ON" : "OFF"}</button>
-      <button type="button" className="zone-chip arena-attack" onPointerDown={press} onPointerUp={release} onPointerLeave={() => { if (pressAt.current) release(); }}>ATTACK {phase ? `· ${phase.toUpperCase()}` : ""}</button>
       <span className="arena-log">{log}</span>
     </div>
+    {typeof document !== "undefined" && createPortal(<>
+      <button type="button" className={`combat-attack ${charged ? "is-charged" : ""}`} aria-label={`Attack with ${zig} — hold for heavy`}
+        onPointerDown={e => { e.preventDefault(); e.stopPropagation(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older Safari */ } press(); }}
+        onPointerUp={e => { e.stopPropagation(); release(); }}
+        onPointerCancel={() => { clearTimeout(chargeTimer.current); setCharged(false); pressAt.current = 0; }}
+        onContextMenu={e => e.preventDefault()}><span>ATTACK</span><small>{zig}</small></button>
+      <button type="button" className="combat-dodge" aria-label={`Dodge roll with ${zig}`} onPointerDown={e => { e.preventDefault(); e.stopPropagation(); dodge(); }} onContextMenu={e => e.preventDefault()}><span>DODGE</span></button>
+    </>, document.body)}
   </div>;
 }
