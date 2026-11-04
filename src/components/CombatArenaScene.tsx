@@ -142,7 +142,7 @@ export function CombatArenaScene({ command = null }: { command?: { id: number; t
   const talking = useRef(false), lastLine = useRef(0);
   const talkBusy = useRef(false); // an off-script chat is waiting for its reply: hold the yard chatter back
   const alive = useRef(true);
-  useEffect(() => () => { alive.current = false; }, []);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   // One line: waits for the voice to finish, then a short read pause before resolving.
   const line = (who: Fighter, text: string) => new Promise<void>(res => {
     let shown = false; const show = () => { shown = true; if (alive.current) setBubble({ who, text }); };
