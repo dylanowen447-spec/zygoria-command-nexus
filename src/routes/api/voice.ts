@@ -13,6 +13,7 @@ const CAST: Record<string, { voice: string; instructions: string }> = {
   Shelton: { voice: "Charon", instructions: "You are Shelton, a huge grumpy armoured beast. Deep, rumbling and gruff, but snappy, impatient and quick — short punchy delivery, no drawn-out words, same brisk pace as the others." },
   Kronk: { voice: "Algenib", instructions: "You are Kronk, a monstrous mutant crocodile warlord. Speak in a terrifying, very deep, slow, guttural growl — menacing, cold and cruel, with a reptilian hiss on S sounds, low rumbling breaths and chilling pauses. Pure villain dread, never comedic." },
   Thoth: { voice: "Iapetus", instructions: "You are Thoth, an ancient, mysterious observer. Calm, low, wise and enigmatic, with measured pauses." },
+  Network: { voice: "Vindemiatrix", instructions: "You are the Network, a cold, all-powerful machine intelligence. Flat, calm, emotionless and synthetic — precise, measured, utterly without warmth or mercy. Quietly terrifying, never raised, never hurried." },
   Narrator: { voice: "Sulafat", instructions: "You are a warm storybook narrator. Gentle, inviting, natural pacing, like reading a bedtime story." },
 };
 

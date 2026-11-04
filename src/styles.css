@@ -1231,6 +1231,22 @@ body > .combat-dodge{position:fixed}
 .strike-brix{stroke:oklch(0.85 0.17 70)}.strike-oz{stroke:oklch(0.9 0.15 220)}.strike-lowkey{stroke:oklch(0.7 0.2 310)}
 @keyframes strike-pop{from{opacity:1;transform-box:fill-box;transform-origin:center;transform:scale(.3)}to{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(1.4)}}
 .kronk-down{left:50%;top:40%;transform:translateX(-50%);font-size:22px;color:oklch(0.85 0.17 80)}
+/* Battle-cry moment: Kronk's eye flares red and his title card flashes before the fight opens. */
+.kronk-glare .kronk-eye.is-flare{animation:kronk-eye-flare 2.6s ease-out forwards}
+@keyframes kronk-eye-flare{0%{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.4)}18%{opacity:1;transform:scale(2.2)}45%{transform:scale(1.6)}80%{opacity:1;transform:scale(1.8)}100%{opacity:0;transform:scale(2.4)}}
+.kronk-title{position:absolute;left:50%;top:34%;transform:translateX(-50%);z-index:2200;pointer-events:none;text-align:center;font-family:var(--font-display,inherit);font-weight:900;font-size:clamp(26px,6vw,52px);letter-spacing:.14em;color:hsl(0 100% 62%);text-shadow:0 3px 0 hsl(0 0% 0% / .85),0 0 22px hsl(0 100% 45%),0 0 46px hsl(0 100% 35%);animation:kronk-title-in 2.6s ease-out forwards}
+.kronk-title small{display:block;font-family:var(--font-mono);font-weight:700;font-size:clamp(9px,1.6vw,14px);letter-spacing:.42em;color:var(--foreground);text-shadow:0 2px 0 hsl(0 0% 0% / .8);margin-top:4px}
+@keyframes kronk-title-in{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.06)}22%{transform:translateX(-50%) scale(1)}78%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(1.02)}}
+/* Pure rage: his eye keeps burning red for the rest of the fight. */
+.kronk-glare .kronk-eye.is-burn{animation:kronk-eye-burn 1.5s ease-in-out infinite}
+@keyframes kronk-eye-burn{0%,100%{opacity:.85;transform-box:fill-box;transform-origin:center;transform:scale(1)}50%{opacity:1;transform:scale(1.5)}}
+/* Combat banter bubbles: short, non-blocking, above the speaker. */
+.lair-bubble{position:absolute;z-index:2300;max-width:min(64%,300px);transform:translateX(-50%);pointer-events:none;font-family:var(--font-mono);font-size:clamp(10px,1.7vw,13px);line-height:1.35;color:var(--foreground);background:oklch(0.1 0.02 260 / 88%);border:1px solid var(--electric);padding:5px 8px;border-radius:6px}
+.lair-bubble b{display:block;font-size:.78em;letter-spacing:.14em;color:var(--gold)}
+.lair-bubble.is-kronk{border-color:hsl(0 90% 50%);color:hsl(0 80% 88%)}
+.lair-bubble.is-kronk b{color:hsl(0 90% 62%)}
+.lair-bubble.is-network{border-color:hsl(190 90% 55%);color:hsl(190 60% 85%);background:oklch(0.08 0.03 220 / 92%);letter-spacing:.05em}
+.lair-bubble.is-network b{color:hsl(190 90% 60%)}
 
 /* Three Eggs: tap-to-knock egg hatch targets */
 .egg-knock { position: absolute; z-index: 2000; width: 13%; aspect-ratio: 1; transform: translate(-50%, -70%); border-radius: 50%; border: 0; background: transparent; cursor: pointer; display: grid; place-items: start center; -webkit-tap-highlight-color: transparent; }

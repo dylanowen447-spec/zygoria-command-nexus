@@ -10,7 +10,7 @@ import { MAX_HP as SQUAD_HP, allDown, damage, fullSquad, type Squad } from "@/li
 
 /** Kronk's Lair: inside the bunker gate, the crew face Kronk himself. Editor-only — no story road yet; Kronk fires laser eyes at the crew. */
 type Zig = "Oz" | "Brix" | "Lowkey";
-type Line = { who: Zig | "Kronk"; text: string; slam?: boolean };
+type Line = { who: Zig | "Kronk" | "Network"; text: string };
 
 /** Walkable dirt road traced from the creator's ground guide, in artwork % (x from left, y from top). */
 const GROUND: [number, number][] = [[4,62],[96,62],[99,92],[1,92]];
@@ -38,29 +38,58 @@ function randomGround(): P {
   for (let i = 0; i < 60; i++) { const p = { x: 12 + Math.random() * 76, y: 66 + Math.random() * 22 }; if (inside(p.x, p.y) && inside(p.x, p.y - 1.5) && inside(p.x, p.y + 1.5)) return p; }
   return { x: 40, y: 80 };
 }
+// 20-second cinematic intro (creator's script): the crew holds its ground and faces Kronk; nobody moves or fights until it ends.
 const INTRO: Line[] = [
-  { who: "Brix", text: "Gate's shut behind us. No going back now, lads." },
-  { who: "Oz", text: "Oh no. Oh no no no. He's not in the tank anymore." },
-  { who: "Lowkey", text: "Kronk. Standing right there at the stairs." },
-  { who: "Kronk", text: "Well, well... little things, crawling into my house." },
-  { who: "Oz", text: "Who let that overgrown handbag in here?!" },
-  { who: "Kronk", text: "Handbag? Ssssay it again, small one. I dare you." },
-  { who: "Oz", text: "Nope. Taking it back. Fully taking it back." },
-  { who: "Oz", text: "Those tanks... are those RATS in the green stuff?!" },
-  { who: "Kronk", text: "My children. Fed on the sludge. Hungry. Always hungry." },
-  { who: "Brix", text: "That's where the sludge comes from. He's brewing it." },
-  { who: "Lowkey", text: "And that N on the screen. I've seen that mark before. Somewhere I shouldn't remember." },
-  { who: "Kronk", text: "The Network sees everything. And now... it sees you." },
-  { who: "Oz", text: "Nobody move. Maybe he can't see us if we don't move." },
-  { who: "Brix", text: "He can see us, Oz. Stay together. Stay behind me." },
-  { who: "Kronk", text: "Run home to your little river. I will drink it dry." },
-  { who: "Kronk", text: "I have crushed entire civilizations." },
-  { who: "Oz", text: "Yeah? Well, you look like you came free with a sofa." },
-  { who: "Brix", text: "Oz... I really think you should stop talking." },
-  { who: "Lowkey", text: "Too late. He's angry.", slam: true },
-  { who: "Kronk", text: "THEN LET'S SEE HOW FUNNY YOU ARE WITHOUT YOUR HEAD!" },
+  { who: "Kronk", text: "Well, well, well... What have we here?" },
+  { who: "Oz", text: "Bloody hell... THAT'S Kronk?!" },
+  { who: "Brix", text: "He's bigger than I thought." },
+  { who: "Kronk", text: "Three little creatures... wandering into MY kingdom." },
+  { who: "Lowkey", text: "We've come for the humans." },
+  { who: "Kronk", text: "HAHAHAHA! You think you can make demands of ME?!" },
+  { who: "Oz", text: "Well, we were gonna ask nicely..." },
+  { who: "Kronk", text: "THEN COME, LITTLE CREATURES... LET ME SHOW YOU WHAT FEAR LOOKS LIKE!" },
+  { who: "Brix", text: "RIGHT, BOYS! LET'S GET HIM!" },
 ];
 const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[] = [];
+
+/** Anger phases (creator's script): each exchange plays once as Kronk's health drops — amusement, temper, pure rage. */
+const PHASE1: Line[] = [
+  { who: "Kronk", text: "HAHAHAHA! Shelton sent CHILDREN to challenge me?" },
+  { who: "Oz", text: "Children?! Mate, you're a handbag with batteries!" },
+  { who: "Kronk", text: "WHAT DID YOU CALL ME?!" },
+  { who: "Brix", text: "He called you a handbag." },
+  { who: "Kronk", text: "I HEARD HIM!" },
+];
+const PHASE2: Line[] = [
+  { who: "Kronk", text: "ENOUGH! I HAVE CRUSHED ARMIES BENEATH THESE FEET!" },
+  { who: "Oz", text: "Well, you've missed us about twelve times!" },
+  { who: "Kronk", text: "SILENCE, YOU INSOLENT LITTLE RAT!" },
+  { who: "Lowkey", text: "He's getting angry." },
+  { who: "Brix", text: "GOOD! KEEP HIM DISTRACTED!" },
+];
+const PHASE3: Line[] = [
+  { who: "Kronk", text: "I AM THE GREATEST CREATION THIS WORLD HAS EVER SEEN!" },
+  { who: "Oz", text: "You've definitely got the biggest mouth!" },
+  { who: "Kronk", text: "I WILL TEAR THIS ENTIRE FACTORY APART!" },
+  { who: "Brix", text: "THEN COME AND GET US!" },
+  { who: "Lowkey", text: "He's losing control. Stay focused." },
+];
+const CRIT: Line[] = [
+  { who: "Kronk", text: "SHELTON! WHERE ARE YOU, YOU USELESS TURTLE?!" },
+  { who: "Oz", text: "Probably hiding in his shell!" },
+];
+/** Genesis 1 ending: the Zigs beat Kronk, but the Network shuts him down. */
+const DEFEAT: Line[] = [
+  { who: "Kronk", text: "NO! THIS IS IMPOSSIBLE!" },
+  { who: "Network", text: "Unit Kronk. Performance unacceptable." },
+  { who: "Kronk", text: "MASTER! GIVE ME ANOTHER CHANCE!" },
+  { who: "Network", text: "Your services are no longer required." },
+  { who: "Kronk", text: "NO! I AM YOUR GREATEST—" },
+  { who: "Network", text: "Shutdown initiated." },
+  { who: "Lowkey", text: "Something bigger is watching us." },
+  { who: "Brix", text: "Then we'd better be ready." },
+  { who: "Oz", text: "Can we at least have five minutes without something trying to eat us?" },
+];
 
 const KRONK_HP = 100;
 // Kronk's single red eye in ground %: sprite box is 26% wide, feet at 59%, eye sits 73.7% across / 16.3% down the frame.
@@ -103,12 +132,11 @@ export function KronkLairScene() {
   const [kronkHit, setKronkHit] = useState(0);
   const [fx, setFx] = useState<{ from: P; kind: Zig; id: number }[]>([]);
   const cooldown = useRef<Partial<Record<Zig, number>>>({});
-  const fighting = step >= 4 && kronkHp > 0; // fight is on as soon as Kronk first speaks and the lasers start
+  const fighting = step >= INTRO.length && kronkHp > 0; // battle begins only after the full cinematic intro has played
 
   useEffect(() => {
     if (step >= INTRO.length) return;
     const line = INTRO[step]!;
-    if (line.slam) { playSfx("slam"); musicOn.current = true; startKronkMusic(); }
     let live = true, t: ReturnType<typeof setTimeout> | undefined;
     const started = performance.now();
     let advanced = false;
@@ -123,11 +151,22 @@ export function KronkLairScene() {
     return () => { live = false; clearTimeout(guard); if (t) clearTimeout(t); };
   }, [step]);
 
+  // Battle cry: the moment the intro ends, Kronk roars, his eye flares red and his title card flashes before the fight opens.
+  const [battleCry, setBattleCry] = useState(false);
+  useEffect(() => {
+    if (step !== INTRO.length || kronkHpRef.current <= 0) return;
+    playSfx("roar");
+    setBattleCry(true);
+    const t = setTimeout(() => setBattleCry(false), 2600);
+    return () => clearTimeout(t);
+  }, [step]);
+
   const movingRef = useRef(moving); movingRef.current = moving;
-  // Unsteered Zigs mostly stand and stare at the tank, taking an occasional short stroll (~every 30s each).
+  // Unsteered Zigs mostly stand and stare at the tank, taking an occasional short stroll (~every 30s each) — only once the intro is over.
   const posRef = useRef(pos); posRef.current = pos;
   const steerRef = useRef(steer); steerRef.current = steer;
   useEffect(() => {
+    if (step < INTRO.length) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const wander = (a: Zig, first = false) => {
       timers.push(setTimeout(() => {
@@ -137,7 +176,7 @@ export function KronkLairScene() {
     };
     (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => wander(a, true));
     return () => timers.forEach(clearTimeout);
-  }, []);
+  }, [step >= INTRO.length]);
   const [sludge, setSludge] = useState<{ x: number; y: number; id: number; r: number }[]>([]);
   const [quake, setQuake] = useState(0);
   const [rear, setRear] = useState(false);
@@ -148,7 +187,7 @@ export function KronkLairScene() {
   const setGuardState = (g: boolean) => { guardRef.current = g; setGuard(g); };
   // Kronk raises his armoured guard every so often (more often when enraged), then drops it.
   useEffect(() => {
-    if (step < 4) return;
+    if (!fighting) return;
     let live = true; let t: ReturnType<typeof setTimeout>;
     const cycle = () => {
       t = setTimeout(() => {
@@ -160,20 +199,20 @@ export function KronkLairScene() {
     };
     cycle();
     return () => { live = false; clearTimeout(t); setGuardState(false); };
-  }, [step >= 4]);
+  }, [fighting]);
   // Kronk's attacks: laser eyes, sludge spit, tail-slam shockwave, and (enraged) sludge rain.
   useEffect(() => {
-    if (step < 4) return;
+    if (!fighting) return;
     let live = true; const timers: ReturnType<typeof setTimeout>[] = [];
     // Shared hit: moving Zigs dodge; otherwise lose a pip and get knocked back from Kronk.
     const hurt = (z: Zig, knock = 6) => {
       const p = posRef.current[z];
       if (squadRef.current[z] <= 0) return;
-      if (movingRef.current[z]) { pop("DODGE!", "dodge", p.x, p.y - 16); return; }
+      if (movingRef.current[z]) { pop("DODGE!", "dodge", p.x, p.y - 16); if (z === "Lowkey" && Math.random() < 0.4) void say([{ who: "Kronk", text: "STAND STILL, SHADOW!" }, { who: "Lowkey", text: "No." }]); return; }
       setHit(z); timers.push(setTimeout(() => setHit(h => (h === z ? null : h)), 500));
       playSfx("hurt");
       const q = damage(squadRef.current, z, 1); squadRef.current = q; setSquad(q);
-      if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; const f = fullSquad(); squadRef.current = f; setSquad(f); fire(); }, 4000));
+      if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; const f = fullSquad(); squadRef.current = f; setSquad(f); kronkHpRef.current = KRONK_HP; setKronkHp(KRONK_HP); setLaser(null); setBubble(null); setRaging(false); setRageBlink(0); said.current = { p1: false, p2: false, p3: false, crit: false }; setStep(0); }, 4000)); // wipe = full retry: the cinematic intro replays
       walkTo(z, clampToGround({ x: p.x + (p.x < 50 ? -knock : knock), y: p.y + knock / 2 }));
     };
     let last = "";
@@ -206,15 +245,15 @@ export function KronkLairScene() {
       } else {
         // Tail slam: he rears up, then a shockwave rolls across the floor. Anyone standing still gets hit.
         setRear(true); playSfx("roar");
-        timers.push(setTimeout(() => { playSfx("quake"); playSfx("slam"); setShake(s => s + 1); setQuake(Date.now()); zs.forEach(a => hurt(a, 8)); }, 1100));
+        timers.push(setTimeout(() => { playSfx("quake"); playSfx("slam"); setShake(s => s + 1); setQuake(Date.now()); const allDodged = zs.every(a => squadRef.current[a] <= 0 || movingRef.current[a]); zs.forEach(a => hurt(a, 8)); if (allDodged) void say([{ who: "Oz", text: "Too slow, big fella!" }, { who: "Kronk", text: "STOP MOVING!" }]); }, 1100));
         timers.push(setTimeout(() => { setQuake(0); setRear(false); }, 1800));
       }
       if (allDown(squadRef.current)) return;
       timers.push(setTimeout(fire, enraged ? 3000 + Math.random() * 2200 : 4800 + Math.random() * 3200));
     };
-    timers.push(setTimeout(fire, 2500));
+    timers.push(setTimeout(fire, 3400)); // short warning beat after the title card before his first attack
     return () => { live = false; timers.forEach(clearTimeout); };
-  }, [step >= 4]);
+  }, [fighting]);
   function walkTo(a: Zig, to: P) {
     const from = posRef.current[a], dx = to.x - from.x, ms = Math.max(300, Math.hypot(dx, (to.y - from.y) * 1.4) * 90);
     const id = (walkId.current[a] = (walkId.current[a] ?? 0) + 1), start = performance.now();
@@ -239,6 +278,28 @@ export function KronkLairScene() {
       if (!voicesOn()) await new Promise(r => setTimeout(r, Math.max(0, 3000 - (performance.now() - started))));
     }
     busy.current = false;
+  }
+
+  // Battle banter: short exchanges that never pause movement or attacks. Phase exchanges force their way in;
+  // reactive remarks only fire if nothing was said in the last few seconds, so nobody nags.
+  const banterBusy = useRef(false);
+  const lastBanter = useRef(0);
+  const said = useRef({ p1: false, p2: false, p3: false, crit: false });
+  const [raging, setRaging] = useState(false); // phase 3: his eye burns red for the rest of the fight
+  const [rageBlink, setRageBlink] = useState(0); // phase 2: a short red eye flash
+  async function say(lines: Line[], force = false) {
+    if (!force && (banterBusy.current || performance.now() - lastBanter.current < 8000)) return;
+    while (banterBusy.current) await new Promise(r => setTimeout(r, 400));
+    banterBusy.current = true;
+    for (const l of lines) {
+      const started = performance.now();
+      await speak(l.who, l.text, () => setBubble(l));
+      if (!voicesOn()) await new Promise(r => setTimeout(r, Math.max(0, 2600 - (performance.now() - started))));
+      await new Promise(r => setTimeout(r, 250));
+    }
+    lastBanter.current = performance.now();
+    banterBusy.current = false;
+    setBubble(null);
   }
 
   // Zigs strike back: Oz stays back and throws sparks; Brix and Lowkey charge in, hit, then retreat to where they stood.
@@ -293,10 +354,17 @@ export function KronkLairScene() {
       if (label) { pop(label, a.toLowerCase(), 50, 36, true); setShake(s => s + 1); }
       else if (n >= 2 && !guardRef.current) pop(`${n} HIT`, a.toLowerCase(), 50, 40);
       const hp = Math.max(0, kronkHpRef.current - dmg);
-      const halfway = kronkHpRef.current >= KRONK_HP / 2 && hp < KRONK_HP / 2;
+      const before = kronkHpRef.current;
       kronkHpRef.current = hp; setKronkHp(hp); setKronkHit(h => h + 1);
-      if (halfway) void speak("Kronk", "ENOUGH! You will BURN!", () => {});
-      if (hp <= 0) { setLaser(null); void speak("Kronk", "This... is not... over...", () => {}).then(() => speak("Oz", "Did we just... beat the handbag?!", () => {})); }
+      // Anger phases, each once: amusement (first blood) → temper (60%) → pure rage (25%) → critical cry for Shelton (10%).
+      if (hp > 0 && !said.current.p1) { said.current.p1 = true; void say(PHASE1, true).then(() => playSfx("roar")); }
+      else if (hp > 0 && !said.current.p2 && before > 60 && hp <= 60) { said.current.p2 = true; setRageBlink(Date.now()); void say(PHASE2, true); }
+      else if (hp > 0 && !said.current.p3 && before > 25 && hp <= 25) { said.current.p3 = true; setRaging(true); playSfx("roar"); void say(PHASE3, true); }
+      else if (hp > 0 && !said.current.crit && before > 10 && hp <= 10) { said.current.crit = true; void say(CRIT, true); }
+      // Occasional reactive remarks (cooldown-gated inside say()).
+      if (hp > 0 && label === "HAYMAKER!" && Math.random() < 0.5) void say([{ who: "Kronk", text: "WHO DARES STRIKE ME?!" }, { who: "Brix", text: "ME!" }]);
+      else if (hp > 0 && a === "Oz" && !label && Math.random() < 0.25) void say([{ who: "Kronk", text: "YOU THINK A LITTLE SPARK CAN HURT ME?!" }, { who: "Oz", text: "Well, you're smoking a bit!" }]);
+      if (hp <= 0) { setLaser(null); setRaging(false); void say(DEFEAT, true); }
   }
   const attackRef = useRef(attack); attackRef.current = attack;
   // Space attacks with the steered Zig (Brix if nobody is steered); the others fight on their own.
@@ -311,13 +379,14 @@ export function KronkLairScene() {
   }, [fighting]);
 
   const tapZig = (a: Zig) => {
+    if (!fighting) return; // no switching or steering during the cinematic intro
     const now = performance.now(), l = lastTap.current;
     if (l && l.a === a && now - l.t < 380) { lastTap.current = null; setSteer(s => (s === a ? null : a)); }
     else lastTap.current = { a, t: now };
   };
   const onGround = (e: React.PointerEvent<HTMLDivElement>) => {
     const tg = e.target as Element | null;
-    if (!steer || !groundRef.current || tg?.closest?.("button,.haven-zig")) return;
+    if (!fighting || !steer || !groundRef.current || tg?.closest?.("button,.haven-zig")) return;
     const r = groundRef.current.getBoundingClientRect();
     walkTo(steer, clampToGround({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 }));
   };
@@ -328,6 +397,9 @@ export function KronkLairScene() {
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
         <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-stomping" : ""} ${guard ? "is-guarding" : ""} ${stunned ? "is-stunned" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
+        {battleCry && <svg className="kronk-laser kronk-glare" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><circle className="kronk-eye is-flare" cx={EYE.x} cy={EYE.y} r={1.2}/></svg>}
+        {rageBlink > 0 && <svg key={rageBlink} className="kronk-laser kronk-glare" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><circle className="kronk-eye is-flare" cx={EYE.x} cy={EYE.y} r={1.2}/></svg>}
+        {raging && <svg className="kronk-laser kronk-glare" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><circle className="kronk-eye is-burn" cx={EYE.x} cy={EYE.y} r={1}/></svg>}
         {laser && <svg key={laser.id} className="kronk-laser" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {[-0.25, 0.25].map(o => <g key={o}>
             <line className="beam-halo" x1={EYE.x + o} y1={EYE.y} x2={laser.to.x + o * 0.4} y2={laser.to.y} />
@@ -348,15 +420,17 @@ export function KronkLairScene() {
         {sludge.map(g => <span key={g.id} className="sludge-mark" style={{ left: `${g.x}%`, top: `${g.y}%`, width: `${g.r * 0.9}%` }} aria-hidden="true"><span className="sludge-glob"/></span>)}
         {quake > 0 && <span key={quake} className="kronk-quake" aria-hidden="true"/>}
         {pops.map(p => <span key={p.id} className={`kronk-pop pop-${p.kind} ${p.big ? "is-big" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-hidden="true">{p.text}</span>)}
-        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""} ${atk[z]?.cls ?? ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
+        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; const face = !m && !fighting ? `facing-${p.x < 50 ? "right" : "left"} ${z.toLowerCase()}-facing-${p.x < 50 ? "right" : "left"}` : ""; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : face} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""} ${atk[z]?.cls ?? ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
       </div>
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
     </div>
     <div className="map-coordinate top-right">KRONK'S LAIR</div>
+    {bubble && step >= INTRO.length && (() => { const w = bubble.who; const zx = w === "Kronk" || w === "Network" ? 50 : Math.min(82, Math.max(14, pos[w].x)); return <div key={bubble.text} className={`lair-bubble ${w === "Network" ? "is-network" : ""} ${w === "Kronk" ? "is-kronk" : ""}`} style={{ left: `${zx}%`, ...(w === "Network" ? { top: "10%" } : w === "Kronk" ? { top: "26%" } : { bottom: "16%" }) }} role="status"><b>{w.toUpperCase()}</b>{bubble.text}</div>; })()}
+    {battleCry && <div className="kronk-title" role="status">KRONK<small>THE NETWORK'S BEAST</small></div>}
     {fighting && typeof document !== "undefined" && createPortal(<button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); attack(steer ?? "Brix"); }} aria-label="Attack Kronk">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>, document.body)}
     {kronkHp <= 0 && <div className="map-coordinate kronk-down" role="status">KRONK DOWN</div>}
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the road to walk · double-tap {steer} to let go</div>}
-    {step >= 4 && <div className="boss-hud" role="status" aria-label="Fight status">
+    {fighting && <div className="boss-hud" role="status" aria-label="Fight status">
       <div className="boss-hud-row"><span className="boss-name">KRONK <small>WARLORD</small></span></div>
       <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(kronkHp / KRONK_HP) * 100}%` }}/></div>
       <div className="boss-hud-row crew squad-row">

@@ -53,3 +53,5 @@
 - [x] Kronk's laser fires from his single red eye, not his body
 - [x] Thicker Kronk laser beam
 - [x] Kronk fight: stop Kronk vanishing/jittering on stomp; remove blue guard circle
+- [x] Kronk 20-second cinematic intro (creator's script): Zigs frozen facing Kronk, no combat until it ends, roar + red eye flash + title card + health bar at battle start; replays on retry
+- [x] Kronk anger dialogue: 3 HP-phase exchanges (100-60 / 60-25 / 25-0), reactive battle remarks with cooldowns, Network shutdown defeat sequence (verified in browser: all phases + defeat fired in order)
