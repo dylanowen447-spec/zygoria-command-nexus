@@ -1340,7 +1340,7 @@ body > .combat-dodge{position:fixed}
 .marker-brix.atk-punch.facing-left:not(.brix-facing-right) .sheet-punch{background-position-y:33.3333%}
 /* Kronk: stomp sheet is always loaded (hidden) so he never blinks out on his first stomp; sized to match his standing height. No guard ring. */
 .kronk-stomp{width:23.1%;visibility:hidden;animation:none}
-.kronk-stomp.is-on{visibility:visible;animation:kronk-stomp-frames 1.76s steps(8,jump-none) forwards}
+.kronk-stomp.is-on{visibility:visible;animation:kronk-stomp-frames 1.76s step-end forwards} /* step-end: hold each keyframe's whole frame; steps(n) here sub-stepped between frames and slid the sheet sideways */
 .kronk-guard{display:none}
 
 /* DEV · COMBAT ARENA (editor-only training room) */

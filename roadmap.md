@@ -72,3 +72,5 @@
 - [x] Big red punch bag: same mechanics as the dummy (hits, health, damage numbers, reset) — phone verified
 - [ ] Read and action the uploaded "ZYGORIA FIRST GENESIS - TALK TO THE ZIGS" file — Phase 1 built (off-script chat with Brix in the Training Grounds); reply delivery still being verified
 - [ ] Free Talk: use the same talk box the crew already use in scene 1, and make it available in every scene (all three Zigs)
+- [ ] Training Grounds: Dispatch replies must be spoken aloud (slow first-time voices were being dropped)
+- [ ] Kronk stomp: play the stomp sheet frame by frame (no sideways stretch), impact on contact frame, back to idle

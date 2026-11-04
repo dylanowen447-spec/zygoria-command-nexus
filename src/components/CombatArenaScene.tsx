@@ -144,10 +144,10 @@ export function CombatArenaScene({ command = null }: { command?: { id: number; t
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   // One line: waits for the voice to finish, then a short read pause before resolving.
-  const line = (who: Fighter, text: string) => new Promise<void>(res => {
+  const line = (who: Fighter, text: string, staleMs = 2500) => new Promise<void>(res => {
     let shown = false; const show = () => { shown = true; if (alive.current) setBubble({ who, text }); };
     const hold = setTimeout(show, 900); // silent fallback when voices are off or slow
-    void speak(who, text, () => { clearTimeout(hold); show(); }, 2500).then(() => {
+    void speak(who, text, () => { clearTimeout(hold); show(); }, staleMs).then(() => {
       clearTimeout(hold); if (!shown) show();
       setTimeout(() => { if (alive.current) setBubble(null); res(); }, 900 + text.length * 25);
     });
@@ -165,7 +165,8 @@ export function CombatArenaScene({ command = null }: { command?: { id: number; t
         const j = await r.json(); if (j.reply) reply = String(j.reply);
       } catch { /* keep fallback */ }
       if (!alive.current) return;
-      setBubble(null); await line(who, reply);
+      // A fresh reply's voice takes ~5–6s to generate the first time: wait for it instead of dropping it.
+      setBubble(null); await line(who, reply, 20000);
       talkBusy.current = false; lastLine.current = performance.now();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -183,7 +184,7 @@ export function CombatArenaScene({ command = null }: { command?: { id: number; t
     if (talkBusy.current || talking.current || now - lastLine.current < gap || now - (convoAt.current[key] ?? -Infinity) < CONVO_COOLDOWN) return false;
     talking.current = true; convoAt.current[key] = now;
     void (async () => {
-      for (const [w, t] of CONVOS[key] ?? []) { if (!alive.current) return; await line(w, t); await new Promise(r => setTimeout(r, 250)); }
+      for (const [w, t] of CONVOS[key] ?? []) { if (!alive.current) return; if (talkBusy.current) break; await line(w, t); await new Promise(r => setTimeout(r, 250)); }
       talking.current = false; lastLine.current = performance.now();
     })();
     return true;
