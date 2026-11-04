@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import groundsArt from "@/assets/training-grounds.png.asset.json";
-import { attackBox, attackPhase, hurtbox, resolveSwing, type Box, type Facing, type Fighter } from "@/lib/combat-boxes";
+import { ATTACK, attackBox, attackPhase, hurtbox, resolveSwing, type Box, type Facing, type Fighter } from "@/lib/combat-boxes";
 
 /** Editor-only Training Grounds: painted art, one interactive dummy (first prop), depth scaling. No health, no enemies. */
 type Swing = { start: number; facing: Facing; struck: Set<number>; heavy: boolean };
@@ -58,6 +58,8 @@ const SPEED = 24; // % of stage width per second (screen-equal in every directio
 const ACCEL = 300, DECEL = 220; // very short ease in/out
 const ASPECT = 1671 / 941; // stage width / height: converts y% into width-equivalent units
 
+/** Training dummy health; it springs back to full a moment after being knocked down. */
+const DUMMY_HP = 30;
 export function CombatArenaScene() {
   const [zig, setZig] = useState<Fighter>("Brix");
   const [debug, setDebug] = useState(false);
@@ -70,7 +72,7 @@ export function CombatArenaScene() {
   const vel = useRef({ x: 0, y: 0 });
   const lastTap = useRef<{ z: Fighter; t: number } | null>(null); // double-tap a resting Zig to switch; a single tap walks
   const swing = useRef<Swing | null>(null);
-  const dummy = useRef({ hurt: 0, dir: 1, kind: "" as Fighter | "", hits: 0, heavy: false });
+  const dummy = useRef({ hurt: 0, dir: 1, kind: "" as Fighter | "", hits: 0, heavy: false, hp: DUMMY_HP, dmg: 0, total: 0, down: 0 });
   const pressAt = useRef(0);
   const stuck = useRef({ dist: Infinity, at: 0 });
   const [log, setLog] = useState("Tap the floor to walk · tap ATTACK to strike, hold for heavy · DODGE to roll (Space / Shift on keyboard)");
@@ -147,13 +149,18 @@ export function CombatArenaScene() {
         if (ph === "active") {
           const dep = depthAt(p.y);
           const hits = resolveSwing(attackBox(zig, p, sw.facing, dep), [{ id: 1, box: hurtbox("Brix", DUMMY, 1.3) }], sw.struck);
-          if (hits.length) {
+          if (hits.length && !dm.down) {
+            // Real damage: the same per-Zig values the fight engine uses, doubled for a heavy.
+            const amount = ATTACK[zig].dmg * (sw.heavy ? 2 : 1);
             dm.hurt = now; dm.kind = zig; dm.heavy = sw.heavy; dm.hits += 1; dm.dir = p.x < DUMMY.x ? 1 : -1;
-            setLog(`${sw.heavy ? "HEAVY " : ""}HIT · ${zig} · ${dm.hits} total`);
+            dm.dmg = amount; dm.total += amount; dm.hp = Math.max(0, dm.hp - amount);
+            setLog(`${sw.heavy ? "HEAVY " : ""}${zig} · −${amount} HP · ${dm.total} damage total`);
+            if (dm.hp === 0) { dm.down = now; setLog(`Dummy knocked down! ${dm.total} damage total`); }
           }
         }
         if (ph === "done") { if (!sw.struck.size) setLog("Miss — swing didn't reach the dummy"); swing.current = null; }
       }
+      if (dummy.current.down && now - dummy.current.down > 1400) { dummy.current.down = 0; dummy.current.hp = DUMMY_HP; }
       tick(n => n + 1);
       raf = requestAnimationFrame(loop);
     };
@@ -180,11 +187,16 @@ export function CombatArenaScene() {
     <div className="arena-stage" ref={stage} onPointerDown={tap}>
       <img className="arena-bg" src={groundsArt.url} alt="Riverside Sanctuary training grounds" draggable={false}/>
       <span className="arena-label">TRAINING GROUNDS</span>
+      <div className="boss-hud arena-hud" role="status" aria-label={`Training dummy health ${dm.hp} of ${DUMMY_HP}`}>
+        <div className="boss-hud-row"><span className="boss-name">DUMMY <small>{dm.hp}/{DUMMY_HP} HP · {dm.total} dealt</small></span></div>
+        <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(dm.hp / DUMMY_HP) * 100}%` }}/></div>
+      </div>
       <span className={`arena-dummy ${reacting ? `is-hit hit-${dm.kind.toLowerCase()} ${dm.heavy ? "is-heavy" : ""}` : ""}`} aria-label={`Training dummy, ${dm.hits} hits`}
         style={{ left: `${c.l}%`, top: `${c.t}%`, width: `${c.w}%`, height: `${c.h}%`, zIndex: 5 + Math.round(DUMMY.y),
           backgroundImage: `url(${groundsArt.url})`, backgroundSize: `${10000 / c.w}% ${10000 / c.h}%`,
           backgroundPosition: `${(c.l / (100 - c.w)) * 100}% ${(c.t / (100 - c.h)) * 100}%`, ["--dir" as string]: dm.dir }}>
-        {reacting && <span key={dm.hits} className="arena-hitmark">{dm.heavy ? "POW!" : "HIT"}</span>}
+        <span className="arena-dummy-hp" aria-hidden="true"><span style={{ width: `${(dm.hp / DUMMY_HP) * 100}%` }}/></span>
+        {reacting && <span key={dm.hits} className={`arena-hitmark ${dm.heavy ? "is-heavy" : ""}`}>−{dm.dmg}{dm.heavy ? " POW!" : ""}</span>}
       </span>
       {(["Brix", "Lowkey", "Oz"] as Fighter[]).filter(z => z !== zig).map(z => { const q = crewPos.current[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()}`} onPointerDown={e => { const l = lastTap.current, now = performance.now(); if (l && l.z === z && now - l.t < 380) { e.stopPropagation(); lastTap.current = null; target.current = null; setZig(z); } else lastTap.current = { z, t: now }; }} style={{ left: `${q.x}%`, ["--fy" as string]: `${100 - q.y}%`, zIndex: 5 + Math.round(q.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(q.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(q.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={z}/></span></span>; })}
       <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${roll.current ? "is-rolling" : ""} ${sw ? `is-attacking ${atkPose(zig, sw.heavy)} facing-${atkSide} ${zig.toLowerCase()}-facing-${atkSide}` : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>

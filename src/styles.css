@@ -1380,3 +1380,8 @@ body > .combat-dodge{position:fixed}
 /* Training Grounds dodge roll: uses rotate/translate so the inline depth scale stays intact. */
 .arena-stage .haven-zig.is-rolling .sprite-stage{animation:arena-roll .3s ease-out;opacity:.75}
 @keyframes arena-roll{35%{rotate:-14deg;translate:0 4px}100%{rotate:0deg;translate:0 0}}
+/* Training Grounds dummy health: bar over the dummy plus the shared boss-style HUD bar. */
+.arena-dummy-hp{position:absolute;left:15%;right:15%;top:-6%;height:5px;border-radius:3px;background:var(--background);border:1px solid var(--border);overflow:hidden}
+.arena-dummy-hp>span{display:block;height:100%;background:var(--primary);transition:width .2s ease-out}
+.arena-hitmark.is-heavy{font-size:clamp(.75rem,2.6vw,1.25rem);color:var(--accent)}
+.arena-hud{position:absolute;top:2%;left:50%;transform:translateX(-50%);width:min(60%,320px);z-index:200;pointer-events:none}
