@@ -8,7 +8,9 @@ export function setVoicesOn(on: boolean) { localStorage.setItem(KEY, on ? "0" : 
 
 /** On-device clip store: lines heard once play instantly on every later visit, no network. */
 const DISK = "zyg-voice-v1";
-const diskKey = (who: string, text: string) => `/__voice/${encodeURIComponent(who)}/${encodeURIComponent(text)}`;
+// Invalidate only the two revised performances; everyone else's saved clips stay intact.
+const castRevision = (who: string) => who === "Kronk" || who === "Shelton" ? "relationship-2026-11-04/" : "";
+const diskKey = (who: string, text: string) => `/__voice/${castRevision(who)}${encodeURIComponent(who)}/${encodeURIComponent(text)}`;
 async function fromDisk(who: string, text: string): Promise<Blob | null> {
   try { const r = await (await caches.open(DISK)).match(diskKey(who, text)); return r ? await r.blob() : null; } catch { return null; }
 }

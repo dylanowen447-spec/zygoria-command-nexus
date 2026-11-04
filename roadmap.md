@@ -1,5 +1,11 @@
 # Roadmap
 
+- [x] Update Kronk/Shelton voice directions and shared canon without changing existing story events (new performances not listened to)
+- [x] Add Shelton to Kronk's battleground, slightly larger than the Zigs but smaller than Kronk; spoken exchanges for everyone
+- [x] Match Shelton's lair fight to Old City's movement, attack ranges, hold-heavy, dodge and shared squad health; browser verified damage and dodge
+- [x] Kronk orders Shelton to dispose of the three insects; he walks on the order, guards/lunges and never retreats mid-fight
+- [x] Enlarge Kronk by 10%, including stomp and eye alignment; desktop and phone checked
+
 - [x] Give opening egg taps three distinct progressive metal cracking sounds
 - [x] Colour egg TAP markers: Lowkey red, Brix blue, Oz yellow; verified all three eggs hatch individually
 

@@ -3,14 +3,18 @@ import { createPortal } from "react-dom";
 import bg from "@/assets/kronk-lair.png.asset.json";
 import kronkIdle from "@/assets/kronk-idle.png.asset.json";
 import kronkStomp from "@/assets/kronk-stomp.webp.asset.json";
+import sheltonSheet from "@/assets/shelton.webp.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
+import { Button } from "@/components/ui/button";
 import { speak, voicesOn } from "@/lib/voice";
 import { startKronkMusic, stopKronkMusic, playSfx } from "@/lib/atmosphere";
 import { MAX_HP as SQUAD_HP, allDown, damage, fullSquad, type Squad } from "@/lib/squad-health";
+import { SHELTON_HOME, SHELTON_HP, SHELTON_REACH, lairDistance, targetsShelton } from "@/lib/lair-shelton";
+import { SHELTON_DISPATCH, SHELTON_RETREAT } from "@/lib/lair-shelton-dialogue";
 
 /** Kronk's Lair: inside the bunker gate, the crew face Kronk himself. Editor-only — no story road yet; Kronk fires laser eyes at the crew. */
 type Zig = "Oz" | "Brix" | "Lowkey";
-type Line = { who: Zig | "Kronk" | "Network"; text: string };
+type Line = { who: Zig | "Kronk" | "Shelton" | "Network"; text: string };
 
 /** Walkable dirt road traced from the creator's ground guide, in artwork % (x from left, y from top). */
 const GROUND: [number, number][] = [[4,62],[96,62],[99,92],[1,92]];
@@ -54,7 +58,7 @@ const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[
 
 /** Anger phases (creator's script): each exchange plays once as Kronk's health drops — amusement, temper, pure rage. */
 const PHASE1: Line[] = [
-  { who: "Kronk", text: "HAHAHAHA! The Network sends CHILDREN to challenge ME?" },
+  { who: "Kronk", text: "HAHAHAHA! Three CHILDREN dare challenge ME?" },
   { who: "Oz", text: "Children?! Mate, you're a handbag with batteries!" },
   { who: "Kronk", text: "WHAT DID YOU CALL ME?!" },
   { who: "Brix", text: "He called you a handbag." },
@@ -76,6 +80,7 @@ const PHASE3: Line[] = [
 ];
 const CRIT: Line[] = [
   { who: "Kronk", text: "SHELTON! WHERE ARE YOU, YOU USELESS TURTLE?!" },
+  { who: "Shelton", text: "H-here, sire! Your perfect might hardly needs my assistance!" },
   { who: "Oz", text: "Probably hiding in his shell!" },
 ];
 /** Genesis 1 ending: the Zigs beat Kronk, but the Network shuts him down. */
@@ -93,7 +98,7 @@ const DEFEAT: Line[] = [
 
 const KRONK_HP = 100;
 // Kronk's single red eye in ground %: sprite box is 26% wide, feet at 59%, eye sits 73.7% across / 16.3% down the frame.
-const EYE = { x: 50 - 13 + 0.737 * 26, y: 59 - 26 * (230 / 380) * (4 / 3) * (1 - 0.163) };
+const EYE = { x: 50 - 14.3 + 0.737 * 28.6, y: 59 - 28.6 * (230 / 380) * (4 / 3) * (1 - 0.163) };
 
 /** Same hold threshold as every other fight: hold ATTACK/Space this long for the heavy attack. */
 const HOLD_MS = 600;
@@ -101,6 +106,9 @@ export function KronkLairScene() {
   const [pos, setPos] = useState<Record<Zig, P>>({ Brix: { x: 42, y: 84 }, Oz: { x: 52, y: 87 }, Lowkey: { x: 62, y: 85 } });
   const [moving, setMoving] = useState<Partial<Record<Zig, { dir: "left" | "right"; ms: number }>>>({});
   const [steer, setSteer] = useState<Zig | null>(null);
+  const [rolling, setRolling] = useState<Zig | null>(null);
+  const dodgeUntil = useRef<Partial<Record<Zig, number>>>({});
+  const lastDodge = useRef(0);
   const [bubble, setBubble] = useState<Line | null>(null);
   const [step, setStep] = useState(0);
   const lastTap = useRef<{ a: Zig; t: number } | null>(null);
@@ -135,6 +143,71 @@ export function KronkLairScene() {
   const [fx, setFx] = useState<{ from: P; kind: Zig; id: number }[]>([]);
   const cooldown = useRef<Partial<Record<Zig, number>>>({});
   const fighting = step >= INTRO.length && kronkHp > 0; // battle begins only after the full cinematic intro has played
+  const [shelton, setShelton] = useState({ ...SHELTON_HOME, hp: SHELTON_HP, mode: "waiting" as "waiting" | "walk" | "windup" | "lunge" | "open" | "beaten" | "flee" });
+  const sheltonRef = useRef(shelton); sheltonRef.current = shelton;
+  const sheltonLive = useRef(false);
+  useEffect(() => {
+    if (!fighting) {
+      sheltonLive.current = false;
+      if (step < INTRO.length) setShelton({ ...SHELTON_HOME, hp: SHELTON_HP, mode: "waiting" });
+      else setShelton(s => ({ ...s, mode: "flee" }));
+      return;
+    }
+    let live = true;
+    const t = setTimeout(() => {
+      void say([...SHELTON_DISPATCH], true, () => {
+        if (!live || kronkHpRef.current <= 0) return;
+        sheltonLive.current = true;
+        setShelton(s => ({ ...s, mode: "walk" }));
+      });
+    }, 4200);
+    return () => { live = false; clearTimeout(t); sheltonLive.current = false; };
+  }, [fighting]);
+  // The lieutenant alone owns this short pursuit/telegraph loop; Kronk's attacks remain unchanged.
+  useEffect(() => {
+    if (!fighting) return;
+    let live = true, raf = 0, nextRush = performance.now() + 1500, impactAt = 0, openUntil = 0, previous = performance.now(), rushStart = 0;
+    let rushFrom: P = { ...SHELTON_HOME }, rushing = false;
+    let prey: Zig = "Brix", aim: P = { x: 42, y: 84 };
+    const frame = (now: number) => {
+      if (!live) return;
+      const dt = Math.min(.05, (now - previous) / 1000); previous = now;
+      const s = sheltonRef.current;
+      if (sheltonLive.current && s.hp > 0) {
+        if (rushing && now < impactAt) {
+          const k = Math.min(1, (now - rushStart) / 450);
+          setShelton(q => ({ ...q, x: rushFrom.x + (aim.x - rushFrom.x) * k, y: rushFrom.y + (aim.y - rushFrom.y) * k, mode: "lunge" }));
+        } else if (impactAt && now >= impactAt) {
+          if (!rushing) { rushing = true; rushStart = now; rushFrom = { x: s.x, y: s.y }; impactAt = now + 450; raf = requestAnimationFrame(frame); return; }
+          rushing = false;
+          impactAt = 0; openUntil = now + 1600; nextRush = now + 4200;
+          setShelton(q => ({ ...q, mode: "open" }));
+          if (squadRef.current[prey] > 0 && lairDistance(posRef.current[prey], aim) < 8 && !movingRef.current[prey] && (dodgeUntil.current[prey] ?? 0) < now) {
+            const hp = damage(squadRef.current, prey); squadRef.current = hp; setSquad(hp); playSfx("hurt");
+            if (allDown(hp)) { sheltonLive.current = false; setStep(0); const f = fullSquad(); squadRef.current = f; setSquad(f); kronkHpRef.current = KRONK_HP; setKronkHp(KRONK_HP); said.current = { p1: false, p2: false, p3: false, crit: false }; setRaging(false); setRageBlink(0); setLaser(null); }
+          } else playSfx("miss");
+        } else if (!impactAt && now > openUntil) {
+          const living = (["Brix", "Oz", "Lowkey"] as Zig[]).filter(z => squadRef.current[z] > 0);
+          living.sort((a, b) => lairDistance(s, posRef.current[a]) - lairDistance(s, posRef.current[b]));
+          const target = living[0];
+          if (target) {
+            const p = posRef.current[target], d = lairDistance(s, p);
+            if (d < 7 && now >= nextRush) {
+              prey = target; aim = { ...p }; impactAt = now + 650;
+              setShelton(q => ({ ...q, mode: "windup" })); playSfx("swing");
+            } else if (d > 5) {
+              const k = Math.min(1, dt * 10 / d);
+              const p2 = clampToGround({ x: s.x + (p.x - s.x) * k, y: s.y + (p.y - s.y) * k });
+              setShelton(q => ({ ...q, ...p2, mode: "walk" }));
+            }
+          }
+        }
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => { live = false; cancelAnimationFrame(raf); };
+  }, [fighting]);
   // Like the other fights, you always control a Zig — Brix to start; double-tap another to switch.
   useEffect(() => { if (fighting) setSteer(s => s ?? "Brix"); }, [fighting]);
 
@@ -272,6 +345,25 @@ export function KronkLairScene() {
     };
     requestAnimationFrame(frame);
   }
+  function dodge() {
+    const a = steerRef.current ?? "Brix", now = performance.now();
+    if (!fighting || squadRef.current[a] <= 0 || now - lastDodge.current < 650) return;
+    lastDodge.current = now; dodgeUntil.current[a] = now + 380; setRolling(a); playSfx("miss");
+    const from = posRef.current[a], enemy = sheltonLive.current ? sheltonRef.current : { x: 50, y: 64 };
+    const dx = from.x - enemy.x, dy = (from.y - enemy.y) * 1.4, len = Math.hypot(dx, dy) || 1;
+    const to = clampToGround({ x: from.x + dx / len * 13, y: from.y + dy / len * 8 });
+    const id = (walkId.current[a] = (walkId.current[a] ?? 0) + 1);
+    setMoving(m => ({ ...m, [a]: { dir: dx < 0 ? "left" : "right", ms: 300 } }));
+    const frame = (t: number) => {
+      if (walkId.current[a] !== id) return;
+      const k = Math.min(1, (t - now) / 300);
+      setPos(p => ({ ...p, [a]: { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k } }));
+      if (k < 1) requestAnimationFrame(frame);
+      else { setMoving(m => ({ ...m, [a]: undefined })); setRolling(r => r === a ? null : r); }
+    };
+    requestAnimationFrame(frame);
+  }
+  const dodgeRef = useRef(dodge); dodgeRef.current = dodge;
   // Invisible force field: every so often Kronk pulses and any Zig too close skids back across the floor.
   const [field, setField] = useState(0);
   useEffect(() => {
@@ -319,13 +411,13 @@ export function KronkLairScene() {
   const said = useRef({ p1: false, p2: false, p3: false, crit: false });
   const [raging, setRaging] = useState(false); // phase 3: his eye burns red for the rest of the fight
   const [rageBlink, setRageBlink] = useState(0); // phase 2: a short red eye flash
-  async function say(lines: Line[], force = false) {
+  async function say(lines: Line[], force = false, onFirstStart?: () => void) {
     if (!force && (banterBusy.current || performance.now() - lastBanter.current < 8000)) return;
     while (banterBusy.current) await new Promise(r => setTimeout(r, 400));
     banterBusy.current = true;
-    for (const l of lines) {
+    for (const [i, l] of lines.entries()) {
       const started = performance.now();
-      await speak(l.who, l.text, () => setBubble(l));
+      await speak(l.who, l.text, () => { setBubble(l); if (i === 0) onFirstStart?.(); });
       if (!voicesOn()) await new Promise(r => setTimeout(r, Math.max(0, 2600 - (performance.now() - started))));
       await new Promise(r => setTimeout(r, 250));
     }
@@ -343,6 +435,25 @@ export function KronkLairScene() {
     const now = performance.now();
     if ((cooldown.current[a] ?? 0) > now) return;
     const p = posRef.current[a];
+    const s = sheltonRef.current;
+    if (targetsShelton(p, s, sheltonLive.current && s.hp > 0, SHELTON_REACH[a])) {
+      cooldown.current[a] = now + (a === "Brix" ? 700 : a === "Lowkey" ? 480 : 560);
+      const facing = s.x < p.x ? "left" : "right";
+      showAtk(a, `${a === "Brix" ? "atk-punch" : a === "Lowkey" ? "atk-slash" : "atk-quick"} ${heavy ? "is-heavy" : ""} facing-${facing} ${a.toLowerCase()}-facing-${facing}`, 600);
+      playSfx(a === "Oz" ? "zap" : "swing");
+      setTimeout(() => {
+        const enemy = sheltonRef.current;
+        if (!sheltonLive.current || enemy.hp <= 0 || squadRef.current[a] <= 0 || lairDistance(posRef.current[a], enemy) > SHELTON_REACH[a]) return;
+        const guardBreak = a === "Brix" && heavy;
+        const n = enemy.mode === "open" || guardBreak ? (heavy ? 2 : 1) : 0;
+        if (!n) { pop("BLOCKED", "block", enemy.x, enemy.y - 10); playSfx("miss"); return; }
+        const hp = Math.max(0, enemy.hp - n);
+        setShelton(q => ({ ...q, hp, mode: hp <= 0 ? "beaten" : q.mode }));
+        pop(`-${n}`, a.toLowerCase(), enemy.x, enemy.y - 10); playSfx(a === "Oz" ? "zap-hit" : "punch-heavy");
+        if (hp <= 0) { sheltonLive.current = false; setShelton(q => ({ ...q, mode: "beaten" })); void say([...SHELTON_RETREAT], true); }
+      }, 260);
+      return;
+    }
     // The player's Zig fights where they stand, like every other fight: walk in range yourself or the swing whiffs.
     if (player) {
       const side0 = p.x < 50 ? -1 : 1, dist = Math.hypot(p.x - 50, (p.y - 64) * 1.4), reach = a === "Oz" ? 45 : 15;
@@ -417,11 +528,17 @@ export function KronkLairScene() {
   useEffect(() => {
     if (!fighting) return;
     let down = 0;
-    const key = (e: KeyboardEvent) => { if (e.code === "Space") { e.preventDefault(); if (!e.repeat && !down) down = performance.now(); } };
+    const key = (e: KeyboardEvent) => { if ((e.target as HTMLElement)?.closest("input,textarea,[contenteditable=true]")) return; if (e.code === "ShiftLeft" || e.code === "ShiftRight") { e.preventDefault(); dodgeRef.current(); } if (e.code === "Space") { e.preventDefault(); if (!e.repeat && !down) down = performance.now(); } };
     const keyUp = (e: KeyboardEvent) => { if (e.code === "Space" && down) { e.preventDefault(); const held = performance.now() - down; down = 0; attackRef.current(steerRef.current ?? "Brix", held >= HOLD_MS, true); } };
     window.addEventListener("keydown", key); window.addEventListener("keyup", keyUp);
     const auto = setInterval(() => {
-      (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => { if (a !== steerRef.current && Math.random() < 0.45) attackRef.current(a); });
+      (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => {
+        if (a === steerRef.current || squadRef.current[a] <= 0) return;
+        const s = sheltonRef.current;
+        if (sheltonLive.current && s.hp > 0 && a !== "Oz" && lairDistance(posRef.current[a], s) > SHELTON_REACH[a]) {
+          walkTo(a, clampToGround({ x: s.x + (a === "Brix" ? -4 : 4), y: s.y + 2 }));
+        } else if (Math.random() < .45) attackRef.current(a);
+      });
     }, 2600);
     return () => { window.removeEventListener("keydown", key); window.removeEventListener("keyup", keyUp); clearInterval(auto); };
   }, [fighting]);
@@ -444,6 +561,7 @@ export function KronkLairScene() {
     <img className="world-image" src={bg.url} alt="Inside Kronk's bunker: red lamps, rat banners and glowing green tanks around a control console above a hazard-striped floor" />
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
+        <span className={`lair-shelton ${shelton.mode === "flee" ? "is-fleeing" : ""} is-${shelton.mode}`} style={{ left: `${shelton.x}%`, bottom: `${100 - shelton.y}%`, zIndex: 5 + Math.round(shelton.y) }} role="img" aria-label="Shelton, Kronk's nervous lieutenant"><span className="lair-shelton-art" style={{ backgroundImage: `url(${sheltonSheet.url})` }}/></span>
         <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix", false, true); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-stomping" : ""} ${guard ? "is-guarding" : ""} ${stunned ? "is-stunned" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {battleCry && <svg className="kronk-laser kronk-glare" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><circle className="kronk-eye is-flare" cx={EYE.x} cy={EYE.y} r={1.2}/></svg>}
         {rageBlink > 0 && <svg key={rageBlink} className="kronk-laser kronk-glare" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><circle className="kronk-eye is-flare" cx={EYE.x} cy={EYE.y} r={1.2}/></svg>}
@@ -469,7 +587,7 @@ export function KronkLairScene() {
         {field > 0 && <span key={`f${field}`} className="kronk-field" aria-hidden="true"/>}
         {quake > 0 && <span key={quake} className="kronk-quake" aria-hidden="true"/>}
         {pops.map(p => <span key={p.id} className={`kronk-pop pop-${p.kind} ${p.big ? "is-big" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} aria-hidden="true">{p.text}</span>)}
-        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; const face = !m && !fighting ? "look-away" : ""; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : face} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""} ${atk[z]?.cls ?? ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
+        {(["Brix", "Oz", "Lowkey"] as Zig[]).map(z => { const m = moving[z], p = pos[z]; const face = !m && !fighting ? "look-away" : ""; return <span key={z} className={`haven-zig marker-${z.toLowerCase()} ${m ? `is-walking ${z.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : face} ${rolling === z ? "is-rolling" : ""} ${steer === z ? "is-controlled" : ""} ${hit === z ? "is-lasered" : ""} ${atk[z]?.cls ?? ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, ["--depth" as string]: String(Math.min(1.18, Math.max(0.78, 0.8 + (p.y - 50) * 0.01))), zIndex: 5 + Math.round(p.y), transitionDuration: "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(z); }} role="button" aria-label={`${z} — double-tap to steer`}>{steer === z && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={z}/></span></span>; })}
       </div>
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
     </div>
@@ -477,10 +595,12 @@ export function KronkLairScene() {
     {battleCry && <div className="kronk-title" role="status">KRONK<small>THE NETWORK'S BEAST</small></div>}
     {fighting && typeof document !== "undefined" && createPortal(<button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older Safari */ } holdStart.current = performance.now(); }} onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; attack(steer ?? "Brix", held >= HOLD_MS, true); }} onPointerCancel={() => { holdStart.current = 0; }} aria-label="Attack Kronk — hold for heavy">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>, document.body)}
     {kronkHp <= 0 && <div className="map-coordinate kronk-down" role="status">KRONK DOWN</div>}
+    {fighting && typeof document !== "undefined" && createPortal(<Button type="button" className="combat-dodge" aria-label={`Dodge roll with ${steer ?? "Brix"}`} onPointerDown={e => { e.preventDefault(); e.stopPropagation(); dodge(); }}>DODGE</Button>, document.body)}
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · tap the floor to walk in close · double-tap another Zig to switch</div>}
     {fighting && <div className="boss-hud" role="status" aria-label="Fight status">
       <div className="boss-hud-row"><span className="boss-name">KRONK <small>WARLORD</small></span></div>
       <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(kronkHp / KRONK_HP) * 100}%` }}/></div>
+      {shelton.mode !== "waiting" && shelton.hp > 0 && <div className="shelton-support-hud" aria-label={`Shelton health ${shelton.hp} of ${SHELTON_HP}`}><span className="boss-name">SHELTON</span><div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${shelton.hp / SHELTON_HP * 100}%` }}/></div></div>}
       <div className="boss-hud-row crew squad-row">
         {(["Brix", "Oz", "Lowkey"] as Zig[]).map(a => <span key={a} className={`squad-pips ${squad[a] <= 0 ? "is-down" : ""}`} aria-label={`${a} ${squad[a]} of ${SQUAD_HP[a]}`}>
           <span className="boss-name">{a.toUpperCase()}</span>

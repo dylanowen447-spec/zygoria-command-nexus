@@ -6,6 +6,7 @@
 <!-- LOVABLE:END -->
 
 - Keep prototype simulation client-side; it requires no persistent services or credentials.
+- Lair Shelton is isolated; version changed voice caches per speaker to preserve other clips.
 - Unlock opening audio directly in the page-turn gesture; hatch cues use a separate compressed Web Audio bus so their clarity does not change ambience or combat volume.
 - Keep public creator identity and linked search metadata in a shared browser-safe data module, with page-specific tags on the leaf route, so visible credits and crawler attribution stay consistent.
 - Keep visual roles and HUD styling in the global design tokens and stylesheet so the world interface remains consistent.

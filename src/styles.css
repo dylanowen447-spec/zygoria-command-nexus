@@ -1205,8 +1205,23 @@ body > .combat-dodge{position:fixed}
 .haven-scene .haven-layer .haven-zig,.haven-scene .haven-human{bottom:13%!important}.haven-scene .haven-bubble{bottom:calc(13% + 62px)}
 /* Kronk's Lair — 4:3 artwork cover box; Kronk idles at the foot of the stairs */
 .kronk-lair .kronk-ground{width:max(100cqw,133.34cqh);height:max(75cqw,100cqh)}
-.kronk-boss{position:absolute;left:50%;bottom:41%;width:26%;aspect-ratio:380/230;transform:translateX(-50%);background-size:300% 100%;background-repeat:no-repeat;animation:kronk-idle 1.2s steps(1) infinite;z-index:62;filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55))}
+.kronk-boss{position:absolute;left:50%;bottom:41%;width:28.6%;aspect-ratio:380/230;transform:translateX(-50%);background-size:300% 100%;background-repeat:no-repeat;animation:kronk-idle 1.2s steps(1) infinite;z-index:62;filter:drop-shadow(0 10px 8px hsl(0 0% 0% / .55))}
 @keyframes kronk-idle{0%{background-position:0 0}33%{background-position:50% 0}66%{background-position:100% 0}}
+.lair-shelton{position:absolute;left:69%;bottom:40%;width:126px;aspect-ratio:1;transform:translateX(-50%);z-index:60;pointer-events:none}
+@media(max-width:600px){.lair-shelton{width:66px}}
+.lair-shelton-art{display:block;width:100%;height:100%;background-size:1800% 100%;background-position:0 0;background-repeat:no-repeat}
+.lair-shelton.is-fleeing{animation:lair-shelton-escape 2.8s linear forwards}
+.lair-shelton.is-fleeing .lair-shelton-art{animation:lair-shelton-walk .66s step-end infinite}
+.lair-shelton.is-walk .lair-shelton-art{animation:lair-shelton-walk .66s step-end infinite}
+.lair-shelton.is-windup .lair-shelton-art{background-position:41.176471% 0}
+.lair-shelton.is-open .lair-shelton-art{background-position:52.941176% 0}
+.lair-shelton.is-lunge .lair-shelton-art{background-position:47.058824% 0}
+.lair-shelton.is-beaten .lair-shelton-art{background-position:88.235294% 0}
+.shelton-support-hud{display:flex;align-items:center;gap:8px;margin-top:4px}
+.shelton-support-hud .boss-name{font:700 8px var(--font-mono);letter-spacing:0}
+.shelton-support-hud .boss-bar{flex:1;height:4px}
+@keyframes lair-shelton-walk{0%{background-position:5.882353% 0}16.6667%{background-position:11.764706% 0}33.3333%{background-position:17.647059% 0}50%{background-position:23.529412% 0}66.6667%{background-position:29.411765% 0}83.3333%,100%{background-position:35.294118% 0}}
+@keyframes lair-shelton-escape{0%{left:69%;opacity:1}85%{opacity:1}100%{left:104%;opacity:0}}
 .kronk-bubble{border-color:hsl(var(--destructive));box-shadow:0 0 14px hsl(var(--destructive) / .6)}.kronk-bubble b{color:hsl(var(--destructive))}
 .kronk-laser{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:200;overflow:visible}
 .kronk-laser line{vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-dasharray:200;stroke-dashoffset:200;animation:kronk-beam 1.1s ease-out forwards}
@@ -1324,7 +1339,7 @@ body > .combat-dodge{position:fixed}
 .marker-brix.atk-punch:not(.brix-facing-left):not(.brix-facing-right):not(.facing-left) .sheet-punch{background-position-y:66.6667%}
 .marker-brix.atk-punch.facing-left:not(.brix-facing-right) .sheet-punch{background-position-y:33.3333%}
 /* Kronk: stomp sheet is always loaded (hidden) so he never blinks out on his first stomp; sized to match his standing height. No guard ring. */
-.kronk-stomp{width:21%;visibility:hidden;animation:none}
+.kronk-stomp{width:23.1%;visibility:hidden;animation:none}
 .kronk-stomp.is-on{visibility:visible;animation:kronk-stomp-frames 1.76s steps(8,jump-none) forwards}
 .kronk-guard{display:none}
 
