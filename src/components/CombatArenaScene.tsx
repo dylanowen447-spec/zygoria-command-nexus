@@ -142,7 +142,7 @@ export function CombatArenaScene() {
     if (talking.current || now - lastLine.current < gap || now - (convoAt.current[key] ?? -Infinity) < CONVO_COOLDOWN) return false;
     talking.current = true; convoAt.current[key] = now;
     void (async () => {
-      for (const [w, t] of CONVOS[key]) { if (!alive.current) return; await line(w, t); await new Promise(r => setTimeout(r, 250)); }
+      for (const [w, t] of CONVOS[key] ?? []) { if (!alive.current) return; await line(w, t); await new Promise(r => setTimeout(r, 250)); }
       talking.current = false; lastLine.current = performance.now();
     })();
     return true;
