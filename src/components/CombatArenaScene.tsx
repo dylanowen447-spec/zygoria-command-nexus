@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CharacterSprite } from "@/components/CharacterSprite";
+import { speak } from "@/lib/voice";
 import groundsArt from "@/assets/training-grounds.png.asset.json";
 import { ATTACK, attackBox, attackPhase, hurtbox, resolveSwing, type Box, type Facing, type Fighter } from "@/lib/combat-boxes";
 
@@ -58,6 +59,32 @@ const SPEED = 24; // % of stage width per second (screen-equal in every directio
 const ACCEL = 300, DECEL = 220; // very short ease in/out
 const ASPECT = 1671 / 941; // stage width / height: converts y% into width-equivalent units
 
+const others = (z: Fighter) => (["Brix", "Lowkey", "Oz"] as Fighter[]).filter(o => o !== z);
+/** Training Grounds team banter, in each Zig's own voice. Keyed by the Zig who is training. */
+const BANTER = {
+  heavy: {
+    Brix: ["Oof. Felt that from here.", "Easy, Brix! It's got a family!", "That bag owes you money or something?"],
+    Oz: ["Ooh, crispy.", "Smells like burnt scarecrow, lads.", "Nice spark, little man."],
+    Lowkey: ["Didn't even see that one.", "Quiet but deadly. Classic.", "Remind me never to annoy you."],
+  } as Record<Fighter, string[]>,
+  down: {
+    Brix: ["Down it goes! Again!", "Brix one, dummy nil.", "It's getting back up. Brave lad."],
+    Oz: ["Zapped flat! Lovely stuff.", "Short-circuited a scarecrow. Proud of you.", "That's going on the fridge."],
+    Lowkey: ["Shadow strikes again.", "It never knew what hit it.", "Clean. Very clean."],
+  } as Record<Fighter, string[]>,
+  tag: {
+    Brix: ["My turn on the bag!", "Stand back, lads. Big man's in.", "Right. Gloves on."],
+    Oz: ["Watch and learn, boys!", "Time for some sparkle!", "Oz is IN the building!"],
+    Lowkey: ["Fine. I'll show you how.", "Step aside.", "Let's keep this quiet."],
+  } as Record<Fighter, string[]>,
+  idle: [
+    ["Oz", "Lads, is it me or does the dummy look like Shelton?"], ["Brix", "Proper training. Just like Dad used to make me do."],
+    ["Lowkey", "The waterfall's nice. Very… splashy."], ["Oz", "After this, fish. Big fish."],
+    ["Brix", "Footwork, boys. It's all about footwork."], ["Lowkey", "I'm not tired. I'm conserving energy."],
+    ["Oz", "If Kronk shows up, I'm hiding behind Brix."], ["Brix", "Who left the tyres out? …Oh. Me."],
+  ] as [Fighter, string][],
+};
+
 /** Training dummy health; it springs back to full a moment after being knocked down. */
 const DUMMY_HP = 30;
 export function CombatArenaScene() {
@@ -77,6 +104,21 @@ export function CombatArenaScene() {
   const stuck = useRef({ dist: Infinity, at: 0 });
   const [log, setLog] = useState("Tap the floor to walk · tap ATTACK to strike, hold for heavy · DODGE to roll (Space / Shift on keyboard)");
   const stage = useRef<HTMLDivElement>(null);
+  // Team banter: one line at a time, spoken (when VOICES is on) with a bubble over the speaker.
+  const [bubble, setBubble] = useState<{ who: Fighter; text: string } | null>(null);
+  const talking = useRef(false), lastLine = useRef(0);
+  const say = (who: Fighter, text: string, force = false) => {
+    const now = performance.now();
+    if (talking.current || (!force && now - lastLine.current < 4000)) return;
+    talking.current = true; lastLine.current = now;
+    let shown = false; const show = () => { shown = true; setBubble({ who, text }); };
+    const hold = setTimeout(show, 900); // silent fallback when voices are off or slow
+    void speak(who, text, () => { clearTimeout(hold); show(); }, 2500).then(() => {
+      clearTimeout(hold); if (!shown) show();
+      setTimeout(() => { setBubble(null); talking.current = false; lastLine.current = performance.now(); }, 1400 + text.length * 25);
+    });
+  };
+  const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)] as T;
 
   const attack = (heavy = false) => { if (!swing.current) swing.current = { start: performance.now(), facing: facing.current, struck: new Set(), heavy }; };
     const [charged, setCharged] = useState(false);
@@ -93,6 +135,14 @@ export function CombatArenaScene() {
     const p = pos.current; let dx = p.x - DUMMY.x, dy = (p.y - DUMMY.y) / ASPECT; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
     roll.current = { until: now + 300, ux: dx, uy: dy }; setLog(`${zig} dodges!`);
   };
+
+  // Tag-in quip when switching, plus idle yard chatter every so often.
+  const firstZig = useRef(true);
+  useEffect(() => { if (firstZig.current) { firstZig.current = false; return; } say(zig, pick(BANTER.tag[zig]), true); }, [zig]);
+  useEffect(() => {
+    const id = setInterval(() => { if (performance.now() - lastLine.current > 11000) { const [w, t] = pick(BANTER.idle); say(w, t); } }, 3000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -128,20 +178,34 @@ export function CombatArenaScene() {
       const free = (x: number, y: number) => inWalk(x, y) && !inSolid(x, y);
       if (mx || my) {
         if (free(p.x + mx, p.y + my)) { p.x += mx; p.y += my; }
-        else if (free(p.x + mx, p.y)) { p.x += mx; v.y = 0; }
-        else if (free(p.x, p.y + my)) { p.y += my; v.x = 0; }
-        else { v.x = 0; v.y = 0; }
+        else {
+          // Glide along the prop's curved edge (tangent of its ellipse) at the same speed, never an axis snap.
+          const s = SOLIDS.find(s => (((p.x + mx) - s.x) / s.rx) ** 2 + (((p.y + my) - s.y) / s.ry) ** 2 < 1);
+          let moved = false;
+          if (s) {
+            let nx = (p.x - s.x) / (s.rx * s.rx), ny = (p.y - s.y) / (s.ry * s.ry); const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+            const dot = mx * nx + my * ny, tx = mx - dot * nx, ty = my - dot * ny, tl = Math.hypot(tx, ty), ml = Math.hypot(mx, my);
+            if (tl > 1e-4) { const k = ml / tl, sx = tx * k, sy = ty * k; if (free(p.x + sx, p.y + sy)) { p.x += sx; p.y += sy; moved = true; } }
+          }
+          if (!moved) {
+            if (free(p.x + mx, p.y)) p.x += mx;
+            else if (free(p.x, p.y + my)) p.y += my;
+            else { v.x *= 0.5; v.y *= 0.5; }
+          }
+        }
       }
-      const moving = Math.hypot(v.x, v.y) > 1.5 && !roll.current;
+      // Hysteresis: the walk cycle keeps running while heading somewhere, so it never restarts mid-stride.
+      const spd = Math.hypot(v.x, v.y);
+      const moving = !roll.current && !swing.current && (walking.current ? spd > 0.6 || !!target.current : spd > 2);
       walking.current = moving;
-      if (moving) {
+      if (moving && spd > 3) {
         // Facing only flips when the new axis clearly dominates, so diagonals never flicker between frames.
         const ax = Math.abs(v.x), ay = Math.abs(v.y), cur = facing.current, horiz = cur === "left" || cur === "right";
         const useX = horiz ? ax * 1.35 >= ay : ax > ay * 1.35;
         facing.current = useX ? (v.x > 0 ? "right" : "left") : v.y > 0 ? "down" : "up";
       }
       // Only rescue feet that somehow ended up inside a prop (e.g. on spawn); never snap during normal walking.
-      if (!free(p.x, p.y)) { const q = clampToFloor(p); p.x = q.x; p.y = q.y; }
+      if (!free(p.x, p.y)) { const q = clampToFloor(p); p.x += (q.x - p.x) * Math.min(1, dt * 12); p.y += (q.y - p.y) * Math.min(1, dt * 12); }
       const sw = swing.current;
       if (sw) {
         const ph = attackPhase(zig, now - sw.start);
@@ -155,7 +219,8 @@ export function CombatArenaScene() {
             dm.hurt = now; dm.kind = zig; dm.heavy = sw.heavy; dm.hits += 1; dm.dir = p.x < DUMMY.x ? 1 : -1;
             dm.dmg = amount; dm.total += amount; dm.hp = Math.max(0, dm.hp - amount);
             setLog(`${sw.heavy ? "HEAVY " : ""}${zig} · −${amount} HP · ${dm.total} damage total`);
-            if (dm.hp === 0) { dm.down = now; setLog(`Dummy knocked down! ${dm.total} damage total`); }
+            if (dm.hp === 0) { dm.down = now; setLog(`Dummy knocked down! ${dm.total} damage total`); const o = others(zig); say(pick(o), pick(BANTER.down[zig]), true); }
+            else if (sw.heavy) { const o = others(zig); say(pick(o), pick(BANTER.heavy[zig])); }
           }
         }
         if (ph === "done") { if (!sw.struck.size) setLog("Miss — swing didn't reach the dummy"); swing.current = null; }
@@ -201,6 +266,7 @@ export function CombatArenaScene() {
       </span>
       {(["Brix", "Lowkey", "Oz"] as Fighter[]).filter(z => z !== zig).map(z => { const q = crewPos.current[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()}`} onPointerDown={e => { const l = lastTap.current, now = performance.now(); if (l && l.z === z && now - l.t < 380) { e.stopPropagation(); lastTap.current = null; target.current = null; setZig(z); } else lastTap.current = { z, t: now }; }} style={{ left: `${q.x}%`, ["--fy" as string]: `${100 - q.y}%`, zIndex: 5 + Math.round(q.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(q.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(q.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={z}/></span></span>; })}
       <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${roll.current ? "is-rolling" : ""} ${charged && !sw ? `is-charging charge-${zig.toLowerCase()}` : ""} ${sw ? `is-attacking ${atkPose(zig, sw.heavy)} facing-${atkSide} ${zig.toLowerCase()}-facing-${atkSide}` : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
+      {bubble && (() => { const q = crewPos.current[bubble.who]; return <span className="arena-bubble" style={{ left: `${Math.max(14, Math.min(86, q.x))}%`, bottom: `calc(${100 - q.y}% + ${Math.round(70 * depthAt(q.y))}px)` }}><b>{bubble.who}</b> {bubble.text}</span>; })()}
       {debug && <>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 1.3))}/>
