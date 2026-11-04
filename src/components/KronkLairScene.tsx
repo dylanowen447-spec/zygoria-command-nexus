@@ -135,6 +135,8 @@ export function KronkLairScene() {
   const [fx, setFx] = useState<{ from: P; kind: Zig; id: number }[]>([]);
   const cooldown = useRef<Partial<Record<Zig, number>>>({});
   const fighting = step >= INTRO.length && kronkHp > 0; // battle begins only after the full cinematic intro has played
+  // Like the other fights, you always control a Zig — Brix to start; double-tap another to switch.
+  useEffect(() => { if (fighting) setSteer(s => s ?? "Brix"); }, [fighting]);
 
   useEffect(() => {
     if (step >= INTRO.length) return;
@@ -308,11 +310,24 @@ export function KronkLairScene() {
   const [atk, setAtk] = useState<Partial<Record<Zig, { cls: string; id: number }>>>({});
   const showAtk = (a: Zig, cls: string, ms: number) => { const id = Date.now() + Math.random(); setAtk(s => ({ ...s, [a]: { cls, id } })); setTimeout(() => setAtk(s => (s[a]?.id === id ? { ...s, [a]: undefined } : s)), ms); };
   const holdStart = useRef(0);
-  function attack(a: Zig, heavy = false) {
+  function attack(a: Zig, heavy = false, player = false) {
     if (kronkHpRef.current <= 0 || squadRef.current[a] <= 0) return;
     const now = performance.now();
     if ((cooldown.current[a] ?? 0) > now) return;
     const p = posRef.current[a];
+    // The player's Zig fights where they stand, like every other fight: walk in range yourself or the swing whiffs.
+    if (player) {
+      const side0 = p.x < 50 ? -1 : 1, dist = Math.hypot(p.x - 50, (p.y - 64) * 1.4), reach = a === "Oz" ? 45 : 15;
+      cooldown.current[a] = now + (a === "Brix" ? 700 : a === "Lowkey" ? 480 : 560);
+      walkId.current[a] = (walkId.current[a] ?? 0) + 1; setMoving(m => ({ ...m, [a]: undefined }));
+      const c1 = combo.current[a], hv = heavy || (c1 && now - c1.t < 1800 ? c1.n + 1 : 1) % (a === "Brix" ? 3 : 4) === 0;
+      const cls = a === "Brix" ? `atk-punch ${hv ? "is-heavy" : ""}` : a === "Lowkey" ? (heavy ? "atk-slash is-heavy" : "atk-slash") : hv ? "atk-heavy" : "atk-quick";
+      showAtk(a, `${cls} facing-${side0 < 0 ? "right" : "left"} ${a.toLowerCase()}-facing-${side0 < 0 ? "right" : "left"}`, a === "Brix" ? 650 : 520);
+      playSfx(a === "Brix" ? "swing" : a === "Oz" ? "zap" : "slash");
+      if (dist > reach) { setTimeout(() => { playSfx("miss"); pop("TOO FAR", a.toLowerCase(), p.x, p.y - 14); }, 220); return; }
+      setTimeout(() => land(a, 0, heavy), a === "Oz" ? 220 : 260);
+      return;
+    }
     const melee = a !== "Oz";
     // Melee: charge to Kronk's side, then come back.
     const side = p.x < 50 ? -1 : 1;
@@ -375,7 +390,7 @@ export function KronkLairScene() {
     if (!fighting) return;
     let down = 0;
     const key = (e: KeyboardEvent) => { if (e.code === "Space") { e.preventDefault(); if (!e.repeat && !down) down = performance.now(); } };
-    const keyUp = (e: KeyboardEvent) => { if (e.code === "Space" && down) { e.preventDefault(); const held = performance.now() - down; down = 0; attackRef.current(steerRef.current ?? "Brix", held >= HOLD_MS); } };
+    const keyUp = (e: KeyboardEvent) => { if (e.code === "Space" && down) { e.preventDefault(); const held = performance.now() - down; down = 0; attackRef.current(steerRef.current ?? "Brix", held >= HOLD_MS, true); } };
     window.addEventListener("keydown", key); window.addEventListener("keyup", keyUp);
     const auto = setInterval(() => {
       (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => { if (a !== steerRef.current && Math.random() < 0.45) attackRef.current(a); });
@@ -386,7 +401,7 @@ export function KronkLairScene() {
   const tapZig = (a: Zig) => {
     if (!fighting) return; // no switching or steering during the cinematic intro
     const now = performance.now(), l = lastTap.current;
-    if (l && l.a === a && now - l.t < 380) { lastTap.current = null; setSteer(s => (s === a ? null : a)); }
+    if (l && l.a === a && now - l.t < 380) { lastTap.current = null; setSteer(a); }
     else lastTap.current = { a, t: now };
   };
   const onGround = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -401,7 +416,7 @@ export function KronkLairScene() {
     <img className="world-image" src={bg.url} alt="Inside Kronk's bunker: red lamps, rat banners and glowing green tanks around a control console above a hazard-striped floor" />
     <div className="haven-layer">
       <div ref={groundRef} className="kronk-ground">
-        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix"); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-stomping" : ""} ${guard ? "is-guarding" : ""} ${stunned ? "is-stunned" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
+        <span key={kronkHit} onPointerDown={e => { if (!fighting) return; e.stopPropagation(); attack(steer ?? "Brix", false, true); }} className={`kronk-boss ${kronkHit ? "is-struck" : ""} ${kronkHp <= 0 ? "is-defeated" : ""} ${rear ? "is-stomping" : ""} ${guard ? "is-guarding" : ""} ${stunned ? "is-stunned" : ""}`} role="img" aria-label="Kronk, the armoured crocodile, breathing at the foot of the stairs" style={{ backgroundImage: `url(${kronkIdle.url})` }}/>
         {battleCry && <svg className="kronk-laser kronk-glare" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><circle className="kronk-eye is-flare" cx={EYE.x} cy={EYE.y} r={1.2}/></svg>}
         {rageBlink > 0 && <svg key={rageBlink} className="kronk-laser kronk-glare" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><circle className="kronk-eye is-flare" cx={EYE.x} cy={EYE.y} r={1.2}/></svg>}
         {raging && <svg className="kronk-laser kronk-glare" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><circle className="kronk-eye is-burn" cx={EYE.x} cy={EYE.y} r={1}/></svg>}
@@ -431,9 +446,9 @@ export function KronkLairScene() {
     </div>
     <div className="map-coordinate top-right">KRONK'S LAIR</div>
     {battleCry && <div className="kronk-title" role="status">KRONK<small>THE NETWORK'S BEAST</small></div>}
-    {fighting && typeof document !== "undefined" && createPortal(<button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older Safari */ } holdStart.current = performance.now(); }} onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; attack(steer ?? "Brix", held >= HOLD_MS); }} onPointerCancel={() => { holdStart.current = 0; }} aria-label="Attack Kronk — hold for heavy">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>, document.body)}
+    {fighting && typeof document !== "undefined" && createPortal(<button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older Safari */ } holdStart.current = performance.now(); }} onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; attack(steer ?? "Brix", held >= HOLD_MS, true); }} onPointerCancel={() => { holdStart.current = 0; }} aria-label="Attack Kronk — hold for heavy">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>, document.body)}
     {kronkHp <= 0 && <div className="map-coordinate kronk-down" role="status">KRONK DOWN</div>}
-    {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the road to walk · double-tap {steer} to let go</div>}
+    {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · tap the floor to walk in close · double-tap another Zig to switch</div>}
     {fighting && <div className="boss-hud" role="status" aria-label="Fight status">
       <div className="boss-hud-row"><span className="boss-name">KRONK <small>WARLORD</small></span></div>
       <div className="boss-bar"><span className="boss-bar-fill" style={{ width: `${(kronkHp / KRONK_HP) * 100}%` }}/></div>
