@@ -6,6 +6,7 @@ import kronkStomp from "@/assets/kronk-stomp.webp.asset.json";
 import sheltonSheet from "@/assets/shelton.webp.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { Button } from "@/components/ui/button";
+import { GameOverScreen } from "@/components/GameOverScreen";
 import { speak, voicesOn } from "@/lib/voice";
 import { startKronkMusic, stopKronkMusic, playSfx } from "@/lib/atmosphere";
 import { MAX_HP as SQUAD_HP, allDown, damage, fullSquad, type Squad } from "@/lib/squad-health";
@@ -142,7 +143,10 @@ export function KronkLairScene() {
   const [kronkHit, setKronkHit] = useState(0);
   const [fx, setFx] = useState<{ from: P; kind: Zig; id: number }[]>([]);
   const cooldown = useRef<Partial<Record<Zig, number>>>({});
-  const fighting = step >= INTRO.length && kronkHp > 0; // battle begins only after the full cinematic intro has played
+  const [over, setOver] = useState(false); // all three Zigs down: Game Over screen until the player retries
+  const fighting = step >= INTRO.length && kronkHp > 0 && !over; // battle begins only after the full cinematic intro has played
+  /** Retry after Game Over: full reset, the cinematic intro replays. */
+  const retryFight = () => { const f = fullSquad(); squadRef.current = f; setSquad(f); kronkHpRef.current = KRONK_HP; setKronkHp(KRONK_HP); setLaser(null); setBubble(null); setRaging(false); setRageBlink(0); said.current = { p1: false, p2: false, p3: false, crit: false }; setSteer(null); setOver(false); setStep(0); };
   const [shelton, setShelton] = useState({ ...SHELTON_HOME, hp: SHELTON_HP, mode: "waiting" as "waiting" | "walk" | "windup" | "lunge" | "open" | "beaten" | "flee" });
   const sheltonRef = useRef(shelton); sheltonRef.current = shelton;
   const sheltonLive = useRef(false);
@@ -184,7 +188,7 @@ export function KronkLairScene() {
           setShelton(q => ({ ...q, mode: "open" }));
           if (squadRef.current[prey] > 0 && lairDistance(posRef.current[prey], aim) < 8 && !movingRef.current[prey] && (dodgeUntil.current[prey] ?? 0) < now) {
             const hp = damage(squadRef.current, prey); squadRef.current = hp; setSquad(hp); playSfx("hurt");
-            if (allDown(hp)) { sheltonLive.current = false; setStep(0); const f = fullSquad(); squadRef.current = f; setSquad(f); kronkHpRef.current = KRONK_HP; setKronkHp(KRONK_HP); said.current = { p1: false, p2: false, p3: false, crit: false }; setRaging(false); setRageBlink(0); setLaser(null); }
+            if (allDown(hp)) { sheltonLive.current = false; setLaser(null); setOver(true); }
           } else playSfx("miss");
         } else if (!impactAt && now > openUntil) {
           const living = (["Brix", "Oz", "Lowkey"] as Zig[]).filter(z => squadRef.current[z] > 0);
@@ -289,7 +293,7 @@ export function KronkLairScene() {
       setHit(z); timers.push(setTimeout(() => setHit(h => (h === z ? null : h)), 500));
       playSfx("hurt");
       const q = damage(squadRef.current, z, 1); squadRef.current = q; setSquad(q);
-      if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; const f = fullSquad(); squadRef.current = f; setSquad(f); kronkHpRef.current = KRONK_HP; setKronkHp(KRONK_HP); setLaser(null); setBubble(null); setRaging(false); setRageBlink(0); said.current = { p1: false, p2: false, p3: false, crit: false }; setStep(0); }, 4000)); // wipe = full retry: the cinematic intro replays
+      if (allDown(q)) timers.push(setTimeout(() => { if (!live) return; setLaser(null); setOver(true); }, 1200)); // wipe = Game Over screen; TRY AGAIN replays the intro
       walkTo(z, clampToGround({ x: p.x + (p.x < 50 ? -knock : knock), y: p.y + knock / 2 }));
     };
     let last = "";
@@ -540,7 +544,30 @@ export function KronkLairScene() {
         } else if (Math.random() < .45) attackRef.current(a);
       });
     }, 2600);
-    return () => { window.removeEventListener("keydown", key); window.removeEventListener("keyup", keyUp); clearInterval(auto); };
+    // Unsteered Zigs vs Shelton: dodge away from his wind-up, keep their distance, then rush in and strike while he's open.
+    const evade = setInterval(() => {
+      const s = sheltonRef.current;
+      if (!sheltonLive.current || s.hp <= 0) return;
+      const now = performance.now();
+      (["Brix", "Oz", "Lowkey"] as Zig[]).forEach(a => {
+        if (a === steerRef.current || squadRef.current[a] <= 0) return;
+        const p = posRef.current[a], d = lairDistance(p, s);
+        const dx = p.x - s.x, dy = (p.y - s.y) * 1.4, len = Math.hypot(dx, dy) || 1;
+        const away = (dist: number) => clampToGround({ x: p.x + dx / len * dist, y: p.y + dy / len * dist * 0.6 });
+        if ((s.mode === "windup" || s.mode === "lunge") && d < 12) {
+          dodgeUntil.current[a] = now + 450; walkTo(a, away(14)); return;
+        }
+        if (s.mode === "open") {
+          if (d <= SHELTON_REACH[a] + 1) attackRef.current(a, a === "Brix" && Math.random() < .3);
+          else if (a !== "Oz") walkTo(a, clampToGround({ x: s.x + (p.x < s.x ? -3 : 3), y: s.y + 1 }));
+          else attackRef.current(a);
+          return;
+        }
+        if (d < 9 && !movingRef.current[a]) walkTo(a, away(10));
+        else if (a === "Oz" && d <= SHELTON_REACH.Oz) attackRef.current(a);
+      });
+    }, 300);
+    return () => { window.removeEventListener("keydown", key); window.removeEventListener("keyup", keyUp); clearInterval(auto); clearInterval(evade); };
   }, [fighting]);
 
   const tapZig = (a: Zig) => {
@@ -595,6 +622,7 @@ export function KronkLairScene() {
     {battleCry && <div className="kronk-title" role="status">KRONK<small>THE NETWORK'S BEAST</small></div>}
     {fighting && typeof document !== "undefined" && createPortal(<button type="button" className="combat-attack" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older Safari */ } holdStart.current = performance.now(); }} onPointerUp={e => { e.stopPropagation(); if (!holdStart.current) return; const held = performance.now() - holdStart.current; holdStart.current = 0; attack(steer ?? "Brix", held >= HOLD_MS, true); }} onPointerCancel={() => { holdStart.current = 0; }} aria-label="Attack Kronk — hold for heavy">ATTACK<small>{(steer ?? "Brix").toUpperCase()}</small></button>, document.body)}
     {kronkHp <= 0 && <div className="map-coordinate kronk-down" role="status">KRONK DOWN</div>}
+    {over && <GameOverScreen onRetry={retryFight} onRestart={retryFight} restartLabel="RESTART KRONK'S LAIR"/>}
     {fighting && typeof document !== "undefined" && createPortal(<Button type="button" className="combat-dodge" aria-label={`Dodge roll with ${steer ?? "Brix"}`} onPointerDown={e => { e.preventDefault(); e.stopPropagation(); dodge(); }}>DODGE</Button>, document.body)}
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · tap the floor to walk in close · double-tap another Zig to switch</div>}
     {fighting && <div className="boss-hud" role="status" aria-label="Fight status">
