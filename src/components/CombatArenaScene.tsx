@@ -245,7 +245,7 @@ export function CombatArenaScene() {
         const dm = dummy.current;
         if (ph === "active") {
           const dep = depthAt(p.y);
-          const hits = resolveSwing(attackBox(zig, p, sw.facing, dep), [{ id: 1, box: hurtbox("Brix", DUMMY, 1.3) }], sw.struck);
+          const hits = resolveSwing(attackBox(zig, p, sw.facing, dep), [{ id: 1, box: hurtbox("Brix", DUMMY, 2) }], sw.struck);
           if (hits.length && !dm.down) {
             // Real damage: the same per-Zig values the fight engine uses, doubled for a heavy.
             const amount = ATTACK[zig].dmg * (sw.heavy ? 2 : 1);
@@ -303,7 +303,7 @@ export function CombatArenaScene() {
       {bubble && (() => { const q = crewPos.current[bubble.who]; return <span className="arena-bubble" style={{ left: `${Math.max(14, Math.min(86, q.x))}%`, bottom: `calc(${100 - q.y}% + ${Math.round(70 * depthAt(q.y))}px)` }}><b>{bubble.who}</b> {bubble.text}</span>; })()}
       {debug && <>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>
-        <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 1.3))}/>
+        <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 2))}/>
         <span className={`arena-box is-attack-box ${phase === "active" ? "is-live" : ""}`} style={boxStyle(attackBox(zig, p, sw?.facing ?? f, depthAt(p.y)))}/>
       </>}
     </div>
