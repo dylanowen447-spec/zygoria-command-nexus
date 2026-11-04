@@ -98,6 +98,9 @@ const CONVO_COOLDOWN = 90000; // the same conversation won't repeat within 90s
 
 /** Training dummy health; it springs back to full a moment after being knocked down. */
 const DUMMY_HP = 30;
+/** Hanging lunch-bag sack beside the punching bag: same hits, health, damage numbers and reset as the dummy. Feet point sits on the ground in front of its boulder. */
+const BAG = { x: 29, y: 54.5, crop: { l: 27.2, t: 27.5, w: 3.8, h: 21.5 } };
+const BAG_HP = 30;
 export function CombatArenaScene() {
   const [zig, setZig] = useState<Fighter>("Brix");
   const [debug, setDebug] = useState(false);
@@ -111,6 +114,7 @@ export function CombatArenaScene() {
   const lastTap = useRef<{ z: Fighter; t: number } | null>(null); // double-tap a resting Zig to switch; a single tap walks
   const swing = useRef<Swing | null>(null);
   const dummy = useRef({ hurt: 0, dir: 1, kind: "" as Fighter | "", hits: 0, heavy: false, hp: DUMMY_HP, dmg: 0, total: 0, down: 0 });
+  const bag = useRef({ hurt: 0, dir: 1, kind: "" as Fighter | "", hits: 0, heavy: false, hp: BAG_HP, dmg: 0, total: 0, down: 0 });
   const pressAt = useRef(0);
   const stuck = useRef({ dist: Infinity, at: 0 });
   const [log, setLog] = useState("Tap the floor to walk · tap ATTACK to strike, hold for heavy · DODGE to roll (Space / Shift on keyboard)");
@@ -242,17 +246,18 @@ export function CombatArenaScene() {
       const sw = swing.current;
       if (sw) {
         const ph = attackPhase(zig, now - sw.start);
-        const dm = dummy.current;
         if (ph === "active") {
           const dep = depthAt(p.y);
-          const hits = resolveSwing(attackBox(zig, p, sw.facing, dep), [{ id: 1, box: hurtbox("Brix", DUMMY, 2) }], sw.struck);
-          if (hits.length && !dm.down) {
+          const hits = resolveSwing(attackBox(zig, p, sw.facing, dep), [{ id: 1, box: hurtbox("Brix", DUMMY, 2) }, { id: 2, box: hurtbox("Brix", BAG, 2) }], sw.struck);
+          for (const h of hits) {
+            const dm = h.id === 1 ? dummy.current : bag.current, at = h.id === 1 ? DUMMY : BAG, name = h.id === 1 ? "Dummy" : "Lunch bag";
+            if (dm.down) continue;
             // Real damage: the same per-Zig values the fight engine uses, doubled for a heavy.
             const amount = ATTACK[zig].dmg * (sw.heavy ? 2 : 1);
-            dm.hurt = now; dm.kind = zig; dm.heavy = sw.heavy; dm.hits += 1; dm.dir = p.x < DUMMY.x ? 1 : -1;
+            dm.hurt = now; dm.kind = zig; dm.heavy = sw.heavy; dm.hits += 1; dm.dir = p.x < at.x ? 1 : -1;
             dm.dmg = amount; dm.total += amount; dm.hp = Math.max(0, dm.hp - amount);
-            setLog(`${sw.heavy ? "HEAVY " : ""}${zig} · −${amount} HP · ${dm.total} damage total`);
-            if (dm.hp === 0) { dm.down = now; setLog(`Dummy knocked down! ${dm.total} damage total`); const o = others(zig); say(pick(o), pick(BANTER.down[zig]), true); }
+            setLog(`${sw.heavy ? "HEAVY " : ""}${zig} · ${name} −${amount} HP · ${dm.total} damage total`);
+            if (dm.hp === 0) { dm.down = now; setLog(`${name} knocked down! ${dm.total} damage total`); const o = others(zig); say(pick(o), pick(BANTER.down[zig]), true); }
             else if (Math.random() < 0.35 && convo(zig)) { /* scripted practice banter */ }
             else if (sw.heavy) { const o = others(zig); say(pick(o), pick(BANTER.heavy[zig])); }
           }
@@ -260,6 +265,7 @@ export function CombatArenaScene() {
         if (ph === "done") { if (!sw.struck.size) { setLog("Miss — swing didn't reach the dummy"); if (zig === "Brix" && Math.random() < 0.5) convo("miss"); } swing.current = null; }
       }
       if (dummy.current.down && now - dummy.current.down > 1400) { dummy.current.down = 0; dummy.current.hp = DUMMY_HP; }
+      if (bag.current.down && now - bag.current.down > 1400) { bag.current.down = 0; bag.current.hp = BAG_HP; }
       tick(n => n + 1);
       raf = requestAnimationFrame(loop);
     };
@@ -298,12 +304,21 @@ export function CombatArenaScene() {
         {reacting && dm.heavy && <span key={`fx${dm.hits}`} className={`arena-charge-fx fx-${dm.kind.toLowerCase()}`} aria-hidden="true"/>}
         {reacting && <span key={dm.hits} className={`arena-hitmark ${dm.heavy ? "is-heavy" : ""}`}>−{dm.dmg}{dm.heavy ? " POW!" : ""}</span>}
       </span>
+      {(() => { const b = bag.current, bc = BAG.crop, br = performance.now() - b.hurt < 520; return <span className={`arena-dummy ${br ? `is-hit hit-${b.kind.toLowerCase()} ${b.heavy ? "is-heavy" : ""}` : ""}`} aria-label={`Lunch bag, ${b.hits} hits`}
+        style={{ left: `${bc.l}%`, top: `${bc.t}%`, width: `${bc.w}%`, height: `${bc.h}%`, zIndex: 5 + Math.round(BAG.y), transformOrigin: "50% 0%",
+          backgroundImage: `url(${groundsArt.url})`, backgroundSize: `${10000 / bc.w}% ${10000 / bc.h}%`,
+          backgroundPosition: `${(bc.l / (100 - bc.w)) * 100}% ${(bc.t / (100 - bc.h)) * 100}%`, ["--dir" as string]: b.dir }}>
+        <span className="arena-dummy-hp" aria-hidden="true" style={{ left: "-60%", right: "-60%" }}><span style={{ width: `${(b.hp / BAG_HP) * 100}%` }}/></span>
+        {br && b.heavy && <span key={`bfx${b.hits}`} className={`arena-charge-fx fx-${b.kind.toLowerCase()}`} aria-hidden="true"/>}
+        {br && <span key={`b${b.hits}`} className={`arena-hitmark ${b.heavy ? "is-heavy" : ""}`}>−{b.dmg}{b.heavy ? " POW!" : ""}</span>}
+      </span>; })()}
       {(["Brix", "Lowkey", "Oz"] as Fighter[]).filter(z => z !== zig).map(z => { const q = crewPos.current[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()}`} onPointerDown={e => { const l = lastTap.current, now = performance.now(); if (l && l.z === z && now - l.t < 380) { e.stopPropagation(); lastTap.current = null; target.current = null; setZig(z); } else lastTap.current = { z, t: now }; }} style={{ left: `${q.x}%`, ["--fy" as string]: `${100 - q.y}%`, zIndex: 5 + Math.round(q.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(q.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(q.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={z}/></span></span>; })}
       <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${roll.current ? "is-rolling" : ""} ${charged && !sw ? `is-charging charge-${zig.toLowerCase()}` : ""} ${sw ? `is-attacking ${atkPose(zig, sw.heavy)} facing-${atkSide} ${zig.toLowerCase()}-facing-${atkSide}` : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
       {bubble && (() => { const q = crewPos.current[bubble.who]; return <span className="arena-bubble" style={{ left: `${Math.max(14, Math.min(86, q.x))}%`, bottom: `calc(${100 - q.y}% + ${Math.round(70 * depthAt(q.y))}px)` }}><b>{bubble.who}</b> {bubble.text}</span>; })()}
       {debug && <>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 2))}/>
+        <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", BAG, 2))}/>
         <span className={`arena-box is-attack-box ${phase === "active" ? "is-live" : ""}`} style={boxStyle(attackBox(zig, p, sw?.facing ?? f, depthAt(p.y)))}/>
       </>}
     </div>
