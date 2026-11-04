@@ -11,7 +11,7 @@ const DUMMY = { x: 49.3, y: 56.5, crop: { l: 44, t: 37, w: 10.5, h: 21.5 } };
 const GROUND = { top: 50, bottom: 97 };
 const WALK = { left: 1, right: 99, top: 48, bottom: 99.5 };
 /** Solid bases (artwork %): feet are pushed out so Zigs walk around, never through. */
-const SOLIDS = [
+const SOLIDS: { x: number; y: number; rx: number; ry: number }[] = [
   { x: 16.8, y: 56.5, rx: 4.6, ry: 2.0 },  // crates + punching bag frame
   { x: 22.5, y: 56.5, rx: 1.6, ry: 1.0 },  // bag frame support
   { x: 28.3, y: 52.5, rx: 2.4, ry: 1.2 },  // boulder under the bag
@@ -57,7 +57,8 @@ export function CombatArenaScene() {
   const [zig, setZig] = useState<Fighter>("Brix");
   const [debug, setDebug] = useState(false);
   const [, tick] = useState(0);
-  const pos = useRef({ x: 35, y: 75 });
+  const crewPos = useRef<Record<Fighter, { x: number; y: number }>>({ Brix: { x: 35, y: 75 }, Lowkey: { x: 25, y: 82 }, Oz: { x: 45, y: 85 } });
+  const pos = { get current() { return crewPos.current[zig]; } };
   const target = useRef<{ x: number; y: number } | null>(null);
   const facing = useRef<Facing>("right");
   const walking = useRef(false);
@@ -151,6 +152,7 @@ export function CombatArenaScene() {
           backgroundPosition: `${(c.l / (100 - c.w)) * 100}% ${(c.t / (100 - c.h)) * 100}%`, ["--dir" as string]: dm.dir }}>
         {reacting && <span key={dm.hits} className="arena-hitmark">{dm.heavy ? "POW!" : "HIT"}</span>}
       </span>
+      {(["Brix", "Lowkey", "Oz"] as Fighter[]).filter(z => z !== zig).map(z => { const q = crewPos.current[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()}`} onPointerDown={e => { e.stopPropagation(); target.current = null; setZig(z); }} style={{ left: `${q.x}%`, ["--fy" as string]: `${100 - q.y}%`, zIndex: 5 + Math.round(q.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(q.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(q.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={z}/></span></span>; })}
       <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${sw ? "is-attacking" : ""} ${sw?.heavy ? "is-heavy" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
       {debug && <>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>

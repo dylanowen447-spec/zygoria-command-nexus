@@ -1375,3 +1375,5 @@ body > .combat-dodge{position:fixed}
 @keyframes dummy-wobble { 0% { transform: rotate(0); } 18% { transform: rotate(calc(var(--dir) * 9deg)) translateX(calc(var(--dir) * 2%)); } 42% { transform: rotate(calc(var(--dir) * -5deg)); } 66% { transform: rotate(calc(var(--dir) * 2.5deg)); } 100% { transform: rotate(0); } }
 .arena-hitmark { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); font-weight: 800; font-size: clamp(.6rem, 2vw, 1rem); color: var(--primary); text-shadow: 0 1px 0 var(--background), 0 0 6px var(--background); animation: hitmark-rise .5s ease-out forwards; }
 @keyframes hitmark-rise { from { opacity: 1; translate: 0 0; } to { opacity: 0; translate: 0 -120%; } }
+/* Training Grounds: every Zig stands on the same feet line (no zone top offsets). */
+.arena-stage .haven-zig{top:auto!important;bottom:var(--fy)!important}
