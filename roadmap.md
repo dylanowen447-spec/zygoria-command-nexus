@@ -64,3 +64,6 @@
 - [x] Kronk force field pushes nearby Zigs back
 - [x] Kronk intro: Zigs face Kronk; lair Zigs no longer darkened
 - [x] Kronk stomp plays all 8 frames (step-end keyframes)
+- [x] Smooth Training Grounds movement
+- [x] Remove invisible steps in Training Grounds (flat ground)
+- [x] Training Grounds: all 3 Zigs' full Old City attacks

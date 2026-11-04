@@ -49,9 +49,13 @@ function clampToFloor(t: { x: number; y: number }) {
   }
   return { x, y };
 }
-/** 2.5D: far (top of clearing) is small, near (bottom) is big. */
-const depthAt = (y: number) => 0.6 + 0.6 * Math.max(0, Math.min(1, (y - GROUND.top) / (GROUND.bottom - GROUND.top)));
-const SPEED = 22; // % per second
+/** Same attack poses as Old City / The Long Walk. */
+const atkPose = (a: Fighter, heavy: boolean) => a === "Brix" ? (heavy ? "atk-punch is-heavy" : "atk-punch") : a === "Lowkey" ? (heavy ? "atk-slash is-heavy" : "atk-slash") : heavy ? "atk-heavy" : "atk-quick";
+/** 2.5D: gentle, continuous perspective (far slightly smaller) so the flat clearing never reads as steps. */
+const depthAt = (y: number) => 0.85 + 0.25 * Math.max(0, Math.min(1, (y - GROUND.top) / (GROUND.bottom - GROUND.top)));
+const SPEED = 24; // % of stage width per second (screen-equal in every direction)
+const ACCEL = 300, DECEL = 220; // very short ease in/out
+const ASPECT = 1671 / 941; // stage width / height: converts y% into width-equivalent units
 
 export function CombatArenaScene() {
   const [zig, setZig] = useState<Fighter>("Brix");
@@ -62,6 +66,8 @@ export function CombatArenaScene() {
   const target = useRef<{ x: number; y: number } | null>(null);
   const facing = useRef<Facing>("right");
   const walking = useRef(false);
+  const vel = useRef({ x: 0, y: 0 });
+  const lastTap = useRef<{ z: Fighter; t: number } | null>(null); // double-tap a resting Zig to switch; a single tap walks
   const swing = useRef<Swing | null>(null);
   const dummy = useRef({ hurt: 0, dir: 1, kind: "" as Fighter | "", hits: 0, heavy: false });
   const pressAt = useRef(0);
@@ -81,33 +87,43 @@ export function CombatArenaScene() {
     };
     const up = (e: KeyboardEvent) => { if (e.code === "Space") release(); };
     window.addEventListener("keydown", key); window.addEventListener("keyup", up);
+    vel.current = { x: 0, y: 0 };
     let last = performance.now(), raf = 0;
     const loop = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      const p = pos.current, t = target.current;
-      walking.current = false;
+      const p = pos.current, t = target.current, v = vel.current;
+      // Smooth walk: work in on-screen units (y scaled by the stage aspect) so speed is equal in every direction,
+      // ease up to full speed in ~0.08s and ease down over the last stretch, sliding along props instead of snapping.
+      let want = 0, ux = 0, uy = 0;
       if (t && !swing.current) {
-        const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy);
+        const dx = t.x - p.x, dyS = (t.y - p.y) / ASPECT, d = Math.hypot(dx, dyS);
         if (d < stuck.current.dist - 0.3) { stuck.current.dist = d; stuck.current.at = now; }
-        else if (now - stuck.current.at > 2500) { target.current = null; stuck.current.dist = Infinity; stuck.current.at = now; }
-        if (d < 0.8) target.current = null;
-        else {
-          // Slide: try the straight line to the tap, then fan out either side until a step lands on open ground.
-          const step = Math.min(d, SPEED * dt), base = Math.atan2(dy, dx);
-          let moved = false;
-          for (const off of [0, 0.45, -0.45, 0.9, -0.9, 1.35, -1.35, 1.8, -1.8, 2.3, -2.3, 2.8, -2.8]) {
-            const a = base + off, nx = p.x + Math.cos(a) * step, ny = p.y + Math.sin(a) * step;
-            if (inWalk(nx, ny) && !inSolid(nx, ny)) {
-              p.x = nx; p.y = ny; moved = true;
-              facing.current = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) > 0 ? "right" : "left") : Math.sin(a) > 0 ? "down" : "up";
-              break;
-            }
-          }
-          walking.current = moved;
-        }
+        else if (now - stuck.current.at > 1200) { target.current = null; stuck.current.dist = Infinity; }
+        if (d < 0.25) target.current = null;
+        else { ux = dx / d; uy = dyS / d; want = Math.min(SPEED, d * 7); }
       }
-      // Keep feet on the ground: out of every prop, tree and rock, and inside the clearing.
-      const q = clampToFloor(p); p.x = q.x; p.y = q.y;
+      const sp = Math.hypot(v.x, v.y);
+      const nsp = want > sp ? Math.min(want, sp + ACCEL * dt) : Math.max(want, sp - DECEL * dt);
+      if (want > 0) { v.x = ux * nsp; v.y = uy * nsp; } else if (sp > 0) { v.x = (v.x / sp) * nsp; v.y = (v.y / sp) * nsp; }
+      if (swing.current) { v.x = 0; v.y = 0; } // attacks never move the Zig
+      const mx = v.x * dt, my = v.y * dt * ASPECT;
+      const free = (x: number, y: number) => inWalk(x, y) && !inSolid(x, y);
+      if (mx || my) {
+        if (free(p.x + mx, p.y + my)) { p.x += mx; p.y += my; }
+        else if (free(p.x + mx, p.y)) { p.x += mx; v.y = 0; }
+        else if (free(p.x, p.y + my)) { p.y += my; v.x = 0; }
+        else { v.x = 0; v.y = 0; }
+      }
+      const moving = Math.hypot(v.x, v.y) > 1.5;
+      walking.current = moving;
+      if (moving) {
+        // Facing only flips when the new axis clearly dominates, so diagonals never flicker between frames.
+        const ax = Math.abs(v.x), ay = Math.abs(v.y), cur = facing.current, horiz = cur === "left" || cur === "right";
+        const useX = horiz ? ax * 1.35 >= ay : ax > ay * 1.35;
+        facing.current = useX ? (v.x > 0 ? "right" : "left") : v.y > 0 ? "down" : "up";
+      }
+      // Only rescue feet that somehow ended up inside a prop (e.g. on spawn); never snap during normal walking.
+      if (!free(p.x, p.y)) { const q = clampToFloor(p); p.x = q.x; p.y = q.y; }
       const sw = swing.current;
       if (sw) {
         const ph = attackPhase(zig, now - sw.start);
@@ -141,6 +157,8 @@ export function CombatArenaScene() {
   const phase = sw ? attackPhase(zig, performance.now() - sw.start) : null;
   const boxStyle = (b: Box) => ({ left: `${b.x - b.w / 2}%`, top: `${b.y - b.h / 2}%`, width: `${b.w}%`, height: `${b.h}%` });
   const f = facing.current;
+  // Old City attack poses; up/down swings turn side-on toward the dummy so the full move is visible.
+  const atkSide = sw ? (sw.facing === "left" || sw.facing === "right" ? sw.facing : p.x < DUMMY.x ? "right" : "left") : "right";
 
   return <div className="arena-wrap">
     <div className="arena-stage" ref={stage} onPointerDown={tap}>
@@ -152,8 +170,8 @@ export function CombatArenaScene() {
           backgroundPosition: `${(c.l / (100 - c.w)) * 100}% ${(c.t / (100 - c.h)) * 100}%`, ["--dir" as string]: dm.dir }}>
         {reacting && <span key={dm.hits} className="arena-hitmark">{dm.heavy ? "POW!" : "HIT"}</span>}
       </span>
-      {(["Brix", "Lowkey", "Oz"] as Fighter[]).filter(z => z !== zig).map(z => { const q = crewPos.current[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()}`} onPointerDown={e => { e.stopPropagation(); target.current = null; setZig(z); }} style={{ left: `${q.x}%`, ["--fy" as string]: `${100 - q.y}%`, zIndex: 5 + Math.round(q.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(q.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(q.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={z}/></span></span>; })}
-      <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${sw ? "is-attacking" : ""} ${sw?.heavy ? "is-heavy" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
+      {(["Brix", "Lowkey", "Oz"] as Fighter[]).filter(z => z !== zig).map(z => { const q = crewPos.current[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()}`} onPointerDown={e => { const l = lastTap.current, now = performance.now(); if (l && l.z === z && now - l.t < 380) { e.stopPropagation(); lastTap.current = null; target.current = null; setZig(z); } else lastTap.current = { z, t: now }; }} style={{ left: `${q.x}%`, ["--fy" as string]: `${100 - q.y}%`, zIndex: 5 + Math.round(q.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(q.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(q.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={z}/></span></span>; })}
+      <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${sw ? `is-attacking ${atkPose(zig, sw.heavy)} facing-${atkSide} ${zig.toLowerCase()}-facing-${atkSide}` : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
       {debug && <>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 1.3))}/>
