@@ -85,6 +85,17 @@ const BANTER = {
   ] as [Fighter, string][],
 };
 
+/** Scripted training conversations (user's banter script). Played line by line, never overlapping. */
+const CONVOS: Record<string, [Fighter, string][]> = {
+  enter: [["Brix", "Right, boys! Time to get serious!"], ["Oz", "You said that yesterday."], ["Lowkey", "And then punched a tree."], ["Brix", "Tree started it."]],
+  Brix: [["Brix", "DID YOU SEE THAT?!"], ["Oz", "Yeah. Dummy didn't stand a chance."], ["Lowkey", "Finally, someone your own intelligence."], ["Brix", "Oi!"]],
+  Oz: [["Oz", "Watch this! Maximum power!"], ["Brix", "You said that before you blew up my radio."], ["Oz", "Improved the sound, didn't I?"], ["Lowkey", "It only plays static."], ["Oz", "Exactly. Experimental."]],
+  Lowkey: [["Brix", "How'd you even do that?"], ["Lowkey", "Talent."], ["Oz", "Can you teach me?"], ["Lowkey", "No."], ["Brix", "Can you teach me?"], ["Lowkey", "Definitely not."]],
+  miss: [["Brix", "That dummy moved!"], ["Oz", "It's made of wood."], ["Lowkey", "Still quicker than you."]],
+  together: [["Oz", "Reckon we're getting stronger?"], ["Brix", "Stronger? I'm already unstoppable!"], ["Lowkey", "You got stuck behind a barrel."], ["Brix", "TACTICAL POSITIONING!"]],
+};
+const CONVO_COOLDOWN = 90000; // the same conversation won't repeat within 90s
+
 /** Training dummy health; it springs back to full a moment after being knocked down. */
 const DUMMY_HP = 30;
 export function CombatArenaScene() {
@@ -107,16 +118,34 @@ export function CombatArenaScene() {
   // Team banter: one line at a time, spoken (when VOICES is on) with a bubble over the speaker.
   const [bubble, setBubble] = useState<{ who: Fighter; text: string } | null>(null);
   const talking = useRef(false), lastLine = useRef(0);
+  const alive = useRef(true);
+  useEffect(() => () => { alive.current = false; }, []);
+  // One line: waits for the voice to finish, then a short read pause before resolving.
+  const line = (who: Fighter, text: string) => new Promise<void>(res => {
+    let shown = false; const show = () => { shown = true; if (alive.current) setBubble({ who, text }); };
+    const hold = setTimeout(show, 900); // silent fallback when voices are off or slow
+    void speak(who, text, () => { clearTimeout(hold); show(); }, 2500).then(() => {
+      clearTimeout(hold); if (!shown) show();
+      setTimeout(() => { if (alive.current) setBubble(null); res(); }, 900 + text.length * 25);
+    });
+  });
   const say = (who: Fighter, text: string, force = false) => {
     const now = performance.now();
     if (talking.current || (!force && now - lastLine.current < 4000)) return;
     talking.current = true; lastLine.current = now;
-    let shown = false; const show = () => { shown = true; setBubble({ who, text }); };
-    const hold = setTimeout(show, 900); // silent fallback when voices are off or slow
-    void speak(who, text, () => { clearTimeout(hold); show(); }, 2500).then(() => {
-      clearTimeout(hold); if (!shown) show();
-      setTimeout(() => { setBubble(null); talking.current = false; lastLine.current = performance.now(); }, 1400 + text.length * 25);
-    });
+    void line(who, text).then(() => { talking.current = false; lastLine.current = performance.now(); });
+  };
+  // A whole conversation, strictly sequential; only one ever runs, and each has its own cooldown.
+  const convoAt = useRef<Record<string, number>>({});
+  const convo = (key: string, gap = 8000) => {
+    const now = performance.now();
+    if (talking.current || now - lastLine.current < gap || now - (convoAt.current[key] ?? -Infinity) < CONVO_COOLDOWN) return false;
+    talking.current = true; convoAt.current[key] = now;
+    void (async () => {
+      for (const [w, t] of CONVOS[key]) { if (!alive.current) return; await line(w, t); await new Promise(r => setTimeout(r, 250)); }
+      talking.current = false; lastLine.current = performance.now();
+    })();
+    return true;
   };
   const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)] as T;
 
@@ -140,7 +169,11 @@ export function CombatArenaScene() {
   const firstZig = useRef(true);
   useEffect(() => { if (firstZig.current) { firstZig.current = false; return; } say(zig, pick(BANTER.tag[zig]), true); }, [zig]);
   useEffect(() => {
-    const id = setInterval(() => { if (performance.now() - lastLine.current > 11000) { const [w, t] = pick(BANTER.idle); say(w, t); } }, 3000);
+    const first = setTimeout(() => convo("enter", 0), 1200);
+    return () => clearTimeout(first);
+  }, []);
+  useEffect(() => {
+    const id = setInterval(() => { if (performance.now() - lastLine.current > 11000 && !convo("together", 11000)) { const [w, t] = pick(BANTER.idle); say(w, t); } }, 3000);
     return () => clearInterval(id);
   }, []);
 
@@ -220,10 +253,11 @@ export function CombatArenaScene() {
             dm.dmg = amount; dm.total += amount; dm.hp = Math.max(0, dm.hp - amount);
             setLog(`${sw.heavy ? "HEAVY " : ""}${zig} · −${amount} HP · ${dm.total} damage total`);
             if (dm.hp === 0) { dm.down = now; setLog(`Dummy knocked down! ${dm.total} damage total`); const o = others(zig); say(pick(o), pick(BANTER.down[zig]), true); }
+            else if (Math.random() < 0.35 && convo(zig)) { /* scripted practice banter */ }
             else if (sw.heavy) { const o = others(zig); say(pick(o), pick(BANTER.heavy[zig])); }
           }
         }
-        if (ph === "done") { if (!sw.struck.size) setLog("Miss — swing didn't reach the dummy"); swing.current = null; }
+        if (ph === "done") { if (!sw.struck.size) { setLog("Miss — swing didn't reach the dummy"); if (zig === "Brix" && Math.random() < 0.5) convo("miss"); } swing.current = null; }
       }
       if (dummy.current.down && now - dummy.current.down > 1400) { dummy.current.down = 0; dummy.current.hp = DUMMY_HP; }
       tick(n => n + 1);
