@@ -1325,3 +1325,19 @@ body > .combat-dodge{position:fixed}
 .kronk-stomp{width:21%;visibility:hidden;animation:none}
 .kronk-stomp.is-on{visibility:visible;animation:kronk-stomp-frames 1.76s steps(8,jump-none) forwards}
 .kronk-guard{display:none}
+
+/* DEV · COMBAT ARENA (editor-only training room) */
+.arena-wrap { position: relative; width: 100%; display: flex; flex-direction: column; gap: .5rem; }
+.arena-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border: 1px solid var(--border); background: linear-gradient(to bottom, var(--card) 0 38%, var(--muted) 38% 100%); background-size: 100% 100%; touch-action: none; }
+.arena-stage::after { content: ""; position: absolute; inset: 38% 0 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 8% 12%; opacity: .35; pointer-events: none; }
+.arena-stage .haven-zig { position: absolute; bottom: var(--fy); transform: translateX(-50%); }
+.arena-label { position: absolute; top: .4rem; left: .6rem; font-size: .65rem; letter-spacing: .15em; color: var(--muted-foreground); z-index: 200; }
+.arena-rat { position: absolute; transform: translate(-50%, -100%); font-size: clamp(1.2rem, 4vw, 2.2rem); line-height: 1; z-index: 50; transition: opacity .3s, filter .1s; }
+.arena-rat.is-hurt { filter: brightness(2.5) saturate(0); }
+.arena-rat.is-dead { opacity: .2; }
+.arena-box { position: absolute; z-index: 150; pointer-events: none; border: 1.5px solid; }
+.arena-box.is-hurt-box { border-color: hsl(140 80% 50%); background: hsl(140 80% 50% / .12); }
+.arena-box.is-attack-box { border-color: hsl(0 85% 55% / .5); border-style: dashed; }
+.arena-box.is-attack-box.is-live { border-style: solid; border-color: hsl(0 85% 55%); background: hsl(0 85% 55% / .3); }
+.arena-controls { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.arena-log { font-size: .7rem; color: var(--muted-foreground); }
