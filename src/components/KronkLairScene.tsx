@@ -54,7 +54,7 @@ const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[
 
 /** Anger phases (creator's script): each exchange plays once as Kronk's health drops — amusement, temper, pure rage. */
 const PHASE1: Line[] = [
-  { who: "Kronk", text: "HAHAHAHA! Shelton sent CHILDREN to challenge me?" },
+  { who: "Kronk", text: "HAHAHAHA! The Network sends CHILDREN to challenge ME?" },
   { who: "Oz", text: "Children?! Mate, you're a handbag with batteries!" },
   { who: "Kronk", text: "WHAT DID YOU CALL ME?!" },
   { who: "Brix", text: "He called you a handbag." },
