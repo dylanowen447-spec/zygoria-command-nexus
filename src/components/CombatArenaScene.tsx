@@ -7,41 +7,52 @@ import { attackBox, attackPhase, hurtbox, resolveSwing, type Box, type Facing, t
 type Swing = { start: number; facing: Facing; struck: Set<number>; heavy: boolean };
 /** Dummy aligned to the painted one (artwork % space). Base = feet point; crop = visible art region. */
 const DUMMY = { x: 49.3, y: 56.5, crop: { l: 44, t: 37, w: 10.5, h: 21.5 } };
-/** Walkable dirt clearing traced from the painted guide (artwork %): avoids grass, rocks, stumps and props. */
-const FLOOR: [number, number][] = [[22.5,52.5],[25,51.5],[32,52.8],[37,51.5],[42,52.5],[46,51.2],[55,51],[67,50.8],[74,50.8],[80,51.5],[88,53.5],[94,56],[100,62.5],[98.5,67],[93,69.5],[87.2,73],[84,77],[81,82],[80.2,85],[85,86.5],[86,90],[78,93],[68,93],[67.5,97],[45,97],[44,93],[40,89],[35,89],[31,94],[28,88],[25.5,85],[23.5,84.5],[18,84],[14,75],[12,68],[16.5,66.5],[19.5,64.5],[17.5,62.5],[22.8,56.5]];
-const GROUND = { top: 50.8, bottom: 97 };
-/** Solid prop bases from the guide's red outlines (artwork %): feet are pushed out so Zigs walk around, never through. */
+/** Flat open ground: the whole clearing is walkable (artwork %); only props, trees and rocks block the feet. */
+const GROUND = { top: 50, bottom: 97 };
+const WALK = { left: 2, right: 98, top: 50, bottom: 99 };
+/** Solid bases (artwork %): feet are pushed out so Zigs walk around, never through. */
 const SOLIDS = [
   { x: 16.8, y: 56.5, rx: 4.6, ry: 2.0 },  // crates + punching bag frame
+  { x: 22.5, y: 56.5, rx: 1.6, ry: 1.0 },  // bag frame support
   { x: 28.3, y: 52.5, rx: 2.4, ry: 1.2 },  // boulder under the bag
+  { x: 33.5, y: 51.5, rx: 3.5, ry: 1.6 },  // boulder behind the target
   { x: 37.5, y: 53.4, rx: 2.8, ry: 1.4 },  // archery target stand
+  { x: 43.5, y: 52, rx: 2.5, ry: 1.2 },    // rock right of the target
   { x: 49.3, y: 56.5, rx: 3.2, ry: 1.5 },  // scarecrow dummy (interactive)
   { x: 61.5, y: 55.2, rx: 1.9, ry: 1.1 },  // wing chun dummy
   { x: 70.5, y: 55.2, rx: 1.8, ry: 1.1 },  // rope post 1
   { x: 77.3, y: 53.8, rx: 1.6, ry: 1.0 },  // rope post 2
   { x: 85.5, y: 57.5, rx: 4.2, ry: 2.0 },  // tire stack
+  { x: 94.5, y: 55, rx: 4.0, ry: 1.9 },    // boulder by the right banners
+  { x: 9, y: 64, rx: 6.0, ry: 2.7 },       // giant tree trunk, left
+  { x: 15, y: 63, rx: 2.5, ry: 1.2 },      // crate by the tree
+  { x: 77, y: 84, rx: 3.5, ry: 1.7 },      // stump
+  { x: 84.5, y: 81.5, rx: 2.5, ry: 1.2 },  // small stump
+  { x: 91, y: 81, rx: 3.5, ry: 1.7 },      // tall stump
+  { x: 96.5, y: 74, rx: 2.5, ry: 1.2 },    // cut stump
+  { x: 7, y: 87, rx: 7.0, ry: 3.2 },       // boulder, bottom left
+  { x: 19, y: 94, rx: 4.0, ry: 1.9 },      // rock, front left
+  { x: 39, y: 92, rx: 4.0, ry: 1.9 },      // flat rock, front centre
+  { x: 92, y: 96, rx: 7.0, ry: 3.2 },      // boulder, bottom right
 ];
-function inside(x: number, y: number) {
-  let c = false;
-  for (let i = 0, j = FLOOR.length - 1; i < FLOOR.length; j = i++) {
-    const [xi, yi] = FLOOR[i]!, [xj, yj] = FLOOR[j]!;
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
-  }
-  return c;
-}
-/** Nearest walkable point (like Kronk's Lair), so taps on grass or a prop walk to the clearing's edge. */
 function inSolid(x: number, y: number) {
   return SOLIDS.some(s => ((x - s.x) / s.rx) ** 2 + ((y - s.y) / s.ry) ** 2 < 1);
 }
+const inWalk = (x: number, y: number) => x >= WALK.left && x <= WALK.right && y >= WALK.top && y <= WALK.bottom;
+/** Keep feet on the ground: inside the clearing and outside every prop, tree and rock. */
 function clampToFloor(t: { x: number; y: number }) {
-  if (inside(t.x, t.y) && !inSolid(t.x, t.y)) return t;
-  let best = t, bd = Infinity;
-  for (let x = 10; x <= 100; x += 0.5) for (let y = 50; y <= 97; y += 0.5) {
-    if (!inside(x, y) || inSolid(x, y)) continue;
-    const d = (x - t.x) ** 2 + (y - t.y) ** 2;
-    if (d < bd) { bd = d; best = { x, y }; }
+  let x = Math.max(WALK.left, Math.min(WALK.right, t.x));
+  let y = Math.max(WALK.top, Math.min(WALK.bottom, t.y));
+  for (let i = 0; i < 6; i++) {
+    const s = SOLIDS.find(s => ((x - s.x) / s.rx) ** 2 + ((y - s.y) / s.ry) ** 2 < 1);
+    if (!s) break;
+    const nx = (x - s.x) / s.rx, ny = (y - s.y) / s.ry, len = Math.hypot(nx, ny);
+    if (len < 1e-4) { x = s.x + s.rx; y = s.y; continue; }
+    const k = 1.02 / len;
+    x = Math.max(WALK.left, Math.min(WALK.right, s.x + nx * k * s.rx));
+    y = Math.max(WALK.top, Math.min(WALK.bottom, s.y + ny * k * s.ry));
   }
-  return best;
+  return { x, y };
 }
 /** 2.5D: far (top of clearing) is small, near (bottom) is big. */
 const depthAt = (y: number) => 0.6 + 0.6 * Math.max(0, Math.min(1, (y - GROUND.top) / (GROUND.bottom - GROUND.top)));
@@ -49,7 +60,7 @@ const SPEED = 22; // % per second
 
 export function CombatArenaScene() {
   const [zig, setZig] = useState<Fighter>("Brix");
-  const [debug, setDebug] = useState(true);
+  const [debug, setDebug] = useState(false);
   const [, tick] = useState(0);
   const pos = useRef({ x: 35, y: 75 });
   const target = useRef<{ x: number; y: number } | null>(null);
@@ -90,7 +101,7 @@ export function CombatArenaScene() {
           let moved = false;
           for (const off of [0, 0.45, -0.45, 0.9, -0.9, 1.35, -1.35, 1.8, -1.8, 2.3, -2.3, 2.8, -2.8]) {
             const a = base + off, nx = p.x + Math.cos(a) * step, ny = p.y + Math.sin(a) * step;
-            if (inside(nx, ny) && !inSolid(nx, ny)) {
+            if (inWalk(nx, ny) && !inSolid(nx, ny)) {
               p.x = nx; p.y = ny; moved = true;
               facing.current = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) > 0 ? "right" : "left") : Math.sin(a) > 0 ? "down" : "up";
               break;
@@ -99,15 +110,8 @@ export function CombatArenaScene() {
           walking.current = moved;
         }
       }
-      // Solid prop bases: push feet out of each ellipse so Zigs walk around props, never through them.
-      for (const s of SOLIDS) {
-        const nx = (p.x - s.x) / s.rx, ny = (p.y - s.y) / s.ry, len = Math.hypot(nx, ny);
-        if (len < 1) {
-          if (len < 1e-4) { p.x = s.x + s.rx; continue; }
-          const k = 1 / len; p.x = s.x + nx * k * s.rx; p.y = s.y + ny * k * s.ry;
-        }
-      }
-      if (!inside(p.x, p.y) || inSolid(p.x, p.y)) { const q = clampToFloor(p); p.x = q.x; p.y = q.y; }
+      // Keep feet on the ground: out of every prop, tree and rock, and inside the clearing.
+      const q = clampToFloor(p); p.x = q.x; p.y = q.y;
       const sw = swing.current;
       if (sw) {
         const ph = attackPhase(zig, now - sw.start);
@@ -154,10 +158,6 @@ export function CombatArenaScene() {
       </span>
       <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${sw ? "is-attacking" : ""} ${sw?.heavy ? "is-heavy" : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(${depthAt(p.y)})`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
       {debug && <>
-        <svg className="arena-floor" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <polygon points={FLOOR.map(([x, y]) => `${x},${y}`).join(" ")} className="arena-floor-fill"/>
-          {SOLIDS.map((s, i) => <ellipse key={i} cx={s.x} cy={s.y} rx={s.rx} ry={s.ry} className="arena-floor-solid"/>)}
-        </svg>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 1.3))}/>
         <span className={`arena-box is-attack-box ${phase === "active" ? "is-live" : ""}`} style={boxStyle(attackBox(zig, p, sw?.facing ?? f, depthAt(p.y)))}/>

@@ -1358,10 +1358,6 @@ body > .combat-dodge{position:fixed}
 .arena-box.is-hurt-box { border-color: hsl(140 80% 50%); background: hsl(140 80% 50% / .12); }
 .arena-box.is-attack-box { border-color: hsl(0 85% 55% / .5); border-style: dashed; }
 .arena-box.is-attack-box.is-live { border-style: solid; border-color: hsl(0 85% 55%); background: hsl(0 85% 55% / .3); }
-/* Training Grounds walkable-area overlay (BOXES ON): green clearing, red prop footprints. */
-.arena-floor { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 140; pointer-events: none; }
-.arena-floor-fill { fill: hsl(140 80% 50% / .14); stroke: hsl(140 80% 50%); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.arena-floor-solid { fill: hsl(0 85% 55% / .22); stroke: hsl(0 85% 55%); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .arena-controls { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
 .arena-log { font-size: .7rem; color: var(--muted-foreground); }
 
