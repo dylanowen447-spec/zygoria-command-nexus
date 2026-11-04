@@ -316,6 +316,7 @@ function CommandCentre() {
     setScenesOpen(false);
     setBuilding(false);
     setDescent(false);
+    setValeTrip(null);
     setKronk(false);
     setKronkLair(false);
     setArena(false);

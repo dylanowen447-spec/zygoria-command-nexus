@@ -52,7 +52,7 @@ const HANDOVER: Line[] = [
 const RETURN: Line[] = VALE_REPORTS;
 
 export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onDescend?: () => void } = {}) {
-  const [quest, setQuest] = useState<QuestStage>(() => loadQuest());
+  const [quest, setQuest] = useState<QuestStage>(() => { const q = loadQuest(); return q === "vale-up" ? advanceQuest("vale-home") : q; }); // a reload mid-trip brings Vale home
   const [script, setScript] = useState<Line[]>(() => quest === "fish" ? [...INTRO, ...HANDOVER] : quest === "vale-home" ? RETURN : INTRO);
   const [valeReady, setValeReady] = useState(false);
   const [step, setStep] = useState(0);

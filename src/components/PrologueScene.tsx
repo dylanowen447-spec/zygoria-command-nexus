@@ -205,7 +205,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     const waitLine = async (text: string) => {
       const l = spokenLine;
       if (l && l.text === text && l.done) { const t0 = performance.now(); await Promise.race([l.done, wait(hold(text) + 4000)]); const left = 1200 - (performance.now() - t0); if (left > 0) await wait(left); }
-      else await waitLine(text);
+      else await wait(hold(text));
     };
     // Only one Zig chatters at a time while exploring.
     let floorUntil = 0;
@@ -810,7 +810,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         let openGate = () => {};
         const emerge = (a: Agent) => { if (hatched.has(a)) return; hatched.add(a); if (alive) { setEmerged(e => ({ ...e, [a]: true })); void walk(a, [scene.spots[scene.spawn[a].out]!.at]); } };
         const open = (_a: Agent, kind: "heavy" | "pop" | "mist") => { if (skipped) return; playHatch(kind); };
-        skipHatch.current = () => { skipped = true; ALL.forEach(a => emerge(a)); setHatching(false); openGate(); };
+        skipHatch.current = () => { skipped = true; ALL.forEach(a => emerge(a)); setHatching(false); openGate(); allDone(); };
         const hwait = (ms: number) => skipped ? Promise.resolve() : Promise.race([wait(ms), new Promise<void>(r => { openGate = r; })]);
         // Player knocks each egg three times; it cracks, then its Zig steps out. Eggs left alone hatch themselves after a while.
         setKnocks({ Oz: 0, Brix: 0, Lowkey: 0 });
