@@ -1385,3 +1385,19 @@ body > .combat-dodge{position:fixed}
 .arena-dummy-hp>span{display:block;height:100%;background:var(--primary);transition:width .2s ease-out}
 .arena-hitmark.is-heavy{font-size:clamp(.75rem,2.6vw,1.25rem);color:var(--accent)}
 .arena-hud{position:absolute;top:2%;left:50%;transform:translateX(-50%);width:min(60%,320px);z-index:200;pointer-events:none}
+
+/* Training Grounds charged attacks: aura while holding, signature burst on a heavy hit. */
+.haven-zig.is-charging .sprite-stage { animation: charge-shiver .12s linear infinite; }
+.haven-zig.is-charging::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 70%; height: 22%; transform: translateX(-50%); border-radius: 50%; pointer-events: none; animation: charge-aura .5s ease-in-out infinite alternate; }
+.haven-zig.charge-brix::after { background: radial-gradient(closest-side, hsl(8 90% 55% / .8), transparent); }
+.haven-zig.charge-oz::after { background: radial-gradient(closest-side, hsl(52 100% 60% / .85), transparent); }
+.haven-zig.charge-lowkey::after { background: radial-gradient(closest-side, hsl(275 70% 45% / .85), transparent); }
+@keyframes charge-shiver { 0%,100% { translate: 0 0; } 50% { translate: .6px 0; } }
+@keyframes charge-aura { from { opacity: .45; scale: .85; } to { opacity: 1; scale: 1.15; } }
+.arena-charge-fx { position: absolute; inset: -20% -40%; pointer-events: none; z-index: 2; }
+.arena-charge-fx.fx-brix { background: conic-gradient(from 200deg, transparent 0 20%, hsl(8 95% 55% / .9) 28%, hsl(40 100% 70% / .9) 32%, transparent 42%); border-radius: 50%; mask: radial-gradient(closest-side, transparent 55%, #000 60%, #000 75%, transparent 80%); animation: fx-swoosh .4s ease-out forwards; }
+.arena-charge-fx.fx-oz { background: radial-gradient(closest-side, hsl(55 100% 85% / .95), hsl(52 100% 55% / .7) 35%, transparent 70%); clip-path: polygon(50% 0,58% 35%,95% 20%,65% 50%,100% 70%,58% 62%,50% 100%,42% 62%,0 70%,35% 50%,5% 20%,42% 35%); animation: fx-zap .45s steps(3) forwards; }
+.arena-charge-fx.fx-lowkey { background: linear-gradient(115deg, transparent 35%, hsl(275 70% 30% / .9) 45%, hsl(290 90% 75% / .95) 50%, hsl(275 70% 30% / .9) 55%, transparent 65%); animation: fx-slash .35s ease-out forwards; }
+@keyframes fx-swoosh { from { opacity: 1; rotate: -60deg; scale: .7; } to { opacity: 0; rotate: 40deg; scale: 1.2; } }
+@keyframes fx-zap { 0% { opacity: 1; scale: .6; rotate: 0deg; } 50% { opacity: 1; scale: 1.1; rotate: 20deg; } 100% { opacity: 0; scale: 1.3; rotate: -10deg; } }
+@keyframes fx-slash { from { opacity: 1; translate: -30% 10%; } to { opacity: 0; translate: 30% -10%; } }
