@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiVoiceRouteImport } from './routes/api/voice'
+import { Route as ApiPublicFreeTalkRouteImport } from './routes/api/public/free-talk'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const ApiVoiceRoute = ApiVoiceRouteImport.update({
   path: '/api/voice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicFreeTalkRoute = ApiPublicFreeTalkRouteImport.update({
+  id: '/api/public/free-talk',
+  path: '/api/public/free-talk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/voice': typeof ApiVoiceRoute
+  '/api/public/free-talk': typeof ApiPublicFreeTalkRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/voice': typeof ApiVoiceRoute
+  '/api/public/free-talk': typeof ApiPublicFreeTalkRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/voice': typeof ApiVoiceRoute
+  '/api/public/free-talk': typeof ApiPublicFreeTalkRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/voice'
+  fullPaths: '/' | '/api/voice' | '/api/public/free-talk'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/voice'
-  id: '__root__' | '/' | '/api/voice'
+  to: '/' | '/api/voice' | '/api/public/free-talk'
+  id: '__root__' | '/' | '/api/voice' | '/api/public/free-talk'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiVoiceRoute: typeof ApiVoiceRoute
+  ApiPublicFreeTalkRoute: typeof ApiPublicFreeTalkRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiVoiceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/free-talk': {
+      id: '/api/public/free-talk'
+      path: '/api/public/free-talk'
+      fullPath: '/api/public/free-talk'
+      preLoaderRoute: typeof ApiPublicFreeTalkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiVoiceRoute: ApiVoiceRoute,
+  ApiPublicFreeTalkRoute: ApiPublicFreeTalkRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

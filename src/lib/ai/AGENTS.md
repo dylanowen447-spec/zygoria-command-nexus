@@ -2,3 +2,4 @@
 - Live story progress lives in `src/lib/ai/canon-state.server.ts` (stage, canon truth, per-agent knowledge, discoveries, unlocked zones, hidden future canon); the UI reads it only through the safe `getCanonState` server function, never the client bundle — so one edit advances the whole world.
 - Keep Codex journal pages in the central server-only story state and expose only visitor-safe records through `getCanonState`, so the journal grows with the story without revealing undiscovered lore.
 - Crew group replies are sequential AI calls reacting to previous speakers, never simulated dialogue.
+- Free Talk is an optional off-script chat (src/lib/free-talk.ts + free-talk.functions.ts): replies never advance, unlock or summarise story events, and no scene state is written — so it can't disturb scripted dialogue, combat or progression.

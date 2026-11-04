@@ -68,6 +68,7 @@
 - [x] Remove invisible steps in Training Grounds (flat ground)
 - [x] Training Grounds: all 3 Zigs' full Old City attacks
 
-- [ ] Training Grounds: solid collisions on the big punch bag, lunch bag and dummies — Zigs stopped in front, never through, on top of or behind them
-- [ ] Big red punch bag: same mechanics as the dummy (hits, health, damage numbers, reset)
-- [ ] Read and action the uploaded "ZYGORIA FIRST GENESIS - TALK TO THE ZIGS" file
+- [x] Training Grounds: solid collisions on the big punch bag, lunch bag and dummies — Zigs stopped in front, never through, on top of or behind them (phone verified: taps behind a prop resolve to standing in front)
+- [x] Big red punch bag: same mechanics as the dummy (hits, health, damage numbers, reset) — phone verified
+- [ ] Read and action the uploaded "ZYGORIA FIRST GENESIS - TALK TO THE ZIGS" file — Phase 1 built (off-script chat with Brix in the Training Grounds); reply delivery still being verified
+- [ ] Free Talk: use the same talk box the crew already use in scene 1, and make it available in every scene (all three Zigs)

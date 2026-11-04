@@ -1404,3 +1404,12 @@ body > .combat-dodge{position:fixed}
 /* Training Grounds banter bubble, floating over whoever is speaking. */
 .arena-bubble{position:absolute;transform:translateX(-50%);z-index:250;max-width:min(200px,48%);padding:4px 8px;border-radius:8px;font-size:10px;line-height:1.3;background:var(--background);color:var(--foreground);border:1px solid color-mix(in oklab,var(--primary) 70%,transparent);pointer-events:none;animation:haven-pop .25s ease-out}
 .arena-bubble b{display:block;font-size:8px;letter-spacing:.1em;color:var(--primary)}
+/* Free Talk: an optional off-script chat with one Zig (Phase 1: Brix in the Training Grounds). */
+.free-talk{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;width:100%;margin-top:.15rem}
+.free-talk input{flex:1 1 140px;min-width:0;font-size:.72rem;padding:.35rem .5rem;border-radius:8px;border:1px solid var(--border);background:var(--background);color:var(--foreground)}
+.free-talk input::placeholder{color:var(--muted-foreground)}
+.free-talk button{font-size:.68rem;font-weight:700;letter-spacing:.08em;padding:.35rem .6rem;border-radius:8px;border:1px solid var(--primary);background:var(--primary);color:var(--primary-foreground);cursor:pointer}
+.free-talk button:disabled{opacity:.45;cursor:default}
+.free-talk-reply{flex:1 1 100%;margin:0;font-size:.72rem;line-height:1.35;color:var(--foreground)}
+.free-talk-reply b{display:block;font-size:8px;letter-spacing:.1em;color:var(--primary)}
+.free-talk-note{flex:1 1 100%;margin:0;font-size:.68rem;color:var(--muted-foreground)}

@@ -4,6 +4,7 @@ import { CharacterSprite } from "@/components/CharacterSprite";
 import { speak } from "@/lib/voice";
 import groundsArt from "@/assets/training-grounds.png.asset.json";
 import { ATTACK, attackBox, attackPhase, hurtbox, resolveSwing, type Box, type Facing, type Fighter } from "@/lib/combat-boxes";
+import { FreeTalkBox } from "@/components/FreeTalkBox";
 
 /** Editor-only Training Grounds: painted art, one interactive dummy (first prop), depth scaling. No health, no enemies. */
 type Swing = { start: number; facing: Facing; struck: Set<number>; heavy: boolean };
@@ -115,6 +116,8 @@ const BAG_HP = 30;
 /** The big red punching bag hanging from the frame: same hits, health, damage numbers and reset as the dummy. */
 const BIGBAG = { x: 24, y: 57.5, crop: { l: 21.8, t: 32, w: 4.3, h: 17.8 } };
 const BIGBAG_HP = 30;
+/** Where an off-script chat thinks the crew is, so replies stay grounded in this scene. */
+const TRAINING_SCENE = "the Riverside Sanctuary training grounds: a sunny woodland clearing with a hanging punching bag, a scarecrow dummy and archery targets, where the crew have been practising punches and dodges";
 export function CombatArenaScene() {
   const [zig, setZig] = useState<Fighter>("Brix");
   const [debug, setDebug] = useState(false);
@@ -137,6 +140,7 @@ export function CombatArenaScene() {
   // Team banter: one line at a time, spoken (when VOICES is on) with a bubble over the speaker.
   const [bubble, setBubble] = useState<{ who: Fighter; text: string } | null>(null);
   const talking = useRef(false), lastLine = useRef(0);
+  const talkBusy = useRef(false); // an off-script chat is waiting for its reply: hold the yard chatter back
   const alive = useRef(true);
   useEffect(() => () => { alive.current = false; }, []);
   // One line: waits for the voice to finish, then a short read pause before resolving.
@@ -150,7 +154,7 @@ export function CombatArenaScene() {
   });
   const say = (who: Fighter, text: string, force = false) => {
     const now = performance.now();
-    if (talking.current || (!force && now - lastLine.current < 4000)) return;
+    if (talkBusy.current || talking.current || (!force && now - lastLine.current < 4000)) return;
     talking.current = true; lastLine.current = now;
     void line(who, text).then(() => { talking.current = false; lastLine.current = performance.now(); });
   };
@@ -158,7 +162,7 @@ export function CombatArenaScene() {
   const convoAt = useRef<Record<string, number>>({});
   const convo = (key: string, gap = 8000) => {
     const now = performance.now();
-    if (talking.current || now - lastLine.current < gap || now - (convoAt.current[key] ?? -Infinity) < CONVO_COOLDOWN) return false;
+    if (talkBusy.current || talking.current || now - lastLine.current < gap || now - (convoAt.current[key] ?? -Infinity) < CONVO_COOLDOWN) return false;
     talking.current = true; convoAt.current[key] = now;
     void (async () => {
       for (const [w, t] of CONVOS[key] ?? []) { if (!alive.current) return; await line(w, t); await new Promise(r => setTimeout(r, 250)); }
@@ -357,6 +361,7 @@ export function CombatArenaScene() {
     <div className="arena-controls" onPointerDown={e => e.stopPropagation()}>
       {(["Brix", "Lowkey", "Oz"] as Fighter[]).map(z => <button key={z} type="button" className={`zone-chip ${z === zig ? "is-active" : ""}`} onClick={() => setZig(z)}>{z}</button>)}
       <button type="button" className={`zone-chip ${debug ? "is-active" : ""}`} onClick={() => setDebug(d => !d)}>BOXES {debug ? "ON" : "OFF"}</button>
+      <FreeTalkBox who="Brix" scene={TRAINING_SCENE} disabled={talking.current || !!swing.current || !!roll.current} onBusy={v => { talkBusy.current = v; }}/>
       <span className="arena-log">{log}</span>
     </div>
     {typeof document !== "undefined" && createPortal(<>
