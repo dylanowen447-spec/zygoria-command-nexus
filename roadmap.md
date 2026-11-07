@@ -75,3 +75,4 @@
 - [x] Training Grounds: Dispatch replies must be spoken aloud (slow first-time voices were being dropped)
 - [x] Kronk stomp: play the stomp sheet frame by frame (no sideways stretch), impact on contact frame, back to idle
 - [ ] Old City: fewer rat waves
+- [x] Mobile: Dispatch reply box must stay on screen; no frozen "…" box over Brix; replies always voiced

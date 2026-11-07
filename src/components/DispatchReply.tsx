@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { speak } from "@/lib/voice";
+import { speak, silenceAllVoices, unmuteVoices } from "@/lib/voice";
 
 type Zig = "Oz" | "Brix" | "Lowkey";
 
@@ -17,11 +17,12 @@ export function DispatchReply({ command, scene }: { command: { id: number; text:
     void (async () => {
       let reply = "Sorry, didn't catch that.";
       try {
-        const r = await fetch("/api/public/free-talk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: who, said: command.text.slice(0, 180), scene }) });
+        const r = await fetch("/api/public/free-talk", { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: who, said: command.text.slice(0, 180), scene }) });
         const j = await r.json(); if (j.reply) reply = String(j.reply);
       } catch { /* keep fallback */ }
       if (!alive.current) return;
       setBubble({ who, text: reply });
+      silenceAllVoices(0); unmuteVoices();
       await speak(who, reply, undefined, 20000);
       setTimeout(() => { if (alive.current) setBubble(b => (b?.text === reply ? null : b)); }, 1500 + reply.length * 30);
     })();

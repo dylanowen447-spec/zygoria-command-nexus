@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CharacterSprite } from "@/components/CharacterSprite";
-import { speak } from "@/lib/voice";
+import { speak, silenceAllVoices, unmuteVoices } from "@/lib/voice";
 import groundsArt from "@/assets/training-grounds.png.asset.json";
 import { ATTACK, attackBox, attackPhase, hurtbox, resolveSwing, type Box, type Facing, type Fighter } from "@/lib/combat-boxes";
 
@@ -161,10 +161,12 @@ export function CombatArenaScene({ command = null }: { command?: { id: number; t
     void (async () => {
       let reply = "Sorry, didn't catch that.";
       try {
-        const r = await fetch("/api/public/free-talk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: who, said: command.text, scene: TRAINING_SCENE }) });
+        const r = await fetch("/api/public/free-talk", { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: who, said: command.text, scene: TRAINING_SCENE }) });
         const j = await r.json(); if (j.reply) reply = String(j.reply);
       } catch { /* keep fallback */ }
-      if (!alive.current) return;
+      if (!alive.current) { talkBusy.current = false; return; }
+      // Clear queued yard banter so the reply is spoken next, not stuck behind chatter.
+      silenceAllVoices(0); unmuteVoices();
       // A fresh reply's voice takes ~5–6s to generate the first time: wait for it instead of dropping it.
       setBubble(null); await line(who, reply, 20000);
       talkBusy.current = false; lastLine.current = performance.now();
@@ -367,7 +369,7 @@ export function CombatArenaScene({ command = null }: { command?: { id: number; t
       </span>; })()}
       {(["Brix", "Lowkey", "Oz"] as Fighter[]).filter(z => z !== zig).map(z => { const q = crewPos.current[z]; return <span key={z} className={`haven-zig marker-${z.toLowerCase()}`} onPointerDown={e => { const l = lastTap.current, now = performance.now(); if (l && l.z === z && now - l.t < 380) { e.stopPropagation(); lastTap.current = null; target.current = null; setZig(z); } else lastTap.current = { z, t: now }; }} style={{ left: `${q.x}%`, ["--fy" as string]: `${100 - q.y}%`, zIndex: 5 + Math.round(q.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(q.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(calc(var(--arena-sprite-scale, 1) * ${depthAt(q.y)}))`, transformOrigin: "50% 100%" }}><CharacterSprite character={z}/></span></span>; })}
       <span className={`haven-zig marker-${zig.toLowerCase()} ${walking.current ? `is-walking ${zig.toLowerCase()}-facing-${f} facing-${f}` : ""} ${roll.current ? "is-rolling" : ""} ${charged && !sw ? `is-charging charge-${zig.toLowerCase()}` : ""} ${sw ? `is-attacking ${atkPose(zig, sw.heavy)} facing-${atkSide} ${zig.toLowerCase()}-facing-${atkSide}` : ""}`} style={{ left: `${p.x}%`, ["--fy" as string]: `${100 - p.y}%`, zIndex: 5 + Math.round(p.y), transitionDuration: "0ms", ["--depth" as string]: String(depthAt(p.y)) }}><span className="arena-shadow" aria-hidden="true"/><span className="sprite-stage" style={{ transform: `scale(calc(var(--arena-sprite-scale, 1) * ${depthAt(p.y)}))`, transformOrigin: "50% 100%" }}><CharacterSprite character={zig}/></span></span>
-      {bubble && (() => { const q = crewPos.current[bubble.who]; return <span className="arena-bubble" style={{ left: `${Math.max(14, Math.min(86, q.x))}%`, bottom: `calc(${100 - q.y}% + calc(70px * var(--arena-sprite-scale, 1) * ${depthAt(q.y)}))` }}><b>{bubble.who}</b> {bubble.text}</span>; })()}
+      {bubble && (() => { const q = crewPos.current[bubble.who]; return <span className="arena-bubble" style={{ left: `${Math.max(14, Math.min(86, q.x))}%`, bottom: `min(calc(${100 - q.y}% + calc(70px * var(--arena-sprite-scale, 1) * ${depthAt(q.y)})), calc(100% - 70px))` }}><b>{bubble.who}</b> {bubble.text}</span>; })()}
       {debug && <>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox(zig, p, depthAt(p.y)))}/>
         <span className="arena-box is-hurt-box" style={boxStyle(hurtbox("Brix", DUMMY, 2))}/>
