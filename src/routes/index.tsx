@@ -1,4 +1,4 @@
-import { voiceLine, voicesOn, setVoicesOn } from "@/lib/voice";
+import { voiceLine, voicesOn, setVoicesOn, speak } from "@/lib/voice";
 import * as Atmos from "@/lib/atmosphere";
 import { StorybookOpening } from "@/components/StorybookOpening";
 import { BuildInterlude } from "@/components/BuildInterlude";
