@@ -1426,3 +1426,12 @@ body > .combat-dodge{position:fixed}
 .intro-prompt{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:8px;max-width:calc(100% - 24px);padding:8px 14px;border-radius:10px;font:600 13px/1.3 var(--font-body);text-align:center;background:var(--background);color:var(--foreground);border:1px solid var(--electric);box-shadow:var(--shadow-glow);pointer-events:none;animation:haven-pop .3s ease-out,intro-glow 2s ease-in-out infinite}
 @keyframes intro-glow{50%{border-color:var(--violet)}}
 @media(max-width:600px){.intro-prompt{font-size:12px;padding:7px 10px;top:8px}}
+
+/* Compact, collapsible mission control */
+.intel-panel.is-collapsed{min-height:0}
+.intel-panel.is-collapsed>.intel-section,.intel-panel.is-collapsed>.intel-bottom,.intel-panel.is-collapsed .intel-top>:not(.intel-heading):not(.intel-location){display:none}
+.intel-panel.is-collapsed .intel-top{padding:10px 14px}
+.intel-toggle{border:1px solid var(--border);background:var(--surface-raised);color:var(--electric);font:600 9px var(--font-mono);letter-spacing:1px;padding:4px 8px;border-radius:2px;min-height:28px}
+.intel-toggle:hover{border-color:var(--electric)}
+.intel-location{display:flex;align-items:center;gap:6px;color:var(--electric);margin-top:8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+@media(min-width:851px){.command-layout:has(.intel-panel.is-collapsed){grid-template-columns:minmax(0,1fr) 260px}}
