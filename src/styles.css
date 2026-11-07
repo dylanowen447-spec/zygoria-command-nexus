@@ -1434,4 +1434,8 @@ body > .combat-dodge{position:fixed}
 .intel-toggle{border:1px solid var(--border);background:var(--surface-raised);color:var(--electric);font:600 9px var(--font-mono);letter-spacing:1px;padding:4px 8px;border-radius:2px;min-height:28px}
 .intel-toggle:hover{border-color:var(--electric)}
 .intel-location{display:flex;align-items:center;gap:6px;color:var(--electric);margin-top:8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-@media(min-width:851px){.command-layout:has(.intel-panel.is-collapsed){grid-template-columns:minmax(0,1fr) 260px}}
+.command-layout:has(.intel-panel.is-collapsed){grid-template-columns:minmax(0,1fr)}
+.intel-panel.is-collapsed{order:-1}
+.intel-panel.is-collapsed .intel-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.intel-panel.is-collapsed .intel-location{margin-top:0;flex:1;min-width:0}
+.intel-panel.is-collapsed .intel-heading{flex:none}
