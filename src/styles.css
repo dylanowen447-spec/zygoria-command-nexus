@@ -1415,3 +1415,5 @@ body > .combat-dodge{position:fixed}
 .free-talk-reply{flex:1 1 100%;margin:0;font-size:.72rem;line-height:1.35;color:var(--foreground)}
 .free-talk-reply b{display:block;font-size:8px;letter-spacing:.1em;color:var(--primary)}
 .free-talk-note{flex:1 1 100%;margin:0;font-size:.68rem;color:var(--muted-foreground)}
+.dispatch-reply{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:400;max-width:min(360px,86vw);padding:8px 12px;border-radius:10px;font-size:13px;line-height:1.35;background:var(--background);color:var(--foreground);border:1px solid color-mix(in oklab,var(--primary) 70%,transparent);pointer-events:none;animation:haven-pop .25s ease-out}
+.dispatch-reply b{display:block;font-size:9px;letter-spacing:.12em;color:var(--primary)}

@@ -8,7 +8,8 @@ const ENTRANCES: Point[][] = [
   [{ x: 4, y: 62 }, { x: 6, y: 68 }, { x: 4, y: 74 }],
   [{ x: 94, y: 50 }, { x: 96, y: 56 }, { x: 94, y: 62 }],
 ];
-const WAVES = [[0, 1, 2], [0, 0, 0], [1, 1, 1, 1], [2, 2, 2, 2], [0, 1, 0, 2], [1, 2, 1, 2, 0], [0, 0, 1, 2, 0], [1, 2, 0, 1, 2, 0], [0, 1, 2, 0, 1, 2]];
+// Three waves total: Brix's swarm, a mixed wave, then a final wave from all sides.
+const WAVES = [[0, 1, 2], [0, 1, 0, 2], [0, 1, 2, 0, 1, 2]];
 export const CITY_WAVES = WAVES.length;
 
 /** True for a spawn inside the northern alleyway (used to stagger the stream). */

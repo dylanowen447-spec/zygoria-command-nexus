@@ -74,3 +74,4 @@
 - [ ] Free Talk: use the same talk box the crew already use in scene 1, and make it available in every scene (all three Zigs)
 - [x] Training Grounds: Dispatch replies must be spoken aloud (slow first-time voices were being dropped)
 - [x] Kronk stomp: play the stomp sheet frame by frame (no sideways stretch), impact on contact frame, back to idle
+- [ ] Old City: fewer rat waves
