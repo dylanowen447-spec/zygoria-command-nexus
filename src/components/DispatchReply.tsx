@@ -1,3 +1,4 @@
+import { sceneWithName } from "@/lib/player-name";
 import { useEffect, useRef, useState } from "react";
 
 import { speak, silenceAllVoices, unmuteVoices } from "@/lib/voice";
@@ -17,7 +18,7 @@ export function DispatchReply({ command, scene }: { command: { id: number; text:
     void (async () => {
       let reply = "Sorry, didn't catch that.";
       try {
-        const r = await fetch("/api/public/free-talk", { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: who, said: command.text.slice(0, 180), scene }) });
+        const r = await fetch("/api/public/free-talk", { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: who, said: command.text.slice(0, 180), scene: sceneWithName(scene) }) });
         const j = await r.json(); if (j.reply) reply = String(j.reply);
       } catch { /* keep fallback */ }
       if (!alive.current) return;

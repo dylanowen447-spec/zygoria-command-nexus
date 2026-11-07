@@ -1421,3 +1421,8 @@ body > .combat-dodge{position:fixed}
 .arena-bubble,.dispatch-reply{box-sizing:border-box;overflow-wrap:anywhere;white-space:normal}
 .dispatch-reply{width:max-content;max-width:calc(100vw - 24px)}
 @media(max-width:600px){.arena-bubble{max-width:min(170px,60%)}.dispatch-reply{position:fixed;bottom:calc(150px + env(safe-area-inset-bottom));font-size:12px}}
+
+/* First Genesis: gentle Dispatch hint after the eggs hatch. */
+.intro-prompt{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:8px;max-width:calc(100% - 24px);padding:8px 14px;border-radius:10px;font:600 13px/1.3 var(--font-body);text-align:center;background:var(--background);color:var(--foreground);border:1px solid var(--electric);box-shadow:var(--shadow-glow);pointer-events:none;animation:haven-pop .3s ease-out,intro-glow 2s ease-in-out infinite}
+@keyframes intro-glow{50%{border-color:var(--violet)}}
+@media(max-width:600px){.intro-prompt{font-size:12px;padding:7px 10px;top:8px}}

@@ -1,3 +1,4 @@
+import { sceneWithName } from "@/lib/player-name";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CharacterSprite } from "@/components/CharacterSprite";
@@ -161,7 +162,7 @@ export function CombatArenaScene({ command = null }: { command?: { id: number; t
     void (async () => {
       let reply = "Sorry, didn't catch that.";
       try {
-        const r = await fetch("/api/public/free-talk", { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: who, said: command.text, scene: TRAINING_SCENE }) });
+        const r = await fetch("/api/public/free-talk", { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: who, said: command.text, scene: sceneWithName(TRAINING_SCENE) }) });
         const j = await r.json(); if (j.reply) reply = String(j.reply);
       } catch { /* keep fallback */ }
       if (!alive.current) { talkBusy.current = false; return; }

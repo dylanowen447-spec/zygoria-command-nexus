@@ -50,6 +50,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
   // Hatch state: which Zigs have stepped out yet. Pods play sounds only — no on-screen overlays.
   const [emerged, setEmerged] = useState<Record<Agent, boolean>>({ Oz: true, Brix: true, Lowkey: true });
   const [hatching, setHatching] = useState(false);
+  // First Genesis intro hint: "talk" after the opening, "name" while Oz waits for the player's name.
+  const [introPrompt, setIntroPrompt] = useState<"talk" | "name" | null>(null);
   useEffect(() => { voicesOn(); }, []);
   const skipHatch = useRef<(() => void) | null>(null);
   // Interactive hatch: the player knocks each egg (3 taps) to crack it open.
@@ -196,7 +198,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     let voiceBusy = false;
     const say = (a: Agent, text: string | null, force = false) => { if ((voiceBusy || talking.has(a)) && !force && text) return; setBubbles(b => ({ ...b, [a]: text ?? undefined })); if (text) { logRef.current(a, text); if (!openingNow) { spokenLine = { text, done: voicesOn() ? speak(a, text, undefined, 2200) : null }; } } };
     sayRef.current = say;
-    let openingNow = false;
+    let openingNow = false, hatchingNow = hatchOn;
     /** Reading time: short lines at least 3.2s, long lines up to 6s, then a 1s breath. */
     const hold = (text: string) => Math.min(6000, Math.max(3200, 1800 + text.length * 45));
     const GAP = 250;
@@ -640,11 +642,12 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         say(z, null, true); await wait(GAP);
       }
     }
-    let heardVoice = false, awaitingName = false;
+    let heardVoice = false, awaitingName = false, pendingContact = false;
     const voiceName = () => { try { return localStorage.getItem("zygoria-voice-name") || ""; } catch { return ""; } };
     async function nameReply(raw: string) {
       const cleaned = raw.replace(/^(hi|hello|hey|oi)[,!.\s]*/i, "").replace(/^(my name is|my name's|i am|i'm|im|call me|it's|its|it is|name's)\s+/i, "").replace(/[^\p{L}\p{N}' -]/gu, "").trim().split(/\s+/).slice(0, 2).join(" ").slice(0, 20);
       if (!cleaned) { awaitingName = true; void chat(raw, ["Oz"]); return; }
+      setIntroPrompt(null);
       const name = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
       try { localStorage.setItem("zygoria-voice-name", name); } catch { /* private mode */ }
       const lines: [Agent, string][] = [["Oz", `${name}? Nice. Sky's got a name.`], ["Brix", `Right, ${name}. Point us somewhere useful.`], ["Lowkey", `${name}. I'll remember that.`]];
@@ -652,8 +655,13 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       for (const [who, line] of lines) { say(who, line, true); await waitLine(line); if (!alive) return; say(who, null, true); await wait(GAP); }
       ALL.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000;
     }
-    async function firstContact() {
-      const lines: [Agent, string][] = [
+    async function firstContact(ozFirst = false) {
+      setIntroPrompt(null);
+      const lines: [Agent, string][] = ozFirst ? [
+        ["Oz", "...Hang on. Anyone else feel like we're being watched?"],
+        ["Lowkey", "From up there. Through the dust."],
+        ["Oz", "Oi, mysterious voice. You got a name?"],
+      ] : [
         ["Oz", "...What was that?"],
         ["Brix", "Wasn't me."],
         ["Lowkey", "Wasn't me either."],
@@ -670,7 +678,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         say(who, null, true); await wait(GAP);
       }
       ALL.forEach(z => talking.delete(z)); voiceBusy = false; floorUntil = performance.now() + 2000;
-      awaitingName = true;
+      if (!alive) return;
+      awaitingName = true; setIntroPrompt("name");
     }
     alarm.current = (situation: string) => {
       if (voiceBusy) return;
@@ -739,7 +748,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     };
     handler.current = (text: string) => {
       if (finished) return;
-      if (scene.id === "landing" && !heardVoice) { heardVoice = true; void firstContact(); return; }
+      if (scene.id === "landing" && !heardVoice) { heardVoice = true; if (openingNow || hatchingNow) pendingContact = true; else void firstContact(); return; }
       if (awaitingName) { awaitingName = false; void nameReply(text); return; }
       const t = text.toLowerCase();
       const named = ALL.filter(z => new RegExp(`\\b${z.toLowerCase()}\\b`).test(t));
@@ -833,6 +842,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         knockRef.current = null;
         skipHatch.current = null;
         setHatching(false);
+        hatchingNow = false;
       }
       else if (scene.startStill) await wait(600);
       else await Promise.all(ALL.map((a, i) => wait(i * 2000).then(() => walk(a, [scene.spots[scene.spawn[a].out]!.at]))));
@@ -840,6 +850,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       openingNow = true;
       for (const [who, text] of scene.opening) { if (inCombat()) break; await speak(who, text, () => { if (alive) say(who, text); }); await wait(voicesOn() ? 250 : hold(text)); if (!alive) return; say(who, null); await wait(voicesOn() ? 300 : GAP); }
       openingNow = false;
+      if (hatchOn && alive) {
+        if (voiceName()) heardVoice = true; // name already given this playthrough — never ask twice
+        else if (pendingContact) void firstContact();
+        else if (!heardVoice) { setIntroPrompt("talk"); timers.push(setTimeout(() => { if (alive && !heardVoice) { heardVoice = true; void firstContact(true); } }, 12000)); }
+      }
       setLookAway(false);
       ALL.forEach(a => void explore(a));
     })();
@@ -927,6 +942,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       </button>
       {combat && <button type="button" className="combat-dodge" aria-label={`Dodge roll with ${ctrl}`} onPointerDown={e => { e.preventDefault(); e.stopPropagation(); dodge.current(); }} onContextMenu={e => e.preventDefault()}><span>DODGE</span></button>}
     </>, document.body)}
+    {hatchOn && introPrompt && <div className="intro-prompt" role="status" aria-live="polite"><span className="live-dot"/>{introPrompt === "talk" ? "Speak or type into DISPATCH below to talk to the crew" : "Oz asked your name — type it into DISPATCH below"}</div>}
     {hatchOn && hatching && <button type="button" className="hatch-skip" onClick={() => skipHatch.current?.()}>Skip ›</button>}
     {!combat && steered && <div className="combat-hint" aria-hidden="true">Steering {steered} · click ground to walk · Space to attack (aim with mouse) · double-tap {steered} to let go</div>}
     {combat && <div className="combat-hint" aria-hidden="true">Double-tap a Zig to control · click ground to move · Space attacks where the mouse points (hold = heavy)</div>}
