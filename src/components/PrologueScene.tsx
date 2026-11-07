@@ -636,8 +636,11 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         } catch { reply = pick(SHRUGS[z]); }
         if (!alive) return;
         previous.push({ agent: z, result: reply });
-        say(z, reply, true);
-        await wait(Math.min(5000, Math.max(2000, 1000 + reply.length * 35)));
+        // Dispatch replies are brand-new lines: give the voice time to be made instead of dropping it.
+        setBubbles(b => ({ ...b, [z]: reply })); logRef.current(z, reply);
+        const done = voicesOn() ? speak(z, reply, undefined, 20000) : null;
+        spokenLine = { text: reply, done };
+        if (done) await Promise.race([done, wait(25000)]); else await wait(Math.min(5000, Math.max(2000, 1000 + reply.length * 35)));
         if (!alive) return;
         say(z, null, true); await wait(GAP);
       }
