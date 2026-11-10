@@ -1070,6 +1070,15 @@ body > .combat-attack{position:fixed;right:calc(8px + env(safe-area-inset-right,
 .descent-scene .haven-zig.is-gone{opacity:0;transition:opacity .3s!important}
 .descent-cave{height:70px;width:70px}
 .sanctuary-exit span{position:relative;display:block;left:auto;top:auto;transform:none;font-size:9px;line-height:1.2;letter-spacing:.1em;white-space:nowrap;color:var(--foreground);background:var(--background);border:1px solid color-mix(in oklch, var(--foreground) 45%, transparent);padding:3px 8px;border-radius:3px}
+.sanctuary-exit i{font-style:normal}
+.sanctuary-exit .exit-compact{display:none}
+/* Phone screens: the back-path marker shrinks to a short chip so it never covers the gap between the shed and the hill. */
+@media(max-width:600px){
+.sanctuary-exit .exit-full{display:none}
+.sanctuary-exit .exit-compact{display:inline}
+.sanctuary-exit.exit-grounds span{font-size:7px;padding:2px 5px;letter-spacing:.06em}
+.sanctuary-exit.exit-grounds{min-width:30px;min-height:22px}
+}
 /* On the descent the crew walk the painted road, so each Zig's feet follow the path instead of the haven floor line. */
 .descent-scene .haven-layer .haven-zig{bottom:var(--feet,20%)!important}
 
