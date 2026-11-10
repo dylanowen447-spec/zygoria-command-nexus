@@ -104,9 +104,11 @@ function enqueue(who: string, text: string, onStart?: () => void, staleMs = 1500
     if (playing) return;
     playing = true;
     // The wait window starts when a line reaches the front, so lines waiting behind another speaker are never skipped.
-    void (async () => { while (queue.length) { const q = queue.shift()!; let started = false; try { const wait = Math.max(q.staleMs, MIN_WAIT_MS); await play(q.who, q.text, wait, Date.now() + wait, () => { started = true; q.onStart?.(); }); } finally { if (!started) q.onStart?.(); q.done(); } } playing = false; })();
+    void (async () => { while (queue.length) { const q = queue.shift()!; let started = false; try { const wait = Math.max(q.staleMs, MIN_WAIT_MS); await play(q.who, q.text, wait, Date.now() + wait, () => { started = true; q.onStart?.(); }); } finally { if (!started) { markFallback(true); q.onStart?.(); } else markFallback(false); q.done(); } } playing = false; })();
   });
 }
+/** A line that couldn't be voiced keeps its text on screen, so voice-only mode never leaves the player with silence and nothing to read. */
+function markFallback(on: boolean) { if (typeof document !== "undefined") document.documentElement.toggleAttribute("data-voice-fallback", on); }
 const clean = (s: string) => s.replace(/\*[^*]*\*/g, "").trim().slice(0, 400);
 
 /** Speak a line; resolves when it finishes (or immediately if voices are off/unavailable).

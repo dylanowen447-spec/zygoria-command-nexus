@@ -1476,7 +1476,7 @@ body > .combat-dodge{position:fixed}
 .kronk-back{position:absolute;left:8px;bottom:8px;z-index:70}
 
 /* Voice-only mode: speech text hidden while voices are on; the speaker glows instead. */
-html[data-voice-only] :is(.haven-bubble,.idle-bubble,.arena-bubble,.thoth-bubble,.speech-bubble,.agent-bubble){display:none!important}
+html[data-voice-only]:not([data-voice-fallback]) :is(.haven-bubble,.idle-bubble,.arena-bubble,.thoth-bubble,.speech-bubble,.agent-bubble){display:none!important}
 @keyframes speaker-glow{0%,100%{filter:drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 14px var(--glow))}50%{filter:drop-shadow(0 0 12px var(--glow)) drop-shadow(0 0 26px var(--glow))}}
 html[data-speaking="oz"] .marker-oz .sprite-stage{--glow:hsl(50 100% 60%);animation:speaker-glow 1s ease-in-out infinite}
 html[data-speaking="brix"] .marker-brix .sprite-stage{--glow:hsl(210 100% 62%);animation:speaker-glow 1s ease-in-out infinite}

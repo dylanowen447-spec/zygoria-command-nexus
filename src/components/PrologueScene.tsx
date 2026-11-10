@@ -751,7 +751,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     };
     handler.current = (text: string) => {
       if (finished) return;
-      if (scene.id === "landing" && !heardVoice && !localStorage.getItem("zygoria-voice-name")) { heardVoice = true; if (openingNow || hatchingNow) pendingContact = true; else void firstContact(); return; }
+      if (scene.id === "landing" && !heardVoice) { heardVoice = true; if (openingNow || hatchingNow) pendingContact = true; else void firstContact(); return; }
       if (awaitingName) { awaitingName = false; void nameReply(text); return; }
       const t = text.toLowerCase();
       const named = ALL.filter(z => new RegExp(`\\b${z.toLowerCase()}\\b`).test(t));
@@ -856,7 +856,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (hatchOn && alive) {
         if (voiceName()) heardVoice = true; // name already given this playthrough — never ask twice
         else if (pendingContact) void firstContact();
-        else if (!heardVoice && !localStorage.getItem("zygoria-voice-name")) { setIntroPrompt("talk"); timers.push(setTimeout(() => { if (alive && !heardVoice) { heardVoice = true; void firstContact(true); } }, 12000)); }
+        else if (!heardVoice) { setIntroPrompt("talk"); timers.push(setTimeout(() => { if (alive && !heardVoice) { heardVoice = true; void firstContact(true); } }, 12000)); }
       }
       setLookAway(false);
       ALL.forEach(a => void explore(a));
