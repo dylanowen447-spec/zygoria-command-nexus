@@ -84,7 +84,7 @@ async function play(who: string, text: string, maxWaitMs: number, until: number,
   root?.setAttribute("data-speaking", who.toLowerCase().split(" ").pop()!);
   await new Promise<void>(res => { a.onended = () => res(); a.onerror = () => res(); a.onplaying = () => { a.onplaying = null; onStart?.(); }; a.play().catch(() => res()); });
   if (current === a) current = null;
-  if (root?.getAttribute("data-speaking") === who.toLowerCase().split(" ").pop()) root.removeAttribute("data-speaking");
+  if (root?.getAttribute("data-speaking") === who.toLowerCase().split(" ").pop()) root?.removeAttribute("data-speaking");
 }
 
 /** Every line goes through one queue so lines never cut each other off or get skipped. */
