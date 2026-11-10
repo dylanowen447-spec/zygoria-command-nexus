@@ -48,10 +48,22 @@ const SPOTS: { id: string; label: string; x: number; y: number; lines: Line[] }[
   { id: "tank", label: "THE TANK", x: 86, y: 20, lines: [{ who: "Oz", text: "It moved. The shadow moved. I'm not imagining that." }, { who: "Lowkey", text: "He's watching the road." }] },
   { id: "banner", label: "RAT BANNER", x: 7, y: 47, lines: [{ who: "Brix", text: "A rat with a crown. Somebody thinks a lot of himself." }] },
   { id: "pipe", label: "DRAIN PIPE", x: 43, y: 50, lines: [{ who: "Lowkey", text: "Don't touch the green. Whatever it is, it's killing the water." }] },
-  { id: "gate", label: "BUNKER GATE", x: 88, y: 43, lines: [{ who: "Brix", text: "Reinforced. Not today, lads. We need a plan first." }, { who: "Oz", text: "Agreed. A big, sensible plan. Far away from here." }] },
 ];
+/** Bunker gate teamwork puzzle: one job per Zig, in any order. */
+type Job = { id: string; who: Zig; label: string; x: number; y: number; lines: Line[] };
+const JOBS: Job[] = [
+  { id: "hatch", who: "Brix", label: "RUSTED HATCH", x: 78, y: 47, lines: [{ who: "Brix", text: "Rusted shut. Stand back, lads." }, { who: "Brix", text: "There. Hatch is open." }] },
+  { id: "valve", who: "Lowkey", label: "SLUDGE VALVE", x: 43, y: 50, lines: [{ who: "Lowkey", text: "The valve's flooding the lock with sludge. Turning it off." }, { who: "Lowkey", text: "Flow's stopped. Lock's dry." }] },
+  { id: "generator", who: "Oz", label: "DEAD GENERATOR", x: 62, y: 44, lines: [{ who: "Oz", text: "Backup generator. Dead as a doornail. Time for a little spark!" }, { who: "Oz", text: "Ha! It's humming! Power's back on!" }] },
+];
+const GATE_LOCKED: Line[] = [{ who: "Brix", text: "Reinforced. Not budging on its own." }, { who: "Lowkey", text: "Three things are holding it. A hatch, a valve, and that dead generator." }, { who: "Oz", text: "One job each, then. Teamwork!" }];
+const GATE_OPEN: Line[] = [{ who: "Brix", text: "Gate's open. This is it, lads." }, { who: "Oz", text: "Big, sensible plan... we go in together." }];
+const GATE = { x: 88, y: 43 };
 
-export function KronkApproachScene() {
+export function KronkApproachScene({ onEnter }: { onEnter?: () => void } = {}) {
+  const [puzzle, setPuzzle] = useState(false);
+  const [fixed, setFixed] = useState<string[]>([]);
+  const opened = fixed.length === JOBS.length;
   const [pos, setPos] = useState<Record<Zig, P>>({ Brix: { x: 24, y: 70 }, Oz: { x: 34, y: 67 }, Lowkey: { x: 44, y: 69 } });
   const [moving, setMoving] = useState<Partial<Record<Zig, { dir: "left" | "right"; ms: number }>>>({});
   const [steer, setSteer] = useState<Zig | null>(null);
@@ -119,6 +131,19 @@ export function KronkApproachScene() {
     }
     busy.current = false;
   }
+  async function doJob(j: Job) {
+    if (busy.current || fixed.includes(j.id)) return;
+    walkTo(j.who, clampToGround({ x: j.x, y: 58 }));
+    await new Promise(r => setTimeout(r, 900));
+    await inspect([j.lines[0]!]);
+    setFixed(f => (f.includes(j.id) ? f : [...f, j.id]));
+    await inspect([j.lines[1]!]);
+  }
+  async function tapGate() {
+    if (opened) { await inspect(GATE_OPEN); onEnter?.(); return; }
+    setPuzzle(true);
+    await inspect(GATE_LOCKED);
+  }
 
   const tapZig = (a: Zig) => {
     const now = performance.now(), l = lastTap.current;
@@ -140,6 +165,8 @@ export function KronkApproachScene() {
         {bubble && <div key={bubble.text} className="haven-bubble" style={{ left: `${Math.min(78, Math.max(22, pos[bubble.who].x))}%`, top: "auto", bottom: `calc(${100 - pos[bubble.who].y}% + 70px)` }}><b>{bubble.who.toUpperCase()}</b>{bubble.text}</div>}
       </div>
       {step >= INTRO.length && SPOTS.map(s => <button key={s.id} type="button" className="kronk-spot" style={{ left: `${s.x}%`, top: `${s.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void inspect(s.lines)} aria-label={`Inspect ${s.label.toLowerCase()}`}><span>{s.label}</span></button>)}
+      {step >= INTRO.length && <button type="button" className="kronk-spot" style={{ left: `${GATE.x}%`, top: `${GATE.y}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void tapGate()} aria-label={opened ? "Enter Kronk's lair" : "Inspect the bunker gate"}><span>{opened ? "▶ ENTER LAIR" : `BUNKER GATE${puzzle ? ` ${fixed.length}/3` : ""}`}</span></button>}
+      {puzzle && JOBS.filter(j => !fixed.includes(j.id)).map(j => <button key={j.id} type="button" className="kronk-spot" style={{ left: `${j.x}%`, top: `${j.y + 6}%` }} onPointerDown={e => e.stopPropagation()} onClick={() => void doJob(j)} aria-label={`${j.who}: fix the ${j.label.toLowerCase()}`}><span>{j.who.toUpperCase()} · {j.label}</span></button>)}
     </div>
     <div className="map-coordinate top-right">KRONK APPROACH</div>
     {steer && <div className="combat-hint" aria-hidden="true">Steering {steer} · click the road to walk · double-tap {steer} to let go</div>}
