@@ -82,3 +82,4 @@
 - [x] Kronk stomp: play the stomp sheet frame by frame (no sideways stretch), impact on contact frame, back to idle
 - [ ] Old City: fewer rat waves
 - [x] Mobile: Dispatch reply box must stay on screen; no frozen "…" box over Brix; replies always voiced
+- [x] Shelton fight: voices too delayed — check and fix

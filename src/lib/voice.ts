@@ -100,7 +100,10 @@ function enqueue(who: string, text: string, onStart?: () => void, staleMs = 1500
   if (now - (recent.get(k) ?? 0) < ECHO_MS) { onStart?.(); return Promise.resolve(); }
   recent.set(k, now);
   return new Promise<void>(done => {
-    queue.push({ who, text, done, onStart, staleMs }); void load(who, text);
+    // Shelton's fight taunts jump the queue (replacing any older taunt still waiting) so he never answers seconds late.
+    if (who === "Shelton") { for (let i = queue.length - 1; i >= 0; i--) if (queue[i]!.who === "Shelton") { const [o] = queue.splice(i, 1); o!.onStart?.(); o!.done(); } queue.unshift({ who, text, done, onStart, staleMs }); }
+    else queue.push({ who, text, done, onStart, staleMs });
+    void load(who, text);
     if (playing) return;
     playing = true;
     // The wait window starts when a line reaches the front, so lines waiting behind another speaker are never skipped.
