@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Orin: cut his supplied sheet into a walking atlas and replace his Haven appearance (desktop and phone checked)
+
 - [x] Mara: prepare her supplied sprite and replace her Haven appearance (desktop and phone checked)
 - [x] Mara: add post-Vale-report conversation using existing voices and persistent next objective; sequence and return visits tested (audio not listened to)
 - [x] Review new Human Settlement image as future settlement reference; leave settlement work for the next separate request

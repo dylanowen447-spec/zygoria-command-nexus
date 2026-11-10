@@ -6,6 +6,7 @@ import maraImg from "@/assets/haven-mara.webp";
 import valeImg from "@/assets/haven-vale.webp";
 import valeSheet from "@/assets/vale-walk.png.asset.json";
 import maraSheet from "@/assets/mara-directions.png.asset.json";
+import orinSheet from "@/assets/orin-walk.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { talkToSurvivor } from "@/lib/job-planning.functions";
@@ -170,7 +171,7 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     <div className="haven-layer">
       {CREW.map(c => { const m = moving?.a === c.id ? moving : null; return <span key={c.id} className={`haven-zig marker-${c.id.toLowerCase()} ${m ? `is-walking ${c.id.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === c.id ? "is-controlled" : ""}`} style={{ left: `${pos[c.id].x}%`, bottom: `${pos[c.id].b}%`, transitionDuration: m ? `${m.ms}ms` : "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(c.id); }} role="button" aria-label={`${c.id} — double-tap to steer`}>{steer === c.id && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={c.id}/></span></span>; })}
       {SURVIVORS.filter(s => !(s.id === "Vale" && quest === "vale-up")).map(s => <Button variant="ghost" key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
-        {s.id === "Vale" ? <span className="vale-sprite" style={{ backgroundImage: `url(${valeSheet.url})` }}/> : s.id === "Mara" ? <span className="mara-sprite" style={{ backgroundImage: `url(${maraSheet.url})` }}/> : <img src={s.img} alt="" draggable={false}/>}<span className="haven-name">{s.name}</span>
+        {s.id === "Vale" ? <span className="vale-sprite" style={{ backgroundImage: `url(${valeSheet.url})` }}/> : s.id === "Mara" ? <span className="mara-sprite" style={{ backgroundImage: `url(${maraSheet.url})` }}/> : <span className="orin-sprite" style={{ backgroundImage: `url(${orinSheet.url})` }}/>}<span className="haven-name">{s.name}</span>
       </Button>)}
       {bubble && <div key={bubble.text} className="haven-bubble" role="button" title="Tap to continue" onPointerDown={e => { e.stopPropagation(); if (!introDone) stopVoice(); }} style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(13% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? "var(--zig-lift)" : "var(--human-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
