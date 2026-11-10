@@ -229,3 +229,18 @@ export const MARA_SURFACE_HOPE: DLine[] = [
   L("Oz", "Sorted. Nobody's packing yet. But we're not giving up on sunlight."),
   L("Mara", "Neither am I.", 1400),
 ];
+
+/** Elder Orin calls the exodus once Kronk has fallen. */
+export const ORIN_EXODUS: DLine[] = [
+  L("Orin", "Listen. The rumble above... it has stopped."),
+  L("Brix", "Kronk's down. His machines have gone quiet."),
+  L("Oz", "Well, the Network switched him off. But we did the hard bit!"),
+  L("Orin", "The black pipes have run cold. For the first time in years, the walls are still."),
+  L("Mara", "You made the road safe. Just like you said you would."),
+  L("Vale", "Orin. You saw the fish. You heard what I saw. It's time."),
+  L("Orin", "I have kept these people in the dark to keep them alive.", 900),
+  L("Orin", "I will not keep them in the dark any longer."),
+  L("Orin", "Pack the lanterns, everyone. We are climbing to the sun.", 1200),
+  L("Lowkey", "We will walk with you. Every step."),
+  L("Oz", "Ha! Best news all week!"),
+];

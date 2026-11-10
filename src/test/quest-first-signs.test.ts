@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { advanceQuest, loadQuest, valeMayClimb, maraMaySpeak, DISTRUST_MS } from "@/lib/quest-first-signs";
+import { advanceQuest, loadQuest, valeMayClimb, maraMaySpeak, orinMayCallExodus, DISTRUST_MS } from "@/lib/quest-first-signs";
 
 describe("First Signs of Life quest", () => {
   beforeEach(() => localStorage.clear());
@@ -16,5 +16,11 @@ describe("First Signs of Life quest", () => {
     expect(maraMaySpeak(loadQuest())).toBe(false);
     expect(advanceQuest("vale-home")).toBe("mara-convinced");
     expect(valeMayClimb(loadQuest())).toBe(false);
+  });
+  it("Kronk's defeat leads to Orin's exodus call, then the ascent", () => {
+    advanceQuest("mara-convinced");
+    expect(orinMayCallExodus(advanceQuest("kronk-defeated"))).toBe(true);
+    expect(advanceQuest("ascent-ready")).toBe("ascent-ready");
+    expect(advanceQuest("kronk-defeated")).toBe("ascent-ready");
   });
 });

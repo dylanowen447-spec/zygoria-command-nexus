@@ -1,3 +1,4 @@
+import { advanceQuest } from "@/lib/quest-first-signs";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import bg from "@/assets/kronk-lair.png.asset.json";
@@ -525,7 +526,7 @@ export function KronkLairScene() {
       // Occasional reactive remarks (cooldown-gated inside say()).
       if (hp > 0 && label === "HAYMAKER!" && Math.random() < 0.5) void say([{ who: "Kronk", text: "WHO DARES STRIKE ME?!" }, { who: "Brix", text: "ME!" }]);
       else if (hp > 0 && a === "Oz" && !label && Math.random() < 0.25) void say([{ who: "Kronk", text: "YOU THINK A LITTLE SPARK CAN HURT ME?!" }, { who: "Oz", text: "Well, you're smoking a bit!" }]);
-      if (hp <= 0) { setLaser(null); setRaging(false); void say(DEFEAT, true); }
+      if (hp <= 0) { setLaser(null); setRaging(false); advanceQuest("kronk-defeated"); void say(DEFEAT, true); }
   }
   const attackRef = useRef(attack); attackRef.current = attack;
   // Space attacks with the steered Zig (Brix if nobody is steered); the others fight on their own.

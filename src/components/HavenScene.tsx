@@ -10,8 +10,8 @@ import orinSheet from "@/assets/orin-walk.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { talkToSurvivor } from "@/lib/job-planning.functions";
-import { DISTRUST_MS, QUEST_OBJECTIVE, advanceQuest, loadQuest, maraMaySpeak, type QuestStage } from "@/lib/quest-first-signs";
-import { FIRST_IMPRESSIONS, MEETING_ORIN, VALE_VOLUNTEERS, VALE_REPORTS, MARA_SURFACE_HOPE, type Speaker, type DLine } from "@/lib/vale-dialogue";
+import { DISTRUST_MS, QUEST_OBJECTIVE, advanceQuest, loadQuest, maraMaySpeak, orinMayCallExodus, type QuestStage } from "@/lib/quest-first-signs";
+import { FIRST_IMPRESSIONS, MEETING_ORIN, VALE_VOLUNTEERS, VALE_REPORTS, MARA_SURFACE_HOPE, ORIN_EXODUS, type Speaker, type DLine } from "@/lib/vale-dialogue";
 
 type Survivor = "Orin" | "Mara" | "Vale";
 type Line = DLine;
@@ -63,6 +63,7 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     let seen = false; try { seen = localStorage.getItem(INTRO_KEY) === "1"; localStorage.setItem(INTRO_KEY, "1"); } catch { /* storage blocked */ }
     if (quest === "vale-home") return RETURN;
     if (maraMaySpeak(quest)) return MARA_SURFACE_HOPE;
+    if (orinMayCallExodus(quest)) return ORIN_EXODUS;
     if (quest === "fish") return seen ? HANDOVER : [...INTRO, ...HANDOVER];
     if (quest === "none" && !seen) return INTRO;
     return [];
@@ -147,6 +148,10 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
       setBubble(null);
       setScript(MARA_SURFACE_HOPE);
       setStep(0);
+    }
+    else if (orinMayCallExodus(quest)) {
+      setQuest(advanceQuest("ascent-ready"));
+      setBubble(null);
     }
     else if (maraMaySpeak(quest) && maraStarted) {
       setQuest(advanceQuest("mara-convinced"));
