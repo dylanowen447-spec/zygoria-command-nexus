@@ -854,8 +854,8 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       for (const [who, text] of scene.opening) { if (inCombat()) break; await speak(who, text, () => { if (alive) say(who, text); }); await wait(voicesOn() ? 250 : hold(text)); if (!alive) return; say(who, null); await wait(voicesOn() ? 300 : GAP); }
       openingNow = false;
       if (hatchOn && alive) {
-        if (voiceName()) heardVoice = true; // name already given this playthrough — never ask twice
-        else if (pendingContact) void firstContact();
+        if (pendingContact) void firstContact();
+        // first contact replays every opening
         else if (!heardVoice) { setIntroPrompt("talk"); timers.push(setTimeout(() => { if (alive && !heardVoice) { heardVoice = true; void firstContact(true); } }, 12000)); }
       }
       setLookAway(false);
