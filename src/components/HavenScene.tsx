@@ -100,7 +100,9 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     setTimeout(() => setMoving(m => (m && m.a === a && m.ms === ms ? null : m)), ms);
   };
   // Intro lines appear when their voice starts and move on when it ends.
-  useEffect(() => { if (bubble && introDone) voiceLine(bubble.who, bubble.text); }, [bubble, introDone]);
+  // Scripted lines are already spoken by the script runner; only voice fresh replies, never the same line twice.
+  const spokenRef = useRef<Line | null>(null);
+  useEffect(() => { if (bubble && introDone && spokenRef.current !== bubble) { spokenRef.current = bubble; voiceLine(bubble.who, bubble.text); } }, [bubble, introDone]);
   const xOf = (w: Speaker) => (w === "Oz" || w === "Brix" || w === "Lowkey" ? pos[w].x : X[w]);
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     if (!line) return;
     let live = true, t: ReturnType<typeof setTimeout> | undefined;
     let shown = performance.now();
-    void speak(line.who, line.text, () => { if (live) { shown = performance.now(); setBubble(line); } }).then(() => {
+    void speak(line.who, line.text, () => { if (live) { shown = performance.now(); spokenRef.current = line; setBubble(line); } }).then(() => {
       if (!live) return;
       const rest = Math.max(350, 3600 - (performance.now() - shown)) + (line.pause ?? 0);
       t = setTimeout(() => setStep(s => s + 1), rest);
