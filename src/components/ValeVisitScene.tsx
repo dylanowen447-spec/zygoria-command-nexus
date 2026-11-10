@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import bg from "@/assets/sanctuary-clear.webp";
-import valeImg from "@/assets/haven-vale.webp";
+import valeSheet from "@/assets/vale-walk.png.asset.json";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { speak, voicesOn, stopVoice } from "@/lib/voice";
 import { WATERFALL_REVEAL, EXPLORING, KRONK_THREAT, HEADING_BACK, type DLine } from "@/lib/vale-dialogue";
@@ -35,7 +35,7 @@ export function ValeVisitScene({ onDone }: { onDone: () => void }) {
     <img className="world-image" src={bg} alt="Vale's first look at the Riverside Sanctuary under an open sky" />
     <div className="haven-layer">
       {(["Brix", "Oz", "Lowkey"] as const).map(c => <span key={c} className={`haven-zig marker-${c.toLowerCase()}`} style={{ left: `${X[c]}%`, bottom: "20%" }}><span className="sprite-stage"><CharacterSprite character={c}/></span></span>)}
-      <span className="haven-human" style={{ left: `${X.Vale}%`, height: "18%" }}><img src={valeImg} alt="Vale" draggable={false}/><span className="haven-name">VALE</span></span>
+      <span className="haven-human" style={{ left: `${X.Vale}%`, height: "18%" }}><span className="vale-sprite" role="img" aria-label="Vale" style={{ backgroundImage: `url(${valeSheet.url})` }}/><span className="haven-name">VALE</span></span>
       {bubble && <div key={bubble.text} className="haven-bubble" role="button" title="Tap to continue" onPointerDown={() => { if (!done) stopVoice(); }} style={{ left: `${Math.min(80, Math.max(20, X[bubble.who]))}%`, bottom: `calc(20% + ${bubble.who === "Vale" ? "var(--human-lift)" : "var(--zig-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
     <div className="map-coordinate top-right">RIVERSIDE SANCTUARY</div>
