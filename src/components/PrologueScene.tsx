@@ -631,7 +631,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
         setBubbles(b => ({ ...b, [z]: "…" }));
         let reply: string;
         try {
-          const out = await Promise.race([runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: [scene.story, voiceName() ? `The voice from the sky is called ${voiceName()}; occasionally call them by name.` : "", ...[...found].map(f => scene.learned[f]).filter(Boolean)].join(" "), prologue: true } }), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("slow")), 8000))]);
+          const out = await Promise.race([runCrewStep({ data: { directive: text, agent: z, previous, finalReview: false, group: speakers.length > 1, story: [scene.story, voiceName() ? `You already know the voice that talks to you; it is called ${voiceName()} and is familiar now — never react as if it is new or "the sky talking"; occasionally call them by name.` : "", ...[...found].map(f => scene.learned[f]).filter(Boolean)].join(" "), prologue: true } }), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("slow")), 8000))]);
           reply = out.result.replace(/\s+/g, " ").trim().slice(0, 220);
         } catch { reply = pick(SHRUGS[z]); }
         if (!alive) return;
@@ -751,7 +751,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
     };
     handler.current = (text: string) => {
       if (finished) return;
-      if (scene.id === "landing" && !heardVoice) { heardVoice = true; if (openingNow || hatchingNow) pendingContact = true; else void firstContact(); return; }
+      if (scene.id === "landing" && !heardVoice && !localStorage.getItem("zygoria-voice-name")) { heardVoice = true; if (openingNow || hatchingNow) pendingContact = true; else void firstContact(); return; }
       if (awaitingName) { awaitingName = false; void nameReply(text); return; }
       const t = text.toLowerCase();
       const named = ALL.filter(z => new RegExp(`\\b${z.toLowerCase()}\\b`).test(t));
@@ -856,7 +856,7 @@ export function PrologueScene({ scene, command, onLog, onNext, onSkip, canSkip =
       if (hatchOn && alive) {
         if (voiceName()) heardVoice = true; // name already given this playthrough — never ask twice
         else if (pendingContact) void firstContact();
-        else if (!heardVoice) { setIntroPrompt("talk"); timers.push(setTimeout(() => { if (alive && !heardVoice) { heardVoice = true; void firstContact(true); } }, 12000)); }
+        else if (!heardVoice && !localStorage.getItem("zygoria-voice-name")) { setIntroPrompt("talk"); timers.push(setTimeout(() => { if (alive && !heardVoice) { heardVoice = true; void firstContact(true); } }, 12000)); }
       }
       setLookAway(false);
       ALL.forEach(a => void explore(a));
