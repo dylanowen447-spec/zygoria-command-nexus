@@ -1453,3 +1453,5 @@ body > .combat-dodge{position:fixed}
 
 .haven-human .vale-sprite{flex:1 1 auto;min-height:0;height:100%}
 .haven-human.is-target .vale-sprite{filter:drop-shadow(0 0 6px color-mix(in oklab, var(--primary) 90%, transparent)) drop-shadow(0 6px 6px hsl(0 0% 0%/.6))}
+.sanctuary-exit.is-locked{opacity:.6;cursor:not-allowed}
+.kronk-back{position:absolute;left:8px;bottom:8px;z-index:70}
