@@ -54,10 +54,19 @@ const HANDOVER: Line[] = [
   ...VALE_VOLUNTEERS,
 ];
 const RETURN: Line[] = VALE_REPORTS;
+const INTRO_KEY = "zygoria-haven-intro-seen-v1";
 
 export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onDescend?: () => void } = {}) {
   const [quest, setQuest] = useState<QuestStage>(() => { const q = loadQuest(); return q === "vale-up" ? advanceQuest("vale-home") : q; }); // a reload mid-trip brings Vale home
-  const [script, setScript] = useState<Line[]>(() => quest === "fish" ? [...INTRO, ...HANDOVER] : quest === "vale-home" ? RETURN : maraMaySpeak(quest) ? MARA_SURFACE_HOPE : INTRO);
+  const [script, setScript] = useState<Line[]>(() => {
+    // The cave introduction plays once ever; later visits pick up the next story beat.
+    let seen = false; try { seen = localStorage.getItem(INTRO_KEY) === "1"; localStorage.setItem(INTRO_KEY, "1"); } catch { /* storage blocked */ }
+    if (quest === "vale-home") return RETURN;
+    if (maraMaySpeak(quest)) return MARA_SURFACE_HOPE;
+    if (quest === "fish") return seen ? HANDOVER : [...INTRO, ...HANDOVER];
+    if (quest === "none" && !seen) return INTRO;
+    return [];
+  });
   const [maraStarted, setMaraStarted] = useState(() => maraMaySpeak(quest));
   const [valeReady, setValeReady] = useState(false);
   const [step, setStep] = useState(0);
