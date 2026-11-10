@@ -15,6 +15,7 @@ const LINES = [...WATERFALL_REVEAL, ...EXPLORING, ...KRONK_THREAT, ...HEADING_BA
 export function ValeVisitScene({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [bubble, setBubble] = useState<Line | null>(null);
+  const [night, setNight] = useState(false);
   const done = step >= LINES.length;
   useEffect(() => {
     if (done) return;
@@ -39,6 +40,12 @@ export function ValeVisitScene({ onDone }: { onDone: () => void }) {
     </div>
     <div className="map-coordinate top-right">RIVERSIDE SANCTUARY</div>
     <div className="quest-objective">◆ Show Vale the Sanctuary</div>
-    {done && <button type="button" className="workshop-spot workshop-door quest-go" onClick={onDone}><span>Take Vale home ›</span></button>}
+    {done && !night && <button type="button" className="workshop-spot workshop-door quest-go" onClick={() => setNight(true)}><span>Rest for the night ›</span></button>}
+    {night && <div className="vale-night" role="dialog" aria-label="The next morning">
+      <span className="prologue-card-eyebrow">THE NEXT MORNING</span>
+      <strong>Vale slept under the open sky for the first time in his life.</strong>
+      <p>At first light he's packed and ready — the Haven needs to hear the news.</p>
+      <button type="button" className="workshop-spot workshop-door quest-go" onClick={onDone}><span>Take Vale home to report ›</span></button>
+    </div>}
   </div>;
 }
