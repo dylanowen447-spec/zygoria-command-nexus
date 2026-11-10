@@ -4,7 +4,10 @@ let current: HTMLAudioElement | null = null;
 const KEY = "zyg-voices-off";
 
 export const voicesOn = () => typeof window !== "undefined" && localStorage.getItem(KEY) !== "1";
-export function setVoicesOn(on: boolean) { localStorage.setItem(KEY, on ? "0" : "1"); if (!on) stopVoice(); }
+export function setVoicesOn(on: boolean) { localStorage.setItem(KEY, on ? "0" : "1"); if (!on) stopVoice(); markVoiceMode(); }
+/** Voice-only mode: while voices are on, speech text is hidden and the speaker lights up instead. */
+export function markVoiceMode() { if (typeof document !== "undefined") document.documentElement.toggleAttribute("data-voice-only", voicesOn()); }
+if (typeof window !== "undefined") queueMicrotask(markVoiceMode);
 
 /** On-device clip store: lines heard once play instantly on every later visit, no network. */
 const DISK = "zyg-voice-v1";
@@ -77,8 +80,11 @@ async function play(who: string, text: string, maxWaitMs: number, until: number,
   a.src = url;
   a.volume = VOLUME[who] ?? 0.72;
   a.playbackRate = 1.3; a.preservesPitch = true; // brisker delivery, same voice pitch
+  const root = typeof document !== "undefined" ? document.documentElement : null;
+  root?.setAttribute("data-speaking", who.toLowerCase().split(" ").pop()!);
   await new Promise<void>(res => { a.onended = () => res(); a.onerror = () => res(); a.onplaying = () => { a.onplaying = null; onStart?.(); }; a.play().catch(() => res()); });
   if (current === a) current = null;
+  if (root?.getAttribute("data-speaking") === who.toLowerCase().split(" ").pop()) root.removeAttribute("data-speaking");
 }
 
 /** Every line goes through one queue so lines never cut each other off or get skipped. */

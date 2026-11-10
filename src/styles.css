@@ -1474,3 +1474,13 @@ body > .combat-dodge{position:fixed}
 .haven-human.is-target .vale-sprite{filter:drop-shadow(0 0 6px color-mix(in oklab, var(--primary) 90%, transparent)) drop-shadow(0 6px 6px hsl(0 0% 0%/.6))}
 .sanctuary-exit.is-locked{opacity:.6;cursor:not-allowed}
 .kronk-back{position:absolute;left:8px;bottom:8px;z-index:70}
+
+/* Voice-only mode: speech text hidden while voices are on; the speaker glows instead. */
+html[data-voice-only] :is(.haven-bubble,.idle-bubble,.arena-bubble,.thoth-bubble,.speech-bubble,.agent-bubble){display:none!important}
+@keyframes speaker-glow{0%,100%{filter:drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 14px var(--glow))}50%{filter:drop-shadow(0 0 12px var(--glow)) drop-shadow(0 0 26px var(--glow))}}
+html[data-speaking="oz"] .marker-oz .sprite-stage{--glow:hsl(50 100% 60%);animation:speaker-glow 1s ease-in-out infinite}
+html[data-speaking="brix"] .marker-brix .sprite-stage{--glow:hsl(210 100% 62%);animation:speaker-glow 1s ease-in-out infinite}
+html[data-speaking="lowkey"] .marker-lowkey .sprite-stage{--glow:hsl(0 90% 60%);animation:speaker-glow 1s ease-in-out infinite}
+html[data-speaking="moxi"] .marker-moxi .sprite-stage{--glow:hsl(150 80% 60%);animation:speaker-glow 1s ease-in-out infinite}
+html[data-speaking="mara"] .mara-sprite,html[data-speaking="vale"] .vale-sprite,html[data-speaking="orin"] .orin-sprite{--glow:hsl(35 100% 65%);animation:speaker-glow 1s ease-in-out infinite}
+html[data-speaking="kronk"] .kronk-boss{--glow:hsl(0 100% 50%);animation:speaker-glow 1s ease-in-out infinite}
