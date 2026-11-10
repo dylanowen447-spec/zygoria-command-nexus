@@ -1,0 +1,2 @@
+- Survivor follow-up dialogue comes from the shared dialogue data and completes through forward-only quest stages, so old Vale saves receive Mara's beat without replaying the escort or unlocking migration.
+- Mara's supplied sprite atlas has nine columns (idle plus eight strides), down/right/up/left rows, and a shared feet anchor, so future movement reuses her exact artwork.

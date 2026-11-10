@@ -5,10 +5,12 @@ import orinImg from "@/assets/haven-orin.webp";
 import maraImg from "@/assets/haven-mara.webp";
 import valeImg from "@/assets/haven-vale.webp";
 import valeSheet from "@/assets/vale-walk.png.asset.json";
+import maraSheet from "@/assets/mara-directions.png.asset.json";
+import { Button } from "@/components/ui/button";
 import { CharacterSprite } from "@/components/CharacterSprite";
 import { talkToSurvivor } from "@/lib/job-planning.functions";
-import { DISTRUST_MS, QUEST_OBJECTIVE, advanceQuest, loadQuest, type QuestStage } from "@/lib/quest-first-signs";
-import { FIRST_IMPRESSIONS, MEETING_ORIN, VALE_VOLUNTEERS, VALE_REPORTS, type Speaker, type DLine } from "@/lib/vale-dialogue";
+import { DISTRUST_MS, QUEST_OBJECTIVE, advanceQuest, loadQuest, maraMaySpeak, type QuestStage } from "@/lib/quest-first-signs";
+import { FIRST_IMPRESSIONS, MEETING_ORIN, VALE_VOLUNTEERS, VALE_REPORTS, MARA_SURFACE_HOPE, type Speaker, type DLine } from "@/lib/vale-dialogue";
 
 type Survivor = "Orin" | "Mara" | "Vale";
 type Line = DLine;
@@ -54,7 +56,8 @@ const RETURN: Line[] = VALE_REPORTS;
 
 export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onDescend?: () => void } = {}) {
   const [quest, setQuest] = useState<QuestStage>(() => { const q = loadQuest(); return q === "vale-up" ? advanceQuest("vale-home") : q; }); // a reload mid-trip brings Vale home
-  const [script, setScript] = useState<Line[]>(() => quest === "fish" ? [...INTRO, ...HANDOVER] : quest === "vale-home" ? RETURN : INTRO);
+  const [script, setScript] = useState<Line[]>(() => quest === "fish" ? [...INTRO, ...HANDOVER] : quest === "vale-home" ? RETURN : maraMaySpeak(quest) ? MARA_SURFACE_HOPE : INTRO);
+  const [maraStarted, setMaraStarted] = useState(() => maraMaySpeak(quest));
   const [valeReady, setValeReady] = useState(false);
   const [step, setStep] = useState(0);
   const [bubble, setBubble] = useState<Line | null>(null);
@@ -101,12 +104,13 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
 
   useEffect(() => {
     if (introDone) return;
-    const line = script[step]!;
+    const line = script[step];
+    if (!line) return;
     let live = true, t: ReturnType<typeof setTimeout> | undefined;
-    const started = performance.now();
-    void speak(line.who, line.text, () => { if (live) setBubble(line); }).then(() => {
+    let shown = performance.now();
+    void speak(line.who, line.text, () => { if (live) { shown = performance.now(); setBubble(line); } }).then(() => {
       if (!live) return;
-      const rest = (voicesOn() ? 350 : Math.max(0, 3600 - (performance.now() - started))) + (line.pause ?? 0);
+      const rest = Math.max(350, 3600 - (performance.now() - shown)) + (line.pause ?? 0);
       t = setTimeout(() => setStep(s => s + 1), rest);
     });
     return () => { live = false; if (t) clearTimeout(t); };
@@ -124,7 +128,18 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
   useEffect(() => {
     if (!introDone) return;
     if (quest === "fish") setValeReady(true);
-    else if (quest === "vale-home") setQuest(advanceQuest("done"));
+    else if (quest === "vale-home") {
+      setQuest(advanceQuest("done"));
+      setTarget("Mara");
+      setMaraStarted(true);
+      setBubble(null);
+      setScript(MARA_SURFACE_HOPE);
+      setStep(0);
+    }
+    else if (maraMaySpeak(quest) && maraStarted) {
+      setQuest(advanceQuest("mara-convinced"));
+      setBubble(null);
+    }
     else if (quest === "none" && !distrustStarted.current) {
       distrustStarted.current = true;
       const gap = DISTRUST_MS / (DISTRUST.length + 1);
@@ -132,7 +147,7 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
       ts.push(setTimeout(() => { setScript(s => [...s, ...HUNGER]); setQuest(advanceQuest("hungry")); }, DISTRUST_MS));
       distrustTimers.current = ts;
     }
-  }, [introDone, quest]);
+  }, [introDone, quest, maraStarted]);
   useEffect(() => () => distrustTimers.current.forEach(clearTimeout), []);
   const objective = QUEST_OBJECTIVE[quest];
 
@@ -154,9 +169,9 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     <img className="world-image" src={bg.url} alt="The Underground Haven: a lantern-lit human refuge deep in a cavern" />
     <div className="haven-layer">
       {CREW.map(c => { const m = moving?.a === c.id ? moving : null; return <span key={c.id} className={`haven-zig marker-${c.id.toLowerCase()} ${m ? `is-walking ${c.id.toLowerCase()}-facing-${m.dir} facing-${m.dir}` : ""} ${steer === c.id ? "is-controlled" : ""}`} style={{ left: `${pos[c.id].x}%`, bottom: `${pos[c.id].b}%`, transitionDuration: m ? `${m.ms}ms` : "0ms" }} onPointerDown={e => { e.stopPropagation(); tapZig(c.id); }} role="button" aria-label={`${c.id} — double-tap to steer`}>{steer === c.id && <span className="ctrl-ring" aria-hidden="true"/>}<span className="sprite-stage"><CharacterSprite character={c.id}/></span></span>; })}
-      {SURVIVORS.filter(s => !(s.id === "Vale" && quest === "vale-up")).map(s => <button key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
-        {s.id === "Vale" ? <span className="vale-sprite" style={{ backgroundImage: `url(${valeSheet.url})` }}/> : <img src={s.img} alt="" draggable={false}/>}<span className="haven-name">{s.name}</span>
-      </button>)}
+      {SURVIVORS.filter(s => !(s.id === "Vale" && quest === "vale-up")).map(s => <Button variant="ghost" key={s.id} type="button" className={`haven-human ${target === s.id ? "is-target" : ""}`} style={{ left: `${s.x}%`, height: `${s.h}%` }} onClick={() => setTarget(s.id)} aria-label={`Talk to ${s.name}`}>
+        {s.id === "Vale" ? <span className="vale-sprite" style={{ backgroundImage: `url(${valeSheet.url})` }}/> : s.id === "Mara" ? <span className="mara-sprite" style={{ backgroundImage: `url(${maraSheet.url})` }}/> : <img src={s.img} alt="" draggable={false}/>}<span className="haven-name">{s.name}</span>
+      </Button>)}
       {bubble && <div key={bubble.text} className="haven-bubble" role="button" title="Tap to continue" onPointerDown={e => { e.stopPropagation(); if (!introDone) stopVoice(); }} style={{ left: `${Math.min(80, Math.max(20, xOf(bubble.who)))}%`, bottom: `calc(13% + ${bubble.who === "Oz" || bubble.who === "Brix" || bubble.who === "Lowkey" ? "var(--zig-lift)" : "var(--human-lift)"} + ${(step % 2) * 22}px)` }}><b>{bubble.who === "Orin" ? "ELDER ORIN" : bubble.who.toUpperCase()}</b>{bubble.text}</div>}
     </div>
     <div className="map-coordinate top-right">UNDERGROUND HAVEN</div>

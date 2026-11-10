@@ -206,3 +206,26 @@ export const VALE_REPORTS: DLine[] = [
   L("Lowkey", "Mostly to Brix."),
   L("Brix", "Oh, give it a rest!"),
 ];
+
+/** Mara's own decision follows the complete, unchanged Vale report. No migration yet. */
+export const MARA_SURFACE_HOPE: DLine[] = [
+  L("Mara", "Wait. Vale saw water and trees. But people need more than a beautiful view."),
+  L("Brix", "Food. Shelter. Somewhere safe to grow things."),
+  L("Mara", "Exactly. My family worked the soil. I know what it takes to feed people."),
+  L("Mara", "Is there proper earth by that river? Not ash with grass poking through it?"),
+  L("Lowkey", "There is living ground along the riverbank. But we haven't tested a garden."),
+  L("Oz", "We can help with that. Brix builds things. I'll try not to electrocute the vegetables."),
+  L("Brix", "An excellent start."),
+  L("Mara", "And seeds? Have you found any we could plant?"),
+  L("Lowkey", "Not yet. We won't promise you a harvest we haven't grown."),
+  L("Mara", "Good. I need honesty, not another promise."),
+  L("Vale", "You saw the fish, Mara. I saw the river they came from. There is a chance up there."),
+  L("Mara", "I know. That's what frightens me. I want it to be true.", 1200),
+  L("Mara", "But if Kronk's sludge reaches that river, or his patrols find us, a garden won't save the children."),
+  L("Brix", "Then we deal with the threat before anyone moves."),
+  L("Mara", "Make that road safe. Then we can check the soil, find seeds, and see what will grow."),
+  L("Lowkey", "One step at a time."),
+  L("Mara", "Do that, and I'll stand beside you when we ask Orin. Not before.", 900),
+  L("Oz", "Sorted. Nobody's packing yet. But we're not giving up on sunlight."),
+  L("Mara", "Neither am I.", 1400),
+];

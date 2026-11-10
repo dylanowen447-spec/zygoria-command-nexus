@@ -1,5 +1,9 @@
 # Roadmap
 
+- [x] Mara: prepare her supplied sprite and replace her Haven appearance (desktop and phone checked)
+- [x] Mara: add post-Vale-report conversation using existing voices and persistent next objective; sequence and return visits tested (audio not listened to)
+- [x] Review new Human Settlement image as future settlement reference; leave settlement work for the next separate request
+
 - [x] Update Kronk/Shelton voice directions and shared canon without changing existing story events (new performances not listened to)
 - [x] Add Shelton to Kronk's battleground, slightly larger than the Zigs but smaller than Kronk; spoken exchanges for everyone
 - [x] Match Shelton's lair fight to Old City's movement, attack ranges, hold-heavy, dodge and shared squad health; browser verified damage and dodge

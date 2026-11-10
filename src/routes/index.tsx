@@ -250,6 +250,7 @@ function CommandCentre() {
   const [cleared, setCleared] = useState<string[]>([]);
   const clearedRef = useRef<string[]>([]);
   const [editor, setEditor] = useState(false);
+  const [questLoaded, setQuestLoaded] = useState(false);
   const [tvDone, setTvDone] = useState(false);
   const [tvEscaped, setTvEscaped] = useState(false);
   const [tvNight, setTvNight] = useState(false);
@@ -268,6 +269,7 @@ function CommandCentre() {
   useEffect(() => {
     try { const c = JSON.parse(localStorage.getItem(CLEARED_KEY) ?? "[]"); if (Array.isArray(c)) { clearedRef.current = c; setCleared(c); } } catch { /* optional */ }
     try { setEditor(localStorage.getItem(EDITOR_KEY) === "1"); } catch { /* optional */ }
+    setQuestLoaded(true);
   }, []);
   function markCleared(id: string) {
     if (clearedRef.current.includes(id)) return;
@@ -1741,7 +1743,7 @@ function CommandCentre() {
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit sanctuary-exit exit-grounds" style={{ left: "64%", top: "40%", width: "auto", height: "auto" }} aria-label="Walk out the back to the Training Grounds" title="Training Grounds" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (!canClick()) return; setArena(true); }}><span><i className="exit-full">▲ TRAINING GROUNDS</i><i className="exit-compact">▲ GROUNDS</i></span></button>}
             {zone.id === "sanctuary" && prologue === "off" && cavesUnlocked(story) && <button type="button" className="workshop-door-hit sanctuary-exit" style={{ left: "85%", top: "47%", width: "auto", height: "auto", minWidth: 48, minHeight: 48 }} aria-label="Walk down to the caves" title="To the caves" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (!canClick()) return; setDescent(true); }}><span>CAVES ›</span></button>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit sanctuary-exit" style={{ left: "8%", top: "58%", width: "auto", height: "auto", minWidth: 48, minHeight: 48 }} aria-label="Walk the Long Walk back toward the eggs" title="The Long Walk" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (!canClick()) return; setPrologue("walk"); }}><span>‹ LONG WALK</span></button>}
-            {zone.id === "sanctuary" && prologue === "off" && (["vale-home", "done"] as string[]).includes(loadQuest()) && <button type="button" className="workshop-door-hit sanctuary-exit" style={{ left: "50%", top: "10%", width: "auto", height: "auto", minWidth: 48, minHeight: 48 }} aria-label="Head for Kronk's refinery" title="To Kronk's refinery" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (!canClick()) return; setKronk(true); }}><span>▲ KRONK'S REFINERY</span></button>}
+            {questLoaded && zone.id === "sanctuary" && prologue === "off" && (["vale-home", "done", "mara-convinced"] as string[]).includes(loadQuest()) && <button type="button" className="workshop-door-hit sanctuary-exit" style={{ left: "50%", top: "10%", width: "auto", height: "auto", minWidth: 48, minHeight: 48 }} aria-label="Head for Kronk's refinery" title="To Kronk's refinery" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); if (!canClick()) return; setKronk(true); }}><span>▲ KRONK'S REFINERY</span></button>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit sanctuary-exit is-locked" style={{ left: "50%", top: "90%", width: "auto", height: "auto", minWidth: 48, minHeight: 48 }} aria-label="Human Settlement — not ready yet" title="Coming soon" disabled onPointerDown={e => e.stopPropagation()}><span>▼ SETTLEMENT · SOON</span></button>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: "74.5%", top: "44%" }} aria-label="Enter Brix's workshop" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("brix"); }}/>}
             {zone.id === "sanctuary" && prologue === "off" && <button type="button" className="workshop-door-hit" style={{ left: "18%", top: "56%" }} aria-label="Enter Oz's shack" title="Tap to enter" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); enterWorkshop("oz"); }}/>}
