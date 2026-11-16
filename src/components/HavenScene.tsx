@@ -57,7 +57,8 @@ const RETURN: Line[] = VALE_REPORTS;
 const INTRO_KEY = "zygoria-haven-intro-seen-v1";
 
 export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onDescend?: () => void } = {}) {
-  const [quest, setQuest] = useState<QuestStage>(() => { const q = loadQuest(); return q === "vale-up" ? advanceQuest("vale-home") : q; }); // a reload mid-trip brings Vale home
+  const jumpHunger = useRef(false);
+  const [quest, setQuest] = useState<QuestStage>(() => { const q = loadQuest(); if (q === "vale-up") return advanceQuest("vale-home"); let seen = false; try { seen = localStorage.getItem(INTRO_KEY) === "1"; } catch { /* fine */ } if (q === "none" && seen) { jumpHunger.current = true; return advanceQuest("hungry"); } return q; }); // a reload mid-trip brings Vale home
   const [script, setScript] = useState<Line[]>(() => {
     // The cave introduction plays once ever; later visits pick up the next story beat.
     let seen = false; try { seen = localStorage.getItem(INTRO_KEY) === "1"; localStorage.setItem(INTRO_KEY, "1"); } catch { /* storage blocked */ }
@@ -66,6 +67,8 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     if (orinMayCallExodus(quest)) return ORIN_EXODUS;
     if (quest === "fish") return seen ? HANDOVER : [...INTRO, ...HANDOVER];
     if (quest === "none" && !seen) return INTRO;
+    // Came back after the intro but before the hunger beat: skip straight to it and save the step.
+    if (jumpHunger.current) return HUNGER;
     return [];
   });
   const [maraStarted, setMaraStarted] = useState(() => maraMaySpeak(quest));

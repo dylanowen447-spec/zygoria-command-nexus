@@ -3,7 +3,7 @@ export type QuestStage = "none" | "hungry" | "fish" | "vale-up" | "vale-home" | 
 export const QUEST_KEY = "zygoria-quest-first-signs-v1";
 const ORDER: QuestStage[] = ["none", "hungry", "fish", "vale-up", "vale-home", "done", "mara-convinced", "kronk-defeated", "ascent-ready"];
 /** Orin keeps up his distrust this long before the Haven's hunger slips out. */
-export const DISTRUST_MS = 150_000;
+export const DISTRUST_MS = 30_000;
 
 export function loadQuest(): QuestStage {
   try { const s = localStorage.getItem(QUEST_KEY) as QuestStage | null; return s && ORDER.includes(s) ? s : "none"; } catch { return "none"; }
