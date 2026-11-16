@@ -124,6 +124,8 @@ export function HavenScene({ onAscend, onDescend }: { onAscend?: () => void; onD
     if (!line) return;
     let live = true, t: ReturnType<typeof setTimeout> | undefined;
     let shown = performance.now();
+    // Show the line straight away (voice-only styling still hides it while the voice plays), so a slow or missing clip never leaves a blank pause.
+    spokenRef.current = line; setBubble(line);
     void speak(line.who, line.text, () => { if (live) { shown = performance.now(); spokenRef.current = line; setBubble(line); } }).then(() => {
       if (!live) return;
       const rest = Math.max(350, 3600 - (performance.now() - shown)) + (line.pause ?? 0);

@@ -778,10 +778,13 @@ function CommandCentre() {
     setFire("lit");
     if (B.chance(0.6) && !await say("Lowkey", B.pick(B.LIT), 1400)) return;
     setFire("grilling");
+    // Save the Haven's fish the moment it's caught, so leaving mid-cookout never loses the quest step.
+    const fishForHaven = loadQuest() === "hungry";
+    if (fishForHaven) advanceQuest("fish");
     if (!await say("Oz", B.pick(B.CATCH_LINE[size]), 2600)) return;
     for (const [who, text] of B.riff(B.GRILL, all, { max: 3 })) if (!await say(who, text, 1800)) return;
     setFire("embers");
-    if (loadQuest() === "hungry") { advanceQuest("fish"); if (!await say("Oz", "Wrapping two of these up for the Haven. Their turn to eat.", 2200)) return; if (!await say("Lowkey", "Down the waterfall road, then. Through the caves.", 2000)) return; }
+    if (fishForHaven) { if (!await say("Oz", "Wrapping two of these up for the Haven. Their turn to eat.", 2200)) return; if (!await say("Lowkey", "Down the waterfall road, then. Through the caves.", 2000)) return; }
     setHunger(h => { const n = clampHunger(100, SANCTUARY_FLOOR); void FISH_RESTORE[size]; void h; saveHunger(n); return n; });
     // Short post-meal chat before everyone drifts home.
     const afters: [Agent, string][][] = [...B.AFTERS];
