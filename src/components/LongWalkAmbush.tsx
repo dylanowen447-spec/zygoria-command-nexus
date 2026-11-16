@@ -255,6 +255,10 @@ export function LongWalkAmbush({ stageRef, hitRef, combatRef, crew, onSay, onAla
           try { localStorage.setItem(KEY, "done"); } catch { /* fine */ }
           onDefeat?.();
           later(500, () => onSay("Lowkey", "Kronk. Remember that name."));
+          // Shelton's loot: he drops a glowing Conduit Cell as he flees; it powers the Bunker Gate generator later.
+          try { localStorage.setItem("zygoria-loot-conduit-cell", "1"); } catch { /* fine */ }
+          setBanner("LOOT · SHELTON'S CONDUIT CELL"); later(3200, () => setBanner(null));
+          later(3200, () => onSay("Oz", "He dropped something! A glowing power cell. I'm keeping it!"));
         }
       }
       force(f => (f + 1) % 1e6);

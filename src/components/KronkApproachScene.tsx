@@ -135,6 +135,8 @@ export function KronkApproachScene({ onEnter }: { onEnter?: () => void } = {}) {
     if (busy.current || fixed.includes(j.id)) return;
     walkTo(j.who, clampToGround({ x: j.x, y: 58 }));
     await new Promise(r => setTimeout(r, 900));
+    let hasCell = false; try { hasCell = localStorage.getItem("zygoria-loot-conduit-cell") === "1"; } catch { /* fine */ }
+    if (j.id === "generator" && hasCell) { await inspect([{ who: "Oz", text: "Dead generator... good thing Shelton dropped his conduit cell. Plugging it in!" }]); await inspect([{ who: "Oz", text: "Ha! Kronk's own lieutenant powered his front door. Beautiful." }]); setFixed(f => f.includes(j.id) ? f : [...f, j.id]); return; }
     await inspect([j.lines[0]!]);
     setFixed(f => (f.includes(j.id) ? f : [...f, j.id]));
     await inspect([j.lines[1]!]);
